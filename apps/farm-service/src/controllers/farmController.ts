@@ -1,0 +1,77 @@
+import { Response, NextFunction } from 'express';
+import { AuthenticatedRequest } from '../types/index.js';
+import * as farmService from '../services/farmService.js';
+import { parsePaginationParams } from '../utils/pagination.js';
+
+export async function createFarm(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const farm = await farmService.createFarm(req.user.userId, req.body);
+    res.status(201).json({ data: farm });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function listFarms(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const pagination = parsePaginationParams(req.query);
+    const { farms, total } = await farmService.listFarms(req.user.userId, pagination);
+    res.json({
+      data: farms,
+      meta: { total, page: Number(req.query['page'] ?? 1), page_size: pagination.take },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getFarm(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const farm = await farmService.getFarm(req.params['farmId'] as string, req.user.userId);
+    res.json({ data: farm });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function updateFarm(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const farm = await farmService.updateFarm(
+      req.params['farmId'] as string,
+      req.user.userId,
+      req.body,
+    );
+    res.json({ data: farm });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function deleteFarm(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    await farmService.deleteFarm(req.params['farmId'] as string, req.user.userId);
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "@agroconnect/db",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    "./farm": "./src/farm.ts"
+  },
+  "scripts": {
+    "generate:farm": "prisma generate --schema prisma/farm/schema.prisma",
+    "migrate:farm": "prisma migrate dev --schema prisma/farm/schema.prisma",
+    "generate": "pnpm generate:farm",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.14.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.14.0",
+    "typescript": "^5.4.0"
+  }
+}

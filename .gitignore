@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Build outputs
+dist/
+.next/
+out/
+build/
+
+# Generated files
+generated/
+packages/db/generated/
+
+# Turbo
+.turbo/
+
+# Environment
+.env
+.env.*
+!.env.example
+packages/db/.env
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Prisma
+prisma/migrations/**/migration_lock.toml
+
+# Python
+*.egg-info/
+.pytest_cache/
+.mypy_cache/

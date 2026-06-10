@@ -1,0 +1,156 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../generated/farm-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Farm {
+  id          String       @id @default(uuid())
+  ownerId     String
+  name        String
+  locationLat Decimal      @db.Decimal(10, 7)
+  locationLng Decimal      @db.Decimal(10, 7)
+  county      String
+  subCounty   String?
+  areaAcres   Decimal      @db.Decimal(8, 2)
+  soilType    SoilType?
+  waterSource WaterSource?
+  status      FarmStatus   @default(active)
+  plots       FarmPlot[]
+  activities  Activity[]
+  inputs      Input[]
+  harvests    Harvest[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@map("farms")
+}
+
+model FarmPlot {
+  id                   String    @id @default(uuid())
+  farmId               String
+  farm                 Farm      @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  name                 String
+  areaAcres            Decimal   @db.Decimal(6, 2)
+  currentCrop          String?
+  currentCropPlantedAt DateTime? @db.Date
+  polygonGeojson       Json?
+
+  @@map("farm_plots")
+}
+
+model Activity {
+  id            String         @id @default(uuid())
+  farmId        String
+  farm          Farm           @relation(fields: [farmId], references: [id])
+  plotId        String?
+  type          ActivityType
+  title         String
+  description   String?
+  scheduledDate DateTime       @db.Date
+  completedDate DateTime?      @db.Date
+  status        ActivityStatus @default(pending)
+  labourCostKes Decimal        @default(0) @db.Decimal(10, 2)
+  notes         String?
+  createdAt     DateTime       @default(now())
+
+  @@index([farmId, scheduledDate])
+  @@map("activities")
+}
+
+model Input {
+  id           String    @id @default(uuid())
+  farmId       String
+  farm         Farm      @relation(fields: [farmId], references: [id])
+  activityId   String?
+  type         InputType
+  productName  String
+  supplierId   String?
+  quantity     Decimal   @db.Decimal(10, 3)
+  unit         String
+  unitCostKes  Decimal   @db.Decimal(10, 2)
+  totalCostKes Decimal   @db.Decimal(12, 2)
+  appliedDate  DateTime  @db.Date
+  notes        String?
+
+  @@map("inputs")
+}
+
+model Harvest {
+  id              String        @id @default(uuid())
+  farmId          String
+  farm            Farm          @relation(fields: [farmId], references: [id])
+  plotId          String?
+  crop            String
+  variety         String?
+  quantityKg      Decimal       @db.Decimal(10, 2)
+  qualityGrade    QualityGrade?
+  harvestDate     DateTime      @db.Date
+  storageLocation String?
+  soldQuantityKg  Decimal       @default(0) @db.Decimal(10, 2)
+  avgPriceKes     Decimal?      @db.Decimal(8, 2)
+  totalRevenueKes Decimal?      @db.Decimal(12, 2)
+  notes           String?
+
+  @@map("harvests")
+}
+
+enum SoilType {
+  clay
+  loam
+  sandy
+  silty
+  peaty
+  chalky
+}
+
+enum WaterSource {
+  rain
+  irrigation
+  borehole
+  river
+  mixed
+}
+
+enum FarmStatus {
+  active
+  fallow
+  sold
+}
+
+enum ActivityType {
+  planting
+  irrigation
+  fertilising
+  pesticide
+  harvesting
+  weeding
+  other
+}
+
+enum ActivityStatus {
+  pending
+  completed
+  skipped
+}
+
+enum InputType {
+  seed
+  fertiliser
+  pesticide
+  herbicide
+  fuel
+  equipment
+  other
+}
+
+enum QualityGrade {
+  A
+  B
+  C
+  reject
+}
