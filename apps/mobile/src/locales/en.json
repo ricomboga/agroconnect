@@ -1,0 +1,845 @@
+{
+  "common": {
+    "retry": "Try again",
+    "save": "Save",
+    "cancel": "Cancel",
+    "back": "Back",
+    "next": "Next",
+    "skip": "Skip",
+    "savedOffline": "Saved. Will sync when online.",
+    "offline": "Working offline",
+    "comingSoon": "Coming soon",
+    "error": {
+      "loadFailed": "Failed to load. Check your connection.",
+      "dbInit": "Database initialization error"
+    }
+  },
+  "auth": {
+    "welcome": {
+      "tagline": "Better farming, better living",
+      "login": "Sign in",
+      "register": "Join"
+    },
+    "login": {
+      "title": "Welcome back",
+      "phone": "Phone number (+254...)",
+      "password": "Password",
+      "submit": "Sign in",
+      "forgotPassword": "Forgot password?",
+      "noAccount": "No account? Join"
+    },
+    "register": {
+      "title": "Create account",
+      "fullName": "Full name",
+      "phone": "Phone number (+254...)",
+      "county": "Select county",
+      "countyPickerTitle": "Select your county",
+      "password": "Password (8+ characters)",
+      "confirmPassword": "Confirm password",
+      "submit": "Create account",
+      "haveAccount": "Have an account? Sign in",
+      "error": {
+        "nameRequired": "Name required (2+ characters)",
+        "phoneInvalid": "Enter a valid Kenya number (+254...)",
+        "countyRequired": "Select a county",
+        "passwordShort": "Password must be 8+ characters",
+        "passwordMismatch": "Passwords do not match"
+      }
+    },
+    "otp": {
+      "title": "Verify your phone",
+      "subtitle": "Enter the code sent to {{phone}}",
+      "submit": "Verify",
+      "resend": "Resend code",
+      "resendIn": "Resend in {{seconds}}s",
+      "success": "Phone verified! Please sign in.",
+      "error": {
+        "invalid": "Incorrect code. Please try again."
+      }
+    },
+    "error": {
+      "invalidCredentials": "Incorrect phone number or password.",
+      "networkError": "Network error. Please try again."
+    }
+  },
+  "tabs": {
+    "farm": "Farm",
+    "diagnose": "Diagnose",
+    "market": "Market",
+    "finance": "Finance",
+    "community": "Community",
+    "profile": "Profile",
+    "govt": "Govt",
+    "insights": "Insights"
+  },
+  "profile": {
+    "title": "My Profile",
+    "logout": "Sign out",
+    "language": {
+      "label": "Language",
+      "sw": "Kiswahili",
+      "en": "English"
+    },
+    "role": {
+      "farmer":           "Farmer",
+      "admin":            "Administrator",
+      "extension_officer":"Extension Officer",
+      "vet":              "Veterinarian"
+    },
+    "stats": {
+      "farms":     "Farms",
+      "diagnoses": "Diagnoses",
+      "listings":  "Listings"
+    },
+    "menu": {
+      "editProfile":   "Edit profile",
+      "notifications": "Notifications",
+      "farmExport":    "Farm Summary",
+      "offlineStatus": "Offline Status"
+    },
+    "edit": {
+      "title":             "Edit profile",
+      "avatar":            "Tap to change photo",
+      "name":              "Full name",
+      "county":            "County",
+      "countyPickerTitle": "Select your county",
+      "language":          "Language",
+      "save":              "Save changes",
+      "saving":            "Saving...",
+      "success":           "Profile saved!"
+    },
+    "notifications": {
+      "title":              "Notification Settings",
+      "activityReminders":  "Activity reminders",
+      "diagnosisResults":   "Diagnosis results",
+      "priceAlerts":        "Price alerts",
+      "loanUpdates":        "Loan updates",
+      "weatherAlerts":      "Weather alerts",
+      "communityReplies":   "Community replies",
+      "save":               "Save",
+      "saving":             "Saving...",
+      "success":            "Settings saved!"
+    },
+    "export": {
+      "title":        "Farm Summary",
+      "selectFarm":   "Select farm",
+      "selectSeason": "Select season",
+      "previewTitle": "Summary — {{name}}",
+      "previewSeason":"Season {{year}}",
+      "yield":        "Yield (kg)",
+      "revenue":      "Revenue (KES)",
+      "costs":        "Costs (KES)",
+      "profit":       "Profit (KES)",
+      "download":     "Download PDF",
+      "downloading":  "Downloading...",
+      "empty": {
+        "title": "No farms yet",
+        "body":  "Add a farm first"
+      }
+    },
+    "offline": {
+      "title":        "Offline Status",
+      "networkLabel": "Network Status",
+      "online":       "Connected",
+      "offline":      "No connection",
+      "pendingCount": "Pending changes: {{count}}",
+      "noPending":    "No pending changes",
+      "syncBtn":      "Sync Now",
+      "syncing":      "Syncing...",
+      "lastSynced":   "Last synced: {{time}}",
+      "neverSynced":  "Never synced",
+      "opLabel": {
+        "CREATE": "Add",
+        "UPDATE": "Update",
+        "DELETE": "Delete"
+      }
+    }
+  },
+  "farm": {
+    "list": {
+      "title": "My Farms",
+      "addFarm": "Add farm",
+      "empty": {
+        "title": "No farms yet",
+        "body": "Add your first farm to get started",
+        "cta": "Add farm"
+      }
+    },
+    "dashboard": {
+      "title": "My Farms",
+      "farms": "Farms",
+      "active": "Active",
+      "plots": "Plots",
+      "area": "Area"
+    },
+    "card": {
+      "area": "Area",
+      "county": "County",
+      "plots": "plots",
+      "plotCount_one": "{{count}} plot",
+      "plotCount_other": "{{count}} plots",
+      "status": {
+        "active": "Active",
+        "fallow": "Fallow",
+        "rented_out": "Rented out",
+        "sold": "Sold"
+      }
+    },
+    "profile": {
+      "title": "Farm details",
+      "area": "Area",
+      "county": "County",
+      "map": {
+        "noGps": "No GPS location set",
+        "open": "Open in Maps"
+      },
+      "tab": {
+        "activities": "Activities",
+        "inputs": "Inputs",
+        "harvests": "Harvests"
+      }
+    },
+    "quickAction": {
+      "logActivity": "Log activity",
+      "logInput": "Log input",
+      "recordHarvest": "Record harvest",
+      "viewCalendar": "Activity calendar",
+      "viewInputs": "Inputs",
+      "viewHarvests": "Harvests",
+      "diagnose": "Diagnose"
+    }
+  },
+  "wizard": {
+    "step1": {
+      "title": "Name & County",
+      "name": "Farm name",
+      "county": "County"
+    },
+    "step2": {
+      "title": "Area & Soil",
+      "area": "Farm area",
+      "unit": {
+        "acres": "acres",
+        "ha": "hectares"
+      },
+      "soilType": "Soil type"
+    },
+    "step3": {
+      "title": "GPS Location",
+      "useLocation": "Use my location",
+      "noPermission": "GPS permission denied",
+      "mapPreview": "Map preview",
+      "skip": "Skip this step"
+    },
+    "step4": {
+      "title": "First crop",
+      "crop": "Select crops (choose all that apply)",
+      "plantingDate": "Planting date",
+      "skip": "Skip",
+      "crops": {
+        "maize": "Maize",
+        "tomato": "Tomato",
+        "beans": "Beans",
+        "potato": "Potato",
+        "tea": "Tea",
+        "coffee": "Coffee",
+        "avocado": "Avocado",
+        "other": "Other"
+      }
+    },
+    "common": {
+      "progress": "Step {{step}} of {{total}}",
+      "next": "Next",
+      "back": "Back",
+      "submit": "Save farm"
+    }
+  },
+  "activity": {
+    "calendar": {
+      "title": "Activity calendar",
+      "monthNav": {
+        "prev": "‹",
+        "next": "›"
+      },
+      "month": {
+        "0": "January",
+        "1": "February",
+        "2": "March",
+        "3": "April",
+        "4": "May",
+        "5": "June",
+        "6": "July",
+        "7": "August",
+        "8": "September",
+        "9": "October",
+        "10": "November",
+        "11": "December"
+      },
+      "empty": {
+        "title": "No activities this month",
+        "body": "Add your first activity",
+        "cta": "Add activity"
+      },
+      "ussdFallback": "Dial *384*123# for more info"
+    },
+    "status": {
+      "pending": "Pending",
+      "completed": "Completed",
+      "skipped": "Skipped"
+    },
+    "form": {
+      "title": {
+        "create": "Add activity",
+        "edit": "Edit activity"
+      },
+      "type": "Activity type",
+      "description": "Description",
+      "plannedDate": "Planned date",
+      "plot": {
+        "label": "Plot",
+        "none": "Whole farm"
+      },
+      "labourCost": "Labour cost (KES)",
+      "save": "Save"
+    },
+    "type": {
+      "planting": "Planting",
+      "irrigation": "Irrigation",
+      "fertilising": "Fertilising",
+      "weeding": "Weeding",
+      "harvesting": "Harvesting",
+      "scouting": "Scouting",
+      "spraying": "Spraying",
+      "other": "Other"
+    }
+  },
+  "input": {
+    "log": {
+      "title": "Inputs",
+      "season": "Season",
+      "totalCost": "Total spent",
+      "empty": {
+        "title": "No inputs this season",
+        "body": "Start recording your input use",
+        "cta": "Add input"
+      }
+    },
+    "type": {
+      "seed": "Seed",
+      "fertiliser": "Fertiliser",
+      "pesticide": "Pesticide",
+      "herbicide": "Herbicide",
+      "fuel": "Fuel",
+      "equipment": "Equipment",
+      "other": "Other"
+    },
+    "form": {
+      "title": "Log input",
+      "type": "Input type",
+      "productName": "Product name",
+      "quantity": "Quantity",
+      "unit": "Unit",
+      "unitCost": "Unit cost (KES)",
+      "totalCost": "Total cost (KES)",
+      "appliedDate": "Date applied",
+      "notes": "Notes",
+      "save": "Save"
+    }
+  },
+  "diagnose": {
+    "home": {
+      "title": "Disease Diagnosis",
+      "subtitle": "Select a farm to start a diagnosis",
+      "startBtn": "Start Diagnosis",
+      "noFarms": "Add a farm first"
+    },
+    "camera": {
+      "title": "Take photos",
+      "permission": "Camera permission is required to continue",
+      "permissionBtn": "Allow Camera",
+      "photoCount": "{{count}}/3 photos",
+      "retake": "Retake",
+      "usePhoto": "Use this photo",
+      "continue": "Continue"
+    },
+    "subject": {
+      "title": "Diagnosis details",
+      "typeLabel": "What are you examining?",
+      "plant": "Plant",
+      "animal": "Animal",
+      "nameLabel": "Plant / animal name",
+      "namePlaceholder": "e.g. maize, dairy cow",
+      "symptomsLabel": "Symptoms (optional)",
+      "symptomsPlaceholder": "Describe what you have observed...",
+      "durationLabel": "Duration of symptoms",
+      "duration": {
+        "today": "Today",
+        "1_3_days": "1–3 days",
+        "1_week": "1 week",
+        "over_1_week": "Over a week"
+      },
+      "submit": "Submit for diagnosis"
+    },
+    "loading": {
+      "title": "Analysing...",
+      "subtitle": "Please wait. This may take about a minute.",
+      "timeout": "Taking longer than expected.",
+      "retry": "Try again"
+    },
+    "result": {
+      "title": "Diagnosis result",
+      "confidence": "Confidence",
+      "confidence_high": "High confidence diagnosis",
+      "confidence_medium": "Medium confidence — review carefully",
+      "confidence_low": "Low confidence — consult an expert",
+      "processed_in": "Processed in {{ms}}ms",
+      "severity": "Severity",
+      "description": "Description",
+      "prescriptions": "Treatment Plan",
+      "buyMedicine": "Buy medicine",
+      "saveFarm": "Save to farm",
+      "share": "Share report",
+      "severity_mild": "Mild",
+      "severity_moderate": "Moderate",
+      "severity_severe": "Severe",
+      "severity_critical": "Critical"
+    },
+    "feedback": {
+      "title": "Was the diagnosis accurate?",
+      "accuracyLabel": "Diagnosis accuracy",
+      "outcomeLabel": "Outcome after treatment",
+      "outcome": {
+        "resolved": "Resolved",
+        "better": "Better",
+        "same": "Same",
+        "worse": "Worse"
+      },
+      "notesLabel": "Additional notes (optional)",
+      "submit": "Submit feedback",
+      "success": "Thank you for your feedback!"
+    },
+    "savedOffline": "Saved — will sync when you reconnect"
+  },
+  "market": {
+    "home": {
+      "title": "Market",
+      "tab": {
+        "sell": "Sell Produce",
+        "buy": "Buy Products"
+      }
+    },
+    "listing": {
+      "title": "Produce listings",
+      "createBtn": "Add listing",
+      "filter": {
+        "allCrops": "All crops",
+        "allGrades": "All grades",
+        "allCounties": "All counties"
+      },
+      "crops": {
+        "maize": "Maize",
+        "tomato": "Tomato",
+        "beans": "Beans",
+        "avocado": "Avocado",
+        "tea": "Tea",
+        "coffee": "Coffee"
+      },
+      "card": {
+        "availableFrom": "Available from {{date}}",
+        "grade": "Grade {{grade}}",
+        "pricePerKg": "KES {{price}}/kg",
+        "quantityKg": "{{quantity}} kg available"
+      },
+      "empty": {
+        "title": "No listings yet",
+        "body": "Be the first to sell your produce here",
+        "cta": "Add listing"
+      },
+      "detail": {
+        "title": "Listing details",
+        "contact": "Contact Farmer",
+        "report": "Report this listing",
+        "priceHistory": "Price history (30 days)",
+        "description": "Description",
+        "noPhotos": "No photos",
+        "sellerInfo": "Seller info",
+        "contactModal": {
+          "title": "Farmer contact",
+          "phone": "Phone number",
+          "close": "Close",
+          "loginRequired": "Sign in first to contact the farmer",
+          "loginBtn": "Sign in"
+        }
+      },
+      "create": {
+        "title": "Add listing",
+        "crop": "Crop name",
+        "variety": "Variety (optional)",
+        "quantity": "Quantity (kg)",
+        "pricePerKg": "Price (KES/kg)",
+        "grade": "Grade (optional)",
+        "county": "County",
+        "availableFrom": "Available from",
+        "availableTo": "Available until (optional)",
+        "description": "Description (optional)",
+        "linkHarvest": "Link to harvest (optional)",
+        "noHarvest": "No harvest link",
+        "addPhotos": "Add photos (up to 3)",
+        "save": "Publish listing",
+        "success": "Listing published successfully!"
+      }
+    },
+    "product": {
+      "title": "Supplier products",
+      "filter": {
+        "all": "All",
+        "seeds": "Seeds",
+        "fertilisers": "Fertilisers",
+        "pesticides": "Pesticides",
+        "equipment": "Equipment",
+        "other": "Other"
+      },
+      "card": {
+        "by": "By {{name}}",
+        "addToCart": "Add to cart"
+      },
+      "stock": {
+        "in_stock": "In stock",
+        "low_stock": "Low stock",
+        "out_of_stock": "Out of stock"
+      },
+      "empty": {
+        "title": "No products yet",
+        "body": "Supplier products will appear here",
+        "cta": "Try again"
+      }
+    },
+    "cart": {
+      "title": "My cart",
+      "floatingBtn": "Cart · {{count}}",
+      "item": {
+        "qty": "Qty",
+        "remove": "Remove"
+      },
+      "total": "Total",
+      "checkout": "Proceed to checkout",
+      "empty": {
+        "title": "Your cart is empty",
+        "body": "Add products from the market",
+        "cta": "Continue shopping"
+      }
+    },
+    "checkout": {
+      "title": "Confirm order",
+      "orderSummary": "Order summary",
+      "mpesaPhone": "M-Pesa number",
+      "confirm": "Pay KES {{amount}}",
+      "processing": "Processing...",
+      "stkPush": "Check your phone for the M-Pesa prompt",
+      "success": "Payment successful!"
+    },
+    "priceAlerts": {
+      "title": "Price Alerts",
+      "addAlert": "Add alert",
+      "crop": "Crop",
+      "targetPrice": "Target price (KES/kg)",
+      "currentPrice": "Current price",
+      "trend": {
+        "up": "↑",
+        "down": "↓",
+        "stable": "→"
+      },
+      "save": "Save alert",
+      "saving": "Saving...",
+      "success": "Alert added!",
+      "enabled": "Alert is active",
+      "disabled": "Alert is paused",
+      "empty": {
+        "title": "No price alerts",
+        "body": "Add an alert to track crop price changes"
+      }
+    }
+  },
+  "finance": {
+    "home": {
+      "title": "Finance",
+      "applyBtn": "Apply for loan",
+      "loanHistory": "Loan history",
+      "loans": {
+        "empty": {
+          "title": "No loans yet",
+          "body": "Apply for your first loan through our products"
+        }
+      }
+    },
+    "score": {
+      "title": "Credit Score",
+      "outOf": "out of 100",
+      "band": "Band {{band}}",
+      "maxLoan": "Max loan: KES {{amount}}",
+      "tapDetail": "Tap to see full breakdown ›",
+      "component": {
+        "yield": "Yield",
+        "inputs": "Inputs",
+        "activities": "Activities",
+        "platform": "Platform"
+      },
+      "detail": {
+        "title": "Score Breakdown",
+        "lastComputed": "Last computed: {{date}}",
+        "recompute": "Recompute score",
+        "recomputing": "Computing...",
+        "howToImprove": "How to improve",
+        "tip": {
+          "yield": "Accurately record all your harvests to improve this score.",
+          "inputs": "Regularly log your seed, fertiliser, and pesticide use.",
+          "activities": "Complete planned activities on time to raise your score.",
+          "platform": "Use this app regularly to increase your platform score."
+        }
+      }
+    },
+    "loan": {
+      "amount": "KES {{amount}}",
+      "status": {
+        "draft": "Draft",
+        "submitted": "Submitted",
+        "under_review": "Under Review",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "disbursed": "Disbursed",
+        "cancelled": "Cancelled"
+      },
+      "products": {
+        "title": "Loan Products",
+        "interestRate": "Rate: {{rate}}% p.a.",
+        "maxAmount": "Up to KES {{amount}}",
+        "minAmount": "From KES {{amount}}",
+        "repaymentMonths": "Repayment: {{months}} months",
+        "eligibility": "Min. band: {{band}}",
+        "applyBtn": "Apply",
+        "notEligible": "Score too low",
+        "empty": {
+          "title": "No loan products",
+          "body": "Loan products will appear here"
+        }
+      },
+      "application": {
+        "title": "Apply for loan",
+        "farmSection": "Farm details (read-only)",
+        "farmName": "Farm",
+        "lastHarvestKes": "Last harvest value",
+        "loanSection": "Loan details",
+        "purpose": "Loan purpose",
+        "purposePlaceholder": "e.g. Buy maize seeds",
+        "amount": "Amount requested (KES)",
+        "amountMax": "Your limit: KES {{max}}",
+        "amountExceedsLimit": "Exceeds your limit of KES {{max}}",
+        "repaymentMonths": "Repayment period (months)",
+        "monthlySummary": "Estimated monthly payment",
+        "estimatedMonthly": "~KES {{amount}} / month",
+        "submit": "Submit application",
+        "submitting": "Submitting...",
+        "success": "Application submitted!"
+      },
+      "statusScreen": {
+        "title": "Loan status",
+        "milestones": {
+          "submitted": "Submitted",
+          "under_review": "Under Review",
+          "approved": "Approved",
+          "rejected": "Rejected",
+          "disbursed": "Disbursed",
+          "cancelled": "Cancelled"
+        },
+        "approvedSection": "Approved loan",
+        "approvedAmount": "Approved amount",
+        "interestRate": "Interest rate",
+        "disbursedAt": "Disbursed on",
+        "mpesaRef": "M-Pesa reference",
+        "rateFormat": "{{rate}}% p.a.",
+        "rejectedNote": "Application rejected. Improve your credit score and try again.",
+        "cancelledNote": "Application was cancelled."
+      }
+    }
+  },
+  "community": {
+    "home": {
+      "title": "Community",
+      "categoryAll": "All",
+      "newThread": "New question",
+      "category": {
+        "crops":      "Crop Advice",
+        "livestock":  "Livestock Health",
+        "market":     "Market",
+        "weather":    "Weather",
+        "finance":    "Finance",
+        "government": "Government",
+        "success":    "Success Stories",
+        "tools":      "Tools & Equipment"
+      },
+      "thread": {
+        "replies_one":   "{{count}} reply",
+        "replies_other": "{{count}} replies",
+        "upvotes":       "{{count}} upvotes"
+      },
+      "empty": {
+        "title": "No discussions yet",
+        "body":  "Be the first to ask a question",
+        "cta":   "Start a discussion"
+      }
+    },
+    "thread": {
+      "title":       "Discussion",
+      "upvote":      "Upvote",
+      "reply":       "Reply",
+      "replyPlaceholder": "Write your reply...",
+      "send":        "Send",
+      "expert":      "Expert",
+      "verified":    "Verified by expert",
+      "liveReply":   "New reply received",
+      "empty": {
+        "title": "No replies yet",
+        "body":  "Be the first to reply"
+      }
+    },
+    "newThread": {
+      "title":            "New question",
+      "category":         "Select category",
+      "cropTag":          "Crop (optional)",
+      "cropTagPlaceholder": "e.g. Maize",
+      "threadTitle":      "Title",
+      "titlePlaceholder": "Write your question briefly",
+      "body":             "Details",
+      "bodyPlaceholder":  "Describe your problem in more detail...",
+      "charCount":        "{{count}} characters",
+      "submit":           "Post",
+      "submitting":       "Posting...",
+      "success":          "Question posted!"
+    },
+    "expert": {
+      "title":          "Expert Profile",
+      "specialisations": "Specialisations",
+      "counties":       "Counties served",
+      "rating":         "{{rating}}/5 · {{count}} reviews",
+      "callBtn":        "Call",
+      "whatsappBtn":    "WhatsApp",
+      "type": {
+        "agronomist":        "Agronomist",
+        "vet":               "Veterinarian",
+        "extension_officer": "Extension Officer"
+      }
+    }
+  },
+  "weather": {
+    "widget": {
+      "title": "Weather",
+      "loading": "Loading weather...",
+      "error": "Failed to load weather",
+      "tapDetail": "Tap for details",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "dayAfter": "Day after",
+      "rain": "Rain {{pct}}%",
+      "tempRange": "{{high}}° / {{low}}°"
+    },
+    "detail": {
+      "title": "Weather",
+      "forecast": "7-day forecast",
+      "humidity": "Humidity {{pct}}%",
+      "alert": {
+        "title": "Weather Alerts",
+        "severity": {
+          "info": "Info",
+          "warning": "Warning",
+          "danger": "Danger"
+        }
+      },
+      "seasonal": {
+        "title": "Seasonal Outlook",
+        "rainfall": "Rainfall",
+        "temperature": "Temperature",
+        "advisory": "Farming Advisory"
+      }
+    },
+    "condition": {
+      "clear": "Clear",
+      "partly_cloudy": "Partly cloudy",
+      "cloudy": "Cloudy",
+      "rainy": "Rainy",
+      "stormy": "Stormy"
+    }
+  },
+  "ussd": {
+    "banner": {
+      "text": "No internet? Dial *384*123# for services",
+      "dismiss": "Dismiss"
+    }
+  },
+  "govt": {
+    "home": {
+      "title": "Government Services",
+      "registrations": { "title": "Farm Registration", "desc": "Register your farm officially" },
+      "subsidies": { "title": "Subsidies", "desc": "Apply for government support" },
+      "licenses": { "title": "Licenses", "desc": "Apply for farming licenses" }
+    },
+    "registrations": {
+      "title": "Farm Registrations",
+      "empty": "No registrations yet",
+      "status": { "pending": "Pending", "under_review": "Under Review", "approved": "Approved", "rejected": "Rejected" },
+      "new": "New Registration"
+    },
+    "subsidies": {
+      "title": "Subsidies",
+      "programs": "Available Programs",
+      "myApplications": "My Applications",
+      "apply": "Apply",
+      "empty": "No subsidies available",
+      "status": { "pending": "Pending", "approved": "Approved", "disbursed": "Disbursed", "rejected": "Rejected" }
+    },
+    "licenses": {
+      "title": "Licenses",
+      "empty": "No licenses yet",
+      "new": "Apply for License",
+      "status": { "pending": "Pending", "issued": "Issued", "rejected": "Rejected", "expired": "Expired" }
+    }
+  },
+  "insights": {
+    "title": "Market Insights",
+    "signals": "Market Signals",
+    "yield": "Yield Estimates",
+    "prices": "Price Forecast",
+    "signal": { "sell_now": "Sell Now", "hold": "Hold", "buy_now": "Buy Now" },
+    "empty": "No forecast data available"
+  },
+  "harvest": {
+    "log": {
+      "title": "Harvests",
+      "totalYield": "Total yield",
+      "totalRevenue": "Total revenue",
+      "empty": {
+        "title": "No harvests yet",
+        "body": "Start recording your harvests",
+        "cta": "Record harvest"
+      }
+    },
+    "form": {
+      "title": "Record harvest",
+      "crop": "Crop",
+      "variety": "Variety (optional)",
+      "quantity": "Quantity (kg)",
+      "grade": {
+        "label": "Grade",
+        "A": "A",
+        "B": "B",
+        "C": "C"
+      },
+      "harvestDate": "Harvest date",
+      "storage": "Storage location (optional)",
+      "soldQty": "Sold quantity (kg)",
+      "avgPrice": "Avg. price (KES/kg)",
+      "totalRevenue": "Total revenue (KES)",
+      "notes": "Notes",
+      "save": "Save"
+    }
+  }
+}

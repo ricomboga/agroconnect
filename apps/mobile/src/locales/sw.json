@@ -1,0 +1,845 @@
+{
+  "common": {
+    "retry": "Jaribu tena",
+    "save": "Hifadhi",
+    "cancel": "Ghairi",
+    "back": "Rudi",
+    "next": "Endelea",
+    "skip": "Ruka",
+    "savedOffline": "Imehifadhiwa. Itasawazishwa mtandaoni.",
+    "offline": "Unafanya kazi bila mtandao",
+    "comingSoon": "Inakuja hivi karibuni",
+    "error": {
+      "loadFailed": "Imeshindwa kupakia. Angalia muunganisho wako.",
+      "dbInit": "Hitilafu ya hifadhidata"
+    }
+  },
+  "auth": {
+    "welcome": {
+      "tagline": "Kilimo bora, maisha bora",
+      "login": "Ingia",
+      "register": "Jiunge"
+    },
+    "login": {
+      "title": "Karibu tena",
+      "phone": "Nambari ya simu (+254...)",
+      "password": "Nenosiri",
+      "submit": "Ingia",
+      "forgotPassword": "Umesahau nenosiri?",
+      "noAccount": "Huna akaunti? Jiunge"
+    },
+    "register": {
+      "title": "Unda akaunti",
+      "fullName": "Jina kamili",
+      "phone": "Nambari ya simu (+254...)",
+      "county": "Chagua kaunti",
+      "countyPickerTitle": "Chagua kaunti yako",
+      "password": "Nenosiri (herufi 8+)",
+      "confirmPassword": "Thibitisha nenosiri",
+      "submit": "Unda akaunti",
+      "haveAccount": "Una akaunti? Ingia",
+      "error": {
+        "nameRequired": "Jina linahitajika (herufi 2+)",
+        "phoneInvalid": "Ingiza nambari sahihi ya Kenya (+254...)",
+        "countyRequired": "Chagua kaunti",
+        "passwordShort": "Nenosiri lazima liwe na herufi 8+",
+        "passwordMismatch": "Manenosiri hayalingani"
+      }
+    },
+    "otp": {
+      "title": "Thibitisha simu yako",
+      "subtitle": "Tumia nambari iliyotumwa kwa {{phone}}",
+      "submit": "Thibitisha",
+      "resend": "Tuma tena",
+      "resendIn": "Tuma tena baada ya {{seconds}}s",
+      "success": "Simu imethibitishwa! Ingia sasa.",
+      "error": {
+        "invalid": "Nambari si sahihi. Jaribu tena."
+      }
+    },
+    "error": {
+      "invalidCredentials": "Nambari ya simu au nenosiri si sahihi.",
+      "networkError": "Tatizo la mtandao. Jaribu tena."
+    }
+  },
+  "tabs": {
+    "farm": "Shamba",
+    "diagnose": "Uchunguzi",
+    "market": "Soko",
+    "finance": "Fedha",
+    "community": "Jamii",
+    "profile": "Wasifu",
+    "govt": "Serikali",
+    "insights": "Maarifa"
+  },
+  "profile": {
+    "title": "Wasifu wangu",
+    "logout": "Toka",
+    "language": {
+      "label": "Lugha",
+      "sw": "Kiswahili",
+      "en": "English"
+    },
+    "role": {
+      "farmer":           "Mkulima",
+      "admin":            "Msimamizi",
+      "extension_officer":"Mshauri wa Kilimo",
+      "vet":              "Daktari wa Mifugo"
+    },
+    "stats": {
+      "farms":     "Mashamba",
+      "diagnoses": "Uchunguzi",
+      "listings":  "Orodha"
+    },
+    "menu": {
+      "editProfile":   "Hariri wasifu",
+      "notifications": "Arifa",
+      "farmExport":    "Muhtasari wa Shamba",
+      "offlineStatus": "Hali ya Offline"
+    },
+    "edit": {
+      "title":             "Hariri wasifu",
+      "avatar":            "Gusa kubadilisha picha",
+      "name":              "Jina kamili",
+      "county":            "Kaunti",
+      "countyPickerTitle": "Chagua kaunti yako",
+      "language":          "Lugha",
+      "save":              "Hifadhi mabadiliko",
+      "saving":            "Inabadilisha...",
+      "success":           "Wasifu umehifadhiwa!"
+    },
+    "notifications": {
+      "title":              "Mipangilio ya Arifa",
+      "activityReminders":  "Vikumbusho vya shughuli",
+      "diagnosisResults":   "Matokeo ya uchunguzi",
+      "priceAlerts":        "Arifa za bei",
+      "loanUpdates":        "Masasisho ya mkopo",
+      "weatherAlerts":      "Arifa za hali ya hewa",
+      "communityReplies":   "Majibu ya jamii",
+      "save":               "Hifadhi",
+      "saving":             "Inabadilisha...",
+      "success":            "Mipangilio imehifadhiwa!"
+    },
+    "export": {
+      "title":        "Muhtasari wa Shamba",
+      "selectFarm":   "Chagua shamba",
+      "selectSeason": "Chagua msimu",
+      "previewTitle": "Muhtasari — {{name}}",
+      "previewSeason":"Msimu {{year}}",
+      "yield":        "Mavuno (kg)",
+      "revenue":      "Mapato (KES)",
+      "costs":        "Gharama (KES)",
+      "profit":       "Faida (KES)",
+      "download":     "Pakua PDF",
+      "downloading":  "Inapakua...",
+      "empty": {
+        "title": "Huna mashamba",
+        "body":  "Ongeza shamba kwanza"
+      }
+    },
+    "offline": {
+      "title":        "Hali ya Offline",
+      "networkLabel": "Hali ya Mtandao",
+      "online":       "Umeunganika",
+      "offline":      "Bila mtandao",
+      "pendingCount": "Mabadiliko yanayongoja: {{count}}",
+      "noPending":    "Hakuna mabadiliko yanayongoja",
+      "syncBtn":      "Sawazisha Sasa",
+      "syncing":      "Inasawazisha...",
+      "lastSynced":   "Ilisawazishwa: {{time}}",
+      "neverSynced":  "Bado haijasawazishwa",
+      "opLabel": {
+        "CREATE": "Kuongeza",
+        "UPDATE": "Kusasisha",
+        "DELETE": "Kufuta"
+      }
+    }
+  },
+  "farm": {
+    "list": {
+      "title": "Mashamba yangu",
+      "addFarm": "Ongeza shamba",
+      "empty": {
+        "title": "Huna shamba bado",
+        "body": "Ongeza shamba lako la kwanza kuanza",
+        "cta": "Ongeza shamba"
+      }
+    },
+    "dashboard": {
+      "title": "Mashamba Yangu",
+      "farms": "Mashamba",
+      "active": "Yanayofanya kazi",
+      "plots": "Viwanja",
+      "area": "Eneo"
+    },
+    "card": {
+      "area": "Ukubwa",
+      "county": "Kaunti",
+      "plots": "viwanja",
+      "plotCount_one": "{{count}} kiwanja",
+      "plotCount_other": "{{count}} viwanja",
+      "status": {
+        "active": "Inafanya kazi",
+        "fallow": "Imelala",
+        "rented_out": "Imepangishwa",
+        "sold": "Imeuzwa"
+      }
+    },
+    "profile": {
+      "title": "Maelezo ya shamba",
+      "area": "Ukubwa",
+      "county": "Kaunti",
+      "map": {
+        "noGps": "Hakuna GPS iliyowekwa",
+        "open": "Fungua kwenye ramani"
+      },
+      "tab": {
+        "activities": "Shughuli",
+        "inputs": "Pembejeo",
+        "harvests": "Mavuno"
+      }
+    },
+    "quickAction": {
+      "logActivity": "Rekodi shughuli",
+      "logInput": "Rekodi pembejeo",
+      "recordHarvest": "Rekodi mavuno",
+      "viewCalendar": "Kalenda ya shughuli",
+      "viewInputs": "Pembejeo",
+      "viewHarvests": "Mavuno",
+      "diagnose": "Chunguza"
+    }
+  },
+  "wizard": {
+    "step1": {
+      "title": "Jina na Kaunti",
+      "name": "Jina la shamba",
+      "county": "Kaunti"
+    },
+    "step2": {
+      "title": "Eneo na Udongo",
+      "area": "Ukubwa wa shamba",
+      "unit": {
+        "acres": "ekari",
+        "ha": "hektari"
+      },
+      "soilType": "Aina ya udongo"
+    },
+    "step3": {
+      "title": "Mahali (GPS)",
+      "useLocation": "Tumia mahali pangu",
+      "noPermission": "Ruhusa ya GPS ilikataliwa",
+      "mapPreview": "Mchoro wa ramani",
+      "skip": "Ruka hatua hii"
+    },
+    "step4": {
+      "title": "Zao la kwanza",
+      "crop": "Chagua mazao (unaweza chagua zaidi ya moja)",
+      "plantingDate": "Tarehe ya kupanda",
+      "skip": "Ruka",
+      "crops": {
+        "maize": "Mahindi",
+        "tomato": "Nyanya",
+        "beans": "Maharagwe",
+        "potato": "Viazi",
+        "tea": "Chai",
+        "coffee": "Kahawa",
+        "avocado": "Parachichi",
+        "other": "Nyingine"
+      }
+    },
+    "common": {
+      "progress": "Hatua {{step}} ya {{total}}",
+      "next": "Endelea",
+      "back": "Rudi",
+      "submit": "Hifadhi shamba"
+    }
+  },
+  "activity": {
+    "calendar": {
+      "title": "Kalenda ya shughuli",
+      "monthNav": {
+        "prev": "‹",
+        "next": "›"
+      },
+      "month": {
+        "0": "Januari",
+        "1": "Februari",
+        "2": "Machi",
+        "3": "Aprili",
+        "4": "Mei",
+        "5": "Juni",
+        "6": "Julai",
+        "7": "Agosti",
+        "8": "Septemba",
+        "9": "Oktoba",
+        "10": "Novemba",
+        "11": "Desemba"
+      },
+      "empty": {
+        "title": "Hakuna shughuli mwezi huu",
+        "body": "Ongeza shughuli yako ya kwanza",
+        "cta": "Ongeza shughuli"
+      },
+      "ussdFallback": "Piga *384*123# kwa maelezo zaidi"
+    },
+    "status": {
+      "pending": "Inangoja",
+      "completed": "Imekamilika",
+      "skipped": "Imerukwa"
+    },
+    "form": {
+      "title": {
+        "create": "Ongeza shughuli",
+        "edit": "Hariri shughuli"
+      },
+      "type": "Aina ya shughuli",
+      "description": "Maelezo",
+      "plannedDate": "Tarehe iliyopangwa",
+      "plot": {
+        "label": "Kiwanja",
+        "none": "Shamba zima"
+      },
+      "labourCost": "Gharama ya kazi (KES)",
+      "save": "Hifadhi"
+    },
+    "type": {
+      "planting": "Kupanda",
+      "irrigation": "Kumwagilia",
+      "fertilising": "Kuweka mbolea",
+      "weeding": "Kupalilia",
+      "harvesting": "Kuvuna",
+      "scouting": "Ukaguzi",
+      "spraying": "Kunyunyizia",
+      "other": "Nyingine"
+    }
+  },
+  "input": {
+    "log": {
+      "title": "Pembejeo",
+      "season": "Mwaka",
+      "totalCost": "Jumla ya gharama",
+      "empty": {
+        "title": "Hakuna pembejeo kwa mwaka huu",
+        "body": "Anza kurekodi matumizi ya pembejeo",
+        "cta": "Ongeza pembejeo"
+      }
+    },
+    "type": {
+      "seed": "Mbegu",
+      "fertiliser": "Mbolea",
+      "pesticide": "Dawa ya wadudu",
+      "herbicide": "Dawa ya magugu",
+      "fuel": "Mafuta",
+      "equipment": "Zana",
+      "other": "Nyingine"
+    },
+    "form": {
+      "title": "Rekodi pembejeo",
+      "type": "Aina ya pembejeo",
+      "productName": "Jina la bidhaa",
+      "quantity": "Kiasi",
+      "unit": "Kipimo",
+      "unitCost": "Bei kwa kiasi (KES)",
+      "totalCost": "Gharama yote (KES)",
+      "appliedDate": "Tarehe ya kutumia",
+      "notes": "Maelezo ya ziada",
+      "save": "Hifadhi"
+    }
+  },
+  "diagnose": {
+    "home": {
+      "title": "Uchunguzi wa Magonjwa",
+      "subtitle": "Chagua shamba uliloanza uchunguzi",
+      "startBtn": "Anza Uchunguzi",
+      "noFarms": "Ongeza shamba kwanza"
+    },
+    "camera": {
+      "title": "Piga picha",
+      "permission": "Tunahitaji ruhusa ya kamera ili uendelee",
+      "permissionBtn": "Ruhusu Kamera",
+      "photoCount": "{{count}}/3 picha",
+      "retake": "Piga tena",
+      "usePhoto": "Tumia picha hii",
+      "continue": "Endelea"
+    },
+    "subject": {
+      "title": "Taarifa za uchunguzi",
+      "typeLabel": "Ni nini unachochunguza?",
+      "plant": "Mmea",
+      "animal": "Mnyama",
+      "nameLabel": "Jina la mmea / mnyama",
+      "namePlaceholder": "Mfano: mahindi, ng'ombe wa maziwa",
+      "symptomsLabel": "Dalili (hiari)",
+      "symptomsPlaceholder": "Eleza dalili ulizoziona...",
+      "durationLabel": "Muda wa dalili",
+      "duration": {
+        "today": "Leo",
+        "1_3_days": "Siku 1–3",
+        "1_week": "Wiki moja",
+        "over_1_week": "Zaidi ya wiki"
+      },
+      "submit": "Wasilisha kwa uchunguzi"
+    },
+    "loading": {
+      "title": "Inachunguza...",
+      "subtitle": "Tafadhali subiri. Inaweza kuchukua dakika moja.",
+      "timeout": "Inachukua muda mrefu zaidi ya kawaida.",
+      "retry": "Jaribu tena"
+    },
+    "result": {
+      "title": "Matokeo ya uchunguzi",
+      "confidence": "Uhakika",
+      "confidence_high": "Utambuzi una uhakika mkubwa",
+      "confidence_medium": "Utambuzi una uhakika wa wastani",
+      "confidence_low": "Uhakika mdogo — wasiliana na mtaalamu",
+      "processed_in": "Imechakatwa kwa {{ms}}ms",
+      "severity": "Ukali",
+      "description": "Maelezo",
+      "prescriptions": "Mpango wa Matibabu",
+      "buyMedicine": "Nunua dawa",
+      "saveFarm": "Hifadhi kwa shamba",
+      "share": "Shiriki ripoti",
+      "severity_mild": "Kidogo",
+      "severity_moderate": "Wastani",
+      "severity_severe": "Kali",
+      "severity_critical": "Hatari"
+    },
+    "feedback": {
+      "title": "Je, utambuzi ulikuwa sahihi?",
+      "accuracyLabel": "Ukweli wa utambuzi",
+      "outcomeLabel": "Matokeo baada ya matibabu",
+      "outcome": {
+        "resolved": "Ilipona",
+        "better": "Ilikuwa bora",
+        "same": "Haikubadilika",
+        "worse": "Ilizidi"
+      },
+      "notesLabel": "Maelezo ya ziada (hiari)",
+      "submit": "Tuma maoni",
+      "success": "Asante kwa maoni yako!"
+    },
+    "savedOffline": "Imehifadhiwa — itasawazishwa unapounganika"
+  },
+  "market": {
+    "home": {
+      "title": "Soko",
+      "tab": {
+        "sell": "Uza Mazao",
+        "buy": "Nunua Bidhaa"
+      }
+    },
+    "listing": {
+      "title": "Orodha ya mazao",
+      "createBtn": "Ongeza orodha",
+      "filter": {
+        "allCrops": "Mazao yote",
+        "allGrades": "Daraja yote",
+        "allCounties": "Kaunti zote"
+      },
+      "crops": {
+        "maize": "Mahindi",
+        "tomato": "Nyanya",
+        "beans": "Maharagwe",
+        "avocado": "Parachichi",
+        "tea": "Chai",
+        "coffee": "Kahawa"
+      },
+      "card": {
+        "availableFrom": "Inapatikana kuanzia {{date}}",
+        "grade": "Daraja {{grade}}",
+        "pricePerKg": "KES {{price}}/kg",
+        "quantityKg": "{{quantity}} kg zinapatikana"
+      },
+      "empty": {
+        "title": "Hakuna orodha kwa sasa",
+        "body": "Kuwa wa kwanza kuuza mazao yako hapa",
+        "cta": "Ongeza orodha"
+      },
+      "detail": {
+        "title": "Maelezo ya orodha",
+        "contact": "Wasiliana na Mkulima",
+        "report": "Ripoti orodha hii",
+        "priceHistory": "Historia ya bei (siku 30)",
+        "description": "Maelezo",
+        "noPhotos": "Hakuna picha",
+        "sellerInfo": "Taarifa za muuzaji",
+        "contactModal": {
+          "title": "Mawasiliano ya mkulima",
+          "phone": "Nambari ya simu",
+          "close": "Funga",
+          "loginRequired": "Ingia kwanza ili kuwasiliana na mkulima",
+          "loginBtn": "Ingia"
+        }
+      },
+      "create": {
+        "title": "Ongeza orodha",
+        "crop": "Jina la zao",
+        "variety": "Aina (hiari)",
+        "quantity": "Kiasi (kg)",
+        "pricePerKg": "Bei (KES/kg)",
+        "grade": "Daraja (hiari)",
+        "county": "Kaunti",
+        "availableFrom": "Inapatikana kuanzia",
+        "availableTo": "Inapatikana hadi (hiari)",
+        "description": "Maelezo (hiari)",
+        "linkHarvest": "Unganisha na mavuno (hiari)",
+        "noHarvest": "Bila mavuno",
+        "addPhotos": "Ongeza picha (hadi 3)",
+        "save": "Chapisha orodha",
+        "success": "Orodha imechapishwa vizuri!"
+      }
+    },
+    "product": {
+      "title": "Bidhaa za wasambazaji",
+      "filter": {
+        "all": "Zote",
+        "seeds": "Mbegu",
+        "fertilisers": "Mbolea",
+        "pesticides": "Dawa",
+        "equipment": "Zana",
+        "other": "Nyingine"
+      },
+      "card": {
+        "by": "Na {{name}}",
+        "addToCart": "Weka kikapuni"
+      },
+      "stock": {
+        "in_stock": "Inapatikana",
+        "low_stock": "Inakwisha",
+        "out_of_stock": "Haipatikani"
+      },
+      "empty": {
+        "title": "Hakuna bidhaa kwa sasa",
+        "body": "Bidhaa mpya za wasambazaji zitaonekana hapa",
+        "cta": "Jaribu tena"
+      }
+    },
+    "cart": {
+      "title": "Kikapu changu",
+      "floatingBtn": "Kikapu · {{count}}",
+      "item": {
+        "qty": "Idadi",
+        "remove": "Ondoa"
+      },
+      "total": "Jumla",
+      "checkout": "Endelea kulipa",
+      "empty": {
+        "title": "Kikapu chako ni tupu",
+        "body": "Ongeza bidhaa kutoka soko",
+        "cta": "Endelea kununua"
+      }
+    },
+    "checkout": {
+      "title": "Thibitisha order",
+      "orderSummary": "Muhtasari wa order",
+      "mpesaPhone": "Nambari ya M-Pesa",
+      "confirm": "Lipa KES {{amount}}",
+      "processing": "Inachakata...",
+      "stkPush": "Angalia simu yako kwa ombi la M-Pesa",
+      "success": "Malipo yamefanikiwa!"
+    },
+    "priceAlerts": {
+      "title": "Arifa za Bei",
+      "addAlert": "Ongeza arifa",
+      "crop": "Zao",
+      "targetPrice": "Bei unayotaka (KES/kg)",
+      "currentPrice": "Bei ya sasa",
+      "trend": {
+        "up": "↑",
+        "down": "↓",
+        "stable": "→"
+      },
+      "save": "Hifadhi arifa",
+      "saving": "Inahifadhi...",
+      "success": "Arifa imeongezwa!",
+      "enabled": "Arifa imewashwa",
+      "disabled": "Arifa imezimwa",
+      "empty": {
+        "title": "Hakuna arifa za bei",
+        "body": "Ongeza arifa upate taarifa za bei za mazao"
+      }
+    }
+  },
+  "finance": {
+    "home": {
+      "title": "Fedha",
+      "applyBtn": "Omba mkopo",
+      "loanHistory": "Historia ya mikopo",
+      "loans": {
+        "empty": {
+          "title": "Hakuna mikopo bado",
+          "body": "Omba mkopo wako wa kwanza kupitia bidhaa zetu"
+        }
+      }
+    },
+    "score": {
+      "title": "Alama ya Mkopo",
+      "outOf": "kati ya 100",
+      "band": "Kiwango {{band}}",
+      "maxLoan": "Mkopo wa juu: KES {{amount}}",
+      "tapDetail": "Gusa kuona maelezo ›",
+      "component": {
+        "yield": "Mavuno",
+        "inputs": "Pembejeo",
+        "activities": "Shughuli",
+        "platform": "Mfumo"
+      },
+      "detail": {
+        "title": "Maelezo ya Alama",
+        "lastComputed": "Ilihesabiwa: {{date}}",
+        "recompute": "Kokotoa upya",
+        "recomputing": "Inakokotoa...",
+        "howToImprove": "Jinsi ya kuimarisha",
+        "tip": {
+          "yield": "Ongeza rekodi za mavuno yako kwa usahihi ili kuimarisha alama hii.",
+          "inputs": "Rekodi matumizi yako ya mbegu, mbolea na dawa mara kwa mara.",
+          "activities": "Kamilisha shughuli zilizopangwa kwa wakati ili alama iwe juu.",
+          "platform": "Tumia programu hii mara kwa mara ili alama iongezeke."
+        }
+      }
+    },
+    "loan": {
+      "amount": "KES {{amount}}",
+      "status": {
+        "draft": "Rasimu",
+        "submitted": "Imewasilishwa",
+        "under_review": "Inachunguzwa",
+        "approved": "Imeidhinishwa",
+        "rejected": "Imekataliwa",
+        "disbursed": "Imetolewa",
+        "cancelled": "Imefutwa"
+      },
+      "products": {
+        "title": "Bidhaa za Mikopo",
+        "interestRate": "Riba: {{rate}}% / mwaka",
+        "maxAmount": "Hadi KES {{amount}}",
+        "minAmount": "Kuanzia KES {{amount}}",
+        "repaymentMonths": "Malipo: miezi {{months}}",
+        "eligibility": "Kiwango: {{band}}+",
+        "applyBtn": "Omba",
+        "notEligible": "Alama haitoshi",
+        "empty": {
+          "title": "Hakuna bidhaa za mkopo",
+          "body": "Bidhaa za mikopo zitaonekana hapa"
+        }
+      },
+      "application": {
+        "title": "Omba mkopo",
+        "farmSection": "Taarifa za shamba (hazibadiliki)",
+        "farmName": "Shamba",
+        "lastHarvestKes": "Thamani ya mavuno ya mwisho",
+        "loanSection": "Maelezo ya mkopo",
+        "purpose": "Madhumuni ya mkopo",
+        "purposePlaceholder": "Mfano: Kununua mbegu za mahindi",
+        "amount": "Kiasi unachoomba (KES)",
+        "amountMax": "Kikomo chako: KES {{max}}",
+        "amountExceedsLimit": "Inazidi kikomo cha KES {{max}}",
+        "repaymentMonths": "Muda wa kulipa (miezi)",
+        "monthlySummary": "Malipo ya kila mwezi (karibu)",
+        "estimatedMonthly": "~KES {{amount}} / mwezi",
+        "submit": "Wasilisha ombi",
+        "submitting": "Inawasilisha...",
+        "success": "Ombi limewasilishwa!"
+      },
+      "statusScreen": {
+        "title": "Hali ya mkopo",
+        "milestones": {
+          "submitted": "Imewasilishwa",
+          "under_review": "Inachunguzwa",
+          "approved": "Imeidhinishwa",
+          "rejected": "Imekataliwa",
+          "disbursed": "Imetolewa",
+          "cancelled": "Imefutwa"
+        },
+        "approvedSection": "Mkopo ulioidhinishwa",
+        "approvedAmount": "Kiasi kilichoidhinishwa",
+        "interestRate": "Riba",
+        "disbursedAt": "Tarehe ya kutolewa",
+        "mpesaRef": "Kumbukumbu ya M-Pesa",
+        "rateFormat": "{{rate}}% / mwaka",
+        "rejectedNote": "Ombi limekataliwa. Imarisha alama yako na ujaribu tena.",
+        "cancelledNote": "Ombi limefutwa."
+      }
+    }
+  },
+  "community": {
+    "home": {
+      "title": "Jamii",
+      "categoryAll": "Zote",
+      "newThread": "Swali jipya",
+      "category": {
+        "crops":      "Ushauri wa Mazao",
+        "livestock":  "Afya ya Mifugo",
+        "market":     "Soko",
+        "weather":    "Hali ya Hewa",
+        "finance":    "Fedha",
+        "government": "Serikali",
+        "success":    "Mafanikio",
+        "tools":      "Zana"
+      },
+      "thread": {
+        "replies_one":   "{{count}} jibu",
+        "replies_other": "{{count}} majibu",
+        "upvotes":       "{{count}} upvote"
+      },
+      "empty": {
+        "title": "Hakuna mazungumzo bado",
+        "body":  "Kuwa wa kwanza kuuliza swali",
+        "cta":   "Anza mazungumzo"
+      }
+    },
+    "thread": {
+      "title":       "Mazungumzo",
+      "upvote":      "Upvote",
+      "reply":       "Jibu",
+      "replyPlaceholder": "Andika jibu lako...",
+      "send":        "Tuma",
+      "expert":      "Mtaalamu",
+      "verified":    "Imethibitishwa na mtaalamu",
+      "liveReply":   "Jibu jipya limepokelewa",
+      "empty": {
+        "title": "Hakuna majibu bado",
+        "body":  "Kuwa wa kwanza kujibu"
+      }
+    },
+    "newThread": {
+      "title":            "Swali jipya",
+      "category":         "Chagua kitengo",
+      "cropTag":          "Zao (hiari)",
+      "cropTagPlaceholder": "Mfano: Mahindi",
+      "threadTitle":      "Kichwa cha habari",
+      "titlePlaceholder": "Andika swali lako kwa ufupi",
+      "body":             "Maelezo",
+      "bodyPlaceholder":  "Eleza tatizo lako kwa undani zaidi...",
+      "charCount":        "{{count}} herufi",
+      "submit":           "Chapisha",
+      "submitting":       "Inachapisha...",
+      "success":          "Swali limechapishwa!"
+    },
+    "expert": {
+      "title":          "Wasifu wa Mtaalamu",
+      "specialisations": "Utaalamu",
+      "counties":       "Kaunti zinazohudumia",
+      "rating":         "{{rating}}/5 · maoni {{count}}",
+      "callBtn":        "Piga simu",
+      "whatsappBtn":    "WhatsApp",
+      "type": {
+        "agronomist":        "Mtaalamu wa Kilimo",
+        "vet":               "Daktari wa Mifugo",
+        "extension_officer": "Mshauri wa Kilimo"
+      }
+    }
+  },
+  "weather": {
+    "widget": {
+      "title": "Hali ya Hewa",
+      "loading": "Inapakia hali ya hewa...",
+      "error": "Imeshindwa kupakia hali ya hewa",
+      "tapDetail": "Gusa kwa maelezo",
+      "today": "Leo",
+      "tomorrow": "Kesho",
+      "dayAfter": "Kesho kutwa",
+      "rain": "Mvua {{pct}}%",
+      "tempRange": "{{high}}° / {{low}}°"
+    },
+    "detail": {
+      "title": "Hali ya Hewa",
+      "forecast": "Utabiri wa siku 7",
+      "humidity": "Unyevunyevu {{pct}}%",
+      "alert": {
+        "title": "Tahadhari za Hewa",
+        "severity": {
+          "info": "Taarifa",
+          "warning": "Onyo",
+          "danger": "Hatari"
+        }
+      },
+      "seasonal": {
+        "title": "Matarajio ya Msimu",
+        "rainfall": "Mvua",
+        "temperature": "Joto",
+        "advisory": "Ushauri wa Kilimo"
+      }
+    },
+    "condition": {
+      "clear": "Wazi",
+      "partly_cloudy": "Mawingu kidogo",
+      "cloudy": "Mawingu",
+      "rainy": "Mvua",
+      "stormy": "Dhoruba"
+    }
+  },
+  "ussd": {
+    "banner": {
+      "text": "Huna mtandao? Piga *384*123# kupata huduma",
+      "dismiss": "Funga"
+    }
+  },
+  "govt": {
+    "home": {
+      "title": "Huduma za Serikali",
+      "registrations": { "title": "Usajili wa Shamba", "desc": "Sajili shamba lako rasmi" },
+      "subsidies": { "title": "Ruzuku", "desc": "Omba msaada wa serikali" },
+      "licenses": { "title": "Leseni", "desc": "Omba leseni ya kilimo" }
+    },
+    "registrations": {
+      "title": "Usajili wa Shamba",
+      "empty": "Huna usajili bado",
+      "status": { "pending": "Inasubiri", "under_review": "Inachunguzwa", "approved": "Imeidhinishwa", "rejected": "Imekataliwa" },
+      "new": "Usajili Mpya"
+    },
+    "subsidies": {
+      "title": "Ruzuku",
+      "programs": "Programu Zinapatikana",
+      "myApplications": "Maombi Yangu",
+      "apply": "Omba",
+      "empty": "Hakuna ruzuku",
+      "status": { "pending": "Inasubiri", "approved": "Imeidhinishwa", "disbursed": "Imetolewa", "rejected": "Imekataliwa" }
+    },
+    "licenses": {
+      "title": "Leseni",
+      "empty": "Huna leseni bado",
+      "new": "Omba Leseni",
+      "status": { "pending": "Inasubiri", "issued": "Imetolewa", "rejected": "Imekataliwa", "expired": "Imeisha" }
+    }
+  },
+  "insights": {
+    "title": "Maarifa ya Soko",
+    "signals": "Ishara za Soko",
+    "yield": "Matarajio ya Mavuno",
+    "prices": "Utabiri wa Bei",
+    "signal": { "sell_now": "Uza Sasa", "hold": "Subiri", "buy_now": "Nunua Sasa" },
+    "empty": "Hakuna data ya utabiri"
+  },
+  "harvest": {
+    "log": {
+      "title": "Mavuno",
+      "totalYield": "Mavuno yote",
+      "totalRevenue": "Mapato yote",
+      "empty": {
+        "title": "Hakuna mavuno bado",
+        "body": "Anza kurekodi mavuno yako",
+        "cta": "Rekodi mavuno"
+      }
+    },
+    "form": {
+      "title": "Rekodi mavuno",
+      "crop": "Zao",
+      "variety": "Aina (hiari)",
+      "quantity": "Kiasi (kg)",
+      "grade": {
+        "label": "Daraja",
+        "A": "A",
+        "B": "B",
+        "C": "C"
+      },
+      "harvestDate": "Tarehe ya kuvuna",
+      "storage": "Mahali pa kuhifadhi (hiari)",
+      "soldQty": "Kilichouzwa (kg)",
+      "avgPrice": "Bei ya wastani (KES/kg)",
+      "totalRevenue": "Mapato yote (KES)",
+      "notes": "Maelezo ya ziada",
+      "save": "Hifadhi"
+    }
+  }
+}

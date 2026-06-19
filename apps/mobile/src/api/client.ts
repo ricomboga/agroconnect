@@ -1,0 +1,67 @@
+import { useAuthStore } from '../stores/authStore';
+
+const BASE_URL = process.env['EXPO_PUBLIC_API_URL'] ?? 'http://localhost:3000/api/v1';
+
+export class ApiError extends Error {
+  constructor(
+    public readonly statusCode: number,
+    public readonly errorCode: string,
+    message: string,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+export async function apiFetch<T>(
+  path: string,
+  options: RequestInit = {},
+): Promise<T> {
+  const token = useAuthStore.getState().token;
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string> | undefined),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10_000);
+
+  let response: Response;
+  try {
+    response = await fetch(`${BASE_URL}${path}`, {
+      ...options,
+      headers,
+      signal: controller.signal,
+    });
+  } catch (err) {
+    clearTimeout(timeout);
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new ApiError(408, 'REQUEST_TIMEOUT', 'Request timed out');
+    }
+    throw err;
+  }
+  clearTimeout(timeout);
+
+  if (response.status === 401) {
+    await useAuthStore.getState().logout();
+    throw new ApiError(401, 'UNAUTHORIZED', 'Session expired');
+  }
+
+  if (!response.ok) {
+    let errorCode = 'UNKNOWN_ERROR';
+    try {
+      const body = await response.json() as { error?: { code?: string; message?: string } };
+      errorCode = body.error?.code ?? errorCode;
+      throw new ApiError(response.status, errorCode, body.error?.message ?? response.statusText);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(response.status, errorCode, response.statusText);
+    }
+  }
+
+  return response.json() as Promise<T>;
+}

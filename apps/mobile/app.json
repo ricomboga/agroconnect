@@ -1,0 +1,57 @@
+{
+  "expo": {
+    "name": "AgroConnect",
+    "slug": "agroconnect",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "agroconnect",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1B5E20"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "ke.agroconnect.mobile",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "AgroConnect inahitaji mahali pako kurekodi GPS ya shamba.",
+        "NSCameraUsageDescription": "AgroConnect inahitaji kamera yako kupiga picha za mimea au wanyama kwa uchunguzi.",
+        "NSPhotoLibraryUsageDescription": "AgroConnect inahitaji picha zako kwa uchunguzi wa magonjwa."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1B5E20"
+      },
+      "package": "ke.agroconnect.mobile",
+      "permissions": [
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "AgroConnect inahitaji mahali pako kurekodi GPS ya shamba."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "AgroConnect inahitaji kamera yako kupiga picha za mimea au wanyama kwa uchunguzi."
+        }
+      ]
+    ],
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "extra": {}
+  }
+}
