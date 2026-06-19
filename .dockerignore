@@ -1,0 +1,44 @@
+# Root node_modules (pnpm virtual store)
+node_modules
+
+# Per-app node_modules
+apps/auth-service/node_modules
+apps/farm-service/node_modules
+apps/api-gateway/node_modules
+apps/finance-service/node_modules
+apps/market-service/node_modules
+apps/community-service/node_modules
+apps/govt-service/node_modules
+apps/soil-service/node_modules
+apps/weather-service/node_modules
+apps/notification-service/node_modules
+apps/media-service/node_modules
+apps/admin-service/node_modules
+apps/ussd-service/node_modules
+
+# Per-package node_modules
+packages/db/node_modules
+packages/shared/node_modules
+packages/kafka/node_modules
+packages/packages/node_modules
+
+# Prisma generated clients — rebuilt inside Docker for Linux target
+packages/db/generated
+
+# Build outputs
+apps/*/dist
+packages/*/dist
+apps/*/.next
+apps/*/.turbo
+packages/*/.turbo
+
+# Non-backend apps not needed in any service image
+apps/mobile
+apps/web
+
+# Repo meta
+.git
+docs
+skills
+infra
+*.md

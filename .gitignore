@@ -3,6 +3,7 @@ node_modules/
 __pycache__/
 *.pyc
 .venv/
+.venv-*/
 venv/
 
 # Build outputs
@@ -17,12 +18,20 @@ packages/db/generated/
 
 # Turbo
 .turbo/
+turbo_cov.txt
+turbo_coverage_out.txt
+
+# Expo
+apps/mobile/.expo/
 
 # Environment
 .env
 .env.*
 !.env.example
 packages/db/.env
+
+# Secrets — never commit real keys or generated JWT key pairs
+infra/dev-keys.json
 
 # Test coverage
 coverage/

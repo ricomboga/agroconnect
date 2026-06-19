@@ -1,0 +1,15 @@
+services:
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: agroconnect-postgres-test
+    environment:
+      POSTGRES_USER: agroconnect
+      POSTGRES_PASSWORD: agroconnect_dev
+      POSTGRES_DB: farm_test_db
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agroconnect -d farm_test_db"]
+      interval: 2s
+      timeout: 3s
+      retries: 20

@@ -66,3 +66,8 @@ MIN_CONFIDENCE      0.65
 ```
 FCM_SERVER_KEY
 ```
+
+## web (Next.js portal)
+```
+NEXT_PUBLIC_API_URL   Base URL of the API gateway — e.g. http://localhost:3000 (dev) or https://api.agroconnect.africa (prod)
+```
