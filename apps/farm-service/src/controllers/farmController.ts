@@ -9,7 +9,7 @@ export async function createFarm(
   next: NextFunction,
 ): Promise<void> {
   try {
-    const farm = await farmService.createFarm(req.user.userId, req.body);
+    const farm = await farmService.createFarm(req.user.id, req.body);
     res.status(201).json({ data: farm });
   } catch (err) {
     next(err);
@@ -23,7 +23,7 @@ export async function listFarms(
 ): Promise<void> {
   try {
     const pagination = parsePaginationParams(req.query);
-    const { farms, total } = await farmService.listFarms(req.user.userId, pagination);
+    const { farms, total } = await farmService.listFarms(req.user.id, req.user.role, pagination);
     res.json({
       data: farms,
       meta: { total, page: Number(req.query['page'] ?? 1), page_size: pagination.take },
@@ -39,7 +39,11 @@ export async function getFarm(
   next: NextFunction,
 ): Promise<void> {
   try {
-    const farm = await farmService.getFarm(req.params['farmId'] as string, req.user.userId);
+    const farm = await farmService.getFarm(
+      req.params['farmId'] as string,
+      req.user.id,
+      req.user.role,
+    );
     res.json({ data: farm });
   } catch (err) {
     next(err);
@@ -54,7 +58,8 @@ export async function updateFarm(
   try {
     const farm = await farmService.updateFarm(
       req.params['farmId'] as string,
-      req.user.userId,
+      req.user.id,
+      req.user.role,
       req.body,
     );
     res.json({ data: farm });
@@ -69,7 +74,7 @@ export async function deleteFarm(
   next: NextFunction,
 ): Promise<void> {
   try {
-    await farmService.deleteFarm(req.params['farmId'] as string, req.user.userId);
+    await farmService.deleteFarm(req.params['farmId'] as string, req.user.id, req.user.role);
     res.status(204).send();
   } catch (err) {
     next(err);

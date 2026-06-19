@@ -1,10 +1,17 @@
-import { prisma } from '@agroconnect/db/farm';
+import { prisma, Prisma } from '@agroconnect/db/farm';
 import { CreatePlotDto } from '../schemas/createPlot.schema.js';
 import { PaginationParams } from '../types/index.js';
 
 export async function createPlot(farmId: string, dto: CreatePlotDto) {
+  const { polygonGeojson, ...rest } = dto;
   return prisma.farmPlot.create({
-    data: { farmId, ...dto },
+    data: {
+      farmId,
+      ...rest,
+      ...(polygonGeojson !== undefined
+        ? { polygonGeojson: polygonGeojson as Prisma.InputJsonValue }
+        : {}),
+    },
   });
 }
 

@@ -1,0 +1,15 @@
+FROM node:20-alpine
+WORKDIR /workspace
+RUN corepack enable && corepack prepare pnpm@9.4.0 --activate
+
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY apps/api-gateway/package.json ./apps/api-gateway/
+
+RUN pnpm install --filter @agroconnect/api-gateway --no-frozen-lockfile
+
+COPY tsconfig.base.json ./
+COPY apps/api-gateway/ ./apps/api-gateway/
+
+WORKDIR /workspace/apps/api-gateway
+EXPOSE 3000
+CMD ["npx", "tsx", "src/index.ts"]

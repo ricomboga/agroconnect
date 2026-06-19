@@ -1,0 +1,47 @@
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../../../packages/db/generated/notification-client"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("NOTIFICATION_DATABASE_URL")
+}
+
+model DeliveryLog {
+  id        String          @id @default(uuid())
+  eventType String
+  farmerId  String
+  channel   DeliveryChannel
+  status    DeliveryStatus
+  error     String?
+  sentAt    DateTime        @default(now())
+
+  @@index([farmerId])
+  @@index([sentAt])
+  @@map("delivery_logs")
+}
+
+model FcmToken {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  token     String
+  updatedAt DateTime @updatedAt
+
+  @@map("fcm_tokens")
+}
+
+enum DeliveryChannel {
+  push
+  sms
+
+  @@map("delivery_channel")
+}
+
+enum DeliveryStatus {
+  sent
+  failed
+
+  @@map("delivery_status")
+}

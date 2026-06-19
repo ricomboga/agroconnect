@@ -1,10 +1,10 @@
-import { prisma } from '@agroconnect/db/farm';
+import { prisma, Prisma } from '@agroconnect/db/farm';
 import { CreateInputDto } from '../schemas/createInput.schema.js';
 import { PaginationParams } from '../types/index.js';
 
 export interface InputFilter {
-  type?: string;
-  season?: string;
+  type?: Prisma.InputWhereInput['type'];
+  appliedDateRange?: { gte: Date; lte: Date };
 }
 
 export async function createInput(farmId: string, dto: CreateInputDto) {
@@ -33,7 +33,8 @@ export async function findInputsByFarm(
   return prisma.input.findMany({
     where: {
       farmId,
-      ...(filter.type && { type: filter.type as never }),
+      ...(filter.type !== undefined ? { type: filter.type } : {}),
+      ...(filter.appliedDateRange ? { appliedDate: filter.appliedDateRange } : {}),
     },
     take: pagination.take,
     skip: pagination.skip,
@@ -45,7 +46,8 @@ export async function countInputsByFarm(farmId: string, filter: InputFilter) {
   return prisma.input.count({
     where: {
       farmId,
-      ...(filter.type && { type: filter.type as never }),
+      ...(filter.type !== undefined ? { type: filter.type } : {}),
+      ...(filter.appliedDateRange ? { appliedDate: filter.appliedDateRange } : {}),
     },
   });
 }

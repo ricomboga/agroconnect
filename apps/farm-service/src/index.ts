@@ -6,6 +6,7 @@ import { plotRouter } from './routes/plotRoutes.js';
 import { activityRouter } from './routes/activityRoutes.js';
 import { inputRouter } from './routes/inputRoutes.js';
 import { harvestRouter } from './routes/harvestRoutes.js';
+import { internalStatsRouter } from './routes/internalStatsRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { startDiagnosisCompletedConsumer } from './events/consumers/diagnosisCompletedConsumer.js';
 import { startLoanDisbursedConsumer } from './events/consumers/loanDisbursedConsumer.js';
@@ -24,6 +25,7 @@ app.use('/api/v1/farms/:farmId/plots', plotRouter);
 app.use('/api/v1/farms/:farmId/activities', activityRouter);
 app.use('/api/v1/farms/:farmId/inputs', inputRouter);
 app.use('/api/v1/farms/:farmId/harvests', harvestRouter);
+app.use('/internal/admin', internalStatsRouter);
 
 app.use(errorHandler);
 
@@ -36,11 +38,13 @@ async function startConsumers(): Promise<void> {
   ]);
 }
 
-app.listen(PORT, () => {
-  logger.info({ port: PORT }, 'farm-service started');
-  startConsumers().catch((err) => {
-    logger.error({ err }, 'Failed to start Kafka consumers');
+if (process.env['NODE_ENV'] !== 'test') {
+  app.listen(PORT, () => {
+    logger.info({ port: PORT }, 'farm-service started');
+    startConsumers().catch((err) => {
+      logger.error({ err }, 'Failed to start Kafka consumers');
+    });
   });
-});
+}
 
 export { app, logger };

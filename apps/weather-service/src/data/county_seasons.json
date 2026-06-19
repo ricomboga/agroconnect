@@ -1,0 +1,284 @@
+{
+  "Nairobi": {
+    "county": "Nairobi",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND)"},
+    "outlook": "Bimodal rainfall pattern typical of central highland Kenya"
+  },
+  "Kiambu": {
+    "county": "Kiambu",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND)"},
+    "outlook": "Highland bimodal pattern; coffee and tea belt with reliable rainfall"
+  },
+  "Murang'a": {
+    "county": "Murang'a",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND)"},
+    "outlook": "Central highland bimodal rainfall; suitable for tea, coffee, and horticultural crops"
+  },
+  "Nyeri": {
+    "county": "Nyeri",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND)"},
+    "outlook": "Mt Kenya foothills; reliable bimodal rains with highland-modified climate"
+  },
+  "Kirinyaga": {
+    "county": "Kirinyaga",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND)"},
+    "outlook": "Mt Kenya lower slopes; reliable rainfall supports rice, tea, and horticultural crops"
+  },
+  "Embu": {
+    "county": "Embu",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND)"},
+    "outlook": "Eastern Mt Kenya slopes; bimodal rains with occasional dry spells in lowlands"
+  },
+  "Meru": {
+    "county": "Meru",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND)"},
+    "outlook": "Bimodal pattern across altitudinal zones; highlands receive heavier MAM rains"
+  },
+  "Tharaka-Nithi": {
+    "county": "Tharaka-Nithi",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND)"},
+    "outlook": "Bimodal with semi-arid lowlands; rainfall reliability decreases eastward"
+  },
+  "Nakuru": {
+    "county": "Nakuru",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND)"},
+    "outlook": "Rift Valley bimodal pattern; moderate and reliable rainfall for mixed farming"
+  },
+  "Laikipia": {
+    "county": "Laikipia",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND)"},
+    "outlook": "Semi-arid plateau; bimodal but erratic; ranching and dryland farming dominant"
+  },
+  "Nyandarua": {
+    "county": "Nyandarua",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND)"},
+    "outlook": "Aberdare range; high-altitude bimodal rains; potato and pyrethrum zone"
+  },
+  "Kakamega": {
+    "county": "Kakamega",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "September", "end": "November", "description": "Short rains (SON)"},
+    "outlook": "Western Kenya; one of the wettest counties with high annual rainfall exceeding 2000mm"
+  },
+  "Vihiga": {
+    "county": "Vihiga",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "September", "end": "November", "description": "Short rains (SON)"},
+    "outlook": "Dense highland; high rainfall density; subsistence farming with tea on slopes"
+  },
+  "Bungoma": {
+    "county": "Bungoma",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "September", "end": "November", "description": "Short rains (SON)"},
+    "outlook": "Western highland bimodal; maize breadbasket with reliable rains"
+  },
+  "Busia": {
+    "county": "Busia",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "September", "end": "November", "description": "Short rains (SON)"},
+    "outlook": "Lake Victoria fringe; high humidity and rainfall influenced by lake-effect"
+  },
+  "Siaya": {
+    "county": "Siaya",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "September", "end": "November", "description": "Short rains (SON)"},
+    "outlook": "Lake basin bimodal; moderate rainfall; susceptible to flooding in low areas"
+  },
+  "Kisumu": {
+    "county": "Kisumu",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "September", "end": "November", "description": "Short rains (SON)"},
+    "outlook": "Lake Victoria shoreline; bimodal with lake-moderated temperature and humidity"
+  },
+  "Kisii": {
+    "county": "Kisii",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "September", "end": "November", "description": "Short rains (SON)"},
+    "outlook": "Highlands above Lake Victoria; very reliable bimodal rains; tea and banana zone"
+  },
+  "Nyamira": {
+    "county": "Nyamira",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "September", "end": "November", "description": "Short rains (SON)"},
+    "outlook": "Western highland bimodal; dense smallholder farming with year-round cultivation"
+  },
+  "Migori": {
+    "county": "Migori",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "September", "end": "November", "description": "Short rains (SON)"},
+    "outlook": "Southern Nyanza; bimodal with lake and border proximity influencing rainfall"
+  },
+  "Homa Bay": {
+    "county": "Homa Bay",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "September", "end": "November", "description": "Short rains (SON)"},
+    "outlook": "Lake basin; moderate bimodal rains; fishing community with diversified agriculture"
+  },
+  "Trans Nzoia": {
+    "county": "Trans Nzoia",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "September", "end": "November", "description": "Short rains (SON)"},
+    "outlook": "North Rift Valley breadbasket; reliable bimodal rains supporting large-scale maize"
+  },
+  "Uasin Gishu": {
+    "county": "Uasin Gishu",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "September", "end": "November", "description": "Short rains (SON)"},
+    "outlook": "Eldoret plateau; reliable bimodal rains; major wheat and maize production zone"
+  },
+  "Elgeyo Marakwet": {
+    "county": "Elgeyo Marakwet",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "September", "end": "November", "description": "Short rains (SON)"},
+    "outlook": "Escarpment county; orographic rainfall with wide altitudinal variation"
+  },
+  "Nandi": {
+    "county": "Nandi",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "September", "end": "November", "description": "Short rains (SON)"},
+    "outlook": "Western highlands; high rainfall with tea and dairy farming dominant"
+  },
+  "Kericho": {
+    "county": "Kericho",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "September", "end": "November", "description": "Short rains (SON)"},
+    "outlook": "Tea capital of Kenya; near-continuous rainfall with afternoon showers year-round"
+  },
+  "Bomet": {
+    "county": "Bomet",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "September", "end": "November", "description": "Short rains (SON)"},
+    "outlook": "South Rift highland; bimodal rains supporting tea, pyrethrum, and mixed farming"
+  },
+  "West Pokot": {
+    "county": "West Pokot",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND)"},
+    "outlook": "North Rift; bimodal with altitude variation; pastoralism and dryland farming"
+  },
+  "Baringo": {
+    "county": "Baringo",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND)"},
+    "outlook": "Rift Valley semi-arid; bimodal but erratic; pastoralism and irrigated horticulture"
+  },
+  "Samburu": {
+    "county": "Samburu",
+    "long_rains": {"start": "March", "end": "May", "description": "Long rains (MAM) — variable"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND) — variable"},
+    "outlook": "ASAL county; bimodal but highly erratic; pastoralism dominant; drought-prone"
+  },
+  "Mombasa": {
+    "county": "Mombasa",
+    "long_rains": {"start": "April", "end": "June", "description": "Coastal long rains (AMJ)"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND)"},
+    "outlook": "Coast; bimodal with monsoonal influence; high humidity year-round"
+  },
+  "Kwale": {
+    "county": "Kwale",
+    "long_rains": {"start": "April", "end": "June", "description": "Coastal long rains (AMJ)"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND)"},
+    "outlook": "South Coast; bimodal coastal pattern; cashew, coconut, and tourism economy"
+  },
+  "Kilifi": {
+    "county": "Kilifi",
+    "long_rains": {"start": "April", "end": "June", "description": "Coastal long rains (AMJ)"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND)"},
+    "outlook": "Mid-coast; bimodal with rainfall decreasing inland; cassava and cashew zone"
+  },
+  "Tana River": {
+    "county": "Tana River",
+    "long_rains": {"start": "April", "end": "June", "description": "Coastal long rains (AMJ) — unreliable inland"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND)"},
+    "outlook": "Arid to semi-arid; Tana River provides irrigation; flood risk during long rains"
+  },
+  "Lamu": {
+    "county": "Lamu",
+    "long_rains": {"start": "April", "end": "June", "description": "Coastal long rains (AMJ)"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND)"},
+    "outlook": "North Coast island archipelago; bimodal coastal pattern with monsoon winds"
+  },
+  "Taita Taveta": {
+    "county": "Taita Taveta",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND)"},
+    "outlook": "Highland-coastal transition; orographic rains on Taita Hills; dry plains below"
+  },
+  "Turkana": {
+    "county": "Turkana",
+    "long_rains": {"start": "March", "end": "May", "description": "Long rains (MAM) — highly unreliable"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND) — highly unreliable"},
+    "outlook": "Arid ASAL; one of Kenya's driest counties; pastoralism; severe drought risk"
+  },
+  "Marsabit": {
+    "county": "Marsabit",
+    "long_rains": {"start": "March", "end": "May", "description": "Long rains (MAM) — variable"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND) — variable"},
+    "outlook": "Arid with highland forest micro-climate on Mt Marsabit; pastoralism dominant"
+  },
+  "Isiolo": {
+    "county": "Isiolo",
+    "long_rains": {"start": "March", "end": "May", "description": "Long rains (MAM) — erratic"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND) — erratic"},
+    "outlook": "Semi-arid gateway to NFD; bimodal but unreliable; pastoralism and irrigated farming"
+  },
+  "Garissa": {
+    "county": "Garissa",
+    "long_rains": {"start": "March", "end": "May", "description": "Long rains (MAM) — unreliable"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND) — unreliable"},
+    "outlook": "Arid ASAL; Tana River corridor; flooding risk contrasts with chronic drought"
+  },
+  "Wajir": {
+    "county": "Wajir",
+    "long_rains": {"start": "April", "end": "June", "description": "Long rains (AMJ) — highly variable"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND) — highly variable"},
+    "outlook": "Arid northeast; very low and erratic rainfall; pastoralism; severe drought-prone"
+  },
+  "Mandera": {
+    "county": "Mandera",
+    "long_rains": {"start": "April", "end": "June", "description": "Long rains (AMJ) — highly variable"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND) — highly variable"},
+    "outlook": "Driest county in Kenya; arid; cross-border Dawa River provides some irrigation"
+  },
+  "Kajiado": {
+    "county": "Kajiado",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND)"},
+    "outlook": "Semi-arid Maasailand; bimodal but erratic in lowlands; pastoralism and horticulture"
+  },
+  "Makueni": {
+    "county": "Makueni",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND)"},
+    "outlook": "Semi-arid; bimodal with rainfall decreasing southward; mango and dryland crops"
+  },
+  "Kitui": {
+    "county": "Kitui",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND)"},
+    "outlook": "Semi-arid; bimodal with unreliable short rains; dryland crops and water harvesting"
+  },
+  "Machakos": {
+    "county": "Machakos",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND)"},
+    "outlook": "Semi-arid with highland pockets; bimodal pattern; horticulture and dryland farming"
+  },
+  "Narok": {
+    "county": "Narok",
+    "long_rains": {"start": "March", "end": "May", "description": "Main rainy season (MAM)"},
+    "short_rains": {"start": "October", "end": "December", "description": "Short rains (OND)"},
+    "outlook": "Maasai Mara zone; bimodal rains support pastoralism, wheat farming, and tourism"
+  }
+}

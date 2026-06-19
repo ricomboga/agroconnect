@@ -1,15 +1,16 @@
 import { Router } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { requireAuth } from '../middleware/auth.js';
-import { validateBody } from '../middleware/validate.js';
+import { validateBody, validateQuery } from '../middleware/validate.js';
 import { createHarvestSchema } from '../schemas/createHarvest.schema.js';
+import { paginationQuerySchema } from '@agroconnect/shared';
 import * as harvestController from '../controllers/harvestController.js';
 import { AuthenticatedRequest } from '../types/index.js';
-import { Request, Response, NextFunction } from 'express';
 
 const router = Router({ mergeParams: true });
 const auth = requireAuth as (req: Request, res: Response, next: NextFunction) => void;
 
-router.get('/', auth, (req, res, next) =>
+router.get('/', auth, validateQuery(paginationQuerySchema), (req, res, next) =>
   harvestController.listHarvests(req as AuthenticatedRequest, res, next),
 );
 router.post('/', auth, validateBody(createHarvestSchema), (req, res, next) =>

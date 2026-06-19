@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from '../types/index.js';
 import * as inputService from '../services/inputService.js';
 import { parsePaginationParams } from '../utils/pagination.js';
+import type { ListInputsQuery } from '../schemas/listInputs.query.schema.js';
 
 export async function recordInput(
   req: AuthenticatedRequest,
@@ -11,7 +12,8 @@ export async function recordInput(
   try {
     const input = await inputService.recordInput(
       req.params['farmId'] as string,
-      req.user.userId,
+      req.user.id,
+      req.user.role,
       req.body,
     );
     res.status(201).json({ data: input });
@@ -26,20 +28,18 @@ export async function listInputs(
   next: NextFunction,
 ): Promise<void> {
   try {
+    const query = req.query as unknown as ListInputsQuery;
     const pagination = parsePaginationParams(req.query);
-    const filter = {
-      type: req.query['type'] as string | undefined,
-      season: req.query['season'] as string | undefined,
-    };
     const { inputs, total } = await inputService.listInputs(
       req.params['farmId'] as string,
-      req.user.userId,
-      filter,
+      req.user.id,
+      req.user.role,
+      { type: query.type, season: query.season },
       pagination,
     );
     res.json({
       data: inputs,
-      meta: { total, page: Number(req.query['page'] ?? 1), page_size: pagination.take },
+      meta: { total, page: query.page, page_size: pagination.take },
     });
   } catch (err) {
     next(err);

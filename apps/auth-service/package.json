@@ -1,1 +1,33 @@
-{ "name": "@agroconnect/auth-service", "version": "0.1.0", "private": true }
+{
+  "name": "@agroconnect/auth-service",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch --env-file=.env src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "jest --passWithNoTests --coverage",
+    "lint": "eslint \"src/**/*.ts\""
+  },
+  "dependencies": {
+    "@agroconnect/db": "workspace:*",
+    "@agroconnect/kafka": "workspace:*",
+    "@agroconnect/shared": "workspace:*",
+    "bcryptjs": "^2.4.3",
+    "express": "^4.19.0",
+    "ioredis": "^5.11.1",
+    "pino": "^9.2.0",
+    "pino-http": "^10.2.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/express": "^4.17.0",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.0.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.0",
+    "tsx": "^4.11.0",
+    "typescript": "^5.4.0"
+  }
+}

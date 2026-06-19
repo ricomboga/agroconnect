@@ -11,7 +11,8 @@ export async function recordHarvest(
   try {
     const harvest = await harvestService.recordHarvest(
       req.params['farmId'] as string,
-      req.user.userId,
+      req.user.id,
+      req.user.role,
       req.body,
     );
     res.status(201).json({ data: harvest });
@@ -29,7 +30,8 @@ export async function listHarvests(
     const pagination = parsePaginationParams(req.query);
     const { harvests, total } = await harvestService.listHarvests(
       req.params['farmId'] as string,
-      req.user.userId,
+      req.user.id,
+      req.user.role,
       pagination,
     );
     res.json({

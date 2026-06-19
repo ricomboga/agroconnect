@@ -9,36 +9,38 @@ export async function createFarm(ownerId: string, dto: CreateFarmDto) {
   });
 }
 
-export async function findFarmsByOwner(ownerId: string, pagination: PaginationParams) {
+export async function findFarmsByOwner(ownerId: string | undefined, pagination: PaginationParams) {
   return prisma.farm.findMany({
-    where: { ownerId, status: { not: 'sold' } },
+    where: { ...(ownerId !== undefined ? { ownerId } : {}), status: { not: 'sold' } },
     take: pagination.take,
     skip: pagination.skip,
     orderBy: { createdAt: 'desc' },
   });
 }
 
-export async function countFarmsByOwner(ownerId: string) {
-  return prisma.farm.count({ where: { ownerId, status: { not: 'sold' } } });
+export async function countFarmsByOwner(ownerId: string | undefined) {
+  return prisma.farm.count({
+    where: { ...(ownerId !== undefined ? { ownerId } : {}), status: { not: 'sold' } },
+  });
 }
 
-export async function findFarmById(farmId: string, ownerId: string) {
+export async function findFarmById(farmId: string, ownerId?: string) {
   return prisma.farm.findFirst({
-    where: { id: farmId, ownerId },
+    where: { id: farmId, ...(ownerId !== undefined ? { ownerId } : {}) },
     include: { plots: true },
   });
 }
 
-export async function updateFarm(farmId: string, ownerId: string, dto: UpdateFarmDto) {
+export async function updateFarm(farmId: string, ownerId: string | undefined, dto: UpdateFarmDto) {
   return prisma.farm.updateMany({
-    where: { id: farmId, ownerId },
+    where: { id: farmId, ...(ownerId !== undefined ? { ownerId } : {}) },
     data: dto,
   });
 }
 
-export async function softDeleteFarm(farmId: string, ownerId: string) {
+export async function softDeleteFarm(farmId: string, ownerId: string | undefined) {
   return prisma.farm.updateMany({
-    where: { id: farmId, ownerId },
+    where: { id: farmId, ...(ownerId !== undefined ? { ownerId } : {}) },
     data: { status: 'sold' },
   });
 }

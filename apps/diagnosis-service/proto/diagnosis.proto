@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package agroconnect.diagnosis.v1;
+
+option py_generic_services = false;
+
+service DiagnosisService {
+  // Synchronous: runs inference inline, returns full result.
+  // Called by farm-service only (AD-002).
+  rpc Diagnose(DiagnoseRequest) returns (DiagnoseResponse);
+  // Fetch a previously stored diagnosis by ID.
+  rpc GetDiagnosis(GetDiagnosisRequest) returns (DiagnosisRecord);
+}
+
+message DiagnoseRequest {
+  string farm_id       = 1;
+  string farmer_id     = 2;
+  string subject_type  = 3;   // "plant" | "animal"
+  string subject_name  = 4;   // e.g. "maize" | "dairy cow"
+  repeated string image_urls = 5;  // S3 URLs from media-service (AD-007)
+  string symptoms      = 6;
+  int32  duration_days = 7;
+}
+
+message DiagnoseResponse {
+  string diagnosis_id       = 1;
+  string status             = 2;   // "completed" | "failed"
+  string disease_name       = 3;
+  string disease_code       = 4;
+  double confidence         = 5;
+  string severity           = 6;
+  string description        = 7;
+  repeated PrescriptionProto prescriptions = 8;
+  int64  processing_time_ms = 9;
+  string ai_model_version   = 10;
+}
+
+message GetDiagnosisRequest {
+  string diagnosis_id = 1;
+}
+
+message DiagnosisRecord {
+  string id             = 1;
+  string status         = 2;   // "completed" | "failed" | "pending"
+  string farm_id        = 3;
+  string farmer_id      = 4;
+  string subject_type   = 5;
+  string subject_name   = 6;
+  string disease_name   = 7;
+  string disease_code   = 8;
+  double confidence     = 9;
+  string severity       = 10;
+  string description    = 11;
+  repeated PrescriptionProto prescriptions = 12;
+  int64  processing_time_ms = 13;
+  string ai_model_version   = 14;
+  string created_at         = 15;   // ISO-8601
+}
+
+message PrescriptionProto {
+  int32  step_number  = 1;
+  string action       = 2;
+  string product_name = 3;
+  string product_type = 4;
+  string dosage       = 5;
+  string frequency    = 6;
+}

@@ -11,7 +11,8 @@ export async function createPlot(
   try {
     const plot = await plotService.createPlot(
       req.params['farmId'] as string,
-      req.user.userId,
+      req.user.id,
+      req.user.role,
       req.body,
     );
     res.status(201).json({ data: plot });
@@ -29,7 +30,8 @@ export async function listPlots(
     const pagination = parsePaginationParams(req.query);
     const { plots, total } = await plotService.listPlots(
       req.params['farmId'] as string,
-      req.user.userId,
+      req.user.id,
+      req.user.role,
       pagination,
     );
     res.json({
