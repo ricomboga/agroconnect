@@ -1,4 +1,6 @@
-import { PrismaClient } from '../generated/farm-client/index.js';
+import { PrismaClient, Prisma } from '../generated/farm-client/index.js';
+
+export { Prisma };
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 

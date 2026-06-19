@@ -8,9 +8,15 @@
   },
   "scripts": {
     "build": "tsc",
-    "lint": "eslint \"src/**/*.ts\""
+    "lint": "eslint \"src/**/*.ts\"",
+    "test": "jest --passWithNoTests"
   },
   "devDependencies": {
+    "@types/express": "^4.17.0",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.0.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.0",
     "typescript": "^5.4.0"
   },
   "dependencies": {

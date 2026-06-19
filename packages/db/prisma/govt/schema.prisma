@@ -1,0 +1,135 @@
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../../generated/govt-client"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model FarmRegistration {
+  id              String             @id @default(uuid())
+  farmerId        String
+  farmId          String
+  farmName        String
+  county          String
+  subCounty       String?
+  areaAcres       Decimal            @db.Decimal(8, 2)
+  landTitle       String?
+  status          RegistrationStatus @default(pending)
+  registrationRef String?
+  officerId       String?
+  notes           String?
+  submittedAt     DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  documents       GovtDocument[]
+
+  @@index([farmerId])
+  @@index([farmId])
+  @@map("farm_registrations")
+}
+
+model SubsidyProgram {
+  id             String               @id @default(uuid())
+  name           String
+  description    String
+  providerAgency String
+  eligibility    String
+  benefitType    String
+  benefitValue   String
+  countyEligible Json
+  deadline       DateTime?            @db.Date
+  isActive       Boolean              @default(true)
+  createdAt      DateTime             @default(now())
+  applications   SubsidyApplication[]
+
+  @@map("subsidy_programs")
+}
+
+model SubsidyApplication {
+  id          String                   @id @default(uuid())
+  farmerId    String
+  farmId      String
+  programId   String
+  program     SubsidyProgram           @relation(fields: [programId], references: [id])
+  status      SubsidyApplicationStatus @default(submitted)
+  notes       String?
+  submittedAt DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+
+  @@unique([farmerId, programId])
+  @@index([farmerId])
+  @@index([programId])
+  @@map("subsidy_applications")
+}
+
+model LicenseApplication {
+  id            String        @id @default(uuid())
+  farmerId      String
+  farmId        String
+  licenseType   LicenseType
+  description   String?
+  status        LicenseStatus @default(submitted)
+  licenseNumber String?
+  expiresAt     DateTime?     @db.Date
+  submittedAt   DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([farmerId])
+  @@map("license_applications")
+}
+
+model GovtDocument {
+  id             String            @id @default(uuid())
+  userId         String
+  documentType   DocumentType
+  fileName       String
+  mediaUrl       String
+  registrationId String?
+  registration   FarmRegistration? @relation(fields: [registrationId], references: [id])
+  uploadedAt     DateTime          @default(now())
+
+  @@index([userId])
+  @@map("govt_documents")
+}
+
+enum RegistrationStatus {
+  pending
+  submitted
+  under_review
+  approved
+  rejected
+}
+
+enum SubsidyApplicationStatus {
+  submitted
+  under_review
+  approved
+  rejected
+  disbursed
+}
+
+enum LicenseStatus {
+  submitted
+  under_review
+  approved
+  rejected
+  expired
+}
+
+enum LicenseType {
+  pesticide_use
+  agro_dealer
+  export_permit
+  water_abstraction
+}
+
+enum DocumentType {
+  national_id
+  title_deed
+  kra_pin
+  business_permit
+  other
+}

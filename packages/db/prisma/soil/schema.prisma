@@ -1,0 +1,29 @@
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../../generated/soil-client"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("SOIL_DATABASE_URL")
+}
+
+model SoilTest {
+  id               String   @id @default(uuid())
+  farmId           String
+  farmerId         String
+  plotId           String?
+  testedAt         DateTime @db.Date
+  ph               Decimal  @db.Decimal(4, 2)
+  nitrogenPpm      Decimal? @db.Decimal(8, 2)
+  phosphorusPpm    Decimal? @db.Decimal(8, 2)
+  potassiumPpm     Decimal? @db.Decimal(8, 2)
+  organicMatterPct Decimal? @db.Decimal(5, 2)
+  labName          String?
+  notes            String?
+  createdAt        DateTime @default(now())
+
+  @@index([farmId, testedAt])
+  @@map("soil_tests")
+}

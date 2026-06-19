@@ -1,0 +1,102 @@
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../../generated/finance-client"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model CreditScore {
+  id                      String     @id @default(uuid())
+  farmerId                String     @unique
+  score                   Decimal    @db.Decimal(5, 2)
+  band                    CreditBand
+  maxLoanKes              Decimal    @db.Decimal(12, 2)
+  seasonsOfData           Int
+  avgYieldScore           Decimal    @db.Decimal(5, 2)
+  inputManagementScore    Decimal    @db.Decimal(5, 2)
+  activityComplianceScore Decimal    @db.Decimal(5, 2)
+  platformEngagementScore Decimal    @db.Decimal(5, 2)
+  computedAt              DateTime
+
+  @@map("credit_scores")
+}
+
+model LoanApplication {
+  id                   String         @id @default(uuid())
+  farmerId             String
+  farmId               String
+  type                 LoanType
+  amountRequestedKes   Decimal        @db.Decimal(12, 2)
+  purpose              String
+  repaymentMonths      Int
+  partnerBankId        String?
+  creditScore          Decimal?       @db.Decimal(5, 2)
+  creditBand           CreditBand?
+  status               LoanStatus     @default(draft)
+  approvedAmountKes    Decimal?       @db.Decimal(12, 2)
+  interestRatePct      Decimal?       @db.Decimal(5, 2)
+  disbursedAt          DateTime?
+  mpesaDisbursementRef String?
+  rejectionReason      String?
+  submittedAt          DateTime?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  documents            LoanDocument[]
+
+  @@index([farmerId])
+  @@map("loan_applications")
+}
+
+model LoanDocument {
+  id           String          @id @default(uuid())
+  loanId       String
+  loan         LoanApplication @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  name         String
+  documentType LoanDocType
+  storageKey   String
+  mimeType     String          @default("application/octet-stream")
+  sizeBytes    Int             @default(0)
+  uploadedAt   DateTime        @default(now())
+
+  @@index([loanId])
+  @@map("loan_documents")
+}
+
+enum CreditBand {
+  A
+  B
+  C
+  D
+  ineligible
+}
+
+enum LoanType {
+  agricultural_working_capital
+  back_to_school
+  asset_finance
+  emergency
+}
+
+enum LoanStatus {
+  draft
+  submitted
+  under_review
+  approved
+  rejected
+  disbursed
+  repaid
+  defaulted
+}
+
+enum LoanDocType {
+  national_id
+  land_title
+  farm_photo
+  bank_statement
+  payslip
+  other
+}

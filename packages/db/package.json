@@ -3,19 +3,48 @@
   "version": "0.1.0",
   "private": true,
   "exports": {
-    "./farm": "./src/farm.ts"
+    "./farm": "./src/farm.ts",
+    "./auth": "./src/auth.ts",
+    "./finance": "./src/finance.ts",
+    "./market": "./src/market.ts",
+    "./community": "./src/community.ts",
+    "./govt": "./src/govt.ts",
+    "./notification": "./src/notification.ts",
+    "./soil": "./src/soil.ts"
   },
   "scripts": {
     "generate:farm": "prisma generate --schema prisma/farm/schema.prisma",
+    "generate:auth": "prisma generate --schema prisma/auth/schema.prisma",
+    "generate:finance": "prisma generate --schema prisma/finance/schema.prisma",
+    "generate:market": "prisma generate --schema prisma/market/schema.prisma",
+    "generate:community": "prisma generate --schema prisma/community/schema.prisma",
+    "generate:govt": "prisma generate --schema prisma/govt/schema.prisma",
+    "generate:notification": "prisma generate --schema ../../apps/notification-service/prisma/schema.prisma",
+    "generate:soil": "prisma generate --schema prisma/soil/schema.prisma",
     "migrate:farm": "prisma migrate dev --schema prisma/farm/schema.prisma",
-    "generate": "pnpm generate:farm",
+    "migrate:auth": "prisma migrate dev --schema prisma/auth/schema.prisma",
+    "migrate:finance": "prisma migrate dev --schema prisma/finance/schema.prisma",
+    "migrate:market": "prisma migrate dev --schema prisma/market/schema.prisma",
+    "migrate:community": "prisma migrate dev --schema prisma/community/schema.prisma",
+    "migrate:govt": "prisma migrate dev --schema prisma/govt/schema.prisma",
+    "migrate:notification": "prisma migrate dev --schema ../../apps/notification-service/prisma/schema.prisma",
+    "migrate:soil": "prisma migrate dev --schema prisma/soil/schema.prisma",
+    "generate": "pnpm generate:farm && pnpm generate:auth && pnpm generate:finance && pnpm generate:market && pnpm generate:community && pnpm generate:govt && pnpm generate:notification && pnpm generate:soil",
+    "seed": "tsx prisma/seed.ts",
     "build": "tsc"
   },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "dependencies": {
-    "@prisma/client": "^5.14.0"
+    "@prisma/client": "^5.14.0",
+    "bcryptjs": "^2.4.3"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20.19.42",
     "prisma": "^5.14.0",
+    "tsx": "^4.11.0",
     "typescript": "^5.4.0"
   }
 }

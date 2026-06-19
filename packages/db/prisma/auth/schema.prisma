@@ -1,0 +1,68 @@
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../../generated/auth-client"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("AUTH_DATABASE_URL")
+}
+
+model User {
+  id           String     @id @default(uuid())
+  phone        String     @unique
+  email        String?    @unique
+  passwordHash String
+  fullName     String
+  role         UserRole
+  county       String?
+  language     Language   @default(sw)
+  isVerified   Boolean    @default(false)
+  isActive     Boolean    @default(true)
+  kycStatus    KycStatus  @default(pending)
+  lastLoginAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  sessions     Session[]
+
+  @@map("users")
+}
+
+model Session {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceId         String?
+  refreshTokenHash String
+  ipAddress        String
+  userAgent        String?
+  expiresAt        DateTime
+  createdAt        DateTime @default(now())
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+enum UserRole {
+  farmer
+  extension_officer
+  vet_officer
+  supplier
+  buyer
+  govt_officer
+  admin
+  lender
+}
+
+enum Language {
+  sw
+  en
+}
+
+enum KycStatus {
+  pending
+  submitted
+  verified
+  rejected
+}

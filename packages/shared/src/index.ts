@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+export { verifyJwt, type JwtPayload } from './jwt.js';
+export { authenticate, type AuthRequest } from './middleware/authenticate.js';
+export { authorize } from './middleware/authorize.js';
+export type { AuthUser } from './types/auth.js';
+
 export interface PaginationParams {
   take: number;
   skip: number;
