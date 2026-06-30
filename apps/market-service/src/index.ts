@@ -6,6 +6,7 @@ import { productRouter } from './routes/productRoutes.js';
 import { orderRouter } from './routes/orderRoutes.js';
 import { priceRouter } from './routes/priceRoutes.js';
 import { internalStatsRouter } from './routes/internalStatsRoutes.js';
+import { internalProductSearchRouter } from './routes/internalProductSearchRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { startPaymentConfirmedConsumer } from './events/consumers/paymentConfirmedConsumer.js';
 
@@ -22,6 +23,7 @@ app.use('/api/v1/market/products', productRouter);
 app.use('/api/v1/market/orders', orderRouter);
 app.use('/api/v1/market/prices', priceRouter);
 app.use('/internal/admin', internalStatsRouter);
+app.use('/internal/products', internalProductSearchRouter);
 
 app.use(errorHandler);
 

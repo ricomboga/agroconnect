@@ -1,5 +1,6 @@
+import http from 'node:http';
+import { URL } from 'node:url';
 import express from 'express';
-import proxy from 'express-http-proxy';
 import pino from 'pino';
 
 const log = pino({ transport: { target: 'pino-pretty' } });
@@ -70,7 +71,7 @@ app.use((_req, res, next) => {
 });
 
 // Route /api/v1/:resource/* → correct upstream
-app.use('/api/v1/:resource', (req, res, next) => {
+app.use('/api/v1/:resource', (req, res) => {
   const resource = req.params['resource'];
   const upstream = UPSTREAMS[resource];
 
@@ -79,11 +80,30 @@ app.use('/api/v1/:resource', (req, res, next) => {
     return;
   }
 
-  log.info({ resource, upstream, path: req.path }, 'proxy');
+  log.info({ resource, upstream, path: req.originalUrl }, 'proxy');
 
-  return proxy(upstream, {
-    proxyReqPathResolver: (req) => req.originalUrl,
-  })(req, res, next);
+  const target = new URL(req.originalUrl, upstream);
+  const options: http.RequestOptions = {
+    hostname: target.hostname,
+    port: target.port || (target.protocol === 'https:' ? 443 : 80),
+    path: target.pathname + target.search,
+    method: req.method,
+    headers: { ...req.headers, host: target.host },
+  };
+
+  const proxyReq = http.request(options, (proxyRes) => {
+    res.writeHead(proxyRes.statusCode ?? 502, proxyRes.headers);
+    proxyRes.pipe(res, { end: true });
+  });
+
+  proxyReq.on('error', (err) => {
+    log.error({ err, resource, upstream }, 'proxy error');
+    if (!res.headersSent) {
+      res.status(502).json({ error: { code: 'GATEWAY_ERROR', message: err.message } });
+    }
+  });
+
+  req.pipe(proxyReq, { end: true });
 });
 
 app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'api-gateway' }));

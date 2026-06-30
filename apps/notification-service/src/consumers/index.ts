@@ -16,12 +16,14 @@ import { weatherAlertIssuedHandler } from '../handlers/weatherAlertIssuedHandler
 import { communityPostCreatedHandler } from '../handlers/communityPostCreatedHandler.js';
 import { userRegisteredHandler } from '../handlers/userRegisteredHandler.js';
 import { notificationSendHandler } from '../handlers/notificationSendHandler.js';
+import { farmWorkerAssignedHandler } from '../handlers/farmWorkerAssignedHandler.js';
 
 const BROKERS = (process.env['KAFKA_BROKERS'] ?? 'localhost:9092').split(',');
 const GROUP_ID = 'notification-service-consumer';
 
 const TOPICS = [
   'farm.created',
+  'farm.worker.assigned',
   'farm.activity.completed',
   'farm.harvest.recorded',
   'diagnosis.completed',
@@ -43,6 +45,7 @@ type Topic = (typeof TOPICS)[number];
 
 const HANDLER_MAP: Record<Topic, (payload: unknown) => Promise<void>> = {
   'farm.created': farmCreatedHandler,
+  'farm.worker.assigned': farmWorkerAssignedHandler,
   'farm.activity.completed': farmActivityCompletedHandler,
   'farm.harvest.recorded': farmHarvestRecordedHandler,
   'diagnosis.completed': diagnosisCompletedHandler,

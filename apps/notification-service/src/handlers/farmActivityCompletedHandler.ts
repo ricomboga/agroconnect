@@ -13,15 +13,16 @@ export async function farmActivityCompletedHandler(raw: unknown): Promise<void> 
     logger.warn({ errors: result.error.flatten(), context: 'farmActivityCompletedHandler' }, 'invalid payload');
     return;
   }
-  const { activityId, farmId, ownerId, activityType } = result.data;
-  const token = await getToken(ownerId);
+  const { activityId, farmId, ownerId, activityType, assignedToWorkerId } = result.data;
+  const recipientId = assignedToWorkerId ?? ownerId;
+  const token = await getToken(recipientId);
   if (!token) {
-    logger.warn({ ownerId, context: 'farmActivityCompletedHandler' }, 'no FCM token — skipping push');
+    logger.warn({ recipientId, context: 'farmActivityCompletedHandler' }, 'no FCM token — skipping push');
     return;
   }
   const tpl = getPushTemplate('sw', TOPIC, { activityId, farmId, activityType });
   if (!tpl) return;
   const status = await sendPush(token, tpl.title, tpl.body);
-  await logDelivery({ eventType: TOPIC, farmerId: ownerId, channel: 'push', status });
-  logger.info({ ownerId, activityId, status }, 'farmActivityCompletedHandler done');
+  await logDelivery({ eventType: TOPIC, farmerId: recipientId, channel: 'push', status });
+  logger.info({ recipientId, activityId, status }, 'farmActivityCompletedHandler done');
 }

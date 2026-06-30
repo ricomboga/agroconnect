@@ -202,6 +202,7 @@ services:
       KAFKA_BROKERS: "kafka:9092"
       REDIS_URL: "redis://:redis_dev_password@redis:6379"
       MEDIA_SERVICE_URL: "http://media-service:3009"
+      DIAGNOSIS_SERVICE_URL: "http://diagnosis-service:8000"
     command: >
       sh -c "cd /workspace && pnpm --filter @agroconnect/db exec prisma migrate deploy --schema prisma/farm/schema.prisma && cd apps/farm-service && exec npx tsx src/index.ts"
     ports:
@@ -259,6 +260,7 @@ services:
       DATABASE_URL: "postgresql://agroconnect:agroconnect_dev@postgres:5432/finance_db"
       KAFKA_BROKERS: "kafka:9092"
       REDIS_URL: "redis://:redis_dev_password@redis:6379"
+      FARM_SERVICE_URL: "http://farm-service:3001"
     command: >
       sh -c "cd /workspace && pnpm --filter @agroconnect/db exec prisma migrate deploy --schema prisma/finance/schema.prisma && cd apps/finance-service && exec npx tsx src/index.ts"
     ports:
@@ -459,12 +461,10 @@ services:
       timeout: 5s
       retries: 5
 
-  # ── Python services ──────────────────────────────────────────────────────────
-
   diagnosis-service:
     build:
-      context: ../apps/diagnosis-service
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: apps/diagnosis-service/Dockerfile.dev
     container_name: agroconnect-diagnosis-service
     restart: unless-stopped
     env_file:
@@ -472,16 +472,16 @@ services:
     environment:
       MONGODB_URI: "mongodb://mongodb:27017/diagnosis_db"
       KAFKA_BROKERS: "kafka:9092"
+      NODE_ENV: "production"
     ports:
       - "8000:8000"
-      - "50051:50051"
     depends_on:
       mongodb:
         condition: service_healthy
       kafka:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import socket; s=socket.socket(); s.settimeout(3); s.connect(('localhost',8000)); s.close()\" 2>/dev/null && exit 0 || exit 1"]
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:8000/health').then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))\""]
       interval: 15s
       timeout: 5s
       retries: 8

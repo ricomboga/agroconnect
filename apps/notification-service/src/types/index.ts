@@ -15,6 +15,7 @@ export const FarmActivityCompletedPayload = z.object({
   farmId: z.string(),
   ownerId: z.string(),
   activityType: z.string(),
+  assignedToWorkerId: z.string().nullable().optional(),
   occurredAt: z.string(),
 });
 export type FarmActivityCompletedPayload = z.infer<typeof FarmActivityCompletedPayload>;
@@ -151,6 +152,17 @@ export const UserRegisteredPayload = z.object({
   occurredAt: z.string(),
 });
 export type UserRegisteredPayload = z.infer<typeof UserRegisteredPayload>;
+
+// farm.worker.assigned
+export const FarmWorkerAssignedPayload = z.object({
+  farmId: z.string(),
+  farmName: z.string(),
+  workerId: z.string(),
+  workerRole: z.string(),
+  ownerId: z.string(),
+  addedAt: z.string(),
+});
+export type FarmWorkerAssignedPayload = z.infer<typeof FarmWorkerAssignedPayload>;
 
 // notification.send (generic pass-through)
 export const NotificationSendPayload = z.object({

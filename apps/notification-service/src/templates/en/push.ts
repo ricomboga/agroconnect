@@ -63,6 +63,10 @@ export const enPushTemplates: Record<string, (data: TemplateData) => PushTemplat
     title: `Welcome to AgroConnect, ${d['fullName'] ?? ''}!`,
     body: 'Your account is ready. Start managing your farm today.',
   }),
+  'farm.worker.assigned': (d) => ({
+    title: `You've been added to ${d['farmName'] ?? 'a farm'}!`,
+    body: `Role: ${d['workerRole'] ?? 'worker'}. Open AgroConnect to see your tasks.`,
+  }),
   'notification.send': (d) => ({
     title: d['title'] ?? 'Message',
     body: d['body'] ?? '',

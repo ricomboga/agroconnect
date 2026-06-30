@@ -66,6 +66,10 @@ export const swPushTemplates: Record<string, (data: TemplateData) => PushTemplat
     title: `Karibu AgroConnect, ${d['fullName'] ?? ''}!`,
     body: 'Akaunti yako imeundwa. Anza kusimamia shamba lako leo.',
   }),
+  'farm.worker.assigned': (d) => ({
+    title: `Umeongezwa kwenye ${d['farmName'] ?? 'shamba'}!`,
+    body: `Jukumu lako: ${d['workerRole'] ?? 'mfanyakazi'}. Fungua AgroConnect kuona kazi zako.`,
+  }),
   'notification.send': (d) => ({
     title: d['title'] ?? 'Ujumbe',
     body: d['body'] ?? '',
