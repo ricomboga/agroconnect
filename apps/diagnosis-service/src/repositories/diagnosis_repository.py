@@ -90,6 +90,12 @@ class DiagnosisRepository:
             },
         )
 
+    async def update_processing(self, diagnosis_id: str) -> None:
+        await self._col.update_one(
+            {"_id": _object_id(diagnosis_id)},
+            {"$set": {"status": "processing", "updated_at": datetime.now(timezone.utc)}},
+        )
+
     async def update_failed(self, diagnosis_id: str) -> None:
         await self._col.update_one(
             {"_id": _object_id(diagnosis_id)},
@@ -117,6 +123,9 @@ class DiagnosisRepository:
             .limit(limit)
         )
         return [_to_model(doc) async for doc in cursor]
+
+    async def count_by_farm(self, farm_id: str) -> int:
+        return await self._col.count_documents({"farm_id": farm_id})
 
     async def update_feedback(
         self,

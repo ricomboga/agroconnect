@@ -1,25 +1,36 @@
-FROM python:3.11-slim
+FROM node:20-alpine AS builder
+WORKDIR /workspace
+RUN corepack enable && corepack prepare pnpm@9.4.0 --activate
 
-WORKDIR /app
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY packages/kafka/package.json   ./packages/kafka/
+COPY packages/shared/package.json  ./packages/shared/
+COPY apps/diagnosis-service/package.json ./apps/diagnosis-service/
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
+RUN pnpm install --filter @agroconnect/diagnosis-service... --no-frozen-lockfile
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY tsconfig.base.json ./
+COPY packages/ ./packages/
+COPY apps/diagnosis-service/ ./apps/diagnosis-service/
 
-COPY . .
+WORKDIR /workspace/apps/diagnosis-service
+RUN pnpm run build
 
-# Generate gRPC stubs at build time so the image is self-contained.
-# Output lands in src/ — PYTHONPATH below makes them importable as top-level modules.
-RUN python -m grpc_tools.protoc \
-    -I proto \
-    --python_out=src \
-    --grpc_python_out=src \
-    proto/diagnosis.proto
+FROM node:20-alpine AS runner
+WORKDIR /workspace
+RUN corepack enable && corepack prepare pnpm@9.4.0 --activate
 
-ENV PYTHONPATH=/app/src
-EXPOSE 8000 50051
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY packages/kafka/package.json   ./packages/kafka/
+COPY packages/shared/package.json  ./packages/shared/
+COPY apps/diagnosis-service/package.json ./apps/diagnosis-service/
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+RUN pnpm install --filter @agroconnect/diagnosis-service... --no-frozen-lockfile --prod
+
+COPY --from=builder /workspace/apps/diagnosis-service/dist ./apps/diagnosis-service/dist
+COPY --from=builder /workspace/packages/ ./packages/
+
+ENV NODE_ENV=production
+WORKDIR /workspace/apps/diagnosis-service
+EXPOSE 8000
+CMD ["node", "dist/index.js"]

@@ -58,6 +58,7 @@ class DiagnosisConsumer:
 
     async def _handle(self, event: DiagnosisSubmittedEvent) -> None:
         log.info("inference started", diagnosis_id=event.diagnosis_id)
+        await self._repo.update_processing(event.diagnosis_id)
         engine = get_engine()
         start_ns = time.monotonic_ns()
         try:
@@ -68,7 +69,12 @@ class DiagnosisConsumer:
 
             await self._repo.update_completed(event.diagnosis_id, result, elapsed_ms)
             await self._producer.publish_completed(
-                event.diagnosis_id, event.farm_id, event.farmer_id, result
+                diagnosis_id=event.diagnosis_id,
+                farm_id=event.farm_id,
+                farmer_id=event.farmer_id,
+                subject_type=event.subject_type,
+                subject_name=event.subject_name,
+                result=result,
             )
             log.info(
                 "inference complete",

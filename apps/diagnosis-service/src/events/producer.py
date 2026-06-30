@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 
 import structlog
 from aiokafka import AIOKafkaProducer
@@ -19,7 +20,7 @@ class DiagnosisProducer:
     async def start(self) -> None:
         self._producer = AIOKafkaProducer(
             bootstrap_servers=settings.KAFKA_BROKERS,
-            value_serializer=lambda v: json.dumps(v).encode(),
+            value_serializer=lambda v: json.dumps(v, default=str).encode(),
         )
         await self._producer.start()
         log.info("kafka producer started")
@@ -42,6 +43,8 @@ class DiagnosisProducer:
         diagnosis_id: str,
         farm_id: str,
         farmer_id: str,
+        subject_type: str,
+        subject_name: str,
         result: InferenceResult,
     ) -> None:
         assert self._producer is not None, "producer not started"
@@ -49,11 +52,14 @@ class DiagnosisProducer:
             diagnosis_id=diagnosis_id,
             farm_id=farm_id,
             farmer_id=farmer_id,
+            subject_type=subject_type,
+            subject_name=subject_name,
             disease_code=result.disease["code"],
             disease_name=result.disease["name"],
             confidence=result.confidence,
             severity=result.severity,
             status="completed",
+            occurred_at=datetime.now(timezone.utc),
         )
         await self._producer.send_and_wait(
             "diagnosis.completed",

@@ -40,7 +40,7 @@ import diagnosis_pb2_grpc  # type: ignore[import]
 
 from src.grpc.server import DiagnosisServicer
 from src.repositories.diagnosis_repository import DiagnosisRepository
-from src.rest.router import router, set_repository
+from src.rest.router import router, set_repository, set_producer
 
 structlog.configure(
     wrapper_class=structlog.make_filtering_bound_logger(
@@ -65,6 +65,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     consumer = DiagnosisConsumer(repo, producer)
 
     set_repository(repo)
+    set_producer(producer)
 
     await producer.start()
     await consumer.start()
