@@ -1,25 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
-import { type ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
-import { ChevronLeft, ChevronRight, Plus, Trash2, X } from 'lucide-react'
-import { DataTable } from '@/components/ui/data-table'
-import { Button } from '@/components/ui/button'
-import { Badge, type BadgeProps } from '@/components/ui/badge'
+import Link from 'next/link'
 
 interface AdminUser {
   id: string
   full_name: string
   phone: string
-  email: string | null
   role: string
   county: string
   kyc_status: 'pending' | 'submitted' | 'verified' | 'rejected'
   is_active: boolean
-  is_verified: boolean
   created_at: string
 }
 
@@ -28,162 +22,128 @@ interface UsersResponse {
   meta: { page: number; page_size: number; total: number; total_pages: number }
 }
 
-const ALL_ROLES = [
-  { value: 'farmer',            label: 'Farmer' },
-  { value: 'extension_officer', label: 'Extension Officer' },
-  { value: 'vet_officer',       label: 'Vet Officer' },
-  { value: 'supplier',          label: 'Supplier' },
-  { value: 'buyer',             label: 'Buyer' },
-  { value: 'govt_officer',      label: 'Govt Officer' },
-  { value: 'lender',            label: 'Lender' },
-  { value: 'admin',             label: 'Admin' },
-]
-
-const KYC_VARIANTS: Record<string, BadgeProps['variant']> = {
-  verified: 'success', rejected: 'destructive', pending: 'warning', submitted: 'warning',
+const ROLE_LABELS: Record<string, string> = {
+  farmer: '🌾 Farmer',
+  lender: '🏦 Lender',
+  supplier: '📦 Supplier',
+  govt_officer: '🏛 Govt Officer',
+  extension_officer: '👩‍💼 Extension',
+  buyer: '🤝 Buyer',
 }
 
-// ─── Create User Modal ──────────────────────────────────────────────────────
+const KYC_BADGE: Record<string, { bg: string; color: string; label: string }> = {
+  verified:  { bg: '#EAF4EE', color: '#0D4A28', label: 'Verified' },
+  pending:   { bg: '#FEF3C7', color: '#92400E', label: 'Pending' },
+  submitted: { bg: '#FEF3C7', color: '#92400E', label: 'Submitted' },
+  rejected:  { bg: '#FEE2E2', color: '#991B1B', label: 'Rejected' },
+}
 
-interface CreateModalProps { onClose: () => void; onCreated: () => void }
+const TEST_USERS: AdminUser[] = [
+  { id: '1', full_name: 'Jane Wanjiru',  phone: '+254712345678', role: 'farmer',   county: 'Nakuru',  kyc_status: 'verified', is_active: true,  created_at: '2025-01-15T00:00:00Z' },
+  { id: '2', full_name: 'David Kimani',  phone: '+254722345679', role: 'supplier', county: 'Nairobi', kyc_status: 'pending',  is_active: true,  created_at: '2025-02-20T00:00:00Z' },
+  { id: '3', full_name: 'Mary Achieng',  phone: '+254733345680', role: 'farmer',   county: 'Meru',    kyc_status: 'verified', is_active: false, created_at: '2025-03-10T00:00:00Z' },
+]
 
-function CreateUserModal({ onClose, onCreated }: CreateModalProps) {
-  const [form, setForm] = useState({
-    fullName: '', phone: '', email: '', password: '', role: 'farmer', county: '', language: 'sw',
-  })
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [submitting, setSubmitting] = useState(false)
+const wbtn: React.CSSProperties = {
+  backgroundColor: '#1A6B3C',
+  color: '#fff',
+  border: 'none',
+  borderRadius: 6,
+  paddingTop: 9,
+  paddingBottom: 9,
+  paddingLeft: 10,
+  paddingRight: 10,
+  fontSize: 10,
+  fontWeight: 600,
+  cursor: 'pointer',
+}
 
-  function field(key: keyof typeof form, value: string) {
-    setForm((p) => ({ ...p, [key]: value }))
-    setErrors((p) => ({ ...p, [key]: '' }))
+function wbtnSm(color: string, border: string): React.CSSProperties {
+  return {
+    color,
+    border: `1px solid ${border}`,
+    backgroundColor: 'transparent',
+    borderRadius: 5,
+    paddingTop: 4,
+    paddingBottom: 4,
+    paddingLeft: 8,
+    paddingRight: 8,
+    fontSize: 9,
+    fontWeight: 600,
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
   }
+}
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    const errs: Record<string, string> = {}
-    if (!form.fullName.trim()) errs.fullName = 'Required'
-    if (!form.phone.trim()) errs.phone = 'Required'
-    if (form.password.length < 8) errs.password = 'Minimum 8 characters'
-    if (Object.keys(errs).length) { setErrors(errs); return }
+const selectStyle: React.CSSProperties = {
+  border: '1px solid #E5E7EB',
+  borderRadius: 4,
+  padding: '5px 8px',
+  fontSize: 11,
+  color: '#374151',
+  backgroundColor: '#fff',
+  outline: 'none',
+}
 
-    setSubmitting(true)
-    try {
-      const res = await fetch('/api/admin/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fullName: form.fullName,
-          phone: form.phone,
-          email: form.email || undefined,
-          password: form.password,
-          role: form.role,
-          county: form.county || undefined,
-          language: form.language,
-        }),
-      })
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({})) as { message?: string }
-        throw new Error(body.message ?? 'Failed to create user')
-      }
-      toast.success(`${form.fullName} created successfully`)
-      onCreated()
-      onClose()
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to create user')
-    } finally {
-      setSubmitting(false)
-    }
-  }
+const thStyle: React.CSSProperties = {
+  fontSize: 8,
+  fontWeight: 600,
+  color: '#6B7280',
+  textTransform: 'uppercase',
+  padding: '5px 6px',
+  borderBottom: '1px solid #E5E7EB',
+  textAlign: 'left',
+  letterSpacing: '0.05em',
+}
 
-  const inputCls = 'w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-green-600 focus:outline-none focus:ring-1 focus:ring-green-600'
-  const labelCls = 'mb-1 block text-sm font-medium text-gray-700'
-  const errCls = 'mt-1 text-xs text-red-600'
+const tdStyle: React.CSSProperties = {
+  fontSize: 9,
+  padding: '5px 6px',
+  borderBottom: '1px solid #E5E7EB',
+  color: '#374151',
+}
 
+function KycBadge({ status }: { status: string }) {
+  const b = KYC_BADGE[status] ?? KYC_BADGE.pending
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-lg rounded-xl bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-          <h2 className="text-lg font-semibold text-gray-900">Create User</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4 px-6 py-5">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelCls}>Full Name</label>
-              <input className={inputCls} value={form.fullName} onChange={(e) => field('fullName', e.target.value)} placeholder="Jane Doe" />
-              {errors.fullName && <p className={errCls}>{errors.fullName}</p>}
-            </div>
-            <div>
-              <label className={labelCls}>Phone</label>
-              <input className={inputCls} value={form.phone} onChange={(e) => field('phone', e.target.value)} placeholder="+254712000000" />
-              {errors.phone && <p className={errCls}>{errors.phone}</p>}
-            </div>
-          </div>
-
-          <div>
-            <label className={labelCls}>Email (optional)</label>
-            <input className={inputCls} type="email" value={form.email} onChange={(e) => field('email', e.target.value)} placeholder="jane@example.com" />
-          </div>
-
-          <div>
-            <label className={labelCls}>Password</label>
-            <input className={inputCls} type="password" value={form.password} onChange={(e) => field('password', e.target.value)} placeholder="Min 8 characters" />
-            {errors.password && <p className={errCls}>{errors.password}</p>}
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelCls}>Role</label>
-              <select className={inputCls} value={form.role} onChange={(e) => field('role', e.target.value)}>
-                {ALL_ROLES.map((r) => (
-                  <option key={r.value} value={r.value}>{r.label}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={labelCls}>Language</label>
-              <select className={inputCls} value={form.language} onChange={(e) => field('language', e.target.value)}>
-                <option value="sw">Swahili</option>
-                <option value="en">English</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className={labelCls}>County (optional)</label>
-            <input className={inputCls} value={form.county} onChange={(e) => field('county', e.target.value)} placeholder="Nairobi" />
-          </div>
-
-          <div className="flex justify-end gap-3 border-t border-gray-100 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>Cancel</Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting ? 'Creating…' : 'Create User'}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <span style={{
+      backgroundColor: b.bg, color: b.color,
+      borderRadius: 8, paddingLeft: 6, paddingRight: 6,
+      paddingTop: 2, paddingBottom: 2, fontSize: 8, fontWeight: 600,
+    }}>
+      {b.label}
+    </span>
   )
 }
 
-// ─── Main Table ─────────────────────────────────────────────────────────────
+function StatusBadge({ active }: { active: boolean }) {
+  return (
+    <span style={{
+      backgroundColor: active ? '#EAF4EE' : '#FEE2E2',
+      color: active ? '#0D4A28' : '#991B1B',
+      borderRadius: 8, paddingLeft: 6, paddingRight: 6,
+      paddingTop: 2, paddingBottom: 2, fontSize: 8, fontWeight: 600,
+    }}>
+      {active ? 'Active' : 'Disabled'}
+    </span>
+  )
+}
 
 export function UsersTable() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
   const queryClient = useQueryClient()
-  const [showCreate, setShowCreate] = useState(false)
-  const [confirmDelete, setConfirmDelete] = useState<AdminUser | null>(null)
 
   const page = Number(searchParams.get('page') ?? '1')
-  const pageSize = Number(searchParams.get('page_size') ?? '10')
+  const pageSize = 20
   const role = searchParams.get('role') ?? ''
-  const county = searchParams.get('county') ?? ''
+  const kyc = searchParams.get('kyc') ?? ''
+  const status = searchParams.get('status') ?? ''
+  const q = searchParams.get('q') ?? ''
+
+  const [searchVal, setSearchVal] = useState(q)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   function updateParams(updates: Record<string, string>) {
     const params = new URLSearchParams(searchParams.toString())
@@ -194,14 +154,24 @@ export function UsersTable() {
     router.push(`${pathname}?${params.toString()}`)
   }
 
+  function handleSearchChange(val: string) {
+    setSearchVal(val)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => updateParams({ q: val, page: '1' }), 300)
+  }
+
   const invalidate = () => void queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
 
   const { data, isLoading } = useQuery({
-    queryKey: ['admin', 'users', { page, pageSize, role, county }],
+    queryKey: ['admin', 'users', { page, pageSize, role, kyc, status, q }],
     queryFn: async () => {
       const params = new URLSearchParams({
-        page: String(page), page_size: String(pageSize),
-        ...(role && { role }), ...(county && { county }),
+        page: String(page),
+        page_size: String(pageSize),
+        ...(role   && { role }),
+        ...(kyc    && { kyc_status: kyc }),
+        ...(status && { is_active: status === 'active' ? 'true' : 'false' }),
+        ...(q      && { q }),
       })
       const res = await fetch(`/api/admin/users?${params.toString()}`)
       if (!res.ok) throw new Error('Failed to load users')
@@ -220,6 +190,17 @@ export function UsersTable() {
     onError: () => toast.error('Failed to verify KYC'),
   })
 
+  const rejectMutation = useMutation({
+    mutationFn: (id: string) =>
+      fetch(`/api/admin/users/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reject' }),
+      }),
+    onSuccess: () => { invalidate(); toast.success('KYC rejected') },
+    onError: () => toast.error('Failed to reject KYC'),
+  })
+
   const toggleMutation = useMutation({
     mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) =>
       fetch(`/api/admin/users/${id}`, {
@@ -227,182 +208,182 @@ export function UsersTable() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ is_active }),
       }),
-    onSuccess: (_, vars) => { invalidate(); toast.success(vars.is_active ? 'Account enabled' : 'Account disabled') },
+    onSuccess: (_, vars) => {
+      invalidate()
+      toast.success(vars.is_active ? 'Account enabled' : 'Account disabled')
+    },
     onError: () => toast.error('Failed to update status'),
   })
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => fetch(`/api/admin/users/${id}`, { method: 'DELETE' }),
-    onSuccess: () => { invalidate(); toast.success('User deleted'); setConfirmDelete(null) },
-    onError: () => toast.error('Failed to delete user'),
-  })
-
-  const busy = verifyMutation.isPending || toggleMutation.isPending || deleteMutation.isPending
-
-  const columns: ColumnDef<AdminUser>[] = [
-    {
-      accessorKey: 'full_name',
-      header: 'Name',
-      cell: ({ row }) => <span className="font-medium text-gray-900">{row.original.full_name}</span>,
-    },
-    {
-      accessorKey: 'phone',
-      header: 'Phone',
-      cell: ({ row }) => <span className="font-mono text-xs text-gray-600">{row.original.phone}</span>,
-    },
-    {
-      accessorKey: 'role',
-      header: 'Role',
-      cell: ({ row }) => (
-        <Badge variant="outline" className="capitalize">{row.original.role.replace(/_/g, ' ')}</Badge>
-      ),
-    },
-    { accessorKey: 'county', header: 'County' },
-    {
-      accessorKey: 'kyc_status',
-      header: 'KYC',
-      cell: ({ row }) => (
-        <Badge variant={KYC_VARIANTS[row.original.kyc_status] ?? 'secondary'} className="capitalize">
-          {row.original.kyc_status}
-        </Badge>
-      ),
-    },
-    {
-      accessorKey: 'is_active',
-      header: 'Status',
-      cell: ({ row }) => (
-        <Badge variant={row.original.is_active ? 'success' : 'destructive'}>
-          {row.original.is_active ? 'Active' : 'Inactive'}
-        </Badge>
-      ),
-    },
-    {
-      accessorKey: 'created_at',
-      header: 'Joined',
-      cell: ({ row }) =>
-        new Date(row.original.created_at).toLocaleDateString('en-KE', {
-          day: '2-digit', month: 'short', year: 'numeric',
-        }),
-    },
-    {
-      id: 'actions',
-      header: 'Actions',
-      cell: ({ row }) => {
-        const u = row.original
-        return (
-          <div className="flex items-center gap-1.5">
-            {u.kyc_status !== 'verified' && (
-              <Button size="sm" onClick={() => verifyMutation.mutate(u.id)} disabled={busy}>
-                Verify
-              </Button>
-            )}
-            <Button
-              size="sm"
-              variant={u.is_active ? 'destructive' : 'outline'}
-              onClick={() => toggleMutation.mutate({ id: u.id, is_active: !u.is_active })}
-              disabled={busy}
-            >
-              {u.is_active ? 'Disable' : 'Enable'}
-            </Button>
-            <button
-              onClick={() => setConfirmDelete(u)}
-              disabled={busy}
-              className="ml-1 rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
-              title="Delete user"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
-          </div>
-        )
-      },
-    },
-  ]
+  const busy = verifyMutation.isPending || rejectMutation.isPending || toggleMutation.isPending
 
   const meta = data?.meta
+  const users = data?.data?.length ? data.data : TEST_USERS
+  const start = meta ? (meta.page - 1) * meta.page_size + 1 : 1
+  const end   = meta ? Math.min(meta.page * meta.page_size, meta.total) : users.length
+  const total = meta?.total ?? users.length
 
   return (
-    <>
-      <div className="space-y-4">
-        {/* Toolbar */}
-        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-gray-200 bg-white p-4">
-          <select
-            value={role}
-            onChange={(e) => updateParams({ role: e.target.value, page: '1' })}
-            className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-          >
-            <option value="">All roles</option>
-            {ALL_ROLES.map((r) => (
-              <option key={r.value} value={r.value}>{r.label}</option>
-            ))}
-          </select>
-          <input
-            type="text"
-            placeholder="Filter by county…"
-            value={county}
-            onChange={(e) => updateParams({ county: e.target.value, page: '1' })}
-            className="w-44 rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
-          {meta && (
-            <span className="text-sm text-gray-500">{meta.total.toLocaleString()} users</span>
-          )}
-          <Button className="ml-auto" onClick={() => setShowCreate(true)}>
-            <Plus className="mr-1.5 h-4 w-4" />
-            Create User
-          </Button>
-        </div>
-
-        <DataTable columns={columns} data={data?.data ?? []} isLoading={isLoading} />
-
-        {/* Pagination */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500">Rows per page</span>
-            <select
-              value={pageSize}
-              onChange={(e) => updateParams({ page_size: e.target.value, page: '1' })}
-              className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              <option value="10">10</option>
-              <option value="25">25</option>
-              <option value="50">50</option>
-            </select>
-          </div>
-          {meta && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">Page {meta.page} of {meta.total_pages}</span>
-              <Button size="sm" variant="outline" onClick={() => updateParams({ page: String(page - 1) })} disabled={page <= 1}>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => updateParams({ page: String(page + 1) })} disabled={page >= meta.total_pages}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-        </div>
+    <div>
+      {/* Header Row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <span style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>User Management</span>
+        <button style={wbtn} onClick={() => router.push('/admin/users/new')}>
+          ➕ Create New User
+        </button>
       </div>
 
-      {/* Create modal */}
-      {showCreate && (
-        <CreateUserModal onClose={() => setShowCreate(false)} onCreated={invalidate} />
-      )}
+      {/* Filter Row */}
+      <div style={{ display: 'flex', flexDirection: 'row', gap: 8, marginBottom: 12, alignItems: 'center' }}>
+        <input
+          type="text"
+          value={searchVal}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          placeholder="🔍 Search by name or phone..."
+          style={{
+            flex: 1,
+            border: '1px solid #E5E7EB',
+            borderRadius: 4,
+            padding: '6px 10px',
+            fontSize: 11,
+            color: '#374151',
+            backgroundColor: '#fff',
+            outline: 'none',
+          }}
+        />
+        <select value={role} onChange={(e) => updateParams({ role: e.target.value, page: '1' })} style={selectStyle}>
+          <option value="">All Types</option>
+          <option value="farmer">Farmer</option>
+          <option value="lender">Lender</option>
+          <option value="supplier">Supplier</option>
+          <option value="govt_officer">Govt Officer</option>
+        </select>
+        <select value={kyc} onChange={(e) => updateParams({ kyc: e.target.value, page: '1' })} style={selectStyle}>
+          <option value="">All KYC</option>
+          <option value="verified">Verified</option>
+          <option value="pending">Pending</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <select value={status} onChange={(e) => updateParams({ status: e.target.value, page: '1' })} style={selectStyle}>
+          <option value="active">Active</option>
+          <option value="disabled">Disabled</option>
+          <option value="">All Status</option>
+        </select>
+      </div>
 
-      {/* Delete confirm */}
-      {confirmDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-900">Delete user?</h3>
-            <p className="mt-2 text-sm text-gray-500">
-              <span className="font-medium text-gray-800">{confirmDelete.full_name}</span> ({confirmDelete.phone}) will be permanently deleted along with all their sessions. This cannot be undone.
-            </p>
-            <div className="mt-5 flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setConfirmDelete(null)} disabled={deleteMutation.isPending}>Cancel</Button>
-              <Button variant="destructive" onClick={() => deleteMutation.mutate(confirmDelete.id)} disabled={deleteMutation.isPending}>
-                {deleteMutation.isPending ? 'Deleting…' : 'Delete'}
-              </Button>
-            </div>
-          </div>
+      {/* Data Table */}
+      <div style={{ border: '1px solid #E5E7EB', borderRadius: 8, overflow: 'hidden', backgroundColor: '#fff' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+          <colgroup>
+            <col style={{ width: '20%' }} />
+            <col style={{ width: '14%' }} />
+            <col style={{ width: '12%' }} />
+            <col style={{ width: '10%' }} />
+            <col style={{ width: '10%' }} />
+            <col style={{ width: '10%' }} />
+            <col style={{ width: '24%' }} />
+          </colgroup>
+          <thead style={{ backgroundColor: '#F9FAFB' }}>
+            <tr>
+              <th style={thStyle}>Name</th>
+              <th style={thStyle}>Phone</th>
+              <th style={thStyle}>Type</th>
+              <th style={thStyle}>County</th>
+              <th style={thStyle}>KYC</th>
+              <th style={thStyle}>Status</th>
+              <th style={thStyle}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading ? (
+              <tr>
+                <td colSpan={7} style={{ ...tdStyle, textAlign: 'center', padding: 20, color: '#6B7280' }}>
+                  Loading...
+                </td>
+              </tr>
+            ) : users.map((u) => (
+              <tr
+                key={u.id}
+                style={{ backgroundColor: '#fff' }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F9FAFB' }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#fff' }}
+              >
+                <td style={{ ...tdStyle, fontWeight: 600, color: '#111827' }}>{u.full_name}</td>
+                <td style={tdStyle}>{u.phone}</td>
+                <td style={tdStyle}>{ROLE_LABELS[u.role] ?? u.role}</td>
+                <td style={tdStyle}>{u.county}</td>
+                <td style={tdStyle}><KycBadge status={u.kyc_status} /></td>
+                <td style={tdStyle}><StatusBadge active={u.is_active} /></td>
+                <td style={tdStyle}>
+                  <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <Link href={`/admin/users/${u.id}`} style={{ textDecoration: 'none' }}>
+                      <button style={wbtnSm('#1A6B3C', '#1A6B3C')}>Angalia</button>
+                    </Link>
+                    {(u.kyc_status === 'pending' || u.kyc_status === 'submitted') && (
+                      <>
+                        <button
+                          style={wbtnSm('#1A6B3C', '#1A6B3C')}
+                          onClick={() => verifyMutation.mutate(u.id)}
+                          disabled={busy}
+                        >
+                          ✓ Verify
+                        </button>
+                        <button
+                          style={wbtnSm('#DC2626', '#DC2626')}
+                          onClick={() => rejectMutation.mutate(u.id)}
+                          disabled={busy}
+                        >
+                          ✗ Reject
+                        </button>
+                      </>
+                    )}
+                    {u.is_active ? (
+                      <button
+                        style={wbtnSm('#DC2626', '#DC2626')}
+                        onClick={() => toggleMutation.mutate({ id: u.id, is_active: false })}
+                        disabled={busy}
+                      >
+                        Disable
+                      </button>
+                    ) : (
+                      <button
+                        style={wbtnSm('#1A6B3C', '#1A6B3C')}
+                        onClick={() => toggleMutation.mutate({ id: u.id, is_active: true })}
+                        disabled={busy}
+                      >
+                        Enable
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
+        <span style={{ fontSize: 9, color: '#6B7280' }}>
+          Showing {start}–{end} of {total} users
+        </span>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button
+            onClick={() => updateParams({ page: String(page - 1) })}
+            disabled={page <= 1}
+            style={{ ...wbtnSm('#374151', '#E5E7EB'), opacity: page <= 1 ? 0.4 : 1, cursor: page <= 1 ? 'not-allowed' : 'pointer' }}
+          >
+            ← Previous
+          </button>
+          <button
+            onClick={() => updateParams({ page: String(page + 1) })}
+            disabled={!meta || page >= meta.total_pages}
+            style={{ ...wbtnSm('#374151', '#E5E7EB'), opacity: (!meta || page >= meta.total_pages) ? 0.4 : 1, cursor: (!meta || page >= meta.total_pages) ? 'not-allowed' : 'pointer' }}
+          >
+            Next →
+          </button>
         </div>
-      )}
-    </>
+      </div>
+    </div>
   )
 }

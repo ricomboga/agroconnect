@@ -11,6 +11,8 @@ export const config = {
     '/provider/:path*',
     '/farmer',
     '/farmer/:path*',
+    '/farms',
+    '/farms/:path*',
   ],
 }
 
@@ -19,6 +21,7 @@ const ROLE_RESTRICTIONS: Record<string, UserRole[]> = {
   '/lender': ['lender', 'admin'],
   '/provider': ['extension_officer', 'vet_officer', 'admin'],
   '/farmer': ['farmer', 'admin'],
+  '/farms': ['farmer', 'admin'],
 }
 
 let cachedPublicKey: CryptoKey | null = null

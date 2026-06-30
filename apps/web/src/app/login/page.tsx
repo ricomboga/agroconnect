@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, FormEvent } from 'react'
+import { useState, FormEvent, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Leaf, Loader2 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
@@ -13,7 +13,7 @@ const ROLE_HOME: Record<string, string> = {
   vet_officer: '/provider/profile',
 }
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const login = useAuthStore((s) => s.login)
@@ -110,5 +110,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   )
 }
