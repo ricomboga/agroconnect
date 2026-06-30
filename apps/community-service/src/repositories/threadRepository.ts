@@ -18,11 +18,14 @@ export async function createThread(
   return prisma.thread.create({
     data: {
       authorId,
+      authorName: dto.authorName,
+      authorCounty: dto.authorCounty,
       category: dto.category,
       title: dto.title,
       body: dto.body,
       cropType: dto.cropType,
       county: dto.county,
+      photos: dto.photos ?? [],
       status,
     },
   });
@@ -37,7 +40,7 @@ export async function findThreadById(id: string) {
 export async function findThreads(filter: ThreadFilter, pagination: PaginationParams) {
   return prisma.thread.findMany({
     where: {
-      status: { not: 'deleted' },
+      status: 'active',
       ...(filter.category && { category: filter.category as never }),
       ...(filter.cropType && { cropType: filter.cropType }),
       ...(filter.county && { county: filter.county }),
@@ -51,7 +54,7 @@ export async function findThreads(filter: ThreadFilter, pagination: PaginationPa
 export async function countThreads(filter: ThreadFilter) {
   return prisma.thread.count({
     where: {
-      status: { not: 'deleted' },
+      status: 'active',
       ...(filter.category && { category: filter.category as never }),
       ...(filter.cropType && { cropType: filter.cropType }),
       ...(filter.county && { county: filter.county }),
@@ -77,9 +80,15 @@ export async function softDeleteThread(id: string, authorId: string | undefined)
   });
 }
 
-export async function incrementThreadUpvotes(id: string) {
-  return prisma.thread.update({
-    where: { id },
-    data: { upvotes: { increment: 1 } },
-  });
+export async function upsertThreadVote(threadId: string, userId: string): Promise<boolean> {
+  try {
+    await prisma.threadVote.create({ data: { threadId, userId } });
+    await prisma.thread.update({
+      where: { id: threadId },
+      data: { upvotes: { increment: 1 } },
+    });
+    return true;
+  } catch {
+    return false;
+  }
 }

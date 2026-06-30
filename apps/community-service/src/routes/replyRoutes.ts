@@ -36,3 +36,8 @@ standaloneReplyRouter.post(
   auth,
   (req, res, next) => replyController.reportReply(req as AuthenticatedRequest, res, next),
 );
+standaloneReplyRouter.delete(
+  '/:replyId',
+  auth,
+  (req, res, next) => replyController.deleteReply(req as AuthenticatedRequest, res, next),
+);

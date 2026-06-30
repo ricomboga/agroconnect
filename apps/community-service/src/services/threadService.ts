@@ -6,11 +6,18 @@ import { ListThreadsQuery } from '../schemas/listThreads.query.schema.js';
 import { PaginationParams } from '../types/index.js';
 import { createError } from '../middleware/errorHandler.js';
 import { containsBlockedWord } from '../utils/blocklist.js';
+import { logger } from '../logger.js';
 
 export async function createThread(authorId: string, dto: CreateThreadDto) {
   const status = containsBlockedWord(dto.title + ' ' + dto.body) ? 'flagged' : 'active';
   const thread = await threadRepo.createThread(authorId, dto, status);
-  await publishPostCreated(thread.id, authorId, dto.category);
+
+  try {
+    await publishPostCreated(thread.id, authorId, dto.category);
+  } catch (err) {
+    logger.warn({ err, threadId: thread.id }, 'Kafka publish failed — thread still created');
+  }
+
   return thread;
 }
 
@@ -56,7 +63,10 @@ export async function deleteThread(id: string, authorId: string, role: string) {
     throw createError('Thread not found or not authorized', 403, 'FORBIDDEN', 'error.forbidden');
 }
 
-export async function upvoteThread(id: string) {
+export async function upvoteThread(id: string, userId: string) {
   await getThread(id);
-  return threadRepo.incrementThreadUpvotes(id);
+  const voted = await threadRepo.upsertThreadVote(id, userId);
+  if (!voted)
+    throw createError('Already upvoted', 409, 'ALREADY_UPVOTED', 'error.already_upvoted');
+  return threadRepo.findThreadById(id);
 }

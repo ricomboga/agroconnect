@@ -6,8 +6,9 @@ export const updateThreadSchema = z
     body: z.string().min(10).optional(),
     cropType: z.string().max(100).optional(),
     county: z.string().max(100).optional(),
+    photos: z.array(z.string().url()).max(5).optional(),
   })
-  .refine((data) => Object.keys(data).length > 0, {
+  .refine((data) => Object.values(data).some((v) => v !== undefined), {
     message: 'At least one field must be provided',
   });
 

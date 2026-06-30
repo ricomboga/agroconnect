@@ -8,7 +8,11 @@ import { getIo } from '../socket.js';
 
 const EXPERT_ROLES = ['extension_officer', 'vet_officer'];
 
-export async function createReply(threadId: string, authorId: string, dto: CreateReplyDto) {
+export async function createReply(
+  threadId: string,
+  authorId: string,
+  dto: CreateReplyDto,
+) {
   const thread = await threadRepo.findThreadById(threadId);
   if (!thread)
     throw createError('Thread not found', 404, 'THREAD_NOT_FOUND', 'error.thread.not_found');
@@ -16,7 +20,9 @@ export async function createReply(threadId: string, authorId: string, dto: Creat
   const status = containsBlockedWord(dto.body) ? 'flagged' : 'active';
   const reply = await replyRepo.createReply(threadId, authorId, dto, status);
 
-  getIo()?.to(`thread:${threadId}`).emit('new_reply', reply);
+  if (status === 'active') {
+    getIo()?.to(`thread:${threadId}`).emit('new_reply', reply);
+  }
 
   return reply;
 }
@@ -33,10 +39,13 @@ export async function listReplies(threadId: string, pagination: PaginationParams
   return { replies, total };
 }
 
-export async function upvoteReply(id: string) {
+export async function upvoteReply(id: string, userId: string) {
   const reply = await replyRepo.findReplyById(id);
   if (!reply) throw createError('Reply not found', 404, 'REPLY_NOT_FOUND', 'error.reply.not_found');
-  return replyRepo.incrementReplyUpvotes(id);
+  const voted = await replyRepo.upsertReplyVote(id, userId);
+  if (!voted)
+    throw createError('Already upvoted', 409, 'ALREADY_UPVOTED', 'error.already_upvoted');
+  return replyRepo.findReplyById(id);
 }
 
 export async function verifyReply(id: string, role: string) {
@@ -49,8 +58,18 @@ export async function verifyReply(id: string, role: string) {
   return replyRepo.setExpertVerified(id);
 }
 
-export async function reportReply(id: string) {
+export async function reportReply(id: string, reason: string | undefined) {
   const reply = await replyRepo.findReplyById(id);
   if (!reply) throw createError('Reply not found', 404, 'REPLY_NOT_FOUND', 'error.reply.not_found');
-  return replyRepo.flagReply(id);
+  return replyRepo.flagReply(id, reason);
+}
+
+export async function deleteReply(id: string, authorId: string, role: string) {
+  const reply = await replyRepo.findReplyById(id);
+  if (!reply) throw createError('Reply not found', 404, 'REPLY_NOT_FOUND', 'error.reply.not_found');
+
+  const ownerFilter = role === 'admin' ? undefined : authorId;
+  const result = await replyRepo.softDeleteReply(id, ownerFilter);
+  if (result.count === 0)
+    throw createError('Reply not found or not authorized', 403, 'FORBIDDEN', 'error.forbidden');
 }

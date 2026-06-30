@@ -11,6 +11,7 @@ export async function findFlaggedThreads(pagination: ModerationPagination) {
     select: {
       id: true,
       authorId: true,
+      authorName: true,
       category: true,
       title: true,
       body: true,
@@ -27,6 +28,6 @@ export async function countFlaggedThreads() {
   return prisma.thread.count({ where: { status: 'flagged' } });
 }
 
-export async function setThreadStatus(id: string, status: 'active' | 'deleted') {
+export async function setThreadStatus(id: string, status: 'active' | 'hidden' | 'deleted') {
   return prisma.thread.update({ where: { id }, data: { status } });
 }

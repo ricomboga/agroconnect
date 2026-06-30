@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from '../types/index.js';
 import * as threadService from '../services/threadService.js';
+import { CreateThreadDto } from '../schemas/createThread.schema.js';
 import { parsePaginationParams } from '../utils/pagination.js';
 
 export async function createThread(
@@ -9,7 +10,8 @@ export async function createThread(
   next: NextFunction,
 ): Promise<void> {
   try {
-    const thread = await threadService.createThread(req.user.id, req.body);
+    const dto = req.body as CreateThreadDto;
+    const thread = await threadService.createThread(req.user.id, dto);
     res.status(201).json({ data: thread });
   } catch (err) {
     next(err);
@@ -83,7 +85,7 @@ export async function upvoteThread(
   next: NextFunction,
 ): Promise<void> {
   try {
-    const thread = await threadService.upvoteThread(req.params['id'] as string);
+    const thread = await threadService.upvoteThread(req.params['id'] as string, req.user.id);
     res.json({ data: thread });
   } catch (err) {
     next(err);

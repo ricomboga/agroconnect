@@ -4,6 +4,8 @@ import pinoHttp from 'pino-http';
 import { logger } from './logger.js';
 import { threadRouter } from './routes/threadRoutes.js';
 import { standaloneReplyRouter } from './routes/replyRoutes.js';
+import { expertRouter } from './routes/expertRoutes.js';
+import { articleRouter } from './routes/articleRoutes.js';
 import { internalModerationRouter } from './routes/internalModerationRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { initIo } from './socket.js';
@@ -18,6 +20,8 @@ app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'community-s
 
 app.use('/api/v1/community/threads', threadRouter);
 app.use('/api/v1/community/replies', standaloneReplyRouter);
+app.use('/api/v1/community/experts', expertRouter);
+app.use('/api/v1/community/articles', articleRouter);
 app.use('/internal/admin', internalModerationRouter);
 
 app.use(errorHandler);
