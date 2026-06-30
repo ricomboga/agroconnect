@@ -17,6 +17,9 @@ router.get('/', auth, validateQuery(listActivitiesQuerySchema), (req, res, next)
 router.post('/', auth, validateBody(createActivitySchema), (req, res, next) =>
   activityController.scheduleActivity(req as AuthenticatedRequest, res, next),
 );
+router.get('/:activityId', auth, (req, res, next) =>
+  activityController.getActivity(req as AuthenticatedRequest, res, next),
+);
 router.patch('/:activityId', auth, validateBody(updateActivitySchema), (req, res, next) =>
   activityController.updateActivity(req as AuthenticatedRequest, res, next),
 );

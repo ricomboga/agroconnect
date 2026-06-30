@@ -24,9 +24,11 @@ export async function listFarms(
   try {
     const pagination = parsePaginationParams(req.query);
     const { farms, total } = await farmService.listFarms(req.user.id, req.user.role, pagination);
+    const page = Number(req.query['page'] ?? 1);
+    const pageSize = pagination.take;
     res.json({
       data: farms,
-      meta: { total, page: Number(req.query['page'] ?? 1), page_size: pagination.take },
+      meta: { total, page, pageSize, totalPages: Math.ceil(total / pageSize) },
     });
   } catch (err) {
     next(err);

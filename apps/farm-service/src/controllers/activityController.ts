@@ -4,6 +4,24 @@ import * as activityService from '../services/activityService.js';
 import { parsePaginationParams } from '../utils/pagination.js';
 import type { ListActivitiesQuery } from '../schemas/listActivities.query.schema.js';
 
+export async function getActivity(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const activity = await activityService.getActivity(
+      req.params['farmId'] as string,
+      req.user.id,
+      req.user.role,
+      req.params['activityId'] as string,
+    );
+    res.json({ data: activity });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function scheduleActivity(
   req: AuthenticatedRequest,
   res: Response,
@@ -42,9 +60,11 @@ export async function listActivities(
       filter,
       pagination,
     );
+    const page = Number(query.page ?? 1);
+    const pageSize = pagination.take;
     res.json({
       data: activities,
-      meta: { total, page: query.page, page_size: pagination.take },
+      meta: { total, page, pageSize, totalPages: Math.ceil(total / pageSize) },
     });
   } catch (err) {
     next(err);

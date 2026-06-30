@@ -31,3 +31,21 @@ export async function countPlotsByFarm(farmId: string) {
 export async function findPlotById(plotId: string, farmId: string) {
   return prisma.farmPlot.findFirst({ where: { id: plotId, farmId } });
 }
+
+export async function updatePlotCrop(
+  plotId: string,
+  _farmId: string,
+  crop: string,
+  variety: string | undefined,
+  plantingDate: Date,
+) {
+  return prisma.farmPlot.update({
+    where: { id: plotId },
+    data: {
+      currentCrop: crop,
+      cropVariety: variety ?? null,
+      plantingDate,
+      currentCropPlantedAt: plantingDate,
+    },
+  });
+}

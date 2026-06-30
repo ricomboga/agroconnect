@@ -1,4 +1,5 @@
 import * as farmRepo from '../repositories/farmRepository.js';
+import * as workerRepo from '../repositories/workerRepository.js';
 import * as summaryRepo from '../repositories/summaryRepository.js';
 import { createError } from '../middleware/errorHandler.js';
 import type { SummaryDateRange } from '../repositories/summaryRepository.js';
@@ -16,14 +17,20 @@ export interface FarmSummary {
 
 export async function getFarmSummary(
   farmId: string,
-  ownerId: string,
+  requesterId: string,
   role: string,
   fromDate?: string,
   toDate?: string,
 ): Promise<FarmSummary> {
-  const ownedBy = role === 'admin' ? undefined : ownerId;
-  const farm = await farmRepo.findFarmById(farmId, ownedBy);
-  if (!farm) throw createError('Farm not found', 404, 'FARM_NOT_FOUND', 'error.farm.not_found');
+  if (role === 'farm_worker') {
+    const membership = await workerRepo.findWorker(farmId, requesterId);
+    if (!membership || !membership.isActive)
+      throw createError('Farm not found', 404, 'FARM_NOT_FOUND', 'error.farm.not_found');
+  } else {
+    const ownedBy = role === 'admin' ? undefined : requesterId;
+    const farm = await farmRepo.findFarmById(farmId, ownedBy);
+    if (!farm) throw createError('Farm not found', 404, 'FARM_NOT_FOUND', 'error.farm.not_found');
+  }
 
   const dateRange: SummaryDateRange | undefined =
     fromDate && toDate ? { gte: new Date(fromDate), lte: new Date(toDate) } : undefined;

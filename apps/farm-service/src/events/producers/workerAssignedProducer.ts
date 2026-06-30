@@ -3,32 +3,33 @@ import { logger } from '../../logger.js';
 
 const BROKERS = (process.env['KAFKA_BROKERS'] ?? 'localhost:9092').split(',');
 
-export async function publishActivityCompleted(
-  activityId: string,
+export async function publishWorkerAssigned(
   farmId: string,
+  farmName: string,
+  workerId: string,
+  workerRole: string,
   ownerId: string,
-  activityType: string,
-  assignedToWorkerId: string | null,
+  addedAt: Date,
 ): Promise<void> {
   const producer = await createProducer(BROKERS);
   try {
     await producer.send({
-      topic: 'farm.activity.completed',
+      topic: 'farm.worker.assigned',
       messages: [
         {
           key: farmId,
           value: JSON.stringify({
-            activityId,
             farmId,
+            farmName,
+            workerId,
+            workerRole,
             ownerId,
-            activityType,
-            assignedToWorkerId,
-            occurredAt: new Date().toISOString(),
+            addedAt: addedAt.toISOString(),
           }),
         },
       ],
     });
-    logger.info({ activityId, farmId }, 'Published farm.activity.completed');
+    logger.info({ farmId, workerId }, 'Published farm.worker.assigned');
   } finally {
     await producer.disconnect();
   }

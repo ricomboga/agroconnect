@@ -7,6 +7,7 @@ import { activityRouter } from './routes/activityRoutes.js';
 import { inputRouter } from './routes/inputRoutes.js';
 import { harvestRouter } from './routes/harvestRoutes.js';
 import { internalStatsRouter } from './routes/internalStatsRoutes.js';
+import { diagnoseRouter } from './routes/diagnoseRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { startDiagnosisCompletedConsumer } from './events/consumers/diagnosisCompletedConsumer.js';
 import { startLoanDisbursedConsumer } from './events/consumers/loanDisbursedConsumer.js';
@@ -20,6 +21,7 @@ app.use(express.json());
 
 app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'farm-service' }));
 
+app.use('/api/v1/diagnose', diagnoseRouter);
 app.use('/api/v1/farms', farmRouter);
 app.use('/api/v1/farms/:farmId/plots', plotRouter);
 app.use('/api/v1/farms/:farmId/activities', activityRouter);
