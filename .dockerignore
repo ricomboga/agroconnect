@@ -2,6 +2,12 @@
 node_modules
 
 # Per-app node_modules
+apps/diagnosis-service/node_modules
+apps/diagnosis-service/.venv
+apps/diagnosis-service/.venv-wsl
+apps/diagnosis-service/.pytest_cache
+apps/diagnosis-service/__pycache__
+apps/diagnosis-service/tests
 apps/auth-service/node_modules
 apps/farm-service/node_modules
 apps/api-gateway/node_modules
