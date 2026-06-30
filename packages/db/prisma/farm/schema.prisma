@@ -10,24 +10,29 @@ datasource db {
 }
 
 model Farm {
-  id          String       @id @default(uuid())
+  id          String        @id @default(uuid())
   ownerId     String
   name        String
-  locationLat Decimal      @db.Decimal(10, 7)
-  locationLng Decimal      @db.Decimal(10, 7)
+  locationLat Decimal       @db.Decimal(10, 7)
+  locationLng Decimal       @db.Decimal(10, 7)
   county      String
   subCounty   String?
-  areaAcres   Decimal      @db.Decimal(8, 2)
+  areaAcres   Decimal       @db.Decimal(8, 2)
   soilType    SoilType?
   waterSource WaterSource?
-  status      FarmStatus   @default(active)
+  status      FarmStatus    @default(active)
+  farmType    FarmType      @default(crop)
   plots       FarmPlot[]
+  workers     FarmWorker[]
   activities  Activity[]
+  animalGroups AnimalGroup[]
   inputs      Input[]
   harvests    Harvest[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
 
+  @@index([ownerId, deletedAt])
   @@map("farms")
 }
 
@@ -40,27 +45,61 @@ model FarmPlot {
   currentCrop          String?
   currentCropPlantedAt DateTime? @db.Date
   polygonGeojson       Json?
+  plantingDate         DateTime? @db.Date
+  cropVariety          String?
 
   @@map("farm_plots")
 }
 
+model FarmWorker {
+  id       String         @id @default(uuid())
+  farmId   String
+  farm     Farm           @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  userId   String
+  role     FarmWorkerRole
+  addedAt  DateTime       @default(now())
+  isActive Boolean        @default(true)
+
+  @@unique([farmId, userId])
+  @@index([farmId])
+  @@index([userId])
+  @@map("farm_workers")
+}
+
 model Activity {
-  id            String         @id @default(uuid())
-  farmId        String
-  farm          Farm           @relation(fields: [farmId], references: [id])
-  plotId        String?
-  type          ActivityType
-  title         String
-  description   String?
-  scheduledDate DateTime       @db.Date
-  completedDate DateTime?      @db.Date
-  status        ActivityStatus @default(pending)
-  labourCostKes Decimal        @default(0) @db.Decimal(10, 2)
-  notes         String?
-  createdAt     DateTime       @default(now())
+  id                  String         @id @default(uuid())
+  farmId              String
+  farm                Farm           @relation(fields: [farmId], references: [id])
+  plotId              String?
+  type                ActivityType
+  title               String
+  description         String?
+  scheduledDate       DateTime       @db.Date
+  scheduledTime       String?
+  completedDate       DateTime?      @db.Date
+  status              ActivityStatus @default(pending)
+  labourCostKes       Decimal        @default(0) @db.Decimal(10, 2)
+  notes               String?
+  skipReason          String?
+  assignedToWorkerId  String?
+  createdAt           DateTime       @default(now())
 
   @@index([farmId, scheduledDate])
   @@map("activities")
+}
+
+model AnimalGroup {
+  id         String   @id @default(uuid())
+  farmId     String
+  farm       Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  animalType String
+  count      Int
+  breed      String?
+  notes      String?
+  createdAt  DateTime @default(now())
+
+  @@index([farmId])
+  @@map("animal_groups")
 }
 
 model Input {
@@ -120,7 +159,22 @@ enum WaterSource {
 enum FarmStatus {
   active
   fallow
+  rented_out
   sold
+}
+
+enum FarmType {
+  crop
+  animal
+  both
+}
+
+enum FarmWorkerRole {
+  manager
+  field_worker
+  harvester
+  sprayer
+  driver
 }
 
 enum ActivityType {

@@ -1,19 +1,21 @@
-import { PrismaClient as AuthPrismaClient } from '../generated/auth-client/index.js';
-import { PrismaClient as FarmPrismaClient } from '../generated/farm-client/index.js';
-import { PrismaClient as MarketPrismaClient } from '../generated/market-client/index.js';
-import { PrismaClient as GovtPrismaClient } from '../generated/govt-client/index.js';
+import { PrismaClient as AuthPrismaClient }      from '../generated/auth-client/index.js';
+import { PrismaClient as FarmPrismaClient }      from '../generated/farm-client/index.js';
+import { PrismaClient as MarketPrismaClient }    from '../generated/market-client/index.js';
+import { PrismaClient as GovtPrismaClient }      from '../generated/govt-client/index.js';
+import { PrismaClient as FinancePrismaClient }   from '../generated/finance-client/index.js';
+import { PrismaClient as CommunityPrismaClient } from '../generated/community-client/index.js';
 import bcrypt from 'bcryptjs';
 
-const authDb = new AuthPrismaClient();
-const farmDb = new FarmPrismaClient();
-const marketDb = new MarketPrismaClient({
-  datasources: { db: { url: process.env['MARKET_DATABASE_URL'] } },
-});
-const govtDb = new GovtPrismaClient({
-  datasources: { db: { url: process.env['GOVT_DATABASE_URL'] } },
-});
+// ── DB clients ────────────────────────────────────────────────────────────────
+// Pass explicit URLs so the seed works regardless of what DATABASE_URL points to.
+const authDb      = new AuthPrismaClient({ datasources: { db: { url: process.env['AUTH_DATABASE_URL'] } } });
+const farmDb      = new FarmPrismaClient({ datasources: { db: { url: process.env['DATABASE_URL'] } } });
+const marketDb    = new MarketPrismaClient({ datasources: { db: { url: process.env['MARKET_DATABASE_URL'] } } });
+const govtDb      = new GovtPrismaClient({ datasources: { db: { url: process.env['GOVT_DATABASE_URL'] } } });
+const financeDb   = new FinancePrismaClient({ datasources: { db: { url: process.env['FINANCE_DATABASE_URL'] } } });
+const communityDb = new CommunityPrismaClient({ datasources: { db: { url: process.env['COMMUNITY_DATABASE_URL'] } } });
 
-// ─── helpers ───────────────────────────────────────────────────────────────────
+// ── helpers ───────────────────────────────────────────────────────────────────
 
 function d(iso: string): Date { return new Date(iso); }
 function addDays(base: Date, n: number): Date {
@@ -53,6 +55,8 @@ const USERS: UserSeed[] = [
   { phone: '+254733001019', fullName: 'Vincent Kiprotich', role: 'supplier',          county: 'Nakuru',       language: 'sw', email: 'v.kiprotich@riftvalleyagro.co.ke' },
   // 1 buyer
   { phone: '+254742001020', fullName: 'Beatrice Njoki',    role: 'buyer',             county: 'Nairobi',      language: 'en', email: 'b.njoki@nairobigreens.co.ke' },
+  // dev test user — phone: +254700001000 / password: TestPass123!
+  { phone: '+254700001000', fullName: 'Jane Wanjiru',      role: 'farmer',            county: 'Kiambu',       language: 'sw', email: 'test@agroconnect.ke' },
 ];
 
 // ─── farms ─────────────────────────────────────────────────────────────────────
@@ -124,7 +128,7 @@ interface ActivityDef {
   description: string; labourCostKes: number;
 }
 
-const BASE = new Date('2026-03-10');
+const BASE  = new Date('2026-03-10');
 const TODAY = new Date('2026-06-10');
 
 const ACTIVITIES_BY_CROP: Record<Crop, ActivityDef[]> = {
@@ -200,36 +204,35 @@ interface InputDef {
   quantity: number; unit: string; unitCostKes: number;
 }
 
-// inputs applied in April–May window (days 31–91 from Mar 10 = Apr 10 – Jun 09)
 const INPUTS_BY_CROP: Record<Crop, InputDef[]> = {
   maize: [
-    { daysFromBase: 32, type: 'fertiliser', productName: 'CAN Fertiliser 50kg (Yara)',       quantity: 2,   unit: 'bag',   unitCostKes: 3800 },
+    { daysFromBase: 32, type: 'fertiliser', productName: 'CAN Fertiliser 50kg (Yara)',       quantity: 2,   unit: 'bag',    unitCostKes: 3800 },
     { daysFromBase: 68, type: 'pesticide',  productName: 'Coragen 200SC (FMC) 150ml',        quantity: 2,   unit: 'bottle', unitCostKes: 1450 },
   ],
   tomatoes: [
     { daysFromBase: 38, type: 'pesticide',  productName: 'Ridomil Gold MZ 500g (Syngenta)',  quantity: 3,   unit: 'packet', unitCostKes: 2200 },
-    { daysFromBase: 50, type: 'fertiliser', productName: 'Calcium Nitrate 25kg (Haifa)',     quantity: 1,   unit: 'bag',   unitCostKes: 1850 },
-    { daysFromBase: 70, type: 'pesticide',  productName: 'Dursban 480EC 1L (Dow)',           quantity: 1,   unit: 'litre', unitCostKes: 1200 },
+    { daysFromBase: 50, type: 'fertiliser', productName: 'Calcium Nitrate 25kg (Haifa)',     quantity: 1,   unit: 'bag',    unitCostKes: 1850 },
+    { daysFromBase: 70, type: 'pesticide',  productName: 'Dursban 480EC 1L (Dow)',           quantity: 1,   unit: 'litre',  unitCostKes: 1200 },
   ],
   beans: [
-    { daysFromBase: 35, type: 'fertiliser', productName: 'DAP Fertiliser 50kg (Yara)',       quantity: 1,   unit: 'bag',   unitCostKes: 4500 },
+    { daysFromBase: 35, type: 'fertiliser', productName: 'DAP Fertiliser 50kg (Yara)',       quantity: 1,   unit: 'bag',    unitCostKes: 4500 },
     { daysFromBase: 55, type: 'pesticide',  productName: 'Dithane M-45 500g (Corteva)',      quantity: 2,   unit: 'packet', unitCostKes: 780  },
   ],
   potatoes: [
-    { daysFromBase: 42, type: 'fertiliser', productName: 'NPK 17:17:17 50kg (MEA)',          quantity: 2,   unit: 'bag',   unitCostKes: 5200 },
+    { daysFromBase: 42, type: 'fertiliser', productName: 'NPK 17:17:17 50kg (MEA)',          quantity: 2,   unit: 'bag',    unitCostKes: 5200 },
     { daysFromBase: 60, type: 'pesticide',  productName: 'Ridomil Gold Plus 500g (Syngenta)',quantity: 4,   unit: 'packet', unitCostKes: 2200 },
     { daysFromBase: 72, type: 'pesticide',  productName: 'Dithane M-45 1kg (Corteva)',       quantity: 2,   unit: 'packet', unitCostKes: 1450 },
   ],
   tea: [
-    { daysFromBase: 28, type: 'fertiliser', productName: 'NPK 25:5:5 50kg (KTDA spec)',      quantity: 2,   unit: 'bag',   unitCostKes: 4200 },
+    { daysFromBase: 28, type: 'fertiliser', productName: 'NPK 25:5:5 50kg (KTDA spec)',      quantity: 2,   unit: 'bag',    unitCostKes: 4200 },
     { daysFromBase: 49, type: 'pesticide',  productName: 'Karate Zeon 50CS 250ml (Syngenta)',quantity: 2,   unit: 'bottle', unitCostKes: 1800 },
   ],
   coffee: [
-    { daysFromBase: 25, type: 'fertiliser', productName: 'CAN Fertiliser 50kg (Yara)',       quantity: 2,   unit: 'bag',   unitCostKes: 3800 },
+    { daysFromBase: 25, type: 'fertiliser', productName: 'CAN Fertiliser 50kg (Yara)',       quantity: 2,   unit: 'bag',    unitCostKes: 3800 },
     { daysFromBase: 48, type: 'pesticide',  productName: 'Copper Oxychloride 1kg (Osho)',    quantity: 3,   unit: 'packet', unitCostKes: 1200 },
   ],
   avocado: [
-    { daysFromBase: 22, type: 'fertiliser', productName: 'CAN Fertiliser 50kg (Yara)',       quantity: 1,   unit: 'bag',   unitCostKes: 3800 },
+    { daysFromBase: 22, type: 'fertiliser', productName: 'CAN Fertiliser 50kg (Yara)',       quantity: 1,   unit: 'bag',    unitCostKes: 3800 },
     { daysFromBase: 85, type: 'pesticide',  productName: 'Mancozeb 80WP 500g (Indofil)',     quantity: 2,   unit: 'packet', unitCostKes: 680  },
   ],
 };
@@ -242,12 +245,10 @@ interface HarvestDef {
   storageLocation: string; notes: string;
 }
 
-// 1-2 harvests per farm
 const HARVESTS_BY_CROP: Record<Crop, HarvestDef[]> = {
   maize: [
-    // Long rains 2025 previous-season harvest (offset -150 days before base = Oct 2025)
     { daysFromBase: -150, crop: 'maize', variety: 'DH04 Hybrid', quantityKgPerAcre: 1800,
-      grade: 'A', priceKes: 42, storageLocation: 'On-farm grain store', notes: 'Good yield, OcT 2025 short-rains cycle' },
+      grade: 'A', priceKes: 42, storageLocation: 'On-farm grain store', notes: 'Good yield, Oct 2025 short-rains cycle' },
   ],
   tomatoes: [
     { daysFromBase: 58,  crop: 'tomatoes', variety: 'Kilele F1', quantityKgPerAcre: 5500,
@@ -260,7 +261,6 @@ const HARVESTS_BY_CROP: Record<Crop, HarvestDef[]> = {
       grade: 'A', priceKes: 135, storageLocation: 'Jute bags, dry store', notes: 'Good dry bean quality, 12% moisture' },
   ],
   potatoes: [
-    // Planted Mar 20, harvest due late June — adding a previous-season harvest
     { daysFromBase: -120, crop: 'potatoes', variety: 'Shangi', quantityKgPerAcre: 6500,
       grade: 'A', priceKes: 28, storageLocation: 'Cool store shed', notes: 'Previous season Oct 2025' },
   ],
@@ -287,21 +287,39 @@ const HARVESTS_BY_CROP: Record<Crop, HarvestDef[]> = {
 async function main(): Promise<void> {
   console.log('🌱  AgroConnect seed starting...\n');
 
-  // hash once — used for all seed users (dev password: TestPass123!)
   const passwordHash = await bcrypt.hash('TestPass123!', 10);
 
   // ── clean slate ──────────────────────────────────────────────────────────────
-  console.log('  Clearing existing seed data...');
+  console.log('  Clearing existing data...');
+  // community
+  await communityDb.reply.deleteMany({});
+  await communityDb.thread.deleteMany({});
+  // finance
+  await financeDb.loanDocument.deleteMany({});
+  await financeDb.loanApplication.deleteMany({});
+  await financeDb.creditScore.deleteMany({});
+  // govt
+  await govtDb.licenseApplication.deleteMany({});
+  await govtDb.subsidyApplication.deleteMany({});
+  await govtDb.subsidyProgram.deleteMany({});
+  await govtDb.govtDocument.deleteMany({});
+  await govtDb.farmRegistration.deleteMany({});
+  // market
+  await marketDb.order.deleteMany({});
+  await marketDb.supplierProduct.deleteMany({});
+  await marketDb.produceListing.deleteMany({});
+  await marketDb.commodityPrice.deleteMany({});
+  // farm
   await farmDb.harvest.deleteMany({});
   await farmDb.input.deleteMany({});
   await farmDb.activity.deleteMany({});
   await farmDb.farmPlot.deleteMany({});
   await farmDb.farm.deleteMany({});
-  await authDb.session.deleteMany({ where: { user: { phone: { contains: '001' } } } });
-  await authDb.user.deleteMany({ where: { phone: { contains: '001' } } });
+  // auth — sessions cascade-delete when user is deleted
+  await authDb.user.deleteMany({});
 
   // ── users ─────────────────────────────────────────────────────────────────────
-  console.log('  Creating 20 users...');
+  console.log('  Creating 21 users...');
   const userMap = new Map<string, string>(); // phone → id
 
   for (const u of USERS) {
@@ -322,12 +340,21 @@ async function main(): Promise<void> {
     userMap.set(u.phone, user.id);
   }
 
+  const testUserId  = userMap.get('+254700001000')!;
+  const farmer1Id   = userMap.get('+254712001001')!; // Wanjiku
+  const farmer2Id   = userMap.get('+254722001002')!; // Otieno
+  const farmer3Id   = userMap.get('+254742001004')!; // Kipchoge
+  const officerId   = userMap.get('+254733001015')!; // Dr. Peter
+  const officer2Id  = userMap.get('+254742001016')!; // Agnes
+  const supplierId  = userMap.get('+254722001018')!; // Nganga
+  const supplier2Id = userMap.get('+254733001019')!; // Vincent
+
   // ── farms + activities + inputs + harvests ─────────────────────────────────────
   console.log('  Creating 30 farms with activities, inputs and harvests...');
 
   for (const f of FARMS) {
     const ownerId = userMap.get(f.ownerPhone);
-    if (!ownerId) throw new Error(`Owner not found for phone ${f.ownerPhone}`);
+    if (!ownerId) throw new Error(`Owner not found: ${f.ownerPhone}`);
 
     const farm = await farmDb.farm.create({
       data: {
@@ -344,13 +371,10 @@ async function main(): Promise<void> {
       },
     });
 
-    // activities
-    const actDefs = ACTIVITIES_BY_CROP[f.crop];
-    for (const a of actDefs) {
+    for (const a of ACTIVITIES_BY_CROP[f.crop]) {
       const scheduled = addDays(BASE, a.daysFromBase);
       const isPast = scheduled <= TODAY;
       const isRecentlyPast = isPast && scheduled >= addDays(TODAY, -7);
-      // activities within 7 days of today: 50/50 completed vs pending (use farm lat as tiebreak)
       const status: ActivityStatus =
         !isPast ? 'pending'
         : isRecentlyPast && f.lat > 0 ? 'pending'
@@ -370,13 +394,8 @@ async function main(): Promise<void> {
       });
     }
 
-    // inputs
-    const inpDefs = INPUTS_BY_CROP[f.crop];
-    for (const i of inpDefs) {
-      const appliedDate = addDays(BASE, i.daysFromBase);
-      // only seed inputs that fall within the Apr–May window (days 31–91)
+    for (const i of INPUTS_BY_CROP[f.crop]) {
       if (i.daysFromBase < 31 || i.daysFromBase > 91) continue;
-      const totalCostKes = i.quantity * i.unitCostKes;
       await farmDb.input.create({
         data: {
           farmId:       farm.id,
@@ -385,22 +404,17 @@ async function main(): Promise<void> {
           quantity:     i.quantity,
           unit:         i.unit,
           unitCostKes:  i.unitCostKes,
-          totalCostKes,
-          appliedDate,
+          totalCostKes: i.quantity * i.unitCostKes,
+          appliedDate:  addDays(BASE, i.daysFromBase),
         },
       });
     }
 
-    // harvests
-    const hvDefs = HARVESTS_BY_CROP[f.crop];
-    for (const h of hvDefs) {
+    for (const h of HARVESTS_BY_CROP[f.crop]) {
       const harvestDate = addDays(BASE, h.daysFromBase);
-      // only create harvest if date is in the past
       if (harvestDate > TODAY) continue;
-      const quantityKg = Math.round(h.quantityKgPerAcre * f.acres);
-      const avgPriceKes = h.priceKes;
-      const totalRevenueKes = Math.round(quantityKg * avgPriceKes * 0.85); // 15% kept/unsold
-      const soldQuantityKg  = Math.round(quantityKg * 0.85);
+      const quantityKg       = Math.round(h.quantityKgPerAcre * f.acres);
+      const soldQuantityKg   = Math.round(quantityKg * 0.85);
       await farmDb.harvest.create({
         data: {
           farmId:          farm.id,
@@ -411,76 +425,274 @@ async function main(): Promise<void> {
           harvestDate,
           storageLocation: h.storageLocation,
           soldQuantityKg,
-          avgPriceKes,
-          totalRevenueKes,
+          avgPriceKes:     h.priceKes,
+          totalRevenueKes: Math.round(soldQuantityKg * h.priceKes),
           notes:           h.notes,
         },
       });
     }
   }
 
-  // ── govt subsidy programs ─────────────────────────────────────────────────────
-  console.log('  Seeding 5 subsidy programs...');
-  await govtDb.subsidyApplication.deleteMany({});
-  await govtDb.subsidyProgram.deleteMany({});
-  await govtDb.subsidyProgram.createMany({
+  // ── dev test farm ─────────────────────────────────────────────────────────────
+  console.log('  Creating dev test farm for Jane Wanjiru (+254700001000)...');
+  const testFarm = await farmDb.farm.create({
+    data: {
+      ownerId:     testUserId,
+      name:        'Wanjiru Maize & Poultry Farm',
+      county:      'Kiambu',
+      subCounty:   'Kiambu Town',
+      locationLat: -1.175,
+      locationLng: 36.829,
+      areaAcres:   3.0,
+      soilType:    'loam',
+      waterSource: 'rain',
+      status:      'active',
+    },
+  });
+  await farmDb.farmPlot.createMany({
     data: [
-      {
-        name: 'MSAI Fertiliser Subsidy',
-        description: 'Subsidised certified fertilisers for smallholder farmers through the Ministry of Agriculture Seed and Input programme.',
-        providerAgency: 'Ministry of Agriculture and Livestock Development',
-        eligibility: 'Smallholder farmers with registered farm of ≤5 acres and a valid AFA farmer ID',
-        benefitType: 'subsidy',
-        benefitValue: '50% discount on NPKS and CAN fertilisers (max 2 bags per season)',
-        countyEligible: [],
-        isActive: true,
-      },
-      {
-        name: 'KALRO High-Yielding Seeds',
-        description: 'Access to improved drought-tolerant and disease-resistant seed varieties developed by KALRO research stations.',
-        providerAgency: 'Kenya Agricultural and Livestock Research Organisation',
-        eligibility: 'Registered farmers growing maize, beans, sorghum, or cowpea',
-        benefitType: 'subsidy',
-        benefitValue: 'Certified KALRO seeds at 30% below commercial market price',
-        countyEligible: [],
-        isActive: true,
-      },
-      {
-        name: 'AFC Youth in Agribusiness',
-        description: 'Low-interest agricultural loans for youth-led farming enterprises to boost food production and rural employment.',
-        providerAgency: 'Agricultural Finance Corporation',
-        eligibility: 'Kenyan youth aged 18–35 with a viable agribusiness plan and farm collateral or group guarantee',
-        benefitType: 'loan',
-        benefitValue: 'Loans of KES 50,000–500,000 at 8% p.a., repayable over 3 years',
-        countyEligible: [],
-        isActive: true,
-      },
-      {
-        name: 'NDMA Drought Emergency Relief',
-        description: 'Emergency food and input relief for farmers in arid and semi-arid counties affected by drought.',
-        providerAgency: 'National Drought Management Authority',
-        eligibility: 'Farmers in ASAL counties with documented crop failure or livestock loss due to drought',
-        benefitType: 'grant',
-        benefitValue: 'Emergency seed and food package valued at up to KES 15,000 per household',
-        countyEligible: ['Turkana', 'Marsabit', 'Isiolo', 'Mandera', 'Wajir', 'Garissa', 'Samburu', 'Baringo', 'Laikipia'],
-        isActive: true,
-      },
-      {
-        name: 'KCSAP Climate Smart Agriculture Grants',
-        description: 'Grants to smallholder farmers for adoption of climate-smart practices including conservation agriculture, agroforestry, and irrigation.',
-        providerAgency: 'State Department for Crop Development (KCSAP)',
-        eligibility: 'Smallholder farmers in targeted sub-counties enrolled in an active Common Interest Group (CIG)',
-        benefitType: 'grant',
-        benefitValue: 'Matching grants of KES 20,000–100,000 for approved CSA investments',
-        countyEligible: ['Nakuru', 'Meru', 'Bungoma', 'Kakamega', 'Kisumu', 'Kiambu', "Murang'a", 'Embu'],
-        isActive: true,
-      },
+      { farmId: testFarm.id, name: 'Kiwanja A', areaAcres: 1.5, currentCrop: 'maize' },
+      { farmId: testFarm.id, name: 'Kiwanja B', areaAcres: 1.0, currentCrop: 'beans' },
+      { farmId: testFarm.id, name: 'Banda ya Kuku', areaAcres: 0.5, currentCrop: null },
     ],
   });
 
-  // ── market commodity prices ───────────────────────────────────────────────────
-  console.log('  Seeding commodity prices...');
-  await marketDb.commodityPrice.deleteMany({});
+  const SEED_NOW = new Date('2026-06-23');
+  const testActivities = [
+    { daysOffset: -45, type: 'planting'    as ActivityType, title: 'Kupanda mahindi — DH04',         desc: 'Hybrid DH04, spacing 75×25cm',              costKes: 2500, status: 'completed' as ActivityStatus },
+    { daysOffset: -30, type: 'weeding'     as ActivityType, title: 'Palizi ya kwanza',               desc: 'Manual weeding — maize field',              costKes: 1800, status: 'completed' as ActivityStatus },
+    { daysOffset: -15, type: 'fertilising' as ActivityType, title: 'Mbolea ya CAN — top dressing',   desc: 'Apply CAN 50kg/acre',                       costKes: 1200, status: 'completed' as ActivityStatus },
+    { daysOffset:   5, type: 'pesticide'   as ActivityType, title: 'Dawa ya armyworm',               desc: 'Spray Coragen for fall armyworm control',   costKes: 1400, status: 'pending'   as ActivityStatus },
+    { daysOffset:  18, type: 'weeding'     as ActivityType, title: 'Palizi ya pili',                 desc: 'Second weeding, hill-up soil',              costKes: 1600, status: 'pending'   as ActivityStatus },
+    { daysOffset:  45, type: 'harvesting'  as ActivityType, title: 'Kuvuna mahindi',                 desc: 'Harvest when husks brown, moisture ≤ 14%',  costKes: 4000, status: 'pending'   as ActivityStatus },
+    { daysOffset: -20, type: 'planting'    as ActivityType, title: 'Kupanda maharagwe — Rosecoco',   desc: 'Rosecoco 50kg seed/acre',                   costKes: 1800, status: 'completed' as ActivityStatus },
+    { daysOffset:  30, type: 'harvesting'  as ActivityType, title: 'Kuvuna maharagwe',              desc: 'Harvest dry beans, moisture < 14%',          costKes: 2500, status: 'pending'   as ActivityStatus },
+  ];
+  for (const a of testActivities) {
+    await farmDb.activity.create({
+      data: {
+        farmId:        testFarm.id,
+        type:          a.type,
+        title:         a.title,
+        description:   a.desc,
+        scheduledDate: addDays(SEED_NOW, a.daysOffset),
+        completedDate: a.status === 'completed' ? addDays(SEED_NOW, a.daysOffset + 1) : null,
+        status:        a.status,
+        labourCostKes: a.costKes,
+      },
+    });
+  }
+
+  // Previous harvest for test farm
+  await farmDb.harvest.create({
+    data: {
+      farmId:          testFarm.id,
+      crop:            'maize',
+      variety:         'DH04 Hybrid',
+      quantityKg:      4500,
+      qualityGrade:    'A',
+      harvestDate:     new Date('2025-10-05'),
+      storageLocation: 'On-farm grain store',
+      soldQuantityKg:  3800,
+      avgPriceKes:     42,
+      totalRevenueKes: 159600,
+      notes:           'Short rains 2025 season — good yield',
+    },
+  });
+
+  // ── govt: subsidy programs ────────────────────────────────────────────────────
+  console.log('  Seeding govt data (programs, registrations, applications, licenses)...');
+  const [prog1, prog2, prog3, prog4, prog5] = await Promise.all([
+    govtDb.subsidyProgram.create({ data: {
+      name: 'MSAI Fertiliser Subsidy',
+      description: 'Subsidised certified fertilisers for smallholder farmers through the Ministry of Agriculture Seed and Input programme.',
+      providerAgency: 'Ministry of Agriculture and Livestock Development',
+      eligibility: 'Smallholder farmers with registered farm of ≤5 acres and a valid AFA farmer ID',
+      benefitType: 'subsidy',
+      benefitValue: '50% discount on NPKS and CAN fertilisers (max 2 bags per season)',
+      countyEligible: [],
+      isActive: true,
+    }}),
+    govtDb.subsidyProgram.create({ data: {
+      name: 'KALRO High-Yielding Seeds',
+      description: 'Access to improved drought-tolerant and disease-resistant seed varieties developed by KALRO research stations.',
+      providerAgency: 'Kenya Agricultural and Livestock Research Organisation',
+      eligibility: 'Registered farmers growing maize, beans, sorghum, or cowpea',
+      benefitType: 'subsidy',
+      benefitValue: 'Certified KALRO seeds at 30% below commercial market price',
+      countyEligible: [],
+      isActive: true,
+    }}),
+    govtDb.subsidyProgram.create({ data: {
+      name: 'AFC Youth in Agribusiness',
+      description: 'Low-interest agricultural loans for youth-led farming enterprises to boost food production and rural employment.',
+      providerAgency: 'Agricultural Finance Corporation',
+      eligibility: 'Kenyan youth aged 18–35 with a viable agribusiness plan and farm collateral or group guarantee',
+      benefitType: 'loan',
+      benefitValue: 'Loans of KES 50,000–500,000 at 8% p.a., repayable over 3 years',
+      countyEligible: [],
+      isActive: true,
+    }}),
+    govtDb.subsidyProgram.create({ data: {
+      name: 'NDMA Drought Emergency Relief',
+      description: 'Emergency food and input relief for farmers in arid and semi-arid counties affected by drought.',
+      providerAgency: 'National Drought Management Authority',
+      eligibility: 'Farmers in ASAL counties with documented crop failure or livestock loss due to drought',
+      benefitType: 'grant',
+      benefitValue: 'Emergency seed and food package valued at up to KES 15,000 per household',
+      countyEligible: ['Turkana', 'Marsabit', 'Isiolo', 'Mandera', 'Wajir', 'Garissa', 'Samburu', 'Baringo', 'Laikipia'],
+      isActive: true,
+    }}),
+    govtDb.subsidyProgram.create({ data: {
+      name: 'KCSAP Climate Smart Agriculture Grants',
+      description: 'Grants for adoption of climate-smart practices including conservation agriculture, agroforestry, and irrigation.',
+      providerAgency: 'State Department for Crop Development (KCSAP)',
+      eligibility: 'Smallholder farmers in targeted sub-counties enrolled in an active Common Interest Group (CIG)',
+      benefitType: 'grant',
+      benefitValue: 'Matching grants of KES 20,000–100,000 for approved CSA investments',
+      countyEligible: ['Nakuru', 'Meru', 'Bungoma', 'Kakamega', 'Kisumu', 'Kiambu', "Murang'a", 'Embu'],
+      isActive: true,
+    }}),
+  ]);
+
+  // Farm registration for test user
+  await govtDb.farmRegistration.create({ data: {
+    farmerId:        testUserId,
+    farmId:          testFarm.id,
+    farmName:        'Wanjiru Maize & Poultry Farm',
+    county:          'Kiambu',
+    subCounty:       'Kiambu Town',
+    areaAcres:       3.0,
+    status:          'approved',
+    registrationRef: 'KE/FARM/2024/07841',
+    officerId:       officerId,
+    notes:           'Verified on-site. Farm records up to date.',
+    submittedAt:     new Date('2024-08-15'),
+  }});
+
+  // Subsidy applications for test user
+  await govtDb.subsidyApplication.create({ data: {
+    farmerId:    testUserId,
+    farmId:      testFarm.id,
+    programId:   prog1.id,
+    status:      'approved',
+    notes:       'Approved for 2 bags CAN 50kg at subsidised rate.',
+    submittedAt: new Date('2026-01-10'),
+  }});
+  await govtDb.subsidyApplication.create({ data: {
+    farmerId:    testUserId,
+    farmId:      testFarm.id,
+    programId:   prog2.id,
+    status:      'under_review',
+    notes:       'Application under review by KALRO regional office.',
+    submittedAt: new Date('2026-03-20'),
+  }});
+  await govtDb.subsidyApplication.create({ data: {
+    farmerId:    testUserId,
+    farmId:      testFarm.id,
+    programId:   prog5.id,
+    status:      'submitted',
+    notes:       null,
+    submittedAt: new Date('2026-05-05'),
+  }});
+
+  // License application
+  await govtDb.licenseApplication.create({ data: {
+    farmerId:     testUserId,
+    farmId:       testFarm.id,
+    licenseType:  'pesticide_use',
+    description:  'Certified pesticide applicator for commercial vegetable production',
+    status:       'approved',
+    licenseNumber: 'PCPB/PA/2024/003271',
+    expiresAt:    new Date('2027-08-31'),
+    submittedAt:  new Date('2024-07-10'),
+  }});
+  await govtDb.licenseApplication.create({ data: {
+    farmerId:    testUserId,
+    farmId:      testFarm.id,
+    licenseType: 'agro_dealer',
+    description: 'Agrovet dealer licence for on-farm input sales to neighbours',
+    status:      'submitted',
+    submittedAt: new Date('2026-04-22'),
+  }});
+
+  // ── finance: credit scores + loan applications ─────────────────────────────────
+  console.log('  Seeding finance data (credit scores + loans)...');
+
+  // Credit scores for test user and 5 other farmers
+  const creditSeeds = [
+    { farmerId: testUserId,  score: 72, band: 'B' as const, maxLoan: 120000, yield_: 78, inputs: 70, activities: 68, platform: 80 },
+    { farmerId: farmer1Id,   score: 85, band: 'A' as const, maxLoan: 250000, yield_: 88, inputs: 85, activities: 82, platform: 90 },
+    { farmerId: farmer2Id,   score: 60, band: 'C' as const, maxLoan: 60000,  yield_: 62, inputs: 58, activities: 55, platform: 70 },
+    { farmerId: farmer3Id,   score: 91, band: 'A' as const, maxLoan: 350000, yield_: 93, inputs: 90, activities: 88, platform: 95 },
+    { farmerId: officer2Id,  score: 40, band: 'D' as const, maxLoan: 0,      yield_: 35, inputs: 40, activities: 45, platform: 50 },
+  ];
+
+  for (const cs of creditSeeds) {
+    await financeDb.creditScore.create({ data: {
+      farmerId:                cs.farmerId,
+      score:                   cs.score,
+      band:                    cs.band,
+      maxLoanKes:              cs.maxLoan,
+      seasonsOfData:           cs.band === 'A' ? 6 : cs.band === 'B' ? 4 : 2,
+      avgYieldScore:           cs.yield_,
+      inputManagementScore:    cs.inputs,
+      activityComplianceScore: cs.activities,
+      platformEngagementScore: cs.platform,
+      computedAt:              new Date('2026-06-01'),
+    }});
+  }
+
+  // Loan applications for test user
+  await financeDb.loanApplication.create({ data: {
+    farmerId:          testUserId,
+    farmId:            testFarm.id,
+    type:              'agricultural_working_capital',
+    amountRequestedKes: 80000,
+    purpose:           'Purchase maize seeds, fertiliser and pesticides for the long rains 2026 season',
+    repaymentMonths:   12,
+    partnerBankId:     'partner-eq-001',
+    creditScore:       72,
+    creditBand:        'B',
+    status:            'disbursed',
+    approvedAmountKes: 75000,
+    interestRatePct:   13.0,
+    disbursedAt:       new Date('2026-03-01'),
+    mpesaDisbursementRef: 'QJF8KH3X22',
+    submittedAt:       new Date('2026-02-14'),
+  }});
+  await financeDb.loanApplication.create({ data: {
+    farmerId:          testUserId,
+    farmId:            testFarm.id,
+    type:              'asset_finance',
+    amountRequestedKes: 45000,
+    purpose:           'Drip irrigation kit for the kitchen garden and poultry water system',
+    repaymentMonths:   18,
+    partnerBankId:     'partner-fa-003',
+    creditScore:       72,
+    creditBand:        'B',
+    status:            'under_review',
+    submittedAt:       new Date('2026-05-20'),
+  }});
+  // One rejected loan for history
+  await financeDb.loanApplication.create({ data: {
+    farmerId:          testUserId,
+    farmId:            testFarm.id,
+    type:              'emergency',
+    amountRequestedKes: 200000,
+    purpose:           'Emergency flood relief and farm rehabilitation',
+    repaymentMonths:   24,
+    partnerBankId:     'partner-kcb-002',
+    creditScore:       65,
+    creditBand:        'C',
+    status:            'rejected',
+    rejectionReason:   'Requested amount exceeds Band B limit of KES 120,000. Improve credit score to Band A.',
+    submittedAt:       new Date('2025-11-08'),
+  }});
+
+  // ── market: commodity prices + produce listings + supplier products ────────────
+  console.log('  Seeding market data (prices, listings, supplier products)...');
+
   await marketDb.commodityPrice.createMany({
     data: [
       { crop: 'maize',    priceKes: 40,  unit: 'kg' },
@@ -496,8 +708,283 @@ async function main(): Promise<void> {
     ],
   });
 
+  // Produce listings — farmers selling their harvest
+  await marketDb.produceListing.createMany({
+    data: [
+      {
+        farmerId: testUserId, farmId: testFarm.id,
+        crop: 'maize', variety: 'DH04 Hybrid',
+        quantityKg: 700, askingPriceKes: 44,
+        qualityGrade: 'A', availableFrom: d('2026-06-15'), availableUntil: d('2026-08-15'),
+        locationCounty: 'Kiambu', locationDescription: 'Kiambu Town — can deliver within 30km',
+        status: 'active', views: 18,
+      },
+      {
+        farmerId: farmer1Id, farmId: 'farm-seed-1',
+        crop: 'beans', variety: 'Rosecoco',
+        quantityKg: 280, askingPriceKes: 130,
+        qualityGrade: 'A', availableFrom: d('2026-06-01'), availableUntil: d('2026-07-31'),
+        locationCounty: 'Kiambu', locationDescription: 'Ruiru — farm gate pickup',
+        status: 'active', views: 32,
+      },
+      {
+        farmerId: farmer2Id, farmId: 'farm-seed-2',
+        crop: 'tomatoes', variety: 'Kilele F1',
+        quantityKg: 1200, askingPriceKes: 58,
+        qualityGrade: 'A', availableFrom: d('2026-05-20'), availableUntil: d('2026-06-30'),
+        locationCounty: 'Kisumu', locationDescription: 'Kisumu East — daily deliveries to city market',
+        status: 'active', views: 75,
+      },
+      {
+        farmerId: farmer3Id, farmId: 'farm-seed-3',
+        crop: 'potatoes', variety: 'Shangi',
+        quantityKg: 5000, askingPriceKes: 32,
+        qualityGrade: 'B', availableFrom: d('2026-06-10'), availableUntil: d('2026-09-30'),
+        locationCounty: 'Uasin Gishu', locationDescription: 'Ainabkoi — bulk discount available',
+        status: 'active', views: 54,
+      },
+      {
+        farmerId: farmer1Id, farmId: 'farm-seed-4',
+        crop: 'tea', variety: 'TRFK 303/577',
+        quantityKg: 900, askingPriceKes: 22,
+        qualityGrade: 'A', availableFrom: d('2026-04-20'), availableUntil: d('2026-07-20'),
+        locationCounty: 'Kiambu', locationDescription: 'Limuru — KTDA-certified green leaf',
+        status: 'active', views: 11,
+      },
+      {
+        farmerId: farmer2Id, farmId: 'farm-seed-5',
+        crop: 'avocado', variety: 'Hass',
+        quantityKg: 3200, askingPriceKes: 30,
+        qualityGrade: 'A', availableFrom: d('2026-06-25'), availableUntil: d('2026-08-31'),
+        locationCounty: 'Kisumu', locationDescription: 'Kisumu West — export quality, packhouse ready',
+        status: 'active', views: 41,
+      },
+      {
+        farmerId: testUserId, farmId: testFarm.id,
+        crop: 'maize', variety: 'DH04 Hybrid',
+        quantityKg: 2000, askingPriceKes: 40,
+        qualityGrade: 'B', availableFrom: d('2025-10-15'), availableUntil: d('2026-01-15'),
+        locationCounty: 'Kiambu', locationDescription: 'Previous season — sold out',
+        status: 'sold', views: 62,
+      },
+    ],
+  });
+
+  // Supplier products — from supplier users
+  await marketDb.supplierProduct.createMany({
+    data: [
+      // Nganga Kamau (Nairobi agro-inputs)
+      {
+        supplierId: supplierId, name: 'CAN Fertiliser 50kg (Yara)',
+        category: 'fertiliser', brand: 'Yara',
+        description: 'Calcium Ammonium Nitrate — 26% N. Best for top-dressing maize, tea, vegetables after establishment.',
+        unit: 'bag', pricePerUnitKes: 3850, stockQuantity: 200,
+        sku: 'YAR-CAN-50', countyAvailability: ['Nairobi', 'Kiambu', "Murang'a", 'Machakos'],
+        isActive: true,
+      },
+      {
+        supplierId: supplierId, name: 'DAP Fertiliser 50kg (Yara)',
+        category: 'fertiliser', brand: 'Yara',
+        description: 'Di-Ammonium Phosphate — 18% N, 46% P₂O₅. Best applied at planting for strong root development.',
+        unit: 'bag', pricePerUnitKes: 4650, stockQuantity: 150,
+        sku: 'YAR-DAP-50', countyAvailability: ['Nairobi', 'Kiambu', "Murang'a", 'Machakos'],
+        isActive: true,
+      },
+      {
+        supplierId: supplierId, name: 'Maize Seed DH04 — 2kg (Dryland Seed)',
+        category: 'seed', brand: 'Dryland Seed',
+        description: 'DH04 hybrid maize. High-yielding, drought-tolerant. 2kg treats 1 acre. Germination >95%.',
+        unit: 'packet', pricePerUnitKes: 980, stockQuantity: 500,
+        sku: 'DLS-DH04-2KG', countyAvailability: ['Nairobi', 'Kiambu', 'Nakuru', 'Meru'],
+        isActive: true,
+      },
+      {
+        supplierId: supplierId, name: 'Ridomil Gold MZ 500g (Syngenta)',
+        category: 'pesticide', brand: 'Syngenta',
+        description: 'Systemic + contact fungicide. Controls late blight in tomatoes and potatoes. Use 100g per 20L water.',
+        unit: 'packet', pricePerUnitKes: 2250, stockQuantity: 80,
+        sku: 'SYN-RGM-500', countyAvailability: ['Nairobi', 'Kiambu', 'Nakuru', 'Meru', 'Nyandarua'],
+        isActive: true,
+      },
+      {
+        supplierId: supplierId, name: 'Coragen 200SC 150ml (FMC)',
+        category: 'pesticide', brand: 'FMC',
+        description: 'Diamide insecticide. Controls fall armyworm, stem borer, diamondback moth. Rainfast in 1 hour.',
+        unit: 'bottle', pricePerUnitKes: 1480, stockQuantity: 120,
+        sku: 'FMC-COR-150', countyAvailability: ['Nairobi', 'Kiambu', "Murang'a", 'Machakos', 'Meru'],
+        isActive: true,
+      },
+      // Vincent Kiprotich (Nakuru agro-inputs)
+      {
+        supplierId: supplier2Id, name: 'NPK 17:17:17 50kg (MEA)',
+        category: 'fertiliser', brand: 'MEA',
+        description: 'Balanced NPK fertiliser. Ideal for potatoes, vegetables, and horticulture at planting stage.',
+        unit: 'bag', pricePerUnitKes: 5300, stockQuantity: 90,
+        sku: 'MEA-NPK-50', countyAvailability: ['Nakuru', 'Nyandarua', 'Laikipia', 'Uasin Gishu'],
+        isActive: true,
+      },
+      {
+        supplierId: supplier2Id, name: 'Certified Shangi Potato Seed 50kg',
+        category: 'seed', brand: 'KEPHIS',
+        description: 'KEPHIS-certified Shangi seed potato. Disease-free. Plant 1,200kg per acre at 75×30cm spacing.',
+        unit: 'bag', pricePerUnitKes: 6800, stockQuantity: 60,
+        sku: 'KEP-SHA-50', countyAvailability: ['Nakuru', 'Nyandarua', 'Meru', 'Elgeyo-Marakwet'],
+        isActive: true,
+      },
+      {
+        supplierId: supplier2Id, name: 'Karate Zeon 50CS 250ml (Syngenta)',
+        category: 'pesticide', brand: 'Syngenta',
+        description: 'Lambda-cyhalothrin capsule suspension. Controls tea spider mite, aphids, whitefly. Very low residue.',
+        unit: 'bottle', pricePerUnitKes: 1850, stockQuantity: 45,
+        sku: 'SYN-KAR-250', countyAvailability: ['Nakuru', 'Kericho', 'Nandi', 'Bomet'],
+        isActive: true,
+      },
+      {
+        supplierId: supplier2Id, name: 'Drip Irrigation Kit — 1 Acre (Netafim)',
+        category: 'equipment', brand: 'Netafim',
+        description: '1-acre complete drip kit: mainline, laterals, emitters, filter, venturi injector. Installs in 1 day.',
+        unit: 'kit', pricePerUnitKes: 28000, stockQuantity: 12,
+        sku: 'NET-DRIP-1AC', countyAvailability: ['Nakuru', 'Kiambu', 'Machakos', 'Laikipia'],
+        isActive: true,
+      },
+      {
+        supplierId: supplier2Id, name: 'Copper Oxychloride 1kg (Osho)',
+        category: 'pesticide', brand: 'Osho',
+        description: 'Contact fungicide for CBD (coffee berry disease), bacterial blight, downy mildew. 300g per 20L.',
+        unit: 'packet', pricePerUnitKes: 1150, stockQuantity: 200,
+        sku: 'OSH-COX-1KG', countyAvailability: ['Nakuru', 'Kericho', 'Nyeri', 'Meru', 'Kirinyaga'],
+        isActive: true,
+      },
+    ],
+  });
+
+  // ── community: threads + replies ───────────────────────────────────────────────
+  console.log('  Seeding community data (threads + replies)...');
+
+  const threads = await Promise.all([
+    communityDb.thread.create({ data: {
+      authorId:  farmer1Id,
+      category:  'crop_advice',
+      title:     'Armyworm outbreak in Kiambu — best control now?',
+      body:      'Nimeona armyworm kwenye shamba yangu la mahindi. Imekula majani mengi. Ninatumia nini haraka kabla halichanganyiki zaidi? Nimeskia Coragen inafanya kazi lakini ni ghali kidogo.',
+      cropType:  'maize',
+      county:    'Kiambu',
+      upvotes:   47,
+      status:    'active',
+      createdAt: new Date('2026-06-08T07:12:00Z'),
+    }}),
+    communityDb.thread.create({ data: {
+      authorId:  farmer2Id,
+      category:  'livestock_health',
+      title:     'Newcastle disease kuku wangu — dalili na dawa',
+      body:      'Kuku wangu wa layer wanapoteza nguvu, hawali, na wengine wanakufa. Nimekuta baadhi wana kikohozi. Je, hii ni Newcastle? Nifanye nini haraka kabla simu wote hawajasababiwa?',
+      cropType:  null,
+      county:    'Kisumu',
+      upvotes:   31,
+      status:    'active',
+      createdAt: new Date('2026-06-05T09:30:00Z'),
+    }}),
+    communityDb.thread.create({ data: {
+      authorId:  farmer3Id,
+      category:  'market_talk',
+      title:     'Bei ya mahindi Eldoret — Juni 2026',
+      body:      'Ninavyoona Eldoret juzi bei ya mahindi ilikuwa KES 38-40/kg. Mkulima mmoja alisema ameuzwa KES 35. Je, mnasema bei ipo wapi kweli? Niko na tani 3 nataka kuuza.',
+      cropType:  'maize',
+      county:    'Uasin Gishu',
+      upvotes:   29,
+      status:    'active',
+      createdAt: new Date('2026-06-09T14:22:00Z'),
+    }}),
+    communityDb.thread.create({ data: {
+      authorId:  officerId,
+      category:  'weather_climate',
+      title:     'Mvua ya Julai/Agosti — matarajio na jinsi ya kujiandaa',
+      body:      'Kulingana na KMD, mvua za masika 2026 zitakuwa kali zaidi kuliko wastani katika maeneo ya Highlands (Kiambu, Nyeri, Meru). Wakulima wa mahindi wajitayarishe kwa hatari ya kuoza kwa mizizi na Grey Leaf Spot. Tenganisheni mazao yaliyovunwa mapema.',
+      cropType:  null,
+      county:    null,
+      upvotes:   88,
+      status:    'active',
+      createdAt: new Date('2026-06-01T08:00:00Z'),
+    }}),
+    communityDb.thread.create({ data: {
+      authorId:  testUserId,
+      category:  'finance_business',
+      title:     'Mkopo wa Equity Bank kwa wakulima — mtu ameshapata?',
+      body:      'Nimetuma application ya mkopo wa KES 80,000 Equity Bank kupitia AgroConnect. Nimekuwa nasubiri siku 14. Je, mtu mwingine amefanikiwa kupata mkopo hapa? Ni muda gani kawaida?',
+      cropType:  null,
+      county:    'Kiambu',
+      upvotes:   22,
+      status:    'active',
+      createdAt: new Date('2026-06-03T11:15:00Z'),
+    }}),
+    communityDb.thread.create({ data: {
+      authorId:  farmer1Id,
+      category:  'government_programs',
+      title:     'Ruzuku ya mbolea MSAI 2026 — jinsi ya kuomba',
+      body:      'Nimesikia serikali inagawa ruzuku ya mbolea tena. MSAI inasema 50% discount kwa CAN na NPKS. Niliomba mwaka jana lakini sikupata. Mwaka huu naomba kupitia AgroConnect — ni rahisi zaidi. Je, nyinyi mmeomba?',
+      cropType:  null,
+      county:    'Kiambu',
+      upvotes:   56,
+      status:    'active',
+      createdAt: new Date('2026-05-28T15:40:00Z'),
+    }}),
+    communityDb.thread.create({ data: {
+      authorId:  farmer2Id,
+      category:  'success_stories',
+      title:     'Nilipata tani 12 ya mahindi — DH04 na umwagiliaji wa tone',
+      body:      'Mwaka huu nimevuna tani 12 kwa ekari 2 ya mahindi DH04. Niliweka umwagiliaji wa tone, nilitumia CAN vizuri, na nilifuata ratiba ya shughulli. Mapato: KES 504,000. Naweza kushare ratiba yangu yote kwa mtu anayehitaji.',
+      cropType:  'maize',
+      county:    'Kisumu',
+      upvotes:   134,
+      status:    'active',
+      createdAt: new Date('2026-06-07T06:55:00Z'),
+    }}),
+    communityDb.thread.create({ data: {
+      authorId:  officer2Id,
+      category:  'equipment_tools',
+      title:     'Mashine ya kupiga dawa kwa drone — bei na faida',
+      body:      'Kampuni moja Nairobi sasa inatoa huduma ya drone spraying kwa bei ya KES 800 kwa ekari. Kwa shamba la zaidi ya ekari 10 ni nafuu kuliko kulipa wafanyikazi 3 siku nzima. Je, mtu ametumia? Ni nzuri kwa blight control?',
+      cropType:  null,
+      county:    null,
+      upvotes:   45,
+      status:    'active',
+      createdAt: new Date('2026-06-06T13:00:00Z'),
+    }}),
+  ]);
+
+  // Replies
+  await communityDb.reply.createMany({
+    data: [
+      // Thread 0: armyworm
+      { threadId: threads[0].id, authorId: officerId,  body: 'Coragen (chlorantraniliprole) ndio dawa bora zaidi sasa hivi dhidi ya armyworm. Nyunyizia asubuhi au jioni wakati halijapanda. Dozi: 150ml kwa ekari. Rudia baada ya siku 10 ukiona bado wako.', upvotes: 28, isExpertVerified: true,  status: 'active', createdAt: new Date('2026-06-08T08:45:00Z') },
+      { threadId: threads[0].id, authorId: farmer3Id,  body: 'Mimi nilitumia Emamectin Benzoate (Escort) na ilifanya kazi vizuri. Ni bei nafuu zaidi kuliko Coragen — KES 350 kwa 100ml.', upvotes: 12, isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-08T10:10:00Z') },
+      { threadId: threads[0].id, authorId: testUserId, body: 'Ninakushukuru! Nilienda kuomba Coragen Farmers Choice leo. Nitarudi na ripoti baada ya nyunyizio.', upvotes: 3,  isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-08T14:30:00Z') },
+      // Thread 1: Newcastle
+      { threadId: threads[1].id, authorId: officerId,  body: 'Dalili unazosema zinaonyesha Newcastle Disease (NCD). Chanjo ya Hitchner B1 au LaSota haraka. Toa kuku wote waliokufa na achilia umbali. Mwambie daktari wa mifugo aribe haraka.', upvotes: 41, isExpertVerified: true,  status: 'active', createdAt: new Date('2026-06-05T10:20:00Z') },
+      { threadId: threads[1].id, authorId: farmer1Id,  body: 'Nilipitia hali kama hii 2024. Nimepoteza kuku 80. Chanjo ya mara kwa mara kila miezi 2 ndiyo suluhisho la muda mrefu.', upvotes: 19, isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-05T12:05:00Z') },
+      // Thread 2: maize price
+      { threadId: threads[2].id, authorId: testUserId, body: 'Kiambu juzi niliona KES 42/kg kwa grade A. Nadhani inategemea ubora na mahali unapouza. Supermarket inanunua vizuri zaidi kuliko wholesale.', upvotes: 8,  isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-09T15:00:00Z') },
+      { threadId: threads[2].id, authorId: farmer1Id,  body: 'Nijaribu Nairobi (Wakulima market) — mara nyingi KES 44-46 kwa grade A ukiuza moja kwa moja bila dalali.', upvotes: 15, isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-09T16:45:00Z') },
+      // Thread 3: weather
+      { threadId: threads[3].id, authorId: farmer1Id,  body: 'Ninashukuru taarifa hii daktari. Nitaanza kukata mahindi yangu ya tea mapema wiki hii ili kukimbia mvua za mara kwa mara.', upvotes: 22, isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-02T07:30:00Z') },
+      { threadId: threads[3].id, authorId: officer2Id, body: 'KMD pia imesema mvua itaendelea hadi Agosti katika Rift Valley. Wakulima wa viazi Nakuru wajikingue dhidi ya late blight — nyunyizo ya kuzuia ni muhimu.', upvotes: 35, isExpertVerified: true,  status: 'active', createdAt: new Date('2026-06-02T09:15:00Z') },
+      // Thread 4: Equity loan
+      { threadId: threads[4].id, authorId: farmer3Id,  body: 'Mimi nilipata mkopo kupitia Faulu Kenya wiki mbili baada ya kutuma. Lakini KCB ilichukua siku 21. Inategemea benki na band yako ya credit.', upvotes: 11, isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-03T13:40:00Z') },
+      { threadId: threads[4].id, authorId: testUserId, body: 'Nimepokea ujumbe leo — mkopo umeidhinishwa! KES 75,000 itatumwa M-Pesa. Asante kwa msaada.', upvotes: 18, isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-10T08:00:00Z') },
+      // Thread 5: MSAI subsidy
+      { threadId: threads[5].id, authorId: officer2Id, body: 'Ombi la MSAI linafanywa kupitia eCitizen au kaunti yako ya kilimo. Utahitaji: nambari ya AFA, picha ya kadi ya ID, na cheti cha usajili wa shamba. AgroConnect inaweza kukusaidia kujaza fomu.', upvotes: 43, isExpertVerified: true,  status: 'active', createdAt: new Date('2026-05-29T09:00:00Z') },
+      // Thread 6: success story
+      { threadId: threads[6].id, authorId: farmer3Id,  body: 'Hongera sana! DH04 na umwagiliaji wa tone ni mchanganyiko unaofanya kazi. Mimi pia nimetumia hii Uasin Gishu. Unaweza kushare ratiba yako? Ningependa kuona jinsi ulivyopanga mbolea na dawa.', upvotes: 28, isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-07T09:10:00Z') },
+      { threadId: threads[6].id, authorId: officerId,  body: 'Mfano mzuri sana! Hii inaonyesha wakulima wanaweza kufikia tani 6 kwa ekari na teknolojia sahihi. Tunataka kufanya semina kuhusu drip irrigation — jiandikishe kupitia extension office yako.', upvotes: 55, isExpertVerified: true,  status: 'active', createdAt: new Date('2026-06-07T11:00:00Z') },
+      // Thread 7: drone spraying
+      { threadId: threads[7].id, authorId: farmer2Id,  body: 'Nilitumia drone service Kisumu msimu uliopita kwa blight ya nyanya. Inafanya kazi vizuri — coverage ni bora kuliko knapsack. Lakini uangalifu: uchunguzi wa dawa na muda wa kunyunyizia ni muhimu.', upvotes: 22, isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-06T14:20:00Z') },
+    ],
+  });
+
   // ── summary ───────────────────────────────────────────────────────────────────
-  const [userCount, farmCount, actCount, inpCount, hvCount, priceCount, subsidyCount] = await Promise.all([
+  const [userCount, farmCount, actCount, inpCount, hvCount, priceCount, subsidyCount,
+         loanCount, scoreCount, threadCount, replyCount, listingCount, productCount,
+         regCount, licCount] = await Promise.all([
     authDb.user.count(),
     farmDb.farm.count(),
     farmDb.activity.count(),
@@ -505,17 +992,33 @@ async function main(): Promise<void> {
     farmDb.harvest.count(),
     marketDb.commodityPrice.count(),
     govtDb.subsidyProgram.count(),
+    financeDb.loanApplication.count(),
+    financeDb.creditScore.count(),
+    communityDb.thread.count(),
+    communityDb.reply.count(),
+    marketDb.produceListing.count(),
+    marketDb.supplierProduct.count(),
+    govtDb.farmRegistration.count(),
+    govtDb.licenseApplication.count(),
   ]);
 
   console.log('\n✅  Seed complete:');
-  console.log(`   users:            ${userCount}`);
-  console.log(`   farms:            ${farmCount}`);
-  console.log(`   activities:       ${actCount}`);
-  console.log(`   inputs:           ${inpCount}`);
-  console.log(`   harvests:         ${hvCount}`);
-  console.log(`   commodity prices: ${priceCount}`);
-  console.log(`   subsidy programs: ${subsidyCount}`);
-  console.log('\n   Dev password for all users: TestPass123!');
+  console.log(`   users:              ${userCount}`);
+  console.log(`   farms:              ${farmCount}`);
+  console.log(`   activities:         ${actCount}`);
+  console.log(`   inputs:             ${inpCount}`);
+  console.log(`   harvests:           ${hvCount}`);
+  console.log(`   commodity prices:   ${priceCount}`);
+  console.log(`   subsidy programs:   ${subsidyCount}`);
+  console.log(`   credit scores:      ${scoreCount}`);
+  console.log(`   loan applications:  ${loanCount}`);
+  console.log(`   community threads:  ${threadCount}`);
+  console.log(`   community replies:  ${replyCount}`);
+  console.log(`   market listings:    ${listingCount}`);
+  console.log(`   supplier products:  ${productCount}`);
+  console.log(`   farm registrations: ${regCount}`);
+  console.log(`   license apps:       ${licCount}`);
+  console.log('\n   Dev login: +254700001000 / TestPass123!');
 }
 
 main()
@@ -525,4 +1028,6 @@ main()
     await farmDb.$disconnect();
     await marketDb.$disconnect();
     await govtDb.$disconnect();
+    await financeDb.$disconnect();
+    await communityDb.$disconnect();
   });

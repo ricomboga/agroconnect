@@ -88,6 +88,7 @@ enum LoanStatus {
   approved
   rejected
   disbursed
+  cancelled
   repaid
   defaulted
 }

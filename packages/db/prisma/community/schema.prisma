@@ -10,18 +10,22 @@ datasource db {
 }
 
 model Thread {
-  id        String         @id @default(uuid())
-  authorId  String
-  category  ThreadCategory
-  title     String
-  body      String
-  cropType  String?
-  county    String?
-  upvotes   Int            @default(0)
-  status    ThreadStatus   @default(active)
-  replies   Reply[]
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  id          String         @id @default(uuid())
+  authorId    String
+  authorName  String
+  authorCounty String?
+  category    ThreadCategory
+  title       String
+  body        String
+  cropType    String?
+  county      String?
+  photos      String[]       @default([])
+  upvotes     Int            @default(0)
+  status      ThreadStatus   @default(active)
+  replies     Reply[]
+  votes       ThreadVote[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 
   @@index([authorId, status])
   @@index([category, status])
@@ -33,14 +37,73 @@ model Reply {
   threadId         String
   thread           Thread      @relation(fields: [threadId], references: [id], onDelete: Cascade)
   authorId         String
+  authorName       String
+  authorRole       String?
   body             String
   upvotes          Int         @default(0)
   isExpertVerified Boolean     @default(false)
   status           ReplyStatus @default(active)
+  reportReason     String?
+  votes            ReplyVote[]
   createdAt        DateTime    @default(now())
 
-  @@index([threadId])
+  @@index([threadId, status])
   @@map("replies")
+}
+
+model ThreadVote {
+  userId    String
+  threadId  String
+  thread    Thread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, threadId])
+  @@map("thread_votes")
+}
+
+model ReplyVote {
+  userId    String
+  replyId   String
+  reply     Reply    @relation(fields: [replyId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, replyId])
+  @@map("reply_votes")
+}
+
+model Expert {
+  id              String     @id @default(uuid())
+  name            String
+  photoUrl        String?
+  providerType    ExpertType
+  specialisations String[]   @default([])
+  countiesServed  String[]   @default([])
+  bio             String?
+  rating          Float      @default(0)
+  reviewCount     Int        @default(0)
+  phone           String
+  whatsapp        String?
+  isActive        Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+
+  @@index([providerType, isActive])
+  @@map("experts")
+}
+
+model Article {
+  id          String         @id @default(uuid())
+  slug        String         @unique
+  title       String
+  summary     String
+  body        String
+  category    ThreadCategory
+  authorName  String
+  isPublished Boolean        @default(true)
+  publishedAt DateTime       @default(now())
+  createdAt   DateTime       @default(now())
+
+  @@index([category, isPublished])
+  @@map("articles")
 }
 
 enum ThreadCategory {
@@ -68,6 +131,15 @@ enum ThreadStatus {
 enum ReplyStatus {
   active
   flagged
+  deleted
 
   @@map("reply_status")
+}
+
+enum ExpertType {
+  agronomist
+  vet
+  extension_officer
+
+  @@map("expert_type")
 }
