@@ -9,7 +9,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { weatherApi } from '../../api/weather';
-import type { WeatherCondition } from '../../api/weather';
+import type { WeatherCondition, WeatherDay } from '../../api/weather';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
 
 const COUNTY_COORDS: Record<string, [number, number]> = {
@@ -94,7 +94,7 @@ export function WeatherWidget({ lat, lng, county, onPress }: WeatherWidgetProps)
         <Text style={s.errorText}>{t('weather.widget.error')}</Text>
       ) : (
         <View style={s.daysRow}>
-          {days.map((day, idx) => (
+          {days.map((day: WeatherDay, idx: number) => (
             <View key={day.date} style={[s.dayCard, idx < days.length - 1 && s.dayCardBorder]}>
               <Text style={s.dayLabel}>{t(DAY_LABEL_KEYS[idx] ?? 'weather.widget.today')}</Text>
               <Text style={s.conditionIcon}>{CONDITION_ICON[day.condition]}</Text>

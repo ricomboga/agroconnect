@@ -13,7 +13,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { govtApi } from '../../api/govt';
-import type { RegistrationStatus } from '../../api/govt';
+import type { RegistrationStatus, FarmRegistration } from '../../api/govt';
 import type { GovtStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<GovtStackParamList, 'Registrations'>;
@@ -82,7 +82,7 @@ export function RegistrationsScreen({ navigation: _navigation }: Props) {
           </View>
         )}
 
-        {registrations.map((reg) => (
+        {registrations.map((reg: FarmRegistration) => (
           <View key={reg.id} style={s.row}>
             <View style={s.rowInfo}>
               <Text style={s.rowName}>{reg.farmName}</Text>

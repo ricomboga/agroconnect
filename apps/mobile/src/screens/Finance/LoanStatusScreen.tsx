@@ -6,14 +6,15 @@ import {
   Pressable,
   ActivityIndicator,
   StyleSheet,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
 import { financeApi } from '../../api/finance';
-import type { LoanStatus, LoanTimeline } from '../../api/finance';
+import type { LoanStatus, LoanTimeline, LoanApplication } from '../../api/finance';
 import type { FinanceStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<FinanceStackParamList, 'LoanStatus'>;
@@ -30,6 +31,21 @@ const STATUS_ORDER: Record<LoanStatus, number> = {
   disbursed: 4,
   cancelled: 2,
 };
+
+function computeRepaymentSchedule(loan: LoanApplication) {
+  if (!loan.approvedAmountKes || loan.interestRate === null || !loan.disbursedAt) return [];
+  const totalRepayable = loan.approvedAmountKes * (1 + loan.interestRate / 100);
+  const monthlyPayment = Math.round(totalRepayable / loan.repaymentMonths);
+  const startDate = new Date(loan.disbursedAt);
+  return Array.from({ length: loan.repaymentMonths }, (_, i) => {
+    const due = new Date(startDate.getFullYear(), startDate.getMonth() + i + 1, startDate.getDate());
+    return {
+      month: i + 1,
+      dueDate: due.toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' }),
+      total: monthlyPayment,
+    };
+  });
+}
 
 function getMilestoneState(
   milestone: MilestoneKey,
@@ -74,6 +90,15 @@ export function LoanStatusScreen({ navigation, route }: Props) {
     queryKey: ['loan', loanId],
     queryFn: () => financeApi.loans.get(loanId),
     staleTime: isOnline ? 2 * 60 * 1000 : Infinity,
+  });
+
+  const queryClient = useQueryClient();
+  const cancelMutation = useMutation({
+    mutationFn: () => financeApi.loans.cancel(loanId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['loan', loanId] });
+      void queryClient.invalidateQueries({ queryKey: ['loans'] });
+    },
   });
 
   if (loanQuery.isLoading) {
@@ -135,8 +160,8 @@ export function LoanStatusScreen({ navigation, route }: Props) {
             <Text style={s.amountLabel}>
               {t('finance.loan.amount', { amount: loan.amountRequestedKes.toLocaleString() })}
             </Text>
-            <View style={[s.statusPill, { backgroundColor: STATUS_BG[loan.status] }]}>
-              <Text style={[s.statusText, { color: STATUS_COLOR[loan.status] }]}>
+            <View style={[s.statusPill, { backgroundColor: STATUS_BG[loan.status as LoanStatus] }]}>
+              <Text style={[s.statusText, { color: STATUS_COLOR[loan.status as LoanStatus] }]}>
                 {t(`finance.loan.status.${loan.status}`)}
               </Text>
             </View>
@@ -187,6 +212,35 @@ export function LoanStatusScreen({ navigation, route }: Props) {
           })}
         </View>
 
+        {/* Cancel button — draft / submitted / under_review */}
+        {(loan.status === 'draft' || loan.status === 'submitted' || loan.status === 'under_review') && (
+          <Pressable
+            style={s.cancelBtn}
+            onPress={() =>
+              Alert.alert(
+                t('finance.loan.statusScreen.cancelConfirmTitle'),
+                t('finance.loan.statusScreen.cancelConfirmMsg'),
+                [
+                  { text: t('finance.loan.statusScreen.cancelNo'), style: 'cancel' },
+                  {
+                    text: t('finance.loan.statusScreen.cancelYes'),
+                    style: 'destructive',
+                    onPress: () => cancelMutation.mutate(),
+                  },
+                ],
+              )
+            }
+            disabled={cancelMutation.isPending}
+            accessibilityRole="button"
+          >
+            {cancelMutation.isPending ? (
+              <ActivityIndicator size="small" color="#B71C1C" />
+            ) : (
+              <Text style={s.cancelLabel}>{t('finance.loan.statusScreen.cancelBtn')}</Text>
+            )}
+          </Pressable>
+        )}
+
         {/* Approved / disbursed info */}
         {(loan.status === 'approved' || loan.status === 'disbursed') && loan.approvedAmountKes && (
           <View style={s.approvalCard}>
@@ -219,6 +273,27 @@ export function LoanStatusScreen({ navigation, route }: Props) {
             )}
           </View>
         )}
+
+        {/* Repayment schedule — approved / disbursed */}
+        {(loan.status === 'approved' || loan.status === 'disbursed') &&
+          loan.approvedAmountKes &&
+          loan.interestRate !== null &&
+          loan.disbursedAt && (
+            <View style={s.repayCard}>
+              <Text style={s.repayTitle}>{t('finance.loan.statusScreen.repaymentSchedule')}</Text>
+              {computeRepaymentSchedule(loan).map((item) => (
+                <View key={item.month} style={s.repayRow}>
+                  <View style={s.repayLeft}>
+                    <Text style={s.repayMonth}>
+                      {t('finance.loan.statusScreen.repaymentMonth', { n: item.month })}
+                    </Text>
+                    <Text style={s.repayDue}>{item.dueDate}</Text>
+                  </View>
+                  <Text style={s.repayAmount}>KES {item.total.toLocaleString()}</Text>
+                </View>
+              ))}
+            </View>
+          )}
 
         {loan.status === 'rejected' && (
           <View style={s.rejectedNote}>
@@ -279,4 +354,27 @@ const s = StyleSheet.create({
   rejectedText:   { fontSize: 14, color: '#B71C1C', lineHeight: 20 },
   cancelledNote:  { backgroundColor: '#EEEEEE', borderRadius: 12, padding: 14 },
   cancelledText:  { fontSize: 14, color: '#616161', lineHeight: 20 },
+
+  cancelBtn: {
+    minHeight: 48, borderRadius: 10, borderWidth: 1.5, borderColor: '#B71C1C',
+    alignItems: 'center', justifyContent: 'center', marginBottom: 16,
+  },
+  cancelLabel: { fontSize: 14, fontWeight: '700', color: '#B71C1C' },
+
+  repayCard: {
+    backgroundColor: '#FFF', borderRadius: 14, padding: 16, marginBottom: 12,
+    borderWidth: 1, borderColor: '#EEEEEE',
+  },
+  repayTitle: {
+    fontSize: 12, fontWeight: '700', color: '#1A1A1A', marginBottom: 12,
+    textTransform: 'uppercase', letterSpacing: 0.5,
+  },
+  repayRow: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
+  },
+  repayLeft:   { gap: 2 },
+  repayMonth:  { fontSize: 12, fontWeight: '600', color: '#1A1A1A' },
+  repayDue:    { fontSize: 11, color: '#757575' },
+  repayAmount: { fontSize: 13, fontWeight: '700', color: '#1565C0' },
 });

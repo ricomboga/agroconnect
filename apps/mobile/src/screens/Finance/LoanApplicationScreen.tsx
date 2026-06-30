@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
 import { financeApi } from '../../api/finance';
+import type { LoanProduct } from '../../api/finance';
 import { farmApi } from '../../api/farm';
 import type { FinanceStackParamList } from '../../navigation/types';
 
@@ -68,7 +69,7 @@ export function LoanApplicationScreen({ navigation, route }: Props) {
   const isLoading = scoreQuery.isLoading || productsQuery.isLoading;
   const isError = scoreQuery.isError || productsQuery.isError;
 
-  const product = productsQuery.data?.data.find((p) => p.id === productId);
+  const product = productsQuery.data?.data.find((p: LoanProduct) => p.id === productId);
   const maxLoanKes = scoreQuery.data?.data.maxLoanKes ?? 0;
   const firstFarm = farmsQuery.data?.data?.[0];
 

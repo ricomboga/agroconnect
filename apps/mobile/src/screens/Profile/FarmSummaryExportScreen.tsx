@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
 import { farmApi } from '../../api/farm';
+import type { Farm } from '../../api/farm';
 import { useAuthStore } from '../../stores/authStore';
 import type { ProfileStackParamList } from '../../navigation/types';
 
@@ -40,7 +41,7 @@ export function FarmSummaryExportScreen({ navigation }: Props) {
 
   const farms = farmsQuery.data?.data ?? [];
   const activeFarmId = selectedFarmId ?? farms[0]?.id ?? null;
-  const activeFarm = farms.find((f) => f.id === activeFarmId);
+  const activeFarm = farms.find((f: Farm) => f.id === activeFarmId);
 
   const summaryQuery = useQuery({
     queryKey: ['farmSummary', activeFarmId, selectedYear],
@@ -133,7 +134,7 @@ export function FarmSummaryExportScreen({ navigation }: Props) {
         {/* Farm selector */}
         <Text style={s.fieldLabel}>{t('profile.export.selectFarm')}</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipRow}>
-          {farms.map((farm) => {
+          {farms.map((farm: Farm) => {
             const active = farm.id === activeFarmId;
             return (
               <Pressable

@@ -73,8 +73,8 @@ export function CreditScoreDetailScreen({ navigation }: Props) {
   if (!score) return null;
 
   const band = score.band;
-  const bandColor = BAND_COLOR[band];
-  const bandBg = BAND_BG[band];
+  const bandColor = BAND_COLOR[band as CreditBand];
+  const bandBg = BAND_BG[band as CreditBand];
 
   const comps: Record<CompKey, { score: number; weight: number }> = score.components;
 

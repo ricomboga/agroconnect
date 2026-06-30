@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { FarmStackParamList } from '../../navigation/types';
 import { useInputs } from '../../hooks/useInputs';
+import type { Input } from '../../api/input';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
 import { LoadingScreen } from '../../components/Common/LoadingScreen';
 import { ErrorScreen } from '../../components/Common/ErrorScreen';
@@ -26,7 +27,7 @@ export function InputLogScreen({ navigation, route }: Props) {
 
   const inputs = data?.data ?? [];
   const totalCostKes = useMemo(
-    () => inputs.reduce((sum, i) => sum + i.totalCostKes, 0),
+    () => inputs.reduce((sum: number, i: Input) => sum + i.totalCostKes, 0),
     [inputs],
   );
 

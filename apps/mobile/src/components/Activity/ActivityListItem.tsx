@@ -20,7 +20,7 @@ export function ActivityListItem({ activity, onPress }: ActivityListItemProps) {
       {activity.description ? (
         <Text style={styles.description} numberOfLines={2}>{activity.description}</Text>
       ) : null}
-      <Text style={styles.date}>{activity.plannedDate}</Text>
+      <Text style={styles.date}>{activity.scheduledDate}</Text>
     </Pressable>
   );
 }

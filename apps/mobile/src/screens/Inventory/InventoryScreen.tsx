@@ -1,0 +1,1343 @@
+import React, { useLayoutEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  ActivityIndicator,
+  StatusBar,
+  StyleSheet,
+  Linking,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { AlertBox } from '../../components/ui/AlertBox';
+import {
+  useInventoryItems,
+  useAnimalProducts,
+  useHarvestStore,
+  useCustomerCollections,
+  useInventorySummary,
+  useMarkCollectionPaid,
+} from '../../hooks/useInventory';
+import type {
+  InputCategory,
+  InventoryItem,
+  AnimalProductRecord,
+  HarvestStore,
+  CustomerCollection,
+} from '../../hooks/useInventory';
+import {
+  getStockBadgeVariant,
+  getStockBarColor,
+  getStockBadgeLabel,
+  CATEGORY_CONFIG,
+  formatQty,
+} from '../../utils/inventoryHelpers';
+import { useUiStore } from '../../store/ui.store';
+import type { StockStackParamList } from '../../navigation/types';
+
+type Props = NativeStackScreenProps<StockStackParamList, 'InventoryHome'>;
+type ActiveTab = 'inputs' | 'products' | 'harvest' | 'collections';
+type CategoryFilter = 'all' | InputCategory;
+type CollectionFilter = 'all' | 'unpaid' | 'paid';
+type ParentNav = { navigate: (screen: string, params?: object) => void };
+
+// ── Module-level helpers ──────────────────────────────────────────────────────
+
+function formatKES(amount: number): string {
+  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)}M`;
+  if (amount >= 1_000) return `${(amount / 1_000).toFixed(1)}K`;
+  return amount.toLocaleString();
+}
+
+function formatNumber(n: number): string {
+  return n.toLocaleString();
+}
+
+function formatDate(isoDate: string, fmt?: string): string {
+  const d = new Date(isoDate);
+  if (fmt === 'MMM D, YYYY') {
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+
+function getDaysOwing(takenDate: string): number {
+  return Math.floor((Date.now() - new Date(takenDate).getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function isWithin7Days(isoDate: string | null): boolean {
+  if (!isoDate) return false;
+  const diff = new Date(isoDate).getTime() - Date.now();
+  return diff <= 7 * 24 * 60 * 60 * 1000;
+}
+
+function getCropEmoji(cropName: string): string {
+  const MAP: Record<string, string> = {
+    Maize: '🌽', Beans: '🫘', Wheat: '🌾', Cabbage: '🥬',
+    Tomatoes: '🍅', Potatoes: '🥔', Onions: '🧅',
+  };
+  return MAP[cropName] ?? '🌿';
+}
+
+function getMonday(d: Date): Date {
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  const monday = new Date(d);
+  monday.setDate(d.getDate() + diff);
+  monday.setHours(0, 0, 0, 0);
+  return monday;
+}
+
+function getWeekDays(): Date[] {
+  const monday = getMonday(new Date());
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return d;
+  });
+}
+
+function isSameDay(isoDate: string, d: Date): boolean {
+  const a = new Date(isoDate);
+  return (
+    a.getFullYear() === d.getFullYear() &&
+    a.getMonth() === d.getMonth() &&
+    a.getDate() === d.getDate()
+  );
+}
+
+const DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
+
+const BADGE_COLORS = {
+  green: { bg: '#EAF4EE', text: '#0D4A28' },
+  amber: { bg: '#FEF3C7', text: '#92400E' },
+  red:   { bg: '#FEE2E2', text: '#991B1B' },
+} as const;
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function InventoryScreen({ navigation }: Props) {
+  const { t } = useTranslation();
+  const showToast = useUiStore((st) => st.showToast);
+
+  const [activeTab, setActiveTab]             = useState<ActiveTab>('inputs');
+  const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>('all');
+  const [collectionFilter, setCollectionFilter] = useState<CollectionFilter>('unpaid');
+
+  useLayoutEffect(() => {
+    navigation.setOptions({ headerShown: false });
+  }, [navigation]);
+
+  // ── Queries ──────────────────────────────────────────────────────────────
+
+  const summaryQ    = useInventorySummary();
+  const inputsQ     = useInventoryItems();
+  const productsQ   = useAnimalProducts();
+  const harvestQ    = useHarvestStore();
+  const collectionsQ = useCustomerCollections();
+
+  // ── Mutations ─────────────────────────────────────────────────────────────
+
+  const markPaidMutation = useMarkCollectionPaid();
+
+  const handleMarkPaid = (id: string, amount: number) => {
+    markPaidMutation.mutate(id, {
+      onSuccess: () => {
+        showToast(
+          t('inventory.collections.paidToast', { amount: formatNumber(amount) }),
+          'success',
+        );
+      },
+    });
+  };
+
+  // ── Derived data ──────────────────────────────────────────────────────────
+
+  const summary = summaryQ.data ?? {
+    totalItemsLow: 0,
+    totalItemsEmpty: 0,
+    totalPendingCollectionsKes: 0,
+    totalHarvestInStoreKes: 0,
+    eggsCollectedToday: null,
+    milkCollectedTodayL: null,
+  };
+
+  const allItems: InventoryItem[] = inputsQ.data ?? [];
+
+  const sortedItems = [...allItems].sort((a, b) => {
+    const pctA = a.purchasedQty > 0 ? (a.remainingQty / a.purchasedQty) * 100 : 0;
+    const pctB = b.purchasedQty > 0 ? (b.remainingQty / b.purchasedQty) * 100 : 0;
+    return pctA - pctB;
+  });
+
+  const filteredItems =
+    selectedCategory === 'all'
+      ? sortedItems
+      : sortedItems.filter((i) => i.category === selectedCategory);
+
+  const urgentItems = allItems.filter(
+    (i) => i.remainingQty <= 0 && isWithin7Days(i.scheduledUseDate),
+  );
+
+  const allProducts: AnimalProductRecord[]  = productsQ.data ?? [];
+  const eggRecords  = allProducts.filter((r) => r.productType === 'eggs');
+  const milkRecords = allProducts.filter((r) => r.productType === 'milk');
+  const hasChickens  = eggRecords.length > 0;
+  const hasDairy     = milkRecords.length > 0;
+
+  const today        = new Date();
+  const weekDays     = getWeekDays();
+
+  const todayEggRecord  = eggRecords.find((r) => isSameDay(r.date, today));
+  const todayMilkRecord = milkRecords.find((r) => isSameDay(r.date, today));
+
+  const weekEggValues = weekDays.map((d) => {
+    const rec = eggRecords.find((r) => isSameDay(r.date, d));
+    return rec?.quantity ?? null;
+  });
+  const weekMilkValues = weekDays.map((d) => {
+    const rec = milkRecords.find((r) => isSameDay(r.date, d));
+    return rec?.quantity ?? null;
+  });
+  const maxEgg  = Math.max(...weekEggValues.filter((v): v is number => v !== null), 1);
+  const maxMilk = Math.max(...weekMilkValues.filter((v): v is number => v !== null), 1);
+
+  const allHarvest: HarvestStore[]        = harvestQ.data ?? [];
+  const totalHarvestValue = allHarvest.reduce((s, h) => s + h.estimatedValueKes, 0);
+  const totalHarvestKg    = allHarvest.reduce((s, h) => s + h.remainingKg, 0);
+
+  const allCollections: CustomerCollection[] = collectionsQ.data ?? [];
+  const filteredCollections = allCollections.filter((c) => {
+    if (collectionFilter === 'unpaid') return !c.isPaid;
+    if (collectionFilter === 'paid')   return c.isPaid;
+    return true;
+  });
+  const unpaidCollections = allCollections.filter((c) => !c.isPaid);
+  const totalPending      = unpaidCollections.reduce((s, c) => s + c.totalAmount, 0);
+
+  // ── Tab definitions ───────────────────────────────────────────────────────
+
+  const TABS: Array<{ key: ActiveTab; label: string }> = [
+    { key: 'inputs',   label: t('inventory.tab.inputs') },
+    { key: 'products', label: t('inventory.tab.animalProducts') },
+    { key: 'harvest',  label: t('inventory.tab.harvest') },
+    { key: 'collections', label: t('inventory.tab.collections') },
+  ];
+
+  const CATEGORY_CHIPS: Array<{ key: CategoryFilter; label: string }> = [
+    { key: 'all',            label: t('inventory.inputs.category.all') },
+    { key: 'fertiliser',     label: t('inventory.inputs.category.fertiliser') },
+    { key: 'pesticide',      label: t('inventory.inputs.category.pesticide') },
+    { key: 'seed',           label: t('inventory.inputs.category.seed') },
+    { key: 'animal_feed',    label: t('inventory.inputs.category.animalFeed') },
+    { key: 'vaccine',        label: t('inventory.inputs.category.vaccine') },
+    { key: 'tool_equipment', label: t('inventory.inputs.category.tool') },
+  ];
+
+  const COLLECTION_FILTERS: Array<{ key: CollectionFilter; label: string }> = [
+    { key: 'all',    label: t('inventory.collections.filterAll') },
+    { key: 'unpaid', label: t('inventory.collections.filterUnpaid') },
+    { key: 'paid',   label: t('inventory.collections.filterPaid') },
+  ];
+
+  // ── Render ────────────────────────────────────────────────────────────────
+
+  return (
+    <View style={s.root}>
+      <StatusBar barStyle="light-content" backgroundColor="#1A6B3C" />
+
+      {/* TopBar */}
+      <SafeAreaView edges={['top']} style={s.topArea}>
+        <View style={s.topBar}>
+          <Text style={s.topBarTitle}>{t('inventory.title')}</Text>
+          <Pressable
+            style={s.topBarBtn}
+            onPress={() => navigation.navigate('AddStockScreen')}
+            accessibilityRole="button"
+            accessibilityLabel={t('inventory.inputs.addCta')}
+          >
+            <Text style={s.topBarIcon}>+</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+
+      {/* Summary Strip */}
+      <View style={s.summaryStrip}>
+        <View style={[s.summaryItem, s.summaryBorder]}>
+          <Text style={[s.summaryValue, { color: '#DC2626' }]}>
+            {summary.totalItemsEmpty + summary.totalItemsLow}
+          </Text>
+          <Text style={s.summaryLabel}>{t('inventory.summary.lowEmpty')}</Text>
+        </View>
+        <View style={[s.summaryItem, s.summaryBorder]}>
+          <Text style={[s.summaryValue, { color: '#D97706' }]}>
+            {formatKES(summary.totalPendingCollectionsKes)}
+          </Text>
+          <Text style={s.summaryLabel}>{t('inventory.summary.pendingKes')}</Text>
+        </View>
+        <View style={[s.summaryItem, s.summaryBorder]}>
+          <Text style={[s.summaryValue, { color: '#1A6B3C' }]}>
+            {formatKES(summary.totalHarvestInStoreKes)}
+          </Text>
+          <Text style={s.summaryLabel}>{t('inventory.summary.inStore')}</Text>
+        </View>
+        <View style={s.summaryItem}>
+          <Text style={[s.summaryValue, { color: '#1A6B3C' }]}>
+            {summary.eggsCollectedToday != null
+              ? t('inventory.summary.trays', { count: summary.eggsCollectedToday })
+              : '—'}
+          </Text>
+          <Text style={s.summaryLabel}>{t('inventory.summary.todayEggs')}</Text>
+        </View>
+      </View>
+
+      {/* SubTab Bar */}
+      <View style={s.subTabs}>
+        {TABS.map((tab) => (
+          <Pressable
+            key={tab.key}
+            style={[s.tabItem, activeTab === tab.key && s.tabItemActive]}
+            onPress={() => setActiveTab(tab.key)}
+            accessibilityRole="tab"
+          >
+            <Text style={[s.tabLabel, activeTab === tab.key && s.tabLabelActive]}>
+              {tab.label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {/* ── INPUTS TAB ────────────────────────────────────────────────────── */}
+      {activeTab === 'inputs' && (
+        <ScrollView
+          style={s.scroll}
+          contentContainerStyle={s.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {inputsQ.isLoading && (
+            <>
+              {[0, 1, 2, 3].map((i) => (
+                <View key={i} style={s.skeletonCard} />
+              ))}
+            </>
+          )}
+
+          {!inputsQ.isLoading && allItems.length === 0 && (
+            <View style={s.emptyCard}>
+              <Text style={s.emptyTitle}>{t('inventory.inputs.empty.title')}</Text>
+              <Text style={s.emptyBody}>{t('inventory.inputs.empty.body2')}</Text>
+              <Pressable
+                style={s.emptyCtaBtn}
+                onPress={() => navigation.navigate('AddStockScreen')}
+                accessibilityRole="button"
+              >
+                <Text style={s.emptyCtaLabel}>{t('inventory.inputs.empty.ctaFirst')}</Text>
+              </Pressable>
+            </View>
+          )}
+
+          {!inputsQ.isLoading && allItems.length > 0 && (
+            <>
+              {urgentItems.length > 0 && (
+                <View style={s.mb8}>
+                  <AlertBox
+                    variant="red"
+                    message={t('inventory.inputs.urgentBanner', {
+                      count: urgentItems.length,
+                      plural: urgentItems.length > 1 ? 's' : '',
+                      activity: urgentItems[0]?.name ?? '',
+                      when: urgentItems[0]?.scheduledUseDate
+                        ? formatDate(urgentItems[0].scheduledUseDate)
+                        : 'soon',
+                    })}
+                  />
+                </View>
+              )}
+
+              {/* Category filter chips */}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={s.chipScroll}
+                contentContainerStyle={s.chipRow}
+              >
+                {CATEGORY_CHIPS.map((chip) => (
+                  <Pressable
+                    key={chip.key}
+                    style={[
+                      s.chip,
+                      selectedCategory === chip.key ? s.chipActive : s.chipInactive,
+                    ]}
+                    onPress={() => setSelectedCategory(chip.key)}
+                    accessibilityRole="button"
+                  >
+                    <Text
+                      style={[
+                        s.chipText,
+                        selectedCategory === chip.key
+                          ? s.chipTextActive
+                          : s.chipTextInactive,
+                      ]}
+                    >
+                      {chip.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+
+              {filteredItems.map((item) => {
+                const pct = item.purchasedQty > 0
+                  ? (item.remainingQty / item.purchasedQty) * 100
+                  : 0;
+                const isEmpty  = item.remainingQty <= 0;
+                const variant  = getStockBadgeVariant(pct);
+                const bc       = BADGE_COLORS[variant];
+                const showScheduledWarn =
+                  isWithin7Days(item.scheduledUseDate) && !isEmpty && item.reorderAlert;
+
+                return (
+                  <View
+                    key={item.id}
+                    style={[
+                      s.inputCard,
+                      {
+                        borderWidth:  isEmpty ? 1.5 : 1,
+                        borderColor:  isEmpty ? '#DC2626' : '#E5E7EB',
+                      },
+                    ]}
+                  >
+                    {/* Row 1: name + badge */}
+                    <View style={s.row1}>
+                      <Text style={s.inputName}>
+                        {item.emoji} {item.name}
+                      </Text>
+                      <View style={[s.badge, { backgroundColor: bc.bg }]}>
+                        <Text style={[s.badgeText, { color: bc.text }]}>
+                          {getStockBadgeLabel(item)}
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* Row 1b: purchased */}
+                    <Text style={s.inputPurchased}>
+                      {t('inventory.inputs.purchased', {
+                        qty: formatQty(item.purchasedQty, item.unit),
+                      })}
+                    </Text>
+
+                    {/* Progress bar */}
+                    <View style={s.progressTrack}>
+                      <View
+                        style={[
+                          s.progressFill,
+                          {
+                            width: `${Math.max(1, Math.min(pct, 100))}%` as `${number}%`,
+                            backgroundColor: getStockBarColor(pct),
+                          },
+                        ]}
+                      />
+                    </View>
+
+                    {/* Used / Left */}
+                    <View style={s.statsRow}>
+                      <Text style={s.statText}>
+                        {t('inventory.inputs.used', {
+                          qty: formatQty(item.usedQty, item.unit),
+                        })}
+                      </Text>
+                      <Text style={s.statText}>
+                        {t('inventory.inputs.left', {
+                          qty: formatQty(item.remainingQty, item.unit),
+                        })}
+                      </Text>
+                    </View>
+
+                    {/* Scheduled use warning */}
+                    {showScheduledWarn && item.scheduledUseDate && (
+                      <View style={s.mb6}>
+                        <AlertBox
+                          variant="amber"
+                          message={t('inventory.inputs.scheduledUse', {
+                            date: formatDate(item.scheduledUseDate),
+                          })}
+                        />
+                      </View>
+                    )}
+
+                    {/* Out of stock alert + Buy Now */}
+                    {isEmpty && (
+                      <>
+                        <View style={s.mb6}>
+                          <AlertBox
+                            variant="red"
+                            message={t('inventory.inputs.outOfStock')}
+                          />
+                        </View>
+                        <Pressable
+                          style={s.buyNowBtn}
+                          onPress={() =>
+                            (navigation.getParent() as ParentNav | undefined)
+                              ?.navigate('Market', { screen: 'MarketHome' })
+                          }
+                          accessibilityRole="button"
+                        >
+                          <Text style={s.buyNowLabel}>
+                            {t('inventory.inputs.buyNowFull', {
+                              price: item.costPerUnit.toLocaleString(),
+                              unit: item.unit,
+                            })}
+                          </Text>
+                        </Pressable>
+                      </>
+                    )}
+
+                    {/* Record Use / Restock */}
+                    {!isEmpty && (
+                      <View style={s.actionRow}>
+                        <Pressable style={s.outlineBtn} accessibilityRole="button">
+                          <Text style={s.outlineBtnLabel}>
+                            {t('inventory.inputs.recordUse')}
+                          </Text>
+                        </Pressable>
+                        <Pressable style={s.primaryBtn} accessibilityRole="button">
+                          <Text style={s.primaryBtnLabel}>
+                            {t('inventory.inputs.restock')}
+                          </Text>
+                        </Pressable>
+                      </View>
+                    )}
+
+                    {/* Cost summary */}
+                    <Text style={s.costSummary}>
+                      {t('inventory.inputs.supplier', {
+                        supplier: item.supplier,
+                        cost: item.costPerUnit.toLocaleString(),
+                        unit: item.unit,
+                      })}
+                    </Text>
+                  </View>
+                );
+              })}
+
+              {/* Add input dashed card */}
+              <Pressable
+                style={s.dashedCard}
+                onPress={() => navigation.navigate('AddStockScreen')}
+                accessibilityRole="button"
+              >
+                <Text style={s.dashedCardLabel}>
+                  {t('inventory.inputs.addInputCard')}
+                </Text>
+              </Pressable>
+            </>
+          )}
+        </ScrollView>
+      )}
+
+      {/* ── ANIMAL PRODUCTS TAB ───────────────────────────────────────────── */}
+      {activeTab === 'products' && (
+        <ScrollView
+          style={s.scroll}
+          contentContainerStyle={s.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {productsQ.isLoading && (
+            <ActivityIndicator size="large" color="#1A6B3C" style={s.loader} />
+          )}
+
+          {!productsQ.isLoading && !hasChickens && !hasDairy && (
+            <View style={s.emptyBox}>
+              <Text style={s.emptyTitle}>{t('inventory.products.cropOnlyMsg')}</Text>
+            </View>
+          )}
+
+          {!productsQ.isLoading && (hasChickens || hasDairy) && (
+            <>
+              {/* Today's Collection */}
+              <Text style={s.sectionHeader}>{t('inventory.products.sectionTitle')}</Text>
+              <View style={s.productGrid}>
+                {hasChickens && (
+                  <View style={[s.productCard, s.productCardGreen]}>
+                    <Text style={s.productEmoji}>🥚</Text>
+                    <Text style={[s.productValue, { color: '#1A6B3C' }]}>
+                      {todayEggRecord?.quantity ?? '—'}
+                    </Text>
+                    <Text style={s.productUnit}>{t('inventory.products.trays')}</Text>
+                    <Text style={s.productDate}>
+                      {t('inventory.products.eggs.today', {
+                        date: today.toLocaleDateString('en-GB', {
+                          month: 'short',
+                          day: 'numeric',
+                        }),
+                      })}
+                    </Text>
+                    {todayEggRecord ? (
+                      <>
+                        <Text style={s.recordedLabel}>
+                          {t('inventory.products.recorded')}
+                        </Text>
+                        <Pressable
+                          style={[s.productActionBtn, { backgroundColor: '#1A6B3C' }]}
+                          accessibilityRole="button"
+                        >
+                          <Text style={s.productActionLabel}>
+                            {t('inventory.products.update')}
+                          </Text>
+                        </Pressable>
+                      </>
+                    ) : (
+                      <>
+                        <View style={s.mb4}>
+                          <AlertBox
+                            variant="amber"
+                            message={t('inventory.products.recordAlert')}
+                          />
+                        </View>
+                        <Pressable
+                          style={[s.productActionBtn, { backgroundColor: '#1A6B3C' }]}
+                          accessibilityRole="button"
+                        >
+                          <Text style={s.productActionLabel}>
+                            {t('inventory.products.recordNow')}
+                          </Text>
+                        </Pressable>
+                      </>
+                    )}
+                  </View>
+                )}
+
+                {hasDairy && (
+                  <View style={[s.productCard, s.productCardTeal]}>
+                    <Text style={s.productEmoji}>🥛</Text>
+                    <Text style={[s.productValue, { color: '#0E7490' }]}>
+                      {todayMilkRecord?.quantity ?? '—'}
+                    </Text>
+                    <Text style={s.productUnit}>{t('inventory.products.litres')}</Text>
+                    <Text style={s.productDate}>
+                      {t('inventory.products.milk.today', {
+                        date: today.toLocaleDateString('en-GB', {
+                          month: 'short',
+                          day: 'numeric',
+                        }),
+                      })}
+                    </Text>
+                    {todayMilkRecord ? (
+                      <>
+                        <Text style={[s.recordedLabel, { color: '#0E7490' }]}>
+                          {t('inventory.products.recorded')}
+                        </Text>
+                        <Pressable
+                          style={[s.productActionBtn, { backgroundColor: '#0E7490' }]}
+                          accessibilityRole="button"
+                        >
+                          <Text style={s.productActionLabel}>
+                            {t('inventory.products.update')}
+                          </Text>
+                        </Pressable>
+                      </>
+                    ) : (
+                      <>
+                        <View style={s.mb4}>
+                          <AlertBox
+                            variant="amber"
+                            message={t('inventory.products.recordAlert')}
+                          />
+                        </View>
+                        <Pressable
+                          style={[s.productActionBtn, { backgroundColor: '#0E7490' }]}
+                          accessibilityRole="button"
+                        >
+                          <Text style={s.productActionLabel}>
+                            {t('inventory.products.recordNow')}
+                          </Text>
+                        </Pressable>
+                      </>
+                    )}
+                  </View>
+                )}
+              </View>
+
+              {/* 7-day egg grid */}
+              {hasChickens && (
+                <>
+                  <Text style={s.sectionHeader}>{t('inventory.products.weekTitle')}</Text>
+                  <WeeklyGrid
+                    weekDays={weekDays}
+                    values={weekEggValues}
+                    maxValue={maxEgg}
+                    today={today}
+                    footerText={t('inventory.products.weekSummary', {
+                      total: weekEggValues.reduce<number>(
+                        (a, v) => a + (v ?? 0),
+                        0,
+                      ),
+                      avg: (
+                        weekEggValues.reduce<number>((a, v) => a + (v ?? 0), 0) /
+                        Math.max(weekEggValues.filter((v) => v !== null).length, 1)
+                      ).toFixed(1),
+                    })}
+                    dayKeys={DAY_KEYS.map((k) => t(`inventory.products.days.${k}`))}
+                  />
+                </>
+              )}
+
+              {/* 7-day milk grid */}
+              {hasDairy && (
+                <>
+                  <Text style={s.sectionHeader}>{t('inventory.products.weekMilkTitle')}</Text>
+                  <WeeklyGrid
+                    weekDays={weekDays}
+                    values={weekMilkValues}
+                    maxValue={maxMilk}
+                    today={today}
+                    footerText={t('inventory.products.weekMilkSummary', {
+                      total: weekMilkValues.reduce<number>(
+                        (a, v) => a + (v ?? 0),
+                        0,
+                      ),
+                      avg: (
+                        weekMilkValues.reduce<number>((a, v) => a + (v ?? 0), 0) /
+                        Math.max(weekMilkValues.filter((v) => v !== null).length, 1)
+                      ).toFixed(1),
+                    })}
+                    dayKeys={DAY_KEYS.map((k) => t(`inventory.products.days.${k}`))}
+                  />
+                </>
+              )}
+
+              {/* Quick Sell */}
+              <Text style={s.sectionHeader}>{t('inventory.products.sellTitle')}</Text>
+              <View style={s.actionRow}>
+                {hasChickens && (
+                  <Pressable style={s.primaryBtn} accessibilityRole="button">
+                    <Text style={s.primaryBtnLabel}>{t('inventory.products.sellEggs')}</Text>
+                  </Pressable>
+                )}
+                {hasDairy && (
+                  <Pressable
+                    style={[s.primaryBtn, { backgroundColor: '#0E7490' }]}
+                    accessibilityRole="button"
+                  >
+                    <Text style={s.primaryBtnLabel}>{t('inventory.products.sellMilk')}</Text>
+                  </Pressable>
+                )}
+              </View>
+            </>
+          )}
+        </ScrollView>
+      )}
+
+      {/* ── HARVEST STORE TAB ─────────────────────────────────────────────── */}
+      {activeTab === 'harvest' && (
+        <ScrollView
+          style={s.scroll}
+          contentContainerStyle={s.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {harvestQ.isLoading && (
+            <ActivityIndicator size="large" color="#1A6B3C" style={s.loader} />
+          )}
+
+          {!harvestQ.isLoading && (
+            <>
+              <Text style={s.sectionHeader}>{t('inventory.harvest.section')}</Text>
+
+              {allHarvest.length === 0 ? (
+                <View style={s.emptyBox}>
+                  <Text style={s.emptyBody}>{t('inventory.harvest.empty')}</Text>
+                </View>
+              ) : (
+                <>
+                  {/* Total value banner */}
+                  {totalHarvestValue > 0 && (
+                    <View style={s.harvestBanner}>
+                      <View style={s.harvestBannerRow}>
+                        <Text style={s.harvestBannerTitle}>
+                          {t('inventory.harvest.totalTitle')}
+                        </Text>
+                        <Text style={s.harvestBannerValue}>
+                          KES {formatNumber(totalHarvestValue)}
+                        </Text>
+                      </View>
+                      <Text style={s.harvestBannerSub}>
+                        {t('inventory.harvest.totalSub', {
+                          count: allHarvest.filter((h) => h.remainingKg > 0).length,
+                          totalKg: totalHarvestKg.toLocaleString(),
+                        })}
+                      </Text>
+                    </View>
+                  )}
+
+                  {allHarvest.map((item) => {
+                    const soldPct =
+                      item.quantityKg > 0
+                        ? (item.soldKg / item.quantityKg) * 100
+                        : 100;
+
+                    return (
+                      <View
+                        key={item.id}
+                        style={[
+                          s.harvestCard,
+                          {
+                            borderColor: item.remainingKg > 0 ? '#1A6B3C' : '#E5E7EB',
+                          },
+                        ]}
+                      >
+                        <View style={s.row1}>
+                          <Text style={s.inputName}>
+                            {getCropEmoji(item.cropName)} {item.cropName} ({item.variety})
+                          </Text>
+                          <View
+                            style={[
+                              s.badge,
+                              { backgroundColor: item.remainingKg > 0 ? '#EAF4EE' : '#EAF4EE' },
+                            ]}
+                          >
+                            <Text style={[s.badgeText, { color: '#0D4A28' }]}>
+                              {item.remainingKg > 0
+                                ? `${item.remainingKg}kg`
+                                : t('inventory.harvest.soldOut')}
+                            </Text>
+                          </View>
+                        </View>
+
+                        <Text style={s.inputPurchased}>
+                          {t('inventory.harvest.harvested', {
+                            date: formatDate(item.harvestDate),
+                            grade: item.gradeLabel,
+                          })}
+                        </Text>
+
+                        {/* Sold progress */}
+                        <View style={s.statsRow}>
+                          <Text style={s.statText}>
+                            {t('inventory.harvest.sold', { kg: item.soldKg })}
+                          </Text>
+                          <Text style={s.statText}>
+                            {t('inventory.harvest.remaining', { kg: item.remainingKg })}
+                          </Text>
+                        </View>
+                        <View style={s.progressTrack}>
+                          <View
+                            style={[
+                              s.progressFill,
+                              {
+                                width: `${Math.min(soldPct, 100)}%` as `${number}%`,
+                                backgroundColor: '#1A6B3C',
+                              },
+                            ]}
+                          />
+                        </View>
+
+                        {/* Estimated value */}
+                        <View style={s.harvestValueBox}>
+                          <Text style={s.harvestValueText}>
+                            {t('inventory.harvest.estimatedValue', {
+                              value: formatNumber(item.estimatedValueKes),
+                            })}
+                          </Text>
+                          <Text style={s.harvestValueNote}>
+                            {t('inventory.harvest.marketPriceNote', {
+                              kg: item.remainingKg,
+                              price: item.quantityKg > 0
+                                ? Math.round(item.estimatedValueKes / Math.max(item.remainingKg, 1))
+                                : 0,
+                            })}
+                          </Text>
+                        </View>
+
+                        <Text style={s.costSummary}>
+                          {t('inventory.harvest.storage', {
+                            location: item.storageLocation,
+                          })}
+                        </Text>
+
+                        <View style={[s.actionRow, s.mt6]}>
+                          <Pressable style={s.primaryBtn} accessibilityRole="button">
+                            <Text style={s.primaryBtnLabel}>
+                              {t('inventory.harvest.recordSale')}
+                            </Text>
+                          </Pressable>
+                          <Pressable style={s.outlineBtn} accessibilityRole="button">
+                            <Text style={s.outlineBtnLabel}>
+                              {t('inventory.harvest.updateStock')}
+                            </Text>
+                          </Pressable>
+                        </View>
+                      </View>
+                    );
+                  })}
+
+                  {/* Add harvest card */}
+                  <Pressable style={s.dashedCard} accessibilityRole="button">
+                    <Text style={s.dashedCardLabel}>
+                      {t('inventory.harvest.addNew')}
+                    </Text>
+                  </Pressable>
+                </>
+              )}
+            </>
+          )}
+        </ScrollView>
+      )}
+
+      {/* ── COLLECTIONS TAB ───────────────────────────────────────────────── */}
+      {activeTab === 'collections' && (
+        <ScrollView
+          style={s.scroll}
+          contentContainerStyle={s.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {collectionsQ.isLoading && (
+            <ActivityIndicator size="large" color="#1A6B3C" style={s.loader} />
+          )}
+
+          {!collectionsQ.isLoading && (
+            <>
+              {/* Total pending banner */}
+              <View style={s.mb8}>
+                {totalPending > 0 ? (
+                  <AlertBox
+                    variant="green"
+                    message={t('inventory.collections.pendingBannerFull', {
+                      total: formatNumber(totalPending),
+                      count: unpaidCollections.length,
+                      plural: unpaidCollections.length !== 1 ? 's' : '',
+                    })}
+                  />
+                ) : (
+                  <AlertBox
+                    variant="green"
+                    message={t('inventory.collections.allPaid')}
+                  />
+                )}
+              </View>
+
+              {/* Filter chips */}
+              <View style={s.filterRow}>
+                {COLLECTION_FILTERS.map((f) => (
+                  <Pressable
+                    key={f.key}
+                    style={[
+                      s.chip,
+                      collectionFilter === f.key ? s.chipActive : s.chipInactive,
+                    ]}
+                    onPress={() => setCollectionFilter(f.key)}
+                    accessibilityRole="button"
+                  >
+                    <Text
+                      style={[
+                        s.chipText,
+                        collectionFilter === f.key
+                          ? s.chipTextActive
+                          : s.chipTextInactive,
+                      ]}
+                    >
+                      {f.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+
+              {/* Collection cards */}
+              {filteredCollections
+                .slice()
+                .sort((a, b) => {
+                  if (!a.isPaid && !b.isPaid) {
+                    return new Date(a.takenDate).getTime() - new Date(b.takenDate).getTime();
+                  }
+                  return 0;
+                })
+                .map((item) => {
+                  const daysOwing = getDaysOwing(item.takenDate);
+                  return (
+                    <View
+                      key={item.id}
+                      style={[
+                        s.collectionCard,
+                        {
+                          borderColor: item.isPaid ? '#E5E7EB' : '#D97706',
+                          opacity:     item.isPaid ? 0.7 : 1,
+                        },
+                      ]}
+                    >
+                      <View style={s.collectionRow1}>
+                        <Text style={s.collectionName}>{item.customerName}</Text>
+                        <Text
+                          style={[
+                            s.collectionAmount,
+                            { color: item.isPaid ? '#1A6B3C' : '#D97706' },
+                          ]}
+                        >
+                          KES {item.totalAmount.toLocaleString()}
+                        </Text>
+                      </View>
+                      <Text style={s.collectionDesc}>
+                        {t('inventory.collections.productTaken', {
+                          product: item.productType,
+                          qty:     item.quantity,
+                          unit:    item.unit,
+                        })}
+                      </Text>
+                      <Text style={s.collectionSince}>
+                        {t('inventory.collections.since', {
+                          date: formatDate(item.takenDate, 'MMM D, YYYY'),
+                        })}
+                      </Text>
+
+                      {item.isPaid && item.paidDate ? (
+                        <Text style={s.paidOnLabel}>
+                          {t('inventory.collections.paidOn', {
+                            date: formatDate(item.paidDate),
+                          })}
+                        </Text>
+                      ) : (
+                        <>
+                          <Text style={s.daysOwingLabel}>
+                            {t('inventory.collections.daysOwing', {
+                              count: daysOwing,
+                              plural: daysOwing !== 1 ? 's' : '',
+                            })}
+                          </Text>
+                          <View style={[s.actionRow, s.mt5]}>
+                            <Pressable
+                              style={[
+                                s.primaryBtn,
+                                markPaidMutation.isPending && s.btnDisabled,
+                              ]}
+                              onPress={() => handleMarkPaid(item.id, item.totalAmount)}
+                              disabled={markPaidMutation.isPending}
+                              accessibilityRole="button"
+                            >
+                              <Text style={s.primaryBtnLabel}>
+                                {t('inventory.collections.markPaid')}
+                              </Text>
+                            </Pressable>
+                            <Pressable
+                              style={s.outlineBtn}
+                              onPress={() =>
+                                void Linking.openURL(`tel:${item.customerPhone}`)
+                              }
+                              accessibilityRole="button"
+                            >
+                              <Text style={s.outlineBtnLabel}>
+                                {t('inventory.collections.callBtn')}
+                              </Text>
+                            </Pressable>
+                          </View>
+                        </>
+                      )}
+                    </View>
+                  );
+                })}
+
+              {/* Add collection card */}
+              <Pressable style={s.dashedCard} accessibilityRole="button">
+                <Text style={s.dashedCardLabel}>
+                  {t('inventory.collections.addNew')}
+                </Text>
+              </Pressable>
+            </>
+          )}
+        </ScrollView>
+      )}
+
+      {/* FAB */}
+      <Pressable
+        style={s.fab}
+        onPress={() => navigation.navigate('AddStockScreen')}
+        accessibilityRole="button"
+        accessibilityLabel={t('inventory.inputs.addCta')}
+      >
+        <Text style={s.fabIcon}>+</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+// ── WeeklyGrid sub-component ─────────────────────────────────────────────────
+
+interface WeeklyGridProps {
+  weekDays: Date[];
+  values: Array<number | null>;
+  maxValue: number;
+  today: Date;
+  footerText: string;
+  dayKeys: string[];
+}
+
+function WeeklyGrid({
+  weekDays,
+  values,
+  maxValue,
+  today,
+  footerText,
+  dayKeys,
+}: WeeklyGridProps) {
+  return (
+    <View style={s.weekCard}>
+      <View style={s.weekGrid}>
+        {weekDays.map((day, i) => {
+          const isToday  = isSameDay(day.toISOString(), today);
+          const isPast   = day < today && !isToday;
+          const isFuture = day > today && !isToday;
+          const val      = values[i];
+
+          return (
+            <View key={i} style={s.weekDayCol}>
+              <Text style={s.weekDayLabel}>{dayKeys[i]}</Text>
+              <View style={[s.weekDayBox, isToday && s.weekDayBoxToday]}>
+                <Text
+                  style={[
+                    s.weekDayNum,
+                    isToday && s.weekDayNumToday,
+                    isFuture && s.weekDayFuture,
+                    isPast && val === null && s.weekDayNoData,
+                  ]}
+                >
+                  {isFuture ? '·' : val !== null ? String(val) : '—'}
+                </Text>
+                {isPast && val !== null && (
+                  <View
+                    style={[
+                      s.weekBar,
+                      { width: `${(val / maxValue) * 80}%` as `${number}%` },
+                    ]}
+                  />
+                )}
+              </View>
+            </View>
+          );
+        })}
+      </View>
+      <Text style={s.weekSummary}>{footerText}</Text>
+    </View>
+  );
+}
+
+// ── Styles ────────────────────────────────────────────────────────────────────
+
+const s = StyleSheet.create({
+  root:    { flex: 1, backgroundColor: '#fff' },
+  topArea: { backgroundColor: '#1A6B3C' },
+  topBar:  {
+    height: 44, flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'space-between', paddingHorizontal: 12,
+  },
+  topBarTitle: { fontSize: 15, fontWeight: '600', color: '#fff' },
+  topBarBtn:   { minHeight: 44, minWidth: 44, alignItems: 'center', justifyContent: 'center' },
+  topBarIcon:  { fontSize: 22, color: 'rgba(255,255,255,0.85)', lineHeight: 26 },
+
+  // ── Summary strip ──────────────────────────────────────────────────────────
+  summaryStrip: {
+    flexDirection: 'row',
+    backgroundColor: '#F9FAFB',
+    borderBottomWidth: 1,
+    borderColor: '#E5E7EB',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  summaryItem: { flex: 1, alignItems: 'center' },
+  summaryBorder: { borderRightWidth: 1, borderColor: '#E5E7EB' },
+  summaryValue:  { fontSize: 12, fontWeight: '800' },
+  summaryLabel:  { fontSize: 8, color: '#6B7280', marginTop: 2 },
+
+  // ── Sub-tabs ───────────────────────────────────────────────────────────────
+  subTabs: {
+    flexDirection: 'row', backgroundColor: '#fff',
+    borderBottomWidth: 1, borderColor: '#E5E7EB',
+  },
+  tabItem: {
+    flex: 1, paddingVertical: 9, alignItems: 'center',
+    borderBottomWidth: 2, borderColor: 'transparent',
+  },
+  tabItemActive:  { borderColor: '#1A6B3C' },
+  tabLabel:       { fontSize: 10, color: '#6B7280', fontWeight: '500' },
+  tabLabelActive: { color: '#1A6B3C', fontWeight: '600' },
+
+  scroll:        { flex: 1, backgroundColor: '#fff' },
+  scrollContent: { padding: 11, paddingBottom: 90 },
+
+  loader: { marginTop: 32 },
+
+  // ── Chips ─────────────────────────────────────────────────────────────────
+  chipScroll:    { marginBottom: 10 },
+  chipRow:       { flexDirection: 'row', gap: 6, paddingVertical: 2 },
+  filterRow:     { flexDirection: 'row', gap: 6, marginBottom: 10 },
+  chip:          { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5 },
+  chipActive:    { backgroundColor: '#1A6B3C' },
+  chipInactive:  { backgroundColor: '#fff', borderWidth: 1, borderColor: '#1A6B3C' },
+  chipText:      { fontSize: 9, fontWeight: '600' },
+  chipTextActive:   { color: '#fff' },
+  chipTextInactive: { color: '#1A6B3C' },
+
+  sectionHeader: {
+    fontSize: 9, fontWeight: '700', color: '#1A6B3C',
+    textTransform: 'uppercase', letterSpacing: 0.8,
+    marginTop: 10, marginBottom: 5,
+  },
+
+  // ── Skeleton ──────────────────────────────────────────────────────────────
+  skeletonCard: {
+    height: 90, backgroundColor: '#F3F4F6', borderRadius: 8, marginBottom: 8,
+  },
+
+  // ── Input cards ──────────────────────────────────────────────────────────
+  inputCard: {
+    backgroundColor: '#fff', borderRadius: 8, padding: 10, marginBottom: 8,
+    shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 2, elevation: 1,
+  },
+  row1: {
+    flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'space-between', marginBottom: 3,
+  },
+  inputName:      { fontSize: 11, fontWeight: '600', color: '#111827', flex: 1, marginRight: 8 },
+  badge:          { borderRadius: 8, paddingHorizontal: 6, paddingVertical: 2 },
+  badgeText:      { fontSize: 8, fontWeight: '600' },
+  inputPurchased: { fontSize: 9, color: '#6B7280', marginBottom: 4 },
+  progressTrack:  {
+    height: 7, backgroundColor: '#E5E7EB', borderRadius: 3,
+    overflow: 'hidden', marginBottom: 3,
+  },
+  progressFill:   { height: 7, borderRadius: 3 },
+  statsRow:       { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+  statText:       { fontSize: 8, color: '#6B7280' },
+  costSummary:    { fontSize: 8, color: '#9CA3AF', marginTop: 4 },
+
+  // ── Buttons ───────────────────────────────────────────────────────────────
+  actionRow:      { flexDirection: 'row', gap: 5 },
+  outlineBtn:     {
+    flex: 1, minHeight: 44, borderWidth: 1.5, borderColor: '#1A6B3C',
+    borderRadius: 6, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  outlineBtnLabel:{ fontSize: 8, color: '#1A6B3C', fontWeight: '600' },
+  primaryBtn:     {
+    flex: 1, minHeight: 44, backgroundColor: '#1A6B3C',
+    borderRadius: 6, alignItems: 'center', justifyContent: 'center',
+  },
+  primaryBtnLabel:{ fontSize: 8, color: '#fff', fontWeight: '600' },
+  buyNowBtn:      {
+    minHeight: 44, backgroundColor: '#DC2626',
+    borderRadius: 6, alignItems: 'center', justifyContent: 'center',
+  },
+  buyNowLabel:    { fontSize: 8, color: '#fff', fontWeight: '600' },
+  btnDisabled:    { opacity: 0.6 },
+
+  // ── Empty states ──────────────────────────────────────────────────────────
+  emptyCard: {
+    borderWidth: 1.5, borderColor: '#E5E7EB', borderStyle: 'dashed',
+    borderRadius: 8, padding: 20, alignItems: 'center', marginBottom: 8,
+  },
+  emptyBox:   { paddingVertical: 20, alignItems: 'center' },
+  emptyTitle: { fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 4, textAlign: 'center' },
+  emptyBody:  { fontSize: 11, color: '#6B7280', textAlign: 'center', marginBottom: 12 },
+  emptyCtaBtn:   {
+    minHeight: 48, backgroundColor: '#1A6B3C', borderRadius: 6,
+    paddingHorizontal: 20, alignItems: 'center', justifyContent: 'center',
+  },
+  emptyCtaLabel: { fontSize: 10, color: '#fff', fontWeight: '600' },
+  dashedCard:    {
+    borderWidth: 2, borderColor: '#E5E7EB', borderStyle: 'dashed',
+    borderRadius: 8, backgroundColor: '#F9FAFB', padding: 12,
+    alignItems: 'center', marginTop: 4, minHeight: 48, justifyContent: 'center',
+  },
+  dashedCardLabel: { fontSize: 10, fontWeight: '600', color: '#1A6B3C' },
+
+  // ── Animal Products ───────────────────────────────────────────────────────
+  productGrid:      { flexDirection: 'row', gap: 6, marginBottom: 8 },
+  productCard:      {
+    flex: 1, borderWidth: 1.5, borderRadius: 8, padding: 10, alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  productCardGreen: { borderColor: '#1A6B3C' },
+  productCardTeal:  { borderColor: '#0E7490' },
+  productEmoji:     { fontSize: 22, marginBottom: 2 },
+  productValue:     { fontSize: 16, fontWeight: '800', marginBottom: 1 },
+  productUnit:      { fontSize: 9, color: '#6B7280' },
+  productDate:      { fontSize: 9, color: '#6B7280', textAlign: 'center', marginBottom: 5 },
+  recordedLabel:    { fontSize: 8, color: '#1A6B3C', marginBottom: 3 },
+  productActionBtn: {
+    minHeight: 44, borderRadius: 6, paddingHorizontal: 12,
+    alignItems: 'center', justifyContent: 'center', marginTop: 5,
+  },
+  productActionLabel: { fontSize: 8, color: '#fff', fontWeight: '600' },
+
+  // ── Weekly grid ───────────────────────────────────────────────────────────
+  weekCard:     {
+    backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB',
+    borderRadius: 8, padding: 8, marginBottom: 8,
+  },
+  weekGrid:     { flexDirection: 'row', marginBottom: 6 },
+  weekDayCol:   { flex: 1, alignItems: 'center', paddingVertical: 3 },
+  weekDayLabel: { fontSize: 7, color: '#6B7280', marginBottom: 3, textAlign: 'center' },
+  weekDayBox:   {
+    paddingVertical: 3, paddingHorizontal: 2,
+    borderRadius: 3, minWidth: 28, alignItems: 'center',
+  },
+  weekDayBoxToday:  { backgroundColor: '#EAF4EE' },
+  weekDayNum:       { fontSize: 9, fontWeight: '600', color: '#111827' },
+  weekDayNumToday:  { color: '#1A6B3C', fontWeight: '700' },
+  weekDayFuture:    { color: '#E5E7EB' },
+  weekDayNoData:    { color: '#9CA3AF' },
+  weekBar: {
+    height: 3, backgroundColor: '#1A6B3C', borderRadius: 1.5, marginTop: 2,
+  },
+  weekSummary: { fontSize: 8, color: '#6B7280', textAlign: 'center', marginTop: 6 },
+
+  // ── Harvest store ─────────────────────────────────────────────────────────
+  harvestBanner: {
+    backgroundColor: '#EAF4EE', borderWidth: 1, borderColor: '#1A6B3C',
+    borderRadius: 8, padding: 10, marginBottom: 8,
+  },
+  harvestBannerRow:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  harvestBannerTitle:{ fontSize: 10, fontWeight: '700', color: '#0D4A28' },
+  harvestBannerValue:{ fontSize: 13, fontWeight: '800', color: '#1A6B3C' },
+  harvestBannerSub:  { fontSize: 9, color: '#1A6B3C', marginTop: 2 },
+  harvestCard: {
+    backgroundColor: '#fff', borderWidth: 1, borderRadius: 8,
+    padding: 10, marginBottom: 8,
+  },
+  harvestValueBox: {
+    backgroundColor: '#F9FAFB', borderRadius: 5,
+    paddingVertical: 6, paddingHorizontal: 8, marginTop: 5,
+  },
+  harvestValueText: { fontSize: 9, fontWeight: '600', color: '#1A6B3C' },
+  harvestValueNote: { fontSize: 8, color: '#6B7280' },
+
+  // ── Collections ───────────────────────────────────────────────────────────
+  collectionCard: {
+    backgroundColor: '#fff', borderWidth: 1, borderRadius: 8,
+    padding: 10, marginBottom: 8,
+  },
+  collectionRow1: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center', marginBottom: 3,
+  },
+  collectionName:   { fontSize: 11, fontWeight: '600', color: '#111827' },
+  collectionAmount: { fontSize: 12, fontWeight: '700' },
+  collectionDesc:   { fontSize: 9, color: '#6B7280', marginBottom: 2 },
+  collectionSince:  { fontSize: 8, color: '#9CA3AF' },
+  paidOnLabel:      { fontSize: 9, color: '#1A6B3C', marginTop: 4 },
+  daysOwingLabel:   { fontSize: 8, color: '#DC2626', marginTop: 3 },
+
+  // ── Utility ───────────────────────────────────────────────────────────────
+  mb4: { marginBottom: 4 },
+  mb6: { marginBottom: 6 },
+  mb8: { marginBottom: 8 },
+  mt5: { marginTop: 5 },
+  mt6: { marginTop: 6 },
+
+  // ── FAB ───────────────────────────────────────────────────────────────────
+  fab: {
+    position: 'absolute', bottom: 72, right: 16,
+    width: 48, height: 48, borderRadius: 24,
+    backgroundColor: '#1A6B3C', alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#1A6B3C', shadowOpacity: 0.4, shadowRadius: 10, elevation: 6,
+  },
+  fabIcon: { fontSize: 24, color: '#fff', lineHeight: 28 },
+});

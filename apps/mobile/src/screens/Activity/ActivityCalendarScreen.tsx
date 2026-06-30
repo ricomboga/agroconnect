@@ -46,7 +46,7 @@ export function ActivityCalendarScreen({ navigation, route }: Props) {
   const activitiesByDay = useMemo(() => {
     const map: Record<number, Activity[]> = {};
     for (const a of activities) {
-      const d = new Date(a.plannedDate).getDate();
+      const d = new Date(a.scheduledDate).getDate();
       if (!map[d]) map[d] = [];
       map[d].push(a);
     }
@@ -125,7 +125,7 @@ export function ActivityCalendarScreen({ navigation, route }: Props) {
           renderItem={({ item }) => (
             <ActivityListItem
               activity={item}
-              onPress={() => navigation.navigate('ActivityForm', { farmId, activityId: item.id })}
+              onPress={() => navigation.navigate('ActivityLogModal', { farmId, activityId: item.id })}
             />
           )}
           style={styles.tray}

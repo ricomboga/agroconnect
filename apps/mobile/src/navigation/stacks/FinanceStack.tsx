@@ -2,6 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { FinanceStackParamList } from '../types';
 import { FinanceHomeScreen } from '../../screens/Finance/FinanceHomeScreen';
+import { AddTransactionScreen } from '../../screens/Finance/AddTransactionScreen';
 import { CreditScoreDetailScreen } from '../../screens/Finance/CreditScoreDetailScreen';
 import { LoanProductsScreen } from '../../screens/Finance/LoanProductsScreen';
 import { LoanApplicationScreen } from '../../screens/Finance/LoanApplicationScreen';
@@ -13,6 +14,7 @@ export function FinanceStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen name="FinanceHome" component={FinanceHomeScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AddTransaction" component={AddTransactionScreen} options={{ headerShown: false }} />
       <Stack.Screen name="CreditScoreDetail" component={CreditScoreDetailScreen} options={{ headerShown: false }} />
       <Stack.Screen name="LoanProducts" component={LoanProductsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="LoanApplication" component={LoanApplicationScreen} options={{ headerShown: false }} />

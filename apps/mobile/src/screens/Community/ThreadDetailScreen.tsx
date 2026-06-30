@@ -9,47 +9,52 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  Image,
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
+import { useAuthStore } from '../../stores/authStore';
 import { useCommunitySocket } from '../../hooks/useCommunitySocket';
 import { communityApi } from '../../api/community';
-import type { Reply, ThreadCategory } from '../../api/community';
+import type { Reply, Thread } from '../../api/community';
 import type { CommunityStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<CommunityStackParamList, 'ThreadDetail'>;
 
-const CATEGORY_COLOR: Record<ThreadCategory, string> = {
-  crops: '#2E7D32', livestock: '#6D4C41', market: '#1565C0',
-  weather: '#00838F', finance: '#E65100', government: '#4527A0',
-  success: '#F57F17', tools: '#37474F',
-};
-const CATEGORY_BG: Record<ThreadCategory, string> = {
-  crops: '#E8F5E9', livestock: '#EFEBE9', market: '#E3F2FD',
-  weather: '#E0F7FA', finance: '#FFF3E0', government: '#EDE7F6',
-  success: '#FFFDE7', tools: '#ECEFF1',
-};
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .map((w) => w[0] ?? '')
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+}
 
 function timeAgo(iso: string): string {
   const secs = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
   if (secs < 60) return `${secs}s`;
   const mins = Math.floor(secs / 60);
-  if (mins < 60) return `${mins}dk`;
+  if (mins < 60) return `${mins}m`;
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}saa`;
-  return `${Math.floor(hrs / 24)}siku`;
+  if (hrs < 24) return `${hrs}h`;
+  return `${Math.floor(hrs / 24)}d`;
 }
 
 export function ThreadDetailScreen({ navigation, route }: Props) {
   const { threadId } = route.params;
   const { t } = useTranslation();
   const { isOnline } = useOfflineSync();
+  const currentUser = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
   const [replyText, setReplyText] = useState('');
   const [extraReplies, setExtraReplies] = useState<Reply[]>([]);
+  const [upvotedThread, setUpvotedThread] = useState(false);
+  const [upvotedReplies, setUpvotedReplies] = useState<Set<string>>(new Set());
   const listRef = useRef<FlatList<Reply>>(null);
 
   const threadQuery = useQuery({
@@ -59,36 +64,101 @@ export function ThreadDetailScreen({ navigation, route }: Props) {
   });
 
   const onNewReply = useCallback((reply: Reply) => {
-    setExtraReplies((prev) => [...prev, reply]);
-    // scroll to bottom on next tick
+    setExtraReplies((prev) => {
+      if (prev.some((r) => r.id === reply.id)) return prev;
+      return [...prev, reply];
+    });
     setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 100);
   }, []);
 
   useCommunitySocket(threadId, onNewReply);
 
+  const authorName = currentUser?.fullName ?? currentUser?.phone ?? 'Farmer';
+
   const replyMutation = useMutation({
-    mutationFn: () => communityApi.threads.reply(threadId, replyText),
+    mutationFn: () =>
+      communityApi.threads.reply(threadId, {
+        body: replyText,
+        authorName,
+      }),
     onSuccess: (res) => {
-      setExtraReplies((prev) => [...prev, res.data]);
+      setExtraReplies((prev) => {
+        if (prev.some((r) => r.id === res.data.id)) return prev;
+        return [...prev, res.data];
+      });
       setReplyText('');
       void queryClient.invalidateQueries({ queryKey: ['threads'] });
     },
   });
 
+  const upvoteThreadMutation = useMutation({
+    mutationFn: () => communityApi.threads.upvote(threadId),
+    onSuccess: () => setUpvotedThread(true),
+    onError: (err: { status?: number }) => {
+      if (err?.status === 409) setUpvotedThread(true);
+    },
+  });
+
+  const upvoteReplyMutation = useMutation({
+    mutationFn: (replyId: string) => communityApi.replies.upvote(replyId),
+    onSuccess: (_data, replyId) => {
+      setUpvotedReplies((prev) => new Set(prev).add(replyId));
+      void queryClient.invalidateQueries({ queryKey: ['thread', threadId] });
+    },
+    onError: (_err, replyId: string) => {
+      setUpvotedReplies((prev) => new Set(prev).add(replyId));
+    },
+  });
+
+  const reportReplyMutation = useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      communityApi.replies.report(id, reason),
+    onSuccess: () => {
+      Alert.alert(t('community.thread.reportSuccess'), t('community.thread.reportSuccessBody'));
+    },
+  });
+
+  const handleReportReply = (replyId: string) => {
+    Alert.alert(
+      t('community.thread.reportTitle'),
+      t('community.thread.reportBody'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('community.thread.report'),
+          style: 'destructive',
+          onPress: () => reportReplyMutation.mutate({ id: replyId, reason: 'user_report' }),
+        },
+      ],
+    );
+  };
+
   if (threadQuery.isLoading) {
     return (
-      <SafeAreaView style={s.safe}>
-        <View style={s.center}><ActivityIndicator size="large" color="#2E7D32" /></View>
+      <SafeAreaView style={s.safe} edges={['top']}>
+        <StatusBar barStyle="light-content" backgroundColor="#1A6B3C" />
+        <View style={s.topBar}>
+          <Pressable onPress={() => navigation.goBack()} style={s.backBtn} accessibilityRole="button">
+            <Text style={s.backLabel}>← {t('common.back')}</Text>
+          </Pressable>
+        </View>
+        <View style={s.center}><ActivityIndicator size="large" color="#1A6B3C" /></View>
       </SafeAreaView>
     );
   }
 
   if (threadQuery.isError) {
     return (
-      <SafeAreaView style={s.safe}>
+      <SafeAreaView style={s.safe} edges={['top']}>
+        <StatusBar barStyle="light-content" backgroundColor="#1A6B3C" />
+        <View style={s.topBar}>
+          <Pressable onPress={() => navigation.goBack()} style={s.backBtn} accessibilityRole="button">
+            <Text style={s.backLabel}>← {t('common.back')}</Text>
+          </Pressable>
+        </View>
         <View style={s.center}>
           <Text style={s.errorText}>{t('common.error.loadFailed')}</Text>
-          <Pressable onPress={() => threadQuery.refetch()} style={s.retryBtn}>
+          <Pressable onPress={() => threadQuery.refetch()} style={s.retryBtn} accessibilityRole="button">
             <Text style={s.retryLabel}>{t('common.retry')}</Text>
           </Pressable>
         </View>
@@ -96,94 +166,173 @@ export function ThreadDetailScreen({ navigation, route }: Props) {
     );
   }
 
-  const thread = threadQuery.data?.data.thread;
+  const thread = threadQuery.data?.data.thread as Thread | undefined;
   const baseReplies = threadQuery.data?.data.replies ?? [];
-  const allReplies = [...baseReplies, ...extraReplies];
+  const allReplies = [...baseReplies, ...extraReplies].filter(
+    (r, i, arr) => arr.findIndex((x) => x.id === r.id) === i,
+  );
   if (!thread) return null;
 
-  const catColor = CATEGORY_COLOR[thread.category];
-  const catBg = CATEGORY_BG[thread.category];
+  const threadPhotos = thread.photos ?? [];
+  const currentUpvotes = (thread.upvoteCount ?? thread.upvotes ?? 0) + (upvotedThread ? 1 : 0);
 
-  const ThreadHeader = () => (
-    <View style={s.threadHeader}>
-      <View style={[s.catTag, { backgroundColor: catBg }]}>
-        <Text style={[s.catTagText, { color: catColor }]}>
-          {t(`community.home.category.${thread.category}`)}
-        </Text>
+  const OriginalPost = () => (
+    <View style={s.originalCard}>
+      <View style={s.postHeader}>
+        <View style={s.authorAvatar}>
+          <Text style={s.authorAvatarText}>{getInitials(thread.authorName)}</Text>
+        </View>
+        <View style={s.authorInfo}>
+          <Text style={s.postAuthorName}>{thread.authorName}</Text>
+          <Text style={s.postMeta}>
+            {[thread.authorCounty, timeAgo(thread.createdAt)].filter(Boolean).join(' · ')}
+          </Text>
+        </View>
       </View>
-      <Text style={s.threadTitle}>{thread.title}</Text>
-      <Text style={s.threadBody}>{thread.body}</Text>
-      <View style={s.authorRow}>
-        <View style={s.authorLeft}>
-          <Text style={s.authorName}>{thread.authorName}</Text>
-          {thread.isExpert && (
-            <View style={s.expertBadge}>
-              <Text style={s.expertBadgeText}>{t('community.thread.expert')}</Text>
+
+      <Text style={s.postTitle}>{thread.title}</Text>
+      <Text style={s.postBody}>{thread.body}</Text>
+
+      {threadPhotos.length > 0 && (
+        <View style={s.photosRow}>
+          {threadPhotos.slice(0, 3).map((uri: string, idx: number) => (
+            <View key={idx} style={s.photoBox}>
+              <Image source={{ uri }} style={s.photoImg} resizeMode="cover" />
+              {idx === 2 && threadPhotos.length > 3 && (
+                <View style={s.photoOverlay}>
+                  <Text style={s.photoOverlayText}>+{threadPhotos.length - 3}</Text>
+                </View>
+              )}
             </View>
-          )}
-        </View>
-        <Text style={s.timeAgo}>{timeAgo(thread.createdAt)}</Text>
-      </View>
-      <Pressable style={s.upvoteRow} accessibilityRole="button">
-        <Text style={s.upvoteText}>⬆ {thread.upvoteCount} {t('community.thread.upvote')}</Text>
-      </Pressable>
-      <View style={s.divider} />
-    </View>
-  );
-
-  const renderReply = ({ item }: { item: Reply }) => (
-    <View style={[s.replyCard, item.isVerified && s.replyVerified]}>
-      <View style={s.replyHeader}>
-        <View style={s.authorLeft}>
-          <Text style={s.authorName}>{item.authorName}</Text>
-          {item.isExpert && (
-            <Pressable
-              onPress={() => navigation.navigate('ExpertProfile', { expertId: item.authorId })}
-              accessibilityRole="button"
-            >
-              <View style={s.expertBadge}>
-                <Text style={s.expertBadgeText}>{t('community.thread.expert')}</Text>
-              </View>
-            </Pressable>
-          )}
-        </View>
-        <Text style={s.timeAgo}>{timeAgo(item.createdAt)}</Text>
-      </View>
-      {item.isVerified && (
-        <View style={s.verifiedBar}>
-          <Text style={s.verifiedText}>✓ {t('community.thread.verified')}</Text>
+          ))}
         </View>
       )}
-      <Text style={s.replyBody}>{item.body}</Text>
-      <Pressable style={s.replyUpvote} accessibilityRole="button">
-        <Text style={s.replyUpvoteText}>⬆ {item.upvoteCount}</Text>
-      </Pressable>
+
+      <View style={s.postFooter}>
+        <Pressable
+          style={[s.footerAction, upvotedThread && s.footerActionActive]}
+          onPress={() => {
+            if (!upvotedThread) upvoteThreadMutation.mutate();
+          }}
+          accessibilityRole="button"
+        >
+          <Text style={[s.footerActionText, upvotedThread && s.footerActionTextActive]}>
+            👍 {currentUpvotes}
+          </Text>
+        </Pressable>
+        <Text style={s.footerMeta}>
+          💬 {t('community.home.thread.replies_other', { count: allReplies.length })}
+        </Text>
+      </View>
     </View>
   );
+
+  const RepliesHeader = () => (
+    <Text style={s.repliesHeader}>
+      {t('community.thread.repliesHeader', { count: allReplies.length })}
+    </Text>
+  );
+
+  const renderReply = ({ item }: { item: Reply }) => {
+    const isExpert = item.isExpert || item.isVerified || item.isExpertVerified;
+    const initials = getInitials(item.authorName);
+    const alreadyUpvoted = upvotedReplies.has(item.id);
+    const replyUpvotes = (item.upvoteCount ?? item.upvotes ?? 0) + (alreadyUpvoted ? 1 : 0);
+
+    const footer = (
+      <View style={s.replyFooter}>
+        <Pressable
+          style={[s.footerAction, alreadyUpvoted && s.footerActionActive]}
+          onPress={() => { if (!alreadyUpvoted) upvoteReplyMutation.mutate(item.id); }}
+          accessibilityRole="button"
+        >
+          <Text style={[s.footerActionText, alreadyUpvoted && s.footerActionTextActive]}>
+            👍 {replyUpvotes}
+          </Text>
+        </Pressable>
+        <Pressable
+          style={s.footerAction}
+          onPress={() => handleReportReply(item.id)}
+          accessibilityRole="button"
+        >
+          <Text style={s.footerActionText}>{t('community.thread.report')}</Text>
+        </Pressable>
+      </View>
+    );
+
+    if (isExpert) {
+      return (
+        <View style={s.expertReply}>
+          <View style={s.replyHeader}>
+            <View style={s.expertAvatar}>
+              <Text style={s.expertAvatarText}>{initials}</Text>
+            </View>
+            <View style={s.replyAuthorCol}>
+              <View style={s.nameRow}>
+                <Text style={s.replyAuthorName}>{item.authorName}</Text>
+                <View style={s.expertBadge}>
+                  <Text style={s.expertBadgeText}>
+                    ✓ {item.authorRole ?? t('community.thread.expert')}
+                  </Text>
+                </View>
+              </View>
+              <Text style={s.replyMeta}>{timeAgo(item.createdAt)}</Text>
+            </View>
+          </View>
+          <Text style={s.replyBody}>{item.body}</Text>
+          {footer}
+        </View>
+      );
+    }
+
+    return (
+      <View style={s.regularReply}>
+        <View style={s.replyHeader}>
+          <View style={s.regularAvatar}>
+            <Text style={s.regularAvatarText}>{initials}</Text>
+          </View>
+          <View style={s.replyAuthorCol}>
+            <Text style={s.replyAuthorName}>{item.authorName}</Text>
+            <Text style={s.replyMeta}>{timeAgo(item.createdAt)}</Text>
+          </View>
+        </View>
+        <Text style={s.replyBody}>{item.body}</Text>
+        {footer}
+      </View>
+    );
+  };
+
+  const userInitials = getInitials(authorName);
 
   return (
     <SafeAreaView style={s.safe} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor="#1A6B3C" />
+
+      <View style={s.topBar}>
+        <Pressable onPress={() => navigation.goBack()} style={s.backBtn} accessibilityRole="button">
+          <Text style={s.backLabel}>← {t('common.back')}</Text>
+        </Pressable>
+        <Text style={s.topTitle} numberOfLines={1}>{thread.title}</Text>
+        <View style={s.backBtn} />
+      </View>
+
       <KeyboardAvoidingView
         style={s.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={0}
       >
-        {/* Top bar */}
-        <View style={s.topBar}>
-          <Pressable onPress={() => navigation.goBack()} style={s.backBtn} accessibilityRole="button">
-            <Text style={s.backLabel}>{t('common.back')}</Text>
-          </Pressable>
-          <Text style={s.topTitle} numberOfLines={1}>{t('community.thread.title')}</Text>
-          <View style={s.backBtn} />
-        </View>
-
         <FlatList
           ref={listRef}
           data={allReplies}
           keyExtractor={(item) => item.id}
           renderItem={renderReply}
-          ListHeaderComponent={<ThreadHeader />}
-          contentContainerStyle={s.list}
+          ListHeaderComponent={
+            <>
+              <OriginalPost />
+              <RepliesHeader />
+            </>
+          }
+          contentContainerStyle={s.listContent}
           ListEmptyComponent={
             <View style={s.emptyReplies}>
               <Text style={s.emptyTitle}>{t('community.thread.empty.title')}</Text>
@@ -192,14 +341,16 @@ export function ThreadDetailScreen({ navigation, route }: Props) {
           }
         />
 
-        {/* Pinned reply input */}
-        <View style={s.replyInputRow}>
+        <View style={s.replyInputBar}>
+          <View style={s.userAvatar}>
+            <Text style={s.userAvatarText}>{userInitials}</Text>
+          </View>
           <TextInput
             style={s.replyInput}
             value={replyText}
             onChangeText={setReplyText}
             placeholder={t('community.thread.replyPlaceholder')}
-            placeholderTextColor="#BDBDBD"
+            placeholderTextColor="#9CA3AF"
             multiline
             maxLength={500}
           />
@@ -209,9 +360,11 @@ export function ThreadDetailScreen({ navigation, route }: Props) {
             disabled={!replyText.trim() || replyMutation.isPending}
             accessibilityRole="button"
           >
-            {replyMutation.isPending
-              ? <ActivityIndicator size="small" color="#FFF" />
-              : <Text style={s.sendBtnText}>{t('community.thread.send')}</Text>}
+            {replyMutation.isPending ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={s.sendBtnText}>→</Text>
+            )}
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -220,51 +373,96 @@ export function ThreadDetailScreen({ navigation, route }: Props) {
 }
 
 const s = StyleSheet.create({
-  safe:           { flex: 1, backgroundColor: '#FAFAFA' },
-  flex:           { flex: 1 },
-  center:         { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
-  errorText:      { fontSize: 15, color: '#B71C1C', marginBottom: 12, textAlign: 'center' },
-  retryBtn:       { minHeight: 48, paddingHorizontal: 24, justifyContent: 'center', backgroundColor: '#E8F5E9', borderRadius: 8 },
-  retryLabel:     { fontSize: 15, color: '#2E7D32', fontWeight: '600' },
+  safe:               { flex: 1, backgroundColor: '#fff' },
+  flex:               { flex: 1 },
+  center:             { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
+  errorText:          { fontSize: 12, color: '#DC2626', marginBottom: 12, textAlign: 'center' },
+  retryBtn:           { minHeight: 44, paddingHorizontal: 20, justifyContent: 'center',
+                        backgroundColor: '#EAF4EE', borderRadius: 6 },
+  retryLabel:         { fontSize: 10, color: '#1A6B3C', fontWeight: '600' },
 
-  topBar:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#FFF', borderBottomWidth: 1, borderBottomColor: '#EEEEEE' },
-  backBtn:        { minWidth: 60, minHeight: 44, justifyContent: 'center' },
-  backLabel:      { fontSize: 15, color: '#2E7D32', fontWeight: '600' },
-  topTitle:       { fontSize: 16, fontWeight: '700', color: '#1A1A1A', flex: 1, textAlign: 'center' },
+  topBar:             { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+                        backgroundColor: '#1A6B3C', height: 44, paddingHorizontal: 12 },
+  backBtn:            { minWidth: 60, minHeight: 44, justifyContent: 'center' },
+  backLabel:          { fontSize: 12, color: '#fff', fontWeight: '600' },
+  topTitle:           { flex: 1, fontSize: 13, fontWeight: '600', color: '#fff',
+                        textAlign: 'center', marginHorizontal: 4 },
 
-  list:           { paddingHorizontal: 14, paddingBottom: 16 },
+  listContent:        { paddingHorizontal: 11, paddingBottom: 16 },
 
-  threadHeader:   { paddingTop: 16, paddingBottom: 12 },
-  catTag:         { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, marginBottom: 8 },
-  catTagText:     { fontSize: 11, fontWeight: '700' },
-  threadTitle:    { fontSize: 17, fontWeight: '800', color: '#1A1A1A', marginBottom: 8, lineHeight: 24 },
-  threadBody:     { fontSize: 14, color: '#333', lineHeight: 22, marginBottom: 12 },
-  authorRow:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  authorLeft:     { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  authorName:     { fontSize: 13, color: '#555', fontWeight: '600' },
-  timeAgo:        { fontSize: 12, color: '#BDBDBD' },
-  expertBadge:    { backgroundColor: '#E8F5E9', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8 },
-  expertBadgeText:{ fontSize: 10, fontWeight: '700', color: '#2E7D32' },
-  upvoteRow:      { minHeight: 36, justifyContent: 'center' },
-  upvoteText:     { fontSize: 13, color: '#757575', fontWeight: '600' },
-  divider:        { height: 1, backgroundColor: '#EEEEEE', marginTop: 12 },
+  originalCard:       { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 10, marginTop: 10,
+                        marginBottom: 8 },
+  postHeader:         { flexDirection: 'row', gap: 6, marginBottom: 8 },
+  authorAvatar:       { width: 28, height: 28, borderRadius: 14, backgroundColor: '#1A6B3C',
+                        alignItems: 'center', justifyContent: 'center' },
+  authorAvatarText:   { fontWeight: '700', fontSize: 10, color: '#fff' },
+  authorInfo:         { flex: 1 },
+  nameRow:            { flexDirection: 'row', alignItems: 'center', gap: 4, flexWrap: 'wrap',
+                        marginBottom: 2 },
+  postAuthorName:     { fontWeight: '700', fontSize: 10, color: '#111827' },
+  postMeta:           { fontSize: 8, color: '#6B7280' },
+  postTitle:          { fontSize: 12, fontWeight: '700', color: '#111827', marginBottom: 4 },
+  postBody:           { fontSize: 10, color: '#374151', lineHeight: 15, marginBottom: 8 },
 
-  replyCard:      { backgroundColor: '#FFF', borderRadius: 12, padding: 14, marginTop: 10, borderWidth: 1, borderColor: '#EEEEEE' },
-  replyVerified:  { borderColor: '#A5D6A7', borderWidth: 1.5 },
-  replyHeader:    { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  verifiedBar:    { backgroundColor: '#E8F5E9', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, marginBottom: 8, alignSelf: 'flex-start' },
-  verifiedText:   { fontSize: 11, color: '#2E7D32', fontWeight: '700' },
-  replyBody:      { fontSize: 14, color: '#333', lineHeight: 20, marginBottom: 8 },
-  replyUpvote:    { minHeight: 32, justifyContent: 'center' },
-  replyUpvoteText:{ fontSize: 12, color: '#9E9E9E', fontWeight: '600' },
+  photosRow:          { flexDirection: 'row', gap: 4, marginBottom: 8 },
+  photoBox:           { width: 80, height: 80, borderRadius: 4, backgroundColor: '#EAF4EE',
+                        overflow: 'hidden' },
+  photoImg:           { width: 80, height: 80 },
+  photoOverlay:       { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: 'rgba(0,0,0,0.45)', alignItems: 'center',
+                        justifyContent: 'center' },
+  photoOverlayText:   { color: '#fff', fontSize: 10, fontWeight: '700' },
 
-  emptyReplies:   { paddingVertical: 24, alignItems: 'center', gap: 4 },
-  emptyTitle:     { fontSize: 15, fontWeight: '600', color: '#424242' },
-  emptyBody:      { fontSize: 13, color: '#757575' },
+  postFooter:         { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  footerAction:       { minHeight: 32, justifyContent: 'center', paddingHorizontal: 6,
+                        borderRadius: 4 },
+  footerActionActive: { backgroundColor: '#EAF4EE' },
+  footerActionText:   { fontSize: 8, color: '#6B7280' },
+  footerActionTextActive: { color: '#1A6B3C', fontWeight: '700' },
+  footerMeta:         { fontSize: 8, color: '#6B7280' },
 
-  replyInputRow:  { flexDirection: 'row', alignItems: 'flex-end', padding: 12, backgroundColor: '#FFF', borderTopWidth: 1, borderTopColor: '#EEEEEE', gap: 8 },
-  replyInput:     { flex: 1, backgroundColor: '#F5F5F5', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 10, fontSize: 14, color: '#1A1A1A', maxHeight: 100, minHeight: 44 },
-  sendBtn:        { minWidth: 64, minHeight: 44, backgroundColor: '#2E7D32', borderRadius: 22, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 16 },
-  sendBtnDisabled:{ backgroundColor: '#A5D6A7' },
-  sendBtnText:    { color: '#FFF', fontWeight: '700', fontSize: 14 },
+  repliesHeader:      { fontSize: 8, fontWeight: '700', color: '#6B7280',
+                        marginVertical: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
+
+  expertReply:        { borderLeftWidth: 3, borderColor: '#1D4ED8', backgroundColor: '#DBEAFE',
+                        borderTopRightRadius: 8, borderBottomRightRadius: 8,
+                        paddingTop: 8, paddingRight: 8, paddingBottom: 8, paddingLeft: 10,
+                        marginBottom: 6 },
+  expertAvatar:       { width: 28, height: 28, borderRadius: 14, backgroundColor: '#1D4ED8',
+                        alignItems: 'center', justifyContent: 'center' },
+  expertAvatarText:   { fontWeight: '700', fontSize: 10, color: '#fff' },
+  expertBadge:        { backgroundColor: '#CFFAFE', borderRadius: 8, paddingHorizontal: 5,
+                        paddingVertical: 1 },
+  expertBadgeText:    { fontSize: 8, fontWeight: '600', color: '#0E7490' },
+
+  regularReply:       { borderLeftWidth: 2, borderColor: '#E5E7EB', paddingLeft: 8,
+                        marginBottom: 6 },
+  regularAvatar:      { width: 28, height: 28, borderRadius: 14, backgroundColor: '#1A6B3C',
+                        alignItems: 'center', justifyContent: 'center' },
+  regularAvatarText:  { fontWeight: '700', fontSize: 10, color: '#fff' },
+
+  replyHeader:        { flexDirection: 'row', gap: 6, marginBottom: 5, alignItems: 'flex-start' },
+  replyAuthorCol:     { flex: 1 },
+  replyAuthorName:    { fontWeight: '700', fontSize: 10, color: '#111827' },
+  replyMeta:          { fontSize: 8, color: '#6B7280' },
+  replyBody:          { fontSize: 9, color: '#374151', lineHeight: 14, marginBottom: 5 },
+  replyFooter:        { flexDirection: 'row', gap: 8 },
+
+  emptyReplies:       { paddingVertical: 24, alignItems: 'center', gap: 4 },
+  emptyTitle:         { fontSize: 12, fontWeight: '600', color: '#374151' },
+  emptyBody:          { fontSize: 10, color: '#6B7280' },
+
+  replyInputBar:      { flexDirection: 'row', alignItems: 'center', gap: 5,
+                        backgroundColor: '#fff', borderTopWidth: 1, borderColor: '#E5E7EB',
+                        paddingVertical: 6, paddingHorizontal: 11 },
+  userAvatar:         { width: 24, height: 24, borderRadius: 12, backgroundColor: '#1A6B3C',
+                        alignItems: 'center', justifyContent: 'center' },
+  userAvatarText:     { fontWeight: '700', fontSize: 8, color: '#fff' },
+  replyInput:         { flex: 1, borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 4,
+                        paddingVertical: 6, paddingHorizontal: 8, color: '#111827',
+                        backgroundColor: '#F9FAFB', minHeight: 32, maxHeight: 80, fontSize: 9 },
+  sendBtn:            { width: 44, height: 44, borderRadius: 22, backgroundColor: '#1A6B3C',
+                        alignItems: 'center', justifyContent: 'center' },
+  sendBtnDisabled:    { backgroundColor: '#9CA3AF' },
+  sendBtnText:        { color: '#fff', fontSize: 16, fontWeight: '700' },
 });

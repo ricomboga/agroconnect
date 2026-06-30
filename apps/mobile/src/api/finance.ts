@@ -88,6 +88,28 @@ export interface RepaymentScheduleItem {
   status: 'pending' | 'paid' | 'overdue';
 }
 
+export interface CreateTransactionDto {
+  type: 'income' | 'expense';
+  amountKes: number;
+  category: string;
+  linkedTo?: string;
+  buyerSupplier?: string;
+  date: string;
+  notes?: string;
+}
+
+export interface Transaction {
+  id: string;
+  type: 'income' | 'expense';
+  amountKes: number;
+  category: string;
+  linkedTo: string | null;
+  buyerSupplier: string | null;
+  date: string;
+  notes: string | null;
+  createdAt: string;
+}
+
 export const financeApi = {
   creditScore: {
     get: () => apiFetch<{ data: CreditScore }>('/finance/credit-score'),
@@ -99,6 +121,14 @@ export const financeApi = {
   },
   products: {
     list: () => apiFetch<{ data: LoanProduct[] }>('/finance/products'),
+  },
+  transactions: {
+    list: () => apiFetch<{ data: Transaction[] }>('/finance/transactions'),
+    create: (dto: CreateTransactionDto) =>
+      apiFetch<{ data: Transaction }>('/finance/transactions', {
+        method: 'POST',
+        body: JSON.stringify(dto),
+      }),
   },
   loans: {
     list: () => apiFetch<{ data: LoanApplication[] }>('/finance/loans'),

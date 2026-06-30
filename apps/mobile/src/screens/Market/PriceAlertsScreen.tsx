@@ -72,10 +72,10 @@ export function PriceAlertsScreen({ navigation }: Props) {
     mutationFn: ({ id, enabled }: { id: string; enabled: boolean }) =>
       priceAlertsApi.toggle(id, enabled),
     onSuccess: (res) => {
-      queryClient.setQueryData<{ data: PriceAlert[] }>(['priceAlerts'], (old) => {
+      queryClient.setQueryData<{ data: PriceAlert[] }>(['priceAlerts'], (old: { data: PriceAlert[] } | undefined) => {
         if (!old) return old;
         return {
-          data: old.data.map((a) => (a.id === res.data.id ? res.data : a)),
+          data: old.data.map((a: PriceAlert) => (a.id === res.data.id ? res.data : a)),
         };
       });
     },

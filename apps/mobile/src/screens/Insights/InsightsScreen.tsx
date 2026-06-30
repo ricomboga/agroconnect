@@ -11,7 +11,9 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { predictApi } from '../../api/predict';
-import type { MarketSignalType } from '../../api/predict';
+import type { MarketSignal, YieldEstimate } from '../../api/predict';
+
+type MarketSignalType = MarketSignal['signal'];
 import type { InsightsStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<InsightsStackParamList, 'Insights'>;
@@ -47,7 +49,7 @@ export function InsightsScreen({ navigation: _navigation }: Props) {
 
   const signals = signalsQuery.data?.data ?? [];
   const yields = yieldQuery.data?.data ?? [];
-  const priceData = pricesQuery.data?.data;
+  const priceData = pricesQuery.data?.data?.[0];
 
   return (
     <SafeAreaView style={s.safe}>
@@ -61,7 +63,7 @@ export function InsightsScreen({ navigation: _navigation }: Props) {
         {!signalsQuery.isLoading && signals.length === 0 && (
           <View style={s.emptyBox}><Text style={s.emptyText}>{t('insights.empty')}</Text></View>
         )}
-        {signals.map((sig, idx) => (
+        {signals.map((sig: MarketSignal, idx: number) => (
           <View key={`${sig.crop}-${idx}`} style={s.signalCard}>
             <View style={s.signalTop}>
               <Text style={s.signalCrop}>{sig.crop}</Text>
@@ -84,7 +86,7 @@ export function InsightsScreen({ navigation: _navigation }: Props) {
         {!yieldQuery.isLoading && yields.length === 0 && (
           <View style={s.emptyBox}><Text style={s.emptyText}>{t('insights.empty')}</Text></View>
         )}
-        {yields.map((est, idx) => (
+        {yields.map((est: YieldEstimate, idx: number) => (
           <View key={`${est.crop}-${idx}`} style={s.yieldCard}>
             <Text style={s.yieldCrop}>{est.crop}</Text>
             <View style={s.yieldStats}>
@@ -97,8 +99,8 @@ export function InsightsScreen({ navigation: _navigation }: Props) {
                 <Text style={s.yieldStatLabel}>Revenue</Text>
               </View>
             </View>
-            {est.harvestWindow ? (
-              <Text style={s.harvestWindow}>{est.harvestWindow}</Text>
+            {est.harvestWindowEnd ? (
+              <Text style={s.harvestWindow}>{est.harvestWindowStart} – {est.harvestWindowEnd}</Text>
             ) : null}
           </View>
         ))}
@@ -113,7 +115,7 @@ export function InsightsScreen({ navigation: _navigation }: Props) {
         {priceData && (
           <View style={s.priceCard}>
             <Text style={s.priceCrop}>{priceData.crop}</Text>
-            <Text style={s.priceSummary}>{priceData.summary}</Text>
+            <Text style={s.priceSummary}>{priceData.trend} · {priceData.changePercent > 0 ? '+' : ''}{priceData.changePercent}%</Text>
             {priceData.currentPriceKes !== undefined && (
               <Text style={s.priceValue}>KES {priceData.currentPriceKes.toLocaleString()} / kg</Text>
             )}

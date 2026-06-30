@@ -1,8 +1,8 @@
 import { apiFetch } from './client';
 
 export type ActivityType =
-  | 'planting' | 'irrigation' | 'fertilising' | 'weeding'
-  | 'harvesting' | 'scouting' | 'spraying' | 'other';
+  | 'planting' | 'irrigation' | 'fertilising' | 'pesticide'
+  | 'harvesting' | 'weeding' | 'other';
 
 export type ActivityStatus = 'pending' | 'completed' | 'skipped';
 
@@ -11,30 +11,49 @@ export interface Activity {
   farmId: string;
   plotId: string | null;
   type: ActivityType;
+  title: string;
   description: string | null;
-  plannedDate: string;
-  actualDate: string | null;
+  scheduledDate: string;
+  scheduledTime: string | null;
+  completedDate: string | null;
   status: ActivityStatus;
   labourCostKes: number | null;
+  assignedToWorkerId: string | null;
+  notes: string | null;
+  skipReason: string | null;
   createdAt: string;
+}
+
+export interface ActivityDetail extends Activity {
+  plotName: string | null;
+  cropName: string | null;
 }
 
 export interface CreateActivityDto {
   type: ActivityType;
+  title: string;
   description?: string;
-  plannedDate: string;
+  scheduledDate: string;
+  scheduledTime?: string;
   plotId?: string;
   labourCostKes?: number;
+  notes?: string;
+  assignedToWorkerId?: string;
 }
 
 export interface UpdateActivityDto {
   type?: ActivityType;
+  title?: string;
   description?: string;
-  plannedDate?: string;
-  actualDate?: string;
+  scheduledDate?: string;
+  scheduledTime?: string | null;
+  completedDate?: string;
   status?: ActivityStatus;
-  plotId?: string;
+  plotId?: string | null;
   labourCostKes?: number;
+  notes?: string;
+  skipReason?: string;
+  assignedToWorkerId?: string | null;
 }
 
 interface ListResponse<T> {
@@ -58,13 +77,16 @@ export const activityApi = {
   },
 
   create: (farmId: string, dto: CreateActivityDto) =>
-    apiFetch<{ data: Activity }>(`/farms/${farmId}/activities`, {
+    apiFetch<{ data: ActivityDetail }>(`/farms/${farmId}/activities`, {
       method: 'POST',
       body: JSON.stringify(dto),
     }),
 
+  get: (farmId: string, activityId: string) =>
+    apiFetch<{ data: ActivityDetail }>(`/farms/${farmId}/activities/${activityId}`),
+
   update: (farmId: string, activityId: string, dto: UpdateActivityDto) =>
-    apiFetch<{ data: Activity }>(`/farms/${farmId}/activities/${activityId}`, {
+    apiFetch<{ data: ActivityDetail }>(`/farms/${farmId}/activities/${activityId}`, {
       method: 'PATCH',
       body: JSON.stringify(dto),
     }),

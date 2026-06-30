@@ -6,13 +6,13 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { DiagnoseStackParamList } from '../../navigation/types';
-import { diagnoseApi } from '../../api/diagnose';
+import { diagnoseApi, type FeedbackOutcome } from '../../api/diagnose';
 import { useUiStore } from '../../store/ui.store';
 
 type Props = NativeStackScreenProps<DiagnoseStackParamList, 'DiagnoseFeedback'>;
-type Outcome = 'resolved' | 'better' | 'same' | 'worse';
+type Outcome = FeedbackOutcome;
 
-const OUTCOMES: Outcome[] = ['resolved', 'better', 'same', 'worse'];
+const OUTCOMES: Outcome[] = ['resolved', 'improved', 'no_change', 'worsened'];
 
 export function DiagnoseFeedbackScreen({ navigation, route }: Props) {
   const { diagnosisId } = route.params;

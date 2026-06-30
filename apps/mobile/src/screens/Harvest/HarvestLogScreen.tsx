@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { FarmStackParamList } from '../../navigation/types';
 import { useHarvests } from '../../hooks/useHarvests';
+import type { Harvest } from '../../api/harvest';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
 import { LoadingScreen } from '../../components/Common/LoadingScreen';
 import { ErrorScreen } from '../../components/Common/ErrorScreen';
@@ -23,8 +24,8 @@ export function HarvestLogScreen({ navigation, route }: Props) {
 
   const harvests = data?.data ?? [];
   const { totalYieldKg, totalRevenueKes } = useMemo(() => ({
-    totalYieldKg: harvests.reduce((sum, h) => sum + h.quantityKg, 0),
-    totalRevenueKes: harvests.reduce((sum, h) => sum + (h.totalRevenueKes ?? 0), 0),
+    totalYieldKg: harvests.reduce((sum: number, h: Harvest) => sum + h.quantityKg, 0),
+    totalRevenueKes: harvests.reduce((sum: number, h: Harvest) => sum + (h.totalRevenueKes ?? 0), 0),
   }), [harvests]);
 
   if (isLoading) return <LoadingScreen />;

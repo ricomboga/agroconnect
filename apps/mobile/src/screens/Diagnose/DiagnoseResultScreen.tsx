@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { DiagnoseStackParamList } from '../../navigation/types';
 import { diagnoseApi } from '../../api/diagnose';
+import type { DiagnosisPrescription, SupplierProduct } from '../../api/diagnose';
 import { LoadingScreen } from '../../components/Common/LoadingScreen';
 import { ErrorScreen } from '../../components/Common/ErrorScreen';
 
@@ -47,14 +48,14 @@ export function DiagnoseResultScreen({ navigation, route }: Props) {
     queryFn: () => diagnoseApi.getResult(diagnosisId),
   });
 
-  const { diagnosis, prescriptions = [] } = data ?? {};
+  const { diagnosis, prescriptions = [], suppliers = [] } = data ?? {};
   const confidencePct = diagnosis ? Math.round(diagnosis.confidence * 100) : 0;
   const barColor = diagnosis ? confidenceColor(diagnosis.confidence) : '#2E7D32';
   const severity = (diagnosis?.severity ?? 'mild') as Severity;
   const severityColor = SEVERITY_COLORS[severity];
   const severityBg = SEVERITY_BG[severity];
-  const hasBuyTarget = prescriptions.some((p) => p.product_name);
-  const buyProductName = prescriptions.find((p) => p.product_name)?.product_name ?? '';
+  const hasBuyTarget = prescriptions.some((p: DiagnosisPrescription) => p.product_name);
+  const buyProductName = prescriptions.find((p: DiagnosisPrescription) => p.product_name)?.product_name ?? '';
   const doneCount = checkedSteps.size;
 
   useEffect(() => {
@@ -77,16 +78,16 @@ export function DiagnoseResultScreen({ navigation, route }: Props) {
   const shareReport = useCallback(async () => {
     if (!diagnosis) return;
     const lines = [
-      `AgroConnect — Ripoti ya Uchunguzi`,
+      t('diagnose.result.shareTitle'),
       ``,
-      `Ugonjwa: ${diagnosis.disease_name} (${diagnosis.disease_code})`,
-      `Ukali: ${t(`diagnose.result.severity_${severity}`)}`,
-      `Uhakika: ${confidencePct}%`,
+      `${t('diagnose.result.shareDiseaseLabel')}: ${diagnosis.disease_name} (${diagnosis.disease_code})`,
+      `${t('diagnose.result.shareSeverityLabel')}: ${t(`diagnose.result.severity_${severity}`)}`,
+      `${t('diagnose.result.shareConfidenceLabel')}: ${confidencePct}%`,
       ``,
       diagnosis.description,
       ``,
-      prescriptions.length > 0 ? `Jinsi ya kutibu:` : '',
-      ...prescriptions.map((p) =>
+      prescriptions.length > 0 ? t('diagnose.result.prescriptions') : '',
+      ...prescriptions.map((p: DiagnosisPrescription) =>
         `${p.step}. ${p.action}${p.product_name ? ` — ${p.product_name}` : ''}`,
       ),
     ].filter(Boolean).join('\n');
@@ -179,7 +180,7 @@ export function DiagnoseResultScreen({ navigation, route }: Props) {
               />
             </View>
 
-            {prescriptions.map((p) => {
+            {prescriptions.map((p: DiagnosisPrescription) => {
               const isChecked = checkedSteps.has(p.step);
               const isExpanded = expandedStep === p.step;
               const hasDetail = Boolean(p.product_name || p.dosage || p.frequency);
@@ -218,6 +219,44 @@ export function DiagnoseResultScreen({ navigation, route }: Props) {
                 </Pressable>
               );
             })}
+          </View>
+        )}
+
+        {/* Supplier availability */}
+        {suppliers.length > 0 && (
+          <View style={styles.card}>
+            <Text style={styles.sectionHeader}>{t('diagnose.result.suppliers.title')}</Text>
+            <Text style={styles.suppliersHint}>{t('diagnose.result.suppliers.subtitle')}</Text>
+            {suppliers.map((s: SupplierProduct) => (
+              <View key={s.id} style={styles.supplierRow}>
+                <View style={styles.supplierInfo}>
+                  <Text style={styles.supplierName}>{s.name}</Text>
+                  {s.brand && <Text style={styles.supplierBrand}>{s.brand}</Text>}
+                  <Text style={styles.supplierCounties}>
+                    📍 {s.county_availability.join(', ')}
+                  </Text>
+                </View>
+                <View style={styles.supplierPriceCol}>
+                  <Text style={styles.supplierPrice}>
+                    KES {s.price_kes.toLocaleString()}
+                  </Text>
+                  <Text style={styles.supplierUnit}>/{s.unit}</Text>
+                  <View style={[
+                    styles.stockBadge,
+                    s.stock_quantity > 0 ? styles.stockIn : styles.stockOut,
+                  ]}>
+                    <Text style={[
+                      styles.stockText,
+                      s.stock_quantity > 0 ? styles.stockTextIn : styles.stockTextOut,
+                    ]}>
+                      {s.stock_quantity > 0
+                        ? t('diagnose.result.suppliers.in_stock')
+                        : t('diagnose.result.suppliers.out_of_stock')}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            ))}
           </View>
         )}
 
@@ -348,6 +387,35 @@ const styles = StyleSheet.create({
   detailPillText: { fontSize: 12, color: '#2E7D32', fontWeight: '600' },
   detailLine: { fontSize: 13, color: '#555555' },
   accordionIcon: { fontSize: 12, color: '#BBBBBB', marginTop: 4 },
+
+  suppliersHint: { fontSize: 12, color: '#9E9E9E', marginBottom: 12 },
+  supplierRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#F5F5F5',
+    gap: 12,
+  },
+  supplierInfo: { flex: 1 },
+  supplierName: { fontSize: 14, fontWeight: '700', color: '#1B1B1B', marginBottom: 2 },
+  supplierBrand: { fontSize: 12, color: '#757575', marginBottom: 4 },
+  supplierCounties: { fontSize: 12, color: '#555555' },
+  supplierPriceCol: { alignItems: 'flex-end' },
+  supplierPrice: { fontSize: 15, fontWeight: '800', color: '#2E7D32' },
+  supplierUnit: { fontSize: 11, color: '#9E9E9E' },
+  stockBadge: {
+    marginTop: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  stockIn: { backgroundColor: '#E8F5E9' },
+  stockOut: { backgroundColor: '#FAFAFA', borderWidth: 1, borderColor: '#E0E0E0' },
+  stockText: { fontSize: 11, fontWeight: '600' },
+  stockTextIn: { color: '#2E7D32' },
+  stockTextOut: { color: '#9E9E9E' },
 
   actionsRow: { gap: 10 },
   actionBtn: {

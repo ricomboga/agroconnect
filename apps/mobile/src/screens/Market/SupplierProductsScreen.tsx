@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { DiagnoseStackParamList } from '../../navigation/types';
 import { marketApi } from '../../api/market';
+import type { SupplierProduct } from '../../api/market';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
 import { useCartStore } from '../../store/cart.store';
 import { LoadingScreen } from '../../components/Common/LoadingScreen';
@@ -31,7 +32,7 @@ export function SupplierProductsScreen({ route, navigation }: Props) {
   if (isError) return <ErrorScreen onRetry={refetch} />;
 
   const needle = productName.toLowerCase();
-  const filtered = (data?.data ?? []).filter((p) =>
+  const filtered = (data?.data ?? []).filter((p: SupplierProduct) =>
     p.name.toLowerCase().includes(needle) ||
     (p.description?.toLowerCase().includes(needle) ?? false),
   );

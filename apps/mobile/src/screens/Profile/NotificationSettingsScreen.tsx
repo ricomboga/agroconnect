@@ -44,7 +44,7 @@ export function NotificationSettingsScreen({ navigation }: Props) {
   });
 
   useEffect(() => {
-    if (profileQuery.data?.user.notificationPreferences) {
+    if (profileQuery.data?.user?.notificationPreferences) {
       setPrefs(profileQuery.data.user.notificationPreferences);
     }
   }, [profileQuery.data]);

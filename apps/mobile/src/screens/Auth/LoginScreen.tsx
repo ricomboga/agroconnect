@@ -1,19 +1,22 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  StyleSheet,
   ActivityIndicator,
+  Animated,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { StatusBar } from 'expo-status-bar';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../stores/authStore';
 import type { AuthStackParamList } from '../../navigation/types';
 
@@ -38,6 +41,8 @@ export function LoginScreen() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
 
+  const shakeAnim = useRef(new Animated.Value(0)).current;
+
   const handlePhoneChange = (raw: string) => {
     // Allow user to type freely; only format if they haven't typed a leading +
     if (raw.startsWith('+')) {
@@ -47,130 +52,210 @@ export function LoginScreen() {
     }
   };
 
+  const triggerShake = () => {
+    shakeAnim.setValue(0);
+    Animated.sequence([
+      Animated.timing(shakeAnim, { toValue: 8,  duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -8, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 6,  duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -6, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 0,  duration: 60, useNativeDriver: true }),
+    ]).start();
+  };
+
   const handleLogin = async () => {
     setError(null);
     try {
       await login({ phone, password });
       // On success, RootNavigator switches to AppTabs automatically
     } catch (err) {
-      // Surface the exact API error message — never replace with a generic string
-      setError(err instanceof Error ? err.message : t('auth.error.networkError'));
+      const isAbort = err instanceof Error && err.name === 'AbortError';
+      let raw = err instanceof Error ? err.message : null;
+      const translated = raw ? t(raw) : null;
+      const msg = isAbort
+        ? t('auth.error.networkError')
+        : (translated && translated !== raw) ? translated
+        : raw ?? t('auth.error.networkError');
+      setError(msg);
+      triggerShake();
     }
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          contentContainerStyle={styles.container}
-          keyboardShouldPersistTaps="handled"
+    <View style={styles.root}>
+      <StatusBar style="light" />
+      <LinearGradient
+        colors={['#0D4A28', '#1A6B3C', '#2E8B57']}
+        locations={[0, 0.6, 1.0]}
+        start={{ x: 0.33, y: 0.03 }}
+        end={{ x: 0.67, y: 0.97 }}
+        style={StyleSheet.absoluteFill}
+      />
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView
+          style={styles.flex}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          {/* Back to Welcome */}
-          <Pressable style={styles.backRow} onPress={() => navigation.goBack()}>
-            <Text style={styles.backText}>← {t('common.back')}</Text>
-          </Pressable>
-
-          <Text style={styles.title}>{t('auth.login.title')}</Text>
-
-          {/* Phone */}
-          <Text style={styles.label}>{t('auth.login.phone')}</Text>
-          <TextInput
-            style={styles.input}
-            value={phone}
-            onChangeText={handlePhoneChange}
-            keyboardType="phone-pad"
-            autoCapitalize="none"
-            autoCorrect={false}
-            editable={!isLoading}
-            accessibilityLabel={t('auth.login.phone')}
-          />
-
-          {/* Password */}
-          <Text style={styles.label}>{t('auth.login.password')}</Text>
-          <TextInput
-            style={styles.input}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            editable={!isLoading}
-            accessibilityLabel={t('auth.login.password')}
-          />
-
-          {/* API error — exact message, not generic */}
-          {error ? <Text style={styles.errorBanner}>{error}</Text> : null}
-
-          {/* Submit */}
-          <Pressable
-            style={[styles.btn, isLoading && styles.btnDisabled]}
-            onPress={() => void handleLogin()}
-            disabled={isLoading}
-            accessibilityRole="button"
+          <ScrollView
+            contentContainerStyle={styles.container}
+            keyboardShouldPersistTaps="handled"
           >
-            {isLoading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text style={styles.btnText}>{t('auth.login.submit')}</Text>
-            )}
-          </Pressable>
+            {/* Hero */}
+            <Text style={styles.logo}>🌱</Text>
+            <Text style={styles.appName}>{t('auth.login.appName')}</Text>
+            <Text style={styles.tagline}>{t('auth.login.tagline')}</Text>
 
-          {/* Go to Register */}
-          <Pressable
-            style={styles.link}
-            onPress={() => navigation.navigate('Register')}
-            disabled={isLoading}
-          >
-            <Text style={styles.linkText}>{t('auth.login.noAccount')}</Text>
-          </Pressable>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+            {/* Glass card */}
+            <Animated.View
+              style={[styles.card, { transform: [{ translateX: shakeAnim }] }]}
+            >
+              {/* Phone */}
+              <Text style={styles.fieldLabel}>{t('auth.login.phoneLabel')}</Text>
+              <TextInput
+                style={styles.phoneInput}
+                value={phone}
+                onChangeText={handlePhoneChange}
+                keyboardType="phone-pad"
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!isLoading}
+                placeholder="+254 7__ ___ ___"
+                placeholderTextColor="rgba(255,255,255,0.5)"
+                accessibilityLabel={t('auth.login.phone')}
+              />
+
+              {/* Password */}
+              <Text style={styles.fieldLabel}>{t('auth.login.pinLabel')}</Text>
+              <TextInput
+                value={password}
+                onChangeText={setPassword}
+                keyboardType="default"
+                maxLength={20}
+                secureTextEntry
+                editable={!isLoading}
+                style={styles.phoneInput}
+                placeholder="••••••••••"
+                placeholderTextColor="rgba(255,255,255,0.4)"
+                accessibilityLabel={t('auth.login.password')}
+              />
+
+              {/* Error */}
+              {error != null && (
+                <Text style={styles.errorText}>{error}</Text>
+              )}
+
+              {/* Sign In */}
+              <Pressable
+                style={styles.signInBtn}
+                onPress={() => void handleLogin()}
+                disabled={isLoading}
+                accessibilityRole="button"
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="#1A6B3C" />
+                ) : (
+                  <Text style={styles.signInText}>{t('auth.login.signIn')}</Text>
+                )}
+              </Pressable>
+            </Animated.View>
+
+            {/* Forgot PIN */}
+            <Text style={styles.forgotPin}>{t('auth.login.forgotPin')}</Text>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFFFF' },
+  root: { flex: 1 },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   flex: { flex: 1 },
-  container: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 48 },
-  backRow: { minHeight: 48, justifyContent: 'center', marginBottom: 8 },
-  backText: { color: '#2E7D32', fontSize: 15 },
-  title: { fontSize: 28, fontWeight: '800', color: '#1B5E20', marginBottom: 28 },
-  label: { fontSize: 13, color: '#555555', marginBottom: 6, fontWeight: '600' },
-  input: {
-    borderWidth: 1.5,
-    borderColor: '#C8E6C9',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 13,
-    fontSize: 16,
-    color: '#111111',
-    marginBottom: 16,
-    minHeight: 50,
-    backgroundColor: '#FAFAFA',
-  },
-  errorBanner: {
-    backgroundColor: '#FFF3F3',
-    color: '#B00020',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 14,
-    marginBottom: 14,
-    borderLeftWidth: 3,
-    borderLeftColor: '#B00020',
-  },
-  btn: {
-    backgroundColor: '#1B5E20',
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    minHeight: 56,
+  container: {
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingTop: 40,
+    paddingBottom: 40,
     justifyContent: 'center',
-    marginTop: 4,
   },
-  btnDisabled: { opacity: 0.6 },
-  btnText: { color: '#FFFFFF', fontSize: 17, fontWeight: '700' },
-  link: { marginTop: 20, alignItems: 'center', minHeight: 48, justifyContent: 'center' },
-  linkText: { color: '#2E7D32', fontSize: 15 },
+
+  // Hero
+  logo: { fontSize: 42, textAlign: 'center', marginBottom: 8 },
+  appName: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 2,
+  },
+  tagline: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.65)',
+    textAlign: 'center',
+    marginBottom: 28,
+  },
+
+  // Glass card
+  card: {
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 12,
+    padding: 16,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  fieldLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.8)',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    marginBottom: 6,
+  },
+
+  // Phone input
+  phoneInput: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    fontSize: 12,
+    color: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+    marginBottom: 10,
+  },
+
+  // Error
+  errorText: {
+    color: 'rgba(255,100,100,0.9)',
+    fontSize: 9,
+    marginTop: 4,
+    marginBottom: 8,
+  },
+
+  // Sign In button
+  signInBtn: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 6,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
+  },
+  signInText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#1A6B3C',
+    textAlign: 'center',
+  },
+
+  // Forgot PIN
+  forgotPin: {
+    marginTop: 14,
+    fontSize: 9,
+    color: 'rgba(255,255,255,0.5)',
+    textAlign: 'center',
+  },
 });

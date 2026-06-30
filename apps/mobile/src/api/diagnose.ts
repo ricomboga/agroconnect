@@ -7,8 +7,21 @@ export interface DiagnosisPrescription {
   step: number;
   action: string;
   product_name: string | null;
-  dosage?: string;
-  frequency?: string;
+  product_type: string | null;
+  dosage: string | null;
+  frequency: string | null;
+}
+
+export interface SupplierProduct {
+  id: string;
+  supplier_id: string;
+  name: string;
+  category: string;
+  brand: string | null;
+  unit: string;
+  price_kes: number;
+  stock_quantity: number;
+  county_availability: string[];
 }
 
 export interface DiagnosisResult {
@@ -22,13 +35,18 @@ export interface DiagnosisResult {
     severity: 'mild' | 'moderate' | 'severe' | 'critical';
     description: string;
   };
+  alternative_diagnoses?: Array<{ disease_name: string; confidence: number; description: string }>;
   prescriptions?: DiagnosisPrescription[];
+  suppliers?: SupplierProduct[];
   processing_time_ms?: number;
 }
 
+// Matches backend: Literal["resolved", "improved", "no_change", "worsened"]
+export type FeedbackOutcome = 'resolved' | 'improved' | 'no_change' | 'worsened';
+
 export interface FeedbackDto {
   rating: number;
-  outcome: 'resolved' | 'better' | 'same' | 'worse';
+  outcome: FeedbackOutcome;
   notes?: string;
 }
 
@@ -50,17 +68,18 @@ export const diagnoseApi = {
       body: formData,
     });
     if (!res.ok) {
-      const body = await res.json() as { error?: { message?: string } };
-      throw new Error(body.error?.message ?? 'Submission failed');
+      const body = await res.json() as { error?: { message?: string }; error_code?: string };
+      throw new Error(body.error?.message ?? body.error_code ?? 'Submission failed');
     }
-    return res.json() as Promise<{ id: string }>;
+    const json = await res.json() as { data: { id: string } };
+    return json.data;
   },
 
   getResult: (diagnosisId: string) =>
-    apiFetch<DiagnosisResult>(`/diagnose/${diagnosisId}`),
+    apiFetch<{ data: DiagnosisResult }>(`/diagnose/${diagnosisId}`).then((r) => r.data),
 
   listByFarm: (farmId: string) =>
-    apiFetch<{ data: DiagnosisResult[] }>(`/diagnose/farm/${farmId}`),
+    apiFetch<{ data: DiagnosisResult[]; total: number }>(`/diagnose/farm/${farmId}`),
 
   submitFeedback: (diagnosisId: string, dto: FeedbackDto) =>
     apiFetch<void>(`/diagnose/${diagnosisId}/feedback`, {
@@ -69,7 +88,7 @@ export const diagnoseApi = {
     }),
 
   diseases: {
-    list: () => apiFetch<{ data: DiseaseEntry[] }>('/diagnose/diseases'),
-    get: (code: string) => apiFetch<{ data: DiseaseEntry }>(`/diagnose/diseases/${code}`),
+    list: () => apiFetch<{ data: DiseaseEntry[]; total: number }>('/diagnose/diseases'),
+    get: (code: string) => apiFetch<DiseaseEntry>(`/diagnose/diseases/${code}`),
   },
 };

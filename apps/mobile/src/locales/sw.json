@@ -6,6 +6,8 @@
     "back": "Rudi",
     "next": "Endelea",
     "skip": "Ruka",
+    "saving": "Inahifadhi...",
+    "loading": "Inapakia...",
     "savedOffline": "Imehifadhiwa. Itasawazishwa mtandaoni.",
     "offline": "Unafanya kazi bila mtandao",
     "comingSoon": "Inakuja hivi karibuni",
@@ -22,6 +24,12 @@
     },
     "login": {
       "title": "Karibu tena",
+      "appName": "AgroConnect",
+      "tagline": "Jukwaa la Kilimo Bora",
+      "phoneLabel": "Nambari ya Simu",
+      "pinLabel": "PIN",
+      "signIn": "Ingia →",
+      "forgotPin": "Umesahau PIN? Wasiliana na msimamizi wa shamba",
       "phone": "Nambari ya simu (+254...)",
       "password": "Nenosiri",
       "submit": "Ingia",
@@ -57,20 +65,150 @@
         "invalid": "Nambari si sahihi. Jaribu tena."
       }
     },
+    "setPin": {
+      "topBarTitle": "Weka PIN Yako",
+      "title": "Unda PIN Salama",
+      "subtitle": "Hii inabadilisha PIN ya muda. Hifadhi kwa siri — usiishiriki.",
+      "currentPasswordLabel": "Nenosiri / PIN ya Sasa",
+      "newPinLabel": "PIN Mpya (tarakimu 4)",
+      "confirmPinLabel": "Thibitisha PIN",
+      "submit": "Hifadhi PIN & Endelea →",
+      "warning": "⚠️ Usitumie mwaka wa kuzaliwa au tarakimu za nambari yako ya simu",
+      "errorMismatch": "PIN hazilingani",
+      "errorSimple": "PIN rahisi sana — usitumie 1234 au tarakimu sawa nne"
+    },
+    "onboarding": {
+      "topBarTitle": "Karibu, {{name}}! 👋",
+      "skip": "Ruka",
+      "progressLabel": "{{count}} kati ya 5 imekamilika",
+      "title": "Hebu Tuanzishe Shamba Lako",
+      "subtitle": "Kamilisha hatua hizi kufungua nguvu kamili ya AgroConnect",
+      "step1": {
+        "name": "Akaunti Imeundwa",
+        "sub": "Akaunti yako ya AgroConnect iko hai"
+      },
+      "step2": {
+        "name": "PIN Imewekwa",
+        "sub": "Akaunti yako imelindwa kwa PIN yako binafsi"
+      },
+      "step3": {
+        "name": "Ongeza Shamba Lako la Kwanza",
+        "sub": "Fuatilia mavuno, shughuli na mapato"
+      },
+      "step4": {
+        "name": "Rekodi Shughuli Yako ya Kwanza",
+        "sub": "Jenga historia yako ya kilimo"
+      },
+      "step5": {
+        "name": "Rekodi Mavuno Yako ya Kwanza",
+        "sub": "Fuatilia mapato na mavuno yako"
+      },
+      "cta": "➕ Ongeza Shamba Sasa",
+      "newBadge": "MPYA"
+    },
     "error": {
       "invalidCredentials": "Nambari ya simu au nenosiri si sahihi.",
-      "networkError": "Tatizo la mtandao. Jaribu tena."
+      "networkError": "Tatizo la mtandao. Jaribu tena.",
+      "loginFailed": "Imeshindwa kuingia. Jaribu tena.",
+      "phoneTaken": "Nambari hii ya simu tayari imesajiliwa."
     }
   },
   "tabs": {
+    "home": "Nyumbani",
     "farm": "Shamba",
     "diagnose": "Uchunguzi",
     "market": "Soko",
     "finance": "Fedha",
+    "inventory": "Hifadhi",
+    "stock": "Ghala",
     "community": "Jamii",
     "profile": "Wasifu",
+    "me": "Mimi",
     "govt": "Serikali",
     "insights": "Maarifa"
+  },
+  "dashboard": {
+    "greeting": "Habari, {{name}} 👋",
+    "greetingTime": "Habari asubuhi",
+    "stat": {
+      "net": "Faida",
+      "kesValue": "KES {{value}}",
+      "band": "Mkopo",
+      "bandValue": "Kiwango {{band}}",
+      "streak": "Msururu",
+      "streakValue": "siku {{days}}",
+      "netThisMonth": "Faida Mwezi Huu",
+      "creditScore": "Alama ya Mkopo",
+      "activeFarms": "Mashamba Hai"
+    },
+    "streak": {
+      "label": "siku mfululizo",
+      "best": "Bora: siku {{days}}"
+    },
+    "nudge": {
+      "sectionTitle": "🤖 AI Mshauri",
+      "urgentBadge": "HARAKA",
+      "soonBadge": "KARIBU",
+      "upcomingBadge": "INAKUJA",
+      "overdueTask": "{{type}} imechelewa siku {{days}}",
+      "upcomingTask": "{{type}} baada ya siku {{days}}",
+      "logNow": "Rekodi Sasa",
+      "schedule": "Panga"
+    },
+    "priceAlert": {
+      "label": "{{crop}} KES {{price}}/kg",
+      "thisWeek": "wiki hii"
+    },
+    "actions": {
+      "title": "Vitendo vya Haraka"
+    },
+    "action": {
+      "logActivity": "Rekodi Shughuli",
+      "addTransaction": "Ongeza Muamala",
+      "diagnose": "Chunguza",
+      "recordStock": "Rekodi Hifadhi",
+      "viewFarms": "Ona Mashamba",
+      "market": "Soko"
+    },
+    "analytics": {
+      "income": "Mapato",
+      "expenses": "Matumizi",
+      "net": "Faida",
+      "creditTitle": "Alama ya Mkopo",
+      "band": "Kiwango {{band}}",
+      "maxLoan": "Mkopo wa Juu KES {{amount}}",
+      "remaining": "iliyobaki",
+      "due": "tarehe",
+      "periodLabel": "Mwezi Huu",
+      "activities": "Shughuli",
+      "done": "imefanywa",
+      "pending": "inasubiri",
+      "late": "imechelewa"
+    },
+    "new": {
+      "welcome": "Karibu, {{name}}! 🌱",
+      "subtitle": "Anza kwa kuongeza shamba lako la kwanza",
+      "setupBody": "Ipe jina, weka mahali, na ongeza mazao au mifugo ili kufungua mapendekezo ya AI.",
+      "complete": "imekamilika",
+      "cta": "Ongeza Shamba →",
+      "step": "Hatua {{n}} kati ya 5"
+    },
+    "locked": {
+      "cashFlow": "Mtiririko wa Fedha",
+      "aiNudge": "Mapendekezo ya AI",
+      "creditScore": "Alama ya Mkopo",
+      "addFarm": "Ongeza Shamba Lako",
+      "desc": "Ongeza shamba lako ili kufungua kipengele hiki"
+    },
+    "inventory": {
+      "title": "📦 Duka la Shamba",
+      "lowEmpty": "⚠️ Vitu vya Chini/Tupu",
+      "collections": "💰 Malipo ya Wateja",
+      "inStore": "🌾 Mazao Ghalani",
+      "eggsToday": "🥚 Mayai Leo",
+      "eggsTrays": "trerei {{count}}",
+      "viewAll": "Angalia Hifadhi →"
+    }
   },
   "profile": {
     "title": "Wasifu wangu",
@@ -81,73 +219,73 @@
       "en": "English"
     },
     "role": {
-      "farmer":           "Mkulima",
-      "admin":            "Msimamizi",
-      "extension_officer":"Mshauri wa Kilimo",
-      "vet":              "Daktari wa Mifugo"
+      "farmer": "Mkulima",
+      "admin": "Msimamizi",
+      "extension_officer": "Mshauri wa Kilimo",
+      "vet": "Daktari wa Mifugo"
     },
     "stats": {
-      "farms":     "Mashamba",
+      "farms": "Mashamba",
       "diagnoses": "Uchunguzi",
-      "listings":  "Orodha"
+      "listings": "Orodha"
     },
     "menu": {
-      "editProfile":   "Hariri wasifu",
+      "editProfile": "Hariri wasifu",
       "notifications": "Arifa",
-      "farmExport":    "Muhtasari wa Shamba",
+      "farmExport": "Muhtasari wa Shamba",
       "offlineStatus": "Hali ya Offline"
     },
     "edit": {
-      "title":             "Hariri wasifu",
-      "avatar":            "Gusa kubadilisha picha",
-      "name":              "Jina kamili",
-      "county":            "Kaunti",
+      "title": "Hariri wasifu",
+      "avatar": "Gusa kubadilisha picha",
+      "name": "Jina kamili",
+      "county": "Kaunti",
       "countyPickerTitle": "Chagua kaunti yako",
-      "language":          "Lugha",
-      "save":              "Hifadhi mabadiliko",
-      "saving":            "Inabadilisha...",
-      "success":           "Wasifu umehifadhiwa!"
+      "language": "Lugha",
+      "save": "Hifadhi mabadiliko",
+      "saving": "Inabadilisha...",
+      "success": "Wasifu umehifadhiwa!"
     },
     "notifications": {
-      "title":              "Mipangilio ya Arifa",
-      "activityReminders":  "Vikumbusho vya shughuli",
-      "diagnosisResults":   "Matokeo ya uchunguzi",
-      "priceAlerts":        "Arifa za bei",
-      "loanUpdates":        "Masasisho ya mkopo",
-      "weatherAlerts":      "Arifa za hali ya hewa",
-      "communityReplies":   "Majibu ya jamii",
-      "save":               "Hifadhi",
-      "saving":             "Inabadilisha...",
-      "success":            "Mipangilio imehifadhiwa!"
+      "title": "Mipangilio ya Arifa",
+      "activityReminders": "Vikumbusho vya shughuli",
+      "diagnosisResults": "Matokeo ya uchunguzi",
+      "priceAlerts": "Arifa za bei",
+      "loanUpdates": "Masasisho ya mkopo",
+      "weatherAlerts": "Arifa za hali ya hewa",
+      "communityReplies": "Majibu ya jamii",
+      "save": "Hifadhi",
+      "saving": "Inabadilisha...",
+      "success": "Mipangilio imehifadhiwa!"
     },
     "export": {
-      "title":        "Muhtasari wa Shamba",
-      "selectFarm":   "Chagua shamba",
+      "title": "Muhtasari wa Shamba",
+      "selectFarm": "Chagua shamba",
       "selectSeason": "Chagua msimu",
       "previewTitle": "Muhtasari — {{name}}",
-      "previewSeason":"Msimu {{year}}",
-      "yield":        "Mavuno (kg)",
-      "revenue":      "Mapato (KES)",
-      "costs":        "Gharama (KES)",
-      "profit":       "Faida (KES)",
-      "download":     "Pakua PDF",
-      "downloading":  "Inapakua...",
+      "previewSeason": "Msimu {{year}}",
+      "yield": "Mavuno (kg)",
+      "revenue": "Mapato (KES)",
+      "costs": "Gharama (KES)",
+      "profit": "Faida (KES)",
+      "download": "Pakua PDF",
+      "downloading": "Inapakua...",
       "empty": {
         "title": "Huna mashamba",
-        "body":  "Ongeza shamba kwanza"
+        "body": "Ongeza shamba kwanza"
       }
     },
     "offline": {
-      "title":        "Hali ya Offline",
+      "title": "Hali ya Offline",
       "networkLabel": "Hali ya Mtandao",
-      "online":       "Umeunganika",
-      "offline":      "Bila mtandao",
+      "online": "Umeunganika",
+      "offline": "Bila mtandao",
       "pendingCount": "Mabadiliko yanayongoja: {{count}}",
-      "noPending":    "Hakuna mabadiliko yanayongoja",
-      "syncBtn":      "Sawazisha Sasa",
-      "syncing":      "Inasawazisha...",
-      "lastSynced":   "Ilisawazishwa: {{time}}",
-      "neverSynced":  "Bado haijasawazishwa",
+      "noPending": "Hakuna mabadiliko yanayongoja",
+      "syncBtn": "Sawazisha Sasa",
+      "syncing": "Inasawazisha...",
+      "lastSynced": "Ilisawazishwa: {{time}}",
+      "neverSynced": "Bado haijasawazishwa",
       "opLabel": {
         "CREATE": "Kuongeza",
         "UPDATE": "Kusasisha",
@@ -156,14 +294,29 @@
     }
   },
   "farm": {
-    "list": {
-      "title": "Mashamba yangu",
-      "addFarm": "Ongeza shamba",
-      "empty": {
-        "title": "Huna shamba bado",
-        "body": "Ongeza shamba lako la kwanza kuanza",
-        "cta": "Ongeza shamba"
-      }
+    "add": {
+      "topBarTitle": "Ongeza Shamba Jipya",
+      "stepInfo": "📌 Hatua 1 ya 2: Maelezo ya shamba. Utaongeza mazao/mifugo katika hatua ya 2.",
+      "nameLabel": "Jina la Shamba *",
+      "namePlaceholder": "mf. Shamba la Nakuru",
+      "countyLabel": "Kaunti *",
+      "countyPlaceholder": "Chagua kaunti",
+      "subCountyLabel": "Kaunti Ndogo",
+      "subCountyPlaceholder": "mf. Nakuru Mashariki",
+      "areaLabel": "Ukubwa wa Shamba (ekari) *",
+      "areaPlaceholder": "mf. 2.5",
+      "gpsLabel": "Mahali (GPS) *",
+      "gpsButton": "📍 Tumia Mahali Pangu Sasa",
+      "gpsNote": "au buruta pin kwenye ramani kuweka mahali",
+      "farmTypeLabel": "Unafanya kilimo gani? *",
+      "cropsOnly": "Mazao Peke Yake",
+      "animalsOnly": "Mifugo Peke Yake",
+      "both": "Vyote Viwili",
+      "continueCrops": "Endelea: Ongeza Mazao →",
+      "continueAnimals": "Endelea: Ongeza Mifugo →",
+      "errorSave": "Imeshindwa kuhifadhi shamba. Tafadhali jaribu tena.",
+      "countyModalTitle": "Chagua Kaunti",
+      "countySearch": "Tafuta kaunti..."
     },
     "dashboard": {
       "title": "Mashamba Yangu",
@@ -194,19 +347,209 @@
         "open": "Fungua kwenye ramani"
       },
       "tab": {
+        "overview": "Muhtasari",
+        "myTasks": "Kazi Zangu",
+        "workers": "Wafanyakazi",
         "activities": "Shughuli",
         "inputs": "Pembejeo",
         "harvests": "Mavuno"
+      },
+      "activities": {
+        "title": "Shughuli Zilizopangwa",
+        "viewAll": "Ona ratiba yote →",
+        "overdueLabel": "Shughuli {{count}} zimechelewa — hatua inahitajika"
+      },
+      "menuViewOnWeb": "Ona kwenye Tovuti",
+      "menuCallOwner": "Piga Simu Mmiliki",
+      "menuEditFarm": "Hariri Shamba",
+      "backLabel": "Mashamba yangu",
+      "stat": {
+        "health": "Afya ya Shamba",
+        "overdue": "Imechelewa"
+      }
+    },
+    "care": {
+      "title": "Kadi za Utunzaji za AI",
+      "careSuffix": "Utunzaji",
+      "urgent": "Haraka",
+      "onTrack": "Katika Mkondo",
+      "done": "Imekamilika",
+      "soon": "Hivi Karibuni",
+      "late": "Imechelewa",
+      "logNow": "⚡ Rekodi {{type}} Sasa",
+      "daysOverdue": "Imechelewa siku {{count}}",
+      "lastDate": "Mwisho: {{date}} · Kila siku {{days}}",
+      "doneSub": "Jana · Ijayo: {{date}}",
+      "dueDays": "Itafanywa baada ya siku {{count}}",
+      "dueThisWeek": "Wiki hii",
+      "dueOnDate": "Itafanywa {{date}} (siku {{count}})"
+    },
+    "workers": {
+      "empty": "Hakuna wafanyakazi kwenye shamba hili bado.",
+      "manageOnWeb": "Simamia wafanyakazi mtandaoni kwenye agroconnect.co.ke",
+      "webPortalInfo": "Kuongeza au kuondoa wafanyakazi, tembelea tovuti ya shamba.",
+      "teamOn": "Timu kwenye {{farmName}}",
+      "active": "Inaendelea",
+      "inactive": "Imesimama",
+      "tasks": "Kazi {{count}}",
+      "tasksAssigned": "Kazi {{count}} zimekupewa",
+      "taskDistribution": "Mgawanyo wa Kazi",
+      "manageTitle": "Simamia wafanyakazi kwenye agroconnect.co.ke",
+      "manageSub": "Ongeza, ondoa, na tenga majukumu kutoka kwa tovuti ya shamba",
+      "role": {
+        "worker": "Mfanyakazi",
+        "manager": "Msimamizi",
+        "field_worker": "Mfanyakazi wa Shamba",
+        "harvester": "Mvunaji",
+        "sprayer": "Mpulizaji",
+        "driver": "Dereva"
+      }
+    },
+    "stat": {
+      "crops": "Mazao",
+      "animals": "Mifugo",
+      "workers": "Wafanyakazi",
+      "plots": "Viwanja"
+    },
+    "switcher": {
+      "title": "Badilisha Shamba",
+      "switch": "Badilisha shamba"
+    },
+    "list": {
+      "title": "Mashamba yangu",
+      "selectFarm": "Chagua Shamba",
+      "selectPrompt": "Una mashamba {{count}} — chagua moja kuendelea",
+      "empty": {
+        "title": "Huna shamba bado",
+        "body": "Ongeza shamba lako la kwanza kuanza",
+        "cta": "Ongeza shamba",
+        "webTitle": "Unda mashamba mtandaoni",
+        "webBody": "Tembelea agroconnect.co.ke kwenye kivinjari au kompyuta kuanzisha mashamba na mazao yako.",
+        "openWebsite": "Fungua Tovuti"
       }
     },
     "quickAction": {
+      "label": "HATUA ZA HARAKA",
+      "manageLabel": "SIMAMIA",
       "logActivity": "Rekodi shughuli",
       "logInput": "Rekodi pembejeo",
       "recordHarvest": "Rekodi mavuno",
       "viewCalendar": "Kalenda ya shughuli",
       "viewInputs": "Pembejeo",
       "viewHarvests": "Mavuno",
-      "diagnose": "Chunguza"
+      "diagnose": "Chunguza",
+      "addCrop": "Ongeza Zao",
+      "addAnimal": "Ongeza Mifugo",
+      "addWorker": "Ongeza Mfanyakazi"
+    },
+    "schedule": {
+      "scheduleActivity": "Panga Shughuli",
+      "sectionOverdue": "⚠️ Zimechelewa",
+      "sectionToday": "Leo",
+      "sectionThisWeek": "Wiki Hii",
+      "sectionUpcoming": "Zinazokuja",
+      "allCaughtUp": "✅ Umefanya vizuri! Hakuna kazi leo.",
+      "assignedTo": "Amepewa",
+      "unassigned": "Hajapewa",
+      "unassignedTap": "Hajapewa — bonyeza kupewa",
+      "logNow": "Rekodi ✓",
+      "logNowOverdue": "Rekodi Sasa ✓",
+      "aiScheduled": "🤖 AI Imepanga",
+      "due": "Tarehe",
+      "whyActivity": "Kwa nini shughuli hii?",
+      "completedOn": "Imekamilika Tarehe",
+      "actualCost": "Gharama Halisi (KES)",
+      "costHint": "Kazi + vifaa vilivyotumiwa",
+      "notes": "Maelezo (si lazima)",
+      "notesPlaceholder": "Ongeza maelezo...",
+      "assignTo": "Mpe Mfanyakazi",
+      "markComplete": "✅ Kamilisha",
+      "skipForNow": "Ruka kwa sasa",
+      "completedToast": "Shughuli imerekodiwa! 🔥 Mfululizo unaendelea.",
+      "completedError": "Imeshindwa kuhifadhi. Tafadhali jaribu tena."
+    }
+  },
+  "animal": {
+    "add": {
+      "topBarTitle": "Ongeza Mifugo",
+      "typeSection": "AINA YA MIFUGO",
+      "customTypeLabel": "Aina ya mifugo (au andika jina lingine)",
+      "customTypePlaceholder": "mf. Samaki, Punda",
+      "countLabel": "Idadi ya mifugo *",
+      "countPlaceholder": "mf. 20",
+      "breedLabel": "Aina/Mbari (si lazima)",
+      "breedPlaceholder": "mf. Friesian, Kenbro",
+      "notesLabel": "Maelezo (si lazima)",
+      "notesPlaceholder": "mf. Chanjo Machi 2025",
+      "saveBtn": "✅ Hifadhi Mifugo",
+      "errorSave": "Imeshindwa kuhifadhi. Tafadhali jaribu tena.",
+      "tile": {
+        "cattle": "Ng'ombe",
+        "goats": "Mbuzi",
+        "sheep": "Kondoo",
+        "poultry": "Kuku",
+        "pigs": "Nguruwe",
+        "rabbits": "Sungura"
+      }
+    }
+  },
+  "worker": {
+    "add": {
+      "topBarTitle": "Ongeza Mfanyakazi",
+      "lookupSection": "TAFUTA MFANYAKAZI",
+      "phoneLabel": "Nambari ya simu ya mfanyakazi *",
+      "phonePlaceholder": "+254712345678",
+      "lookupBtn": "Tafuta",
+      "lookupError": "Hakuna akaunti ya AgroConnect inayolingana na nambari hii.",
+      "roleSection": "CHAGUA JUKUMU",
+      "saveBtn": "✅ Ongeza Mfanyakazi Shambani",
+      "errorSave": "Imeshindwa kuongeza mfanyakazi. Tafadhali jaribu tena.",
+      "role": {
+        "fieldWorker": "Mkulima Shambani",
+        "harvester": "Mvunaji",
+        "sprayer": "Mpulizaji",
+        "driver": "Dereva",
+        "manager": "Msimamizi"
+      }
+    }
+  },
+  "crop": {
+    "add": {
+      "topBarTitle": "Ongeza Mazao",
+      "aiScheduleAlert": "🤖 Tarehe ya kupanda inatumika kutengeneza ratiba yako ya kumwagilia, kupalilia, kuweka mbolea, na kuvuna.",
+      "cropTypeLabel": "Aina ya Zao *",
+      "varietyLabel": "Aina / Mbegu",
+      "varietyPlaceholder": "mf. H614D (Mseto)",
+      "plantingDateLabel": "Tarehe ya Kupanda *",
+      "plantingDatePlaceholder": "📅 Chagua tarehe",
+      "areaLabel": "Eneo (ekari)",
+      "areaPlaceholder": "1.5",
+      "aiPreviewWith2Fert": "🤖 AI itatengeneza: Kumwagilia kila siku {{water}} · Kupalilia ifikapo {{weedDate}} (wiki {{weedWeek}}) · Mbolea: {{fert1}} + {{fert2}} · Mavuno: ~{{harvest}}",
+      "aiPreviewWith1Fert": "🤖 AI itatengeneza: Kumwagilia kila siku {{water}} · Kupalilia ifikapo {{weedDate}} (wiki {{weedWeek}}) · Mbolea: {{fert1}} · Mavuno: ~{{harvest}}",
+      "plotLabel": "Namba ya Shamba / Kiwanja",
+      "plotPlaceholder": "mf. Kiwanja A (Kaskazini)",
+      "saveCrop": "Hifadhi Zao na Ona Ratiba →",
+      "addAnother": "+ Ongeza Zao Lingine",
+      "errorSave": "Imeshindwa kuhifadhi zao. Tafadhali jaribu tena.",
+      "crops": {
+        "maize": "Mahindi",
+        "tomato": "Nyanya",
+        "beans": "Maharagwe",
+        "cabbage": "Kabichi",
+        "potato": "Viazi",
+        "other": "Nyingine"
+      },
+      "dateModal": {
+        "title": "Chagua Tarehe ya Kupanda",
+        "select": "Chagua",
+        "su": "Ju",
+        "mo": "Ju",
+        "tu": "Jm",
+        "we": "Al",
+        "th": "Kh",
+        "fr": "Ij",
+        "sa": "Jm"
+      }
     }
   },
   "wizard": {
@@ -255,6 +598,52 @@
     }
   },
   "activity": {
+    "schedule": {
+      "title": "Ratiba ya Shughuli",
+      "tab": {
+        "all": "Zote",
+        "overdue": "Zimechelewa",
+        "today": "Leo",
+        "done": "Zilizokamilika"
+      },
+      "overdue": {
+        "sectionTitle": "⚠️ IMECHELEWA — Hatua Inahitajika",
+        "logWatering": "Rekodi Kumwagilia Sasa ✓",
+        "bookVet": "Panga Daktari ✓",
+        "logSpraying": "Rekodi Kunyunyizia Sasa ✓",
+        "logNow": "Rekodi Sasa ✓"
+      },
+      "badge": {
+        "late": "Imechelewa",
+        "today": "Leo",
+        "done": "Imekamilika ✓",
+        "daysAway": "siku {{n}}"
+      },
+      "sub": {
+        "daysLate": "imechelewa siku {{daysLate}}"
+      },
+      "logBtn": "Rekodi ✓",
+      "completedOn": "Imekamilika {{date}}",
+      "empty": {
+        "title": "Hakuna shughuli",
+        "body": "Ongeza shughuli yako ya kwanza kuanza",
+        "cta": "Ongeza shughuli"
+      },
+      "whyNowLabel": "🤖 Kwa nini sasa?",
+      "whyUrgentLabel": "🤖 Kwa nini ni haraka?",
+      "whyThenLabel": "🤖 Kwa nini wakati huo?",
+      "todaySection": "Leo — {{date}}",
+      "assignedToYou": "Amepewa wewe",
+      "completedThisMonth": "IMEKAMILIKA MWEZI HUU",
+      "completedOnDate": "Imekamilika: {{date}}",
+      "btn": {
+        "logWatering": "⚡ Rekodi Kumwagilia Sasa",
+        "bookVet": "📅 Panga Daktari",
+        "logSpraying": "⚡ Rekodi Kunyunyizia Sasa",
+        "logNow": "⚡ Rekodi Sasa",
+        "logDone": "Rekodi ✓"
+      }
+    },
     "calendar": {
       "title": "Kalenda ya shughuli",
       "monthNav": {
@@ -292,6 +681,10 @@
         "create": "Ongeza shughuli",
         "edit": "Hariri shughuli"
       },
+      "topBarTitle": "Rekodi Shughuli",
+      "streakAlert": "🔥 Rekodi shughuli hii kudumisha Msururu wako wa siku {{streak}}! (+1 alama ya mkopo)",
+      "activityTypeSection": "AINA YA SHUGHULI",
+      "detailsSection": "MAELEZO",
       "type": "Aina ya shughuli",
       "description": "Maelezo",
       "plannedDate": "Tarehe iliyopangwa",
@@ -299,8 +692,55 @@
         "label": "Kiwanja",
         "none": "Shamba zima"
       },
+      "farmLabel": "Shamba *",
+      "farmPlaceholder": "Chagua shamba",
+      "cropAnimalLabel": "Zao / Mnyama *",
+      "cropAnimalPlaceholder": "Chagua zao au mnyama",
+      "dateLabel": "Tarehe *",
+      "durationLabel": "Muda",
+      "durationPlaceholder": "masaa 2",
+      "costLabel": "Gharama (KES)",
+      "costPlaceholder": "mf. 500",
       "labourCost": "Gharama ya kazi (KES)",
-      "save": "Hifadhi"
+      "labourCostPlaceholder": "mf. 800",
+      "notesLabel": "Maelezo (hiari)",
+      "notesPlaceholder": "Ongeza maelezo...",
+      "saveBtn": "✅ Hifadhi Shughuli (+1 Msururu)",
+      "successToast": "Shughuli imerekodiwa! 🔥 Msururu wa siku {{streak}}",
+      "errorSave": "Imeshindwa kuhifadhi shughuli. Jaribu tena.",
+      "farmPickerTitle": "Chagua Shamba",
+      "cropPickerTitle": "Chagua Zao / Mnyama",
+      "timeLabel": "Wakati (si lazima)",
+      "timePlaceholder": "Chagua wakati",
+      "timePickerTitle": "Chagua Wakati",
+      "timePickerHour": "Saa",
+      "timePickerMinute": "Dakika",
+      "timePickerConfirm": "Weka Wakati",
+      "assignWorker": "Mpe Mfanyakazi (si lazima)",
+      "assignWorkerPlaceholder": "Chagua mfanyakazi",
+      "assignWorkerNone": "Hapana — acha bila kupewa",
+      "workerPickerTitle": "Mpe Mfanyakazi",
+      "save": "Hifadhi",
+      "animalType": {
+        "layers": "Layers (Kuku)",
+        "dairyCattle": "Ng'ombe wa Maziwa",
+        "beefCattle": "Ng'ombe wa Nyama",
+        "goats": "Mbuzi",
+        "sheep": "Kondoo",
+        "pigs": "Nguruwe",
+        "rabbits": "Sungura"
+      },
+      "tile": {
+        "watering": "Kumwagilia",
+        "spraying": "Kunyunyizia",
+        "fertilising": "Mbolea",
+        "weeding": "Kupalilia",
+        "planting": "Kupanda",
+        "harvesting": "Vuna",
+        "vaccination": "Chanjo",
+        "deworming": "Dawa Minyoo",
+        "feeding": "Kulisha"
+      }
     },
     "type": {
       "planting": "Kupanda",
@@ -310,7 +750,29 @@
       "harvesting": "Kuvuna",
       "scouting": "Ukaguzi",
       "spraying": "Kunyunyizia",
-      "other": "Nyingine"
+      "other": "Nyingine",
+      "vaccination": "Chanjo",
+      "deworming": "Dawa ya minyoo",
+      "feeding": "Kulisha"
+    },
+    "log": {
+      "completedOn": "Imekamilika Tarehe",
+      "actualCost": "Gharama Halisi (KES)",
+      "assignTo": "Weka Kwa",
+      "notes": "Maelezo (si lazima)",
+      "notesPh": "mf. Nilitumia hose ya 3m, umwagiliaji kamili...",
+      "unassigned": "Haijawekwa",
+      "aiScheduled": "🤖 Imepangwa na AI",
+      "whyTitle": "🤖 Kwa nini shughuli hii?",
+      "streakMsg": "Rekodi ili kudumisha streak ya siku {{streak}}!",
+      "streakCredit": "+1 alama ya mkopo",
+      "completeBtn": "✅ Weka Kama Imekamilika",
+      "skipLink": "Ruka kwa sasa",
+      "errorRequired": "Tafadhali weka tarehe ya kukamilika",
+      "errorSave": "Imeshindwa kuhifadhi. Jaribu tena.",
+      "successToast": "Imerekodiwa! 🔥 Streak ya siku {{streak}}",
+      "workerPickerTitle": "Weka Kwa",
+      "datePickerSelect": "Chagua"
     }
   },
   "input": {
@@ -348,77 +810,109 @@
   },
   "diagnose": {
     "home": {
-      "title": "Uchunguzi wa Magonjwa",
-      "subtitle": "Chagua shamba uliloanza uchunguzi",
-      "startBtn": "Anza Uchunguzi",
-      "noFarms": "Ongeza shamba kwanza"
-    },
-    "camera": {
-      "title": "Piga picha",
-      "permission": "Tunahitaji ruhusa ya kamera ili uendelee",
-      "permissionBtn": "Ruhusu Kamera",
-      "photoCount": "{{count}}/3 picha",
-      "retake": "Piga tena",
-      "usePhoto": "Tumia picha hii",
-      "continue": "Endelea"
-    },
-    "subject": {
-      "title": "Taarifa za uchunguzi",
-      "typeLabel": "Ni nini unachochunguza?",
-      "plant": "Mmea",
-      "animal": "Mnyama",
-      "nameLabel": "Jina la mmea / mnyama",
-      "namePlaceholder": "Mfano: mahindi, ng'ombe wa maziwa",
-      "symptomsLabel": "Dalili (hiari)",
-      "symptomsPlaceholder": "Eleza dalili ulizoziona...",
-      "durationLabel": "Muda wa dalili",
-      "duration": {
-        "today": "Leo",
-        "1_3_days": "Siku 1–3",
-        "1_week": "Wiki moja",
-        "over_1_week": "Zaidi ya wiki"
+      "title": "Uchunguzi wa AI",
+      "infoAlert": "🤖 Niulize tatizo lolote la kilimo — kwa Kiingereza au Kiswahili. Nitakupa jibu rahisi.",
+      "sectionAsk": "Ungependa kuuliza vipi?",
+      "sectionHistory": "Uchunguzi Uliopita",
+      "mode": {
+        "text": "Andika Swali",
+        "textSub": "Eleza tatizo kwa maneno yako mwenyewe",
+        "photo": "Piga Picha",
+        "photoSub": "Piga picha 1–3 za tatizo",
+        "both": "Swali + Picha",
+        "bothSub": "Sahihi zaidi — AI inaona muktadha wote",
+        "recommended": "INASHAURIWA"
       },
-      "submit": "Wasilisha kwa uchunguzi"
+      "history": {
+        "empty": {
+          "title": "Bado haujafanya uchunguzi",
+          "body": "Bonyeza juu kuuliza swali lako la kwanza"
+        }
+      },
+      "historyItem": {
+        "confidence": "{{pct}}%",
+        "resolved": "Imepona",
+        "pending": "Inasubiri"
+      }
     },
-    "loading": {
-      "title": "Inachunguza...",
-      "subtitle": "Tafadhali subiri. Inaweza kuchukua dakika moja.",
-      "timeout": "Inachukua muda mrefu zaidi ya kawaida.",
-      "retry": "Jaribu tena"
+    "input": {
+      "title": "Eleza Tatizo",
+      "questionLabel": "Tatizo ni nini? *",
+      "questionPlaceholder": "mf. Majani ya mahindi yanageuka njano kutoka pembeni. Ilianza baada ya mvua nyingi...",
+      "charCount": "{{count}}/500",
+      "photosLabel": "Picha (hiari lakini husaidia)",
+      "cameraPrompt": "Gusa kupiga picha",
+      "cropChip": "🌿 Zao",
+      "animalChip": "🐄 Mnyama",
+      "subjectLabel": "Ni zao/mnyama gani?",
+      "submitBtn": "🤖 Pata Jibu la AI",
+      "submitting": "Inachunguza...",
+      "submitNote": "Jibu litakuwa tayari kwa sekunde 10–30",
+      "errorSubmit": "Imeshindwa kutuma. Tafadhali jaribu tena.",
+      "ussdFallback": "Huna mtandao? Piga {{code}} kwa uchunguzi wa msingi"
     },
     "result": {
-      "title": "Matokeo ya uchunguzi",
+      "title": "Jibu la AI",
+      "save": "Hifadhi",
+      "aiThinks": "AI inaamini hii ni...",
       "confidence": "Uhakika",
-      "confidence_high": "Utambuzi una uhakika mkubwa",
-      "confidence_medium": "Utambuzi una uhakika wa wastani",
+      "confidence_high": "Matokeo yenye uhakika mkubwa",
+      "confidence_medium": "Matokeo yenye uhakika wa wastani",
       "confidence_low": "Uhakika mdogo — wasiliana na mtaalamu",
-      "processed_in": "Imechakatwa kwa {{ms}}ms",
-      "severity": "Ukali",
-      "description": "Maelezo",
-      "prescriptions": "Mpango wa Matibabu",
-      "buyMedicine": "Nunua dawa",
-      "saveFarm": "Hifadhi kwa shamba",
-      "share": "Shiriki ripoti",
+      "processed_in": "⚡ Ilichunguliwa kwa ms {{ms}}",
+      "description": "Maelezo ya Ugonjwa",
+      "prescriptions": "Jinsi ya Kutibu",
+      "buyMedicine": "Nunua Dawa",
+      "saveFarm": "Hifadhi kwenye Shamba",
+      "shareTitle": "AgroConnect — Ripoti ya Uchunguzi",
+      "shareDiseaseLabel": "Ugonjwa",
+      "shareSeverityLabel": "Ukali",
+      "shareConfidenceLabel": "Uhakika",
       "severity_mild": "Kidogo",
       "severity_moderate": "Wastani",
       "severity_severe": "Kali",
-      "severity_critical": "Hatari"
+      "severity_critical": "Hatari Sana",
+      "whatHappening": "❓ Kinachotokea kwa {{subject}} wako?",
+      "stepsTitle": "✅ Nini cha kufanya — Hatua {{n}} Rahisi:",
+      "recovery": "💡 Habari njema: Ukianza matibabu leo, zao lako linapaswa kupona katika wiki 2–3.",
+      "buyProduct": "🛒 Nunua {{product}} Karibu",
+      "saveRecord": "📥 Hifadhi kwenye Rekodi ya Shamba",
+      "suppliers": {
+        "title": "🛒 Wapi Kununua Dawa",
+        "subtitle": "Bidhaa zinazolingana na dawa zilizopendekezwa zinapatikana kwenye maeneo yako",
+        "in_stock": "Inapatikana",
+        "out_of_stock": "Haipatikani"
+      },
+      "loading": {
+        "title": "Inachunguza...",
+        "subtitle": "Tafadhali subiri. Inaweza kuchukua sekunde 10–30."
+      },
+      "error": {
+        "title": "Uchunguzi umeshindwa",
+        "body": "Tafadhali jaribu tena"
+      }
     },
     "feedback": {
-      "title": "Je, utambuzi ulikuwa sahihi?",
-      "accuracyLabel": "Ukweli wa utambuzi",
-      "outcomeLabel": "Matokeo baada ya matibabu",
+      "title": "Tathmini Matokeo",
+      "accuracyLabel": "Usahihi wa AI (nyota 1–5)",
+      "outcomeLabel": "Hali baada ya matibabu",
       "outcome": {
-        "resolved": "Ilipona",
-        "better": "Ilikuwa bora",
-        "same": "Haikubadilika",
-        "worse": "Ilizidi"
+        "resolved": "✅ Imepona kabisa",
+        "improved": "📈 Imepata nafuu",
+        "no_change": "➡️ Hakuna mabadiliko",
+        "worsened": "📉 Imezidi kuwa mbaya"
       },
       "notesLabel": "Maelezo ya ziada (hiari)",
-      "submit": "Tuma maoni",
-      "success": "Asante kwa maoni yako!"
+      "submit": "Tuma Tathmini",
+      "success": "Asante! Maoni yako yanasaidia kuboresha AI."
     },
-    "savedOffline": "Imehifadhiwa — itasawazishwa unapounganika"
+    "savedOffline": "Imehifadhiwa — itasawazishwa unapounganika",
+    "loading": {
+      "title": "Inachunguza...",
+      "subtitle": "Tafadhali subiri. Inaweza kuchukua sekunde 10–30.",
+      "timeout": "Inachukua muda mrefu. Jaribu tena?",
+      "retry": "Jaribu Tena"
+    }
   },
   "market": {
     "home": {
@@ -561,10 +1055,88 @@
     }
   },
   "finance": {
+    "transaction": {
+      "topBarTitle": "Ongeza Muamala",
+      "incomeToggle": "Mapato",
+      "expenseToggle": "Matumizi",
+      "incomeSubtitle": "Pesa iliyopokelewa",
+      "expenseSubtitle": "Pesa iliyotumika",
+      "amountLabel": "Kiasi (KES) *",
+      "amountPrefix": "KES",
+      "categoryLabel": "Aina *",
+      "linkedToLabel": "Inahusiana Na (hiari)",
+      "linkedToPlaceholder": "Chagua shamba / zao / mnyama",
+      "buyerLabel": "Mnunuzi / Msambazaji",
+      "buyerPlaceholder": "mf. Peter Buyer",
+      "dateLabel": "Tarehe *",
+      "notesLabel": "Risiti / Maelezo",
+      "notesPlaceholder": "mf. 200kg @ KES 40/kg",
+      "infoAlert": "💡 Hii itaongezwa kwenye mtiririko wako wa fedha wa Juni na kusasisha alama yako ya mkopo.",
+      "saveBtn": "Hifadhi Muamala ✓",
+      "saving": "Inahifadhi...",
+      "errorSave": "Imeshindwa kuhifadhi. Tafadhali jaribu tena.",
+      "savedOffline": "Imehifadhiwa. Itasawazishwa unapounganika.",
+      "category": {
+        "crop_sale": "🌽 Uuzaji wa Mazao",
+        "animal_products": "🥚 Bidhaa za Mifugo",
+        "fertiliser": "🌾 Mbolea",
+        "pesticide_drugs": "💊 Dawa ya Wadudu/Mifugo",
+        "tools_equipment": "🔧 Zana/Vifaa",
+        "labour": "👷 Kazi",
+        "water_irrigation": "💧 Maji/Umwagiliaji",
+        "other_input": "📦 Pembejeo Nyingine"
+      },
+      "linkedToModal": {
+        "title": "Inahusiana Na",
+        "close": "Funga"
+      },
+      "dateModal": {
+        "title": "Chagua Tarehe",
+        "done": "Imekamilika"
+      }
+    },
     "home": {
       "title": "Fedha",
       "applyBtn": "Omba mkopo",
       "loanHistory": "Historia ya mikopo",
+      "reports": {
+        "periodMonth": "Mwezi Huu",
+        "periodQuarter": "Miezi 3",
+        "periodYear": "Mwaka Huu",
+        "income": "Mapato",
+        "expenses": "Matumizi",
+        "netProfit": "Faida Halisi",
+        "margin": "pembejeo",
+        "breakdown": "Mgawanyo wa Kategoria",
+        "export": "Hamisha / Shiriki Ripoti"
+      },
+      "tabs": {
+        "cashflow": "Mtiririko wa Fedha",
+        "loans": "Mikopo",
+        "reports": "Ripoti"
+      },
+      "addTransaction": "Ongeza Muamala",
+      "netBanner": {
+        "period": "{{month}} — Hali ya Fedha",
+        "income": "💚 Mapato",
+        "expenses": "❤️ Matumizi",
+        "netProfit": "Faida Halisi",
+        "vsLastMonth": "{{pct}}% ikilinganishwa na mwezi uliopita"
+      },
+      "chart": {
+        "title": "Mtiririko wa Fedha — Wiki 4 zilizopita",
+        "income": "Mapato",
+        "expenses": "Matumizi"
+      },
+      "transactions": {
+        "title": "Miamala ya Hivi Karibuni",
+        "income": "Mapato",
+        "expense": "Matumizi",
+        "empty": {
+          "title": "Hakuna miamala bado",
+          "body": "Rekodi mapato na matumizi kufuatilia mtiririko wa fedha"
+        }
+      },
       "loans": {
         "empty": {
           "title": "Hakuna mikopo bado",
@@ -658,7 +1230,14 @@
         "mpesaRef": "Kumbukumbu ya M-Pesa",
         "rateFormat": "{{rate}}% / mwaka",
         "rejectedNote": "Ombi limekataliwa. Imarisha alama yako na ujaribu tena.",
-        "cancelledNote": "Ombi limefutwa."
+        "cancelledNote": "Ombi limefutwa.",
+        "cancelBtn": "Futa Ombi",
+        "cancelConfirmTitle": "Futa ombi?",
+        "cancelConfirmMsg": "Hii itaondoa ombi lako la mkopo. Unaweza kuomba tena baadaye.",
+        "cancelYes": "Ndio, Futa",
+        "cancelNo": "Acha",
+        "repaymentSchedule": "Ratiba ya Malipo",
+        "repaymentMonth": "Mwezi {{n}}"
       }
     }
   },
@@ -666,67 +1245,108 @@
     "home": {
       "title": "Jamii",
       "categoryAll": "Zote",
-      "newThread": "Swali jipya",
+      "newThread": "Chapisho Jipya",
       "category": {
-        "crops":      "Ushauri wa Mazao",
-        "livestock":  "Afya ya Mifugo",
-        "market":     "Soko",
-        "weather":    "Hali ya Hewa",
-        "finance":    "Fedha",
-        "government": "Serikali",
-        "success":    "Mafanikio",
-        "tools":      "Zana"
+        "crops": "🌿 Mazao",
+        "livestock": "🐄 Mifugo",
+        "market": "📈 Soko",
+        "weather": "🌦 Hali ya Hewa",
+        "finance": "💰 Fedha",
+        "government": "🏛 Serikali",
+        "success": "Mafanikio",
+        "tools": "Zana"
       },
       "thread": {
-        "replies_one":   "{{count}} jibu",
+        "replies_one": "{{count}} jibu",
         "replies_other": "{{count}} majibu",
-        "upvotes":       "{{count}} upvote"
+        "upvotes": "{{count}} upvote"
       },
       "empty": {
-        "title": "Hakuna mazungumzo bado",
-        "body":  "Kuwa wa kwanza kuuliza swali",
-        "cta":   "Anza mazungumzo"
+        "title": "Hakuna machapisho bado",
+        "body": "Hakuna machapisho bado. Kuwa wa kwanza kuuliza!",
+        "categoryBody": "Hakuna machapisho katika {{category}} bado. Kuwa wa kwanza kuuliza!",
+        "cta": "Anza mazungumzo"
+      },
+      "tabs": {
+        "discussions": "Mazungumzo",
+        "experts": "Wataalamu",
+        "articles": "Jifunze"
       }
     },
     "thread": {
-      "title":       "Mazungumzo",
-      "upvote":      "Upvote",
-      "reply":       "Jibu",
-      "replyPlaceholder": "Andika jibu lako...",
-      "send":        "Tuma",
-      "expert":      "Mtaalamu",
-      "verified":    "Imethibitishwa na mtaalamu",
-      "liveReply":   "Jibu jipya limepokelewa",
+      "title": "Mazungumzo",
+      "upvote": "Upvote",
+      "reply": "Jibu",
+      "replyPlaceholder": "Andika jibu...",
+      "send": "Tuma",
+      "expert": "Mtaalamu",
+      "verified": "Imethibitishwa na mtaalamu",
+      "liveReply": "Jibu jipya limepokelewa",
+      "repliesHeader": "{{count}} Majibu — yaliyopangwa kulingana na msaada zaidi",
+      "replyAction": "↩ Jibu",
+      "report": "⚑ Ripoti",
+      "reportTitle": "Ripoti Jibu",
+      "reportBody": "Ripoti jibu hili kwa ukaguzi wa msimamizi?",
+      "reportSuccess": "Imeripotiwa",
+      "reportSuccessBody": "Asante. Timu yetu itakagua jibu hili.",
       "empty": {
         "title": "Hakuna majibu bado",
-        "body":  "Kuwa wa kwanza kujibu"
+        "body": "Kuwa wa kwanza kujibu"
       }
     },
     "newThread": {
-      "title":            "Swali jipya",
-      "category":         "Chagua kitengo",
-      "cropTag":          "Zao (hiari)",
+      "title": "Chapisho Jipya",
+      "questionLabel": "Kichwa / Swali *",
+      "questionPlaceholder": "Swali lako ni nini?",
+      "detailsLabel": "Maelezo *",
+      "detailsPlaceholder": "Eleza kwa undani...",
+      "categoryLabel": "Kitengo *",
+      "cropAnimalLabel": "Zao / Mnyama",
+      "cropAnimalPlaceholder": "Mfano: Mahindi",
+      "farmLabel": "Shamba",
+      "farmPlaceholder": "Mfano: Shamba la Nakuru",
+      "photosLabel": "Picha (hiari)",
+      "addPhoto": "Ongeza picha",
+      "photosComingSoon": "Upakiaji wa picha unakuja hivi karibuni. Unaweza bado kuchapisha swali lako sasa.",
+      "category": "Chagua kitengo",
+      "cropTag": "Zao (hiari)",
       "cropTagPlaceholder": "Mfano: Mahindi",
-      "threadTitle":      "Kichwa cha habari",
+      "threadTitle": "Kichwa cha habari",
       "titlePlaceholder": "Andika swali lako kwa ufupi",
-      "body":             "Maelezo",
-      "bodyPlaceholder":  "Eleza tatizo lako kwa undani zaidi...",
-      "charCount":        "{{count}} herufi",
-      "submit":           "Chapisha",
-      "submitting":       "Inachapisha...",
-      "success":          "Swali limechapishwa!"
+      "body": "Maelezo",
+      "bodyPlaceholder": "Eleza kwa undani...",
+      "charCount": "{{count}} herufi",
+      "submit": "Chapisha Swali 📢",
+      "submitting": "Inachapisha...",
+      "success": "Swali limechapishwa!"
     },
     "expert": {
-      "title":          "Wasifu wa Mtaalamu",
+      "title": "Wasifu wa Mtaalamu",
       "specialisations": "Utaalamu",
-      "counties":       "Kaunti zinazohudumia",
-      "rating":         "{{rating}}/5 · maoni {{count}}",
-      "callBtn":        "Piga simu",
-      "whatsappBtn":    "WhatsApp",
+      "counties": "Kaunti zinazohudumia",
+      "bio": "Kuhusu",
+      "rating": "{{rating}}/5 · maoni {{count}}",
+      "callBtn": "Piga simu",
+      "whatsappBtn": "WhatsApp",
       "type": {
-        "agronomist":        "Mtaalamu wa Kilimo",
-        "vet":               "Daktari wa Mifugo",
+        "agronomist": "Mtaalamu wa Kilimo",
+        "vet": "Daktari wa Mifugo",
         "extension_officer": "Mshauri wa Kilimo"
+      }
+    },
+    "experts": {
+      "title": "Tafuta Mtaalamu",
+      "filterAll": "Wataalamu Wote",
+      "empty": {
+        "title": "Hakuna wataalamu bado",
+        "body": "Washauri wa kilimo na mifugo wataonekana hapa."
+      }
+    },
+    "articles": {
+      "title": "Maktaba ya Maarifa",
+      "empty": {
+        "title": "Hakuna makala bado",
+        "body": "Mwongozo wa kilimo na vidokezo vitaonekana hapa."
       }
     }
   },
@@ -778,14 +1398,28 @@
   "govt": {
     "home": {
       "title": "Huduma za Serikali",
-      "registrations": { "title": "Usajili wa Shamba", "desc": "Sajili shamba lako rasmi" },
-      "subsidies": { "title": "Ruzuku", "desc": "Omba msaada wa serikali" },
-      "licenses": { "title": "Leseni", "desc": "Omba leseni ya kilimo" }
+      "registrations": {
+        "title": "Usajili wa Shamba",
+        "desc": "Sajili shamba lako rasmi"
+      },
+      "subsidies": {
+        "title": "Ruzuku",
+        "desc": "Omba msaada wa serikali"
+      },
+      "licenses": {
+        "title": "Leseni",
+        "desc": "Omba leseni ya kilimo"
+      }
     },
     "registrations": {
       "title": "Usajili wa Shamba",
       "empty": "Huna usajili bado",
-      "status": { "pending": "Inasubiri", "under_review": "Inachunguzwa", "approved": "Imeidhinishwa", "rejected": "Imekataliwa" },
+      "status": {
+        "pending": "Inasubiri",
+        "under_review": "Inachunguzwa",
+        "approved": "Imeidhinishwa",
+        "rejected": "Imekataliwa"
+      },
       "new": "Usajili Mpya"
     },
     "subsidies": {
@@ -794,13 +1428,23 @@
       "myApplications": "Maombi Yangu",
       "apply": "Omba",
       "empty": "Hakuna ruzuku",
-      "status": { "pending": "Inasubiri", "approved": "Imeidhinishwa", "disbursed": "Imetolewa", "rejected": "Imekataliwa" }
+      "status": {
+        "pending": "Inasubiri",
+        "approved": "Imeidhinishwa",
+        "disbursed": "Imetolewa",
+        "rejected": "Imekataliwa"
+      }
     },
     "licenses": {
       "title": "Leseni",
       "empty": "Huna leseni bado",
       "new": "Omba Leseni",
-      "status": { "pending": "Inasubiri", "issued": "Imetolewa", "rejected": "Imekataliwa", "expired": "Imeisha" }
+      "status": {
+        "pending": "Inasubiri",
+        "issued": "Imetolewa",
+        "rejected": "Imekataliwa",
+        "expired": "Imeisha"
+      }
     }
   },
   "insights": {
@@ -808,7 +1452,11 @@
     "signals": "Ishara za Soko",
     "yield": "Matarajio ya Mavuno",
     "prices": "Utabiri wa Bei",
-    "signal": { "sell_now": "Uza Sasa", "hold": "Subiri", "buy_now": "Nunua Sasa" },
+    "signal": {
+      "sell_now": "Uza Sasa",
+      "hold": "Subiri",
+      "buy_now": "Nunua Sasa"
+    },
     "empty": "Hakuna data ya utabiri"
   },
   "harvest": {
@@ -840,6 +1488,284 @@
       "totalRevenue": "Mapato yote (KES)",
       "notes": "Maelezo ya ziada",
       "save": "Hifadhi"
+    }
+  },
+  "inventory": {
+    "title": "Hifadhi",
+    "tab": {
+      "inputs": "Pembejeo",
+      "products": "Mazao",
+      "animalProducts": "Mazao ya Wanyama",
+      "harvest": "Ghala la Mazao",
+      "collections": "Makusanyo"
+    },
+    "summary": {
+      "lowEmpty": "Chini/Imekwisha",
+      "pendingKes": "KES Inayosubiri",
+      "inStore": "Ghalani",
+      "todayEggs": "Mayai Leo",
+      "trays": "{{count}} trays"
+    },
+    "inputs": {
+      "urgentAlert": "⚠️ bidhaa {{count}} zimekwisha — {{activity}} imepangwa hivi karibuni",
+      "urgentBanner": "⚠️ bidhaa {{count}} zimekwisha — {{activity}} imepangwa {{when}}",
+      "purchased": "Ilinunuliwa: {{qty}}",
+      "used": "Ilitumiwa: {{qty}}",
+      "left": "Iliyobaki: {{qty}}",
+      "recordUse": "Rekodi Matumizi",
+      "restock": "Jaza Tena 🛒",
+      "buyMore": "Nunua Zaidi 🛒",
+      "buyNow": "Nunua Sasa — KES {{price}} 🛒",
+      "buyNowFull": "Nunua Sasa — KES {{price}}/{{unit}} 🛒",
+      "outOfStock": "🚨 Imekwisha — agiza haraka",
+      "scheduledUse": "⚠️ Matumizi yaliyopangwa: {{date}}",
+      "supplier": "Muuzaji: {{supplier}} · Bei: KES {{cost}}/{{unit}}",
+      "addCta": "➕ Ongeza Hifadhi",
+      "addInputCard": "➕ Ongeza Hifadhi",
+      "loading": "Inapakia pembejeo...",
+      "category": {
+        "all": "Yote",
+        "fertiliser": "🌾 Mbolea",
+        "pesticide": "🌿 Dawa ya Wadudu",
+        "seed": "🌱 Mbegu",
+        "animalFeed": "🐾 Chakula cha Wanyama",
+        "vaccine": "💉 Chanjo",
+        "tool": "🔧 Zana"
+      },
+      "empty": {
+        "title": "Hakuna pembejeo zilizorekodiwa",
+        "body": "Fuatilia mbegu, mbolea na dawa hapa",
+        "body2": "Bado hakuna pembejeo. Bonyeza + kuongeza mbolea, mbegu, au dawa.",
+        "cta": "➕ Ongeza Hifadhi",
+        "ctaFirst": "Ongeza Kwanza"
+      }
+    },
+    "products": {
+      "sectionTitle": "Makusanyo ya Leo",
+      "trays": "Trays",
+      "litres": "Lita",
+      "eggs": {
+        "today": "Leo, {{date}}"
+      },
+      "milk": {
+        "today": "Leo, {{date}}"
+      },
+      "update": "Sasisha",
+      "recordAlert": "Rekodi makusanyo ya leo",
+      "recordNow": "Rekodi Sasa",
+      "recorded": "✓ Imerekodiwa",
+      "weekTitle": "Mayai — Wiki Hii",
+      "weekMilkTitle": "Maziwa — Wiki Hii",
+      "weekSummary": "Jumla ya wiki: {{total}} trays · Wastani: {{avg}}/siku",
+      "weekMilkSummary": "Jumla ya wiki: {{total}}L · Wastani: {{avg}}L/siku",
+      "sellTitle": "Rekodi Uuzaji",
+      "sellEggs": "Uza Mayai 🥚",
+      "sellMilk": "Uza Maziwa 🥛",
+      "cropOnlyMsg": "Mazao ya wanyama yanafuatiliwa kwa wakulima wa mifugo.",
+      "days": {
+        "mon": "J",
+        "tue": "K",
+        "wed": "J",
+        "thu": "A",
+        "fri": "I",
+        "sat": "J",
+        "sun": "J"
+      },
+      "empty": {
+        "title": "Hakuna makusanyo leo",
+        "body": "Rekodi makusanyo yako ya mayai na maziwa"
+      }
+    },
+    "harvest": {
+      "section": "Mazao Ghalani",
+      "empty": "Hakuna mavuno ghalani. Rekodi mavuno kufuatilia ulicho nacho.",
+      "totalTitle": "🌾 Thamani Yote Ghalani",
+      "totalSub": "Mazao {{count}} · {{totalKg}}kg jumla",
+      "harvested": "Ilivunwa: {{date}} · Daraja {{grade}}",
+      "storage": "Hifadhi: {{location}}",
+      "sold": "Iliyouzwa: {{kg}}kg",
+      "remaining": "Iliyobaki: {{kg}}kg",
+      "estimatedValue": "Thamani inayokadiriwa: KES {{value}}",
+      "marketPriceNote": "({{kg}}kg × KES {{price}}/kg)",
+      "recordSale": "Rekodi Uuzaji",
+      "updateStock": "Sasisha Hifadhi",
+      "addNew": "➕ Rekodi Mavuno Mapya Ghalani",
+      "soldOut": "Imeuzwa ✓"
+    },
+    "collections": {
+      "pendingBanner": "💰 Jumla inayosubiri: KES {{total}} kutoka kwa wateja {{count}}",
+      "pendingBannerFull": "💰 Jumla inayosubiri: KES {{total}} kutoka kwa mteja {{count}}{{plural}}",
+      "allPaid": "✅ Wateja wote wamefanya malipo!",
+      "notPaid": "{{product}} imechukuliwa · Bado haijalipiwa",
+      "productTaken": "{{product}} — {{qty}} {{unit}} ilichukuliwa",
+      "since": "Tangu: {{date}}",
+      "paidOn": "✅ Imelipwa tarehe {{date}}",
+      "daysOwing": "Siku {{count}} bado hazijalipwa",
+      "markPaid": "✓ Weka kama Imelipwa",
+      "callBtn": "📞 Piga Simu",
+      "filterAll": "Yote",
+      "filterUnpaid": "Hazijalipwa",
+      "filterPaid": "Zilizolipwa",
+      "addNew": "➕ Ongeza Mkusanyiko wa Mteja",
+      "paidToast": "Malipo yamerekodiwa. Kuongeza KES {{amount}} kwenye mtiririko wa fedha.",
+      "empty": {
+        "title": "Hakuna malipo yanayosubiri",
+        "body": "Makusanyo yote ya wateja yamefanyika"
+      }
+    },
+    "restock": {
+      "title": "🛒 Jaza Hifadhi {{name}}",
+      "currentStock": "Hifadhi ya sasa: {{qty}}",
+      "qtyPurchased": "Kiasi Kilichonunuliwa *",
+      "costPerUnit": "Bei kwa {{unit}} (KES) *",
+      "totalCost": "Jumla ya gharama: KES {{total}}",
+      "supplierLabel": "Muuzaji *",
+      "supplierPlaceholder": "mf. Nakuru Agrovets",
+      "dateLabel": "Tarehe ya Ununuzi *",
+      "receiptLabel": "Nambari ya Risiti (si lazima)",
+      "receiptPlaceholder": "Kwa kumbukumbu",
+      "previewTitle": "Baada ya kujaza:",
+      "previewNewQty": "{{qty}} jumla katika hifadhi",
+      "previewTotalSpent": "Jumla iliyotumika: KES {{total}}",
+      "previewNote": "Hii itaongezwa kwenye matumizi ya shamba yako moja kwa moja.",
+      "saveBtn": "Thibitisha Ununuzi",
+      "saving": "Inahifadhi...",
+      "successToast": "Imejazwa! KES {{cost}} imeongezwa kwenye matumizi ya shamba.",
+      "savedOfflineToast": "Imehifadhiwa nje ya mtandao. KES {{cost}} itasawazishwa ukiwa mtandaoni."
+    },
+    "recordUse": {
+      "title": "Rekodi Matumizi — {{name}}",
+      "remaining": "Iliyobaki: {{qty}}",
+      "qtyUsed": "Kiasi Kilichotumiwa *",
+      "decrease": "Punguza kiasi",
+      "increase": "Ongeza kiasi",
+      "exceeds": "{{remaining}} peke yake ndio ipo",
+      "dateLabel": "Tarehe ya Kutumia *",
+      "prevDay": "Siku iliyopita",
+      "nextDay": "Siku inayofuata",
+      "activityLabel": "Shughuli Iliyounganishwa (si lazima)",
+      "noActivity": "Hakuna — bila shughuli",
+      "notesLabel": "Maelezo (si lazima)",
+      "notesPlaceholder": "mf. Ilitumika kaskazini, Shamba A",
+      "afterRecord": "Baada ya kurekodi: {{qty}} imebaki",
+      "saveBtn": "Rekodi {{qty}} Iliyotumiwa ✓",
+      "saving": "Inahifadhi...",
+      "outOfStock": {
+        "title": "Imekwisha hifadhi",
+        "message": "Bidhaa hii imekwisha. Ungependa kuagiza zaidi?",
+        "findSupplier": "Ndiyo, Tafuta Muuzaji",
+        "notNow": "Si sasa"
+      }
+    },
+    "addCollection": {
+      "title": "➕ Rekodi Mkusanyiko wa Mteja",
+      "subtitle": "Rekodi kile mteja amechukua — utaweka alama ya kulipwa atakapolipa.",
+      "nameLabel": "Jina la Mteja *",
+      "namePlaceholder": "mf. Grace Kamau",
+      "recent": "Hivi karibuni:",
+      "phoneLabel": "Nambari ya Simu",
+      "phonePlaceholder": "+254 7__ ___ ___",
+      "productLabel": "Bidhaa *",
+      "productEggs": "Mayai",
+      "productMilk": "Maziwa",
+      "productMaize": "Mahindi",
+      "productCabbage": "Kabichi",
+      "productBeans": "Maharagwe",
+      "productOther": "Nyingine",
+      "qtyLabel": "Kiasi *",
+      "unitLabel": "Kipimo",
+      "priceLabel": "Bei kwa {{unit}} (KES) *",
+      "totalPreview": "Jumla: KES {{total}}",
+      "dateLabel": "Tarehe Ilichukuliwa *",
+      "notesLabel": "Maelezo (si lazima)",
+      "notesPlaceholder": "mf. Atalipa Ijumaa",
+      "saveBtn": "Rekodi Mkusanyiko · KES {{total}}",
+      "saveBtnEmpty": "Jaza sehemu zote zinazohitajika",
+      "saving": "Inahifadhi...",
+      "successToast": "Imerekodiwa! {{name}} anadaiwa KES {{total}}"
+    },
+    "addItem": {
+      "topBarTitle": "Ongeza Hifadhi",
+      "infoAlert": "Fuatilia bidhaa yoyote ya shamba hapa — mbolea, chakula, dawa, mbegu, au zana.",
+      "categoryTitle": "Ni aina gani ya bidhaa?",
+      "category": {
+        "fertiliser": "Mbolea",
+        "pesticide": "Dawa ya Wadudu",
+        "herbicide": "Dawa ya Magugu",
+        "seed": "Mbegu",
+        "animal_feed": "Chakula cha Wanyama",
+        "animal_medicine": "Dawa ya Wanyama",
+        "vaccine": "Chanjo",
+        "tool_equipment": "Zana na Vifaa",
+        "other": "Nyingine"
+      },
+      "nameLabel": "Jina la Bidhaa *",
+      "namePlaceholderDefault": "Ingiza jina la bidhaa",
+      "namePlaceholder": {
+        "fertiliser": "mf. Mbolea CAN, DAP, NPK",
+        "pesticide": "mf. Mancozeb 80WP, Ridomil Gold",
+        "herbicide": "mf. Roundup, Atrazine",
+        "seed": "mf. Mahindi H614D, Nyanya F1",
+        "animal_feed": "mf. Layers Mash, Dairy Concentrate",
+        "animal_medicine": "mf. Oxytetracycline, Multivitamin",
+        "vaccine": "mf. Chanjo ya Newcastle, FMD",
+        "tool_equipment": "mf. Sprayer, Jembe",
+        "other": "mf. Kamba, Mifuko ya Plastiki"
+      },
+      "unitLabel": "Kipimo",
+      "unit": {
+        "kg": "kg",
+        "bags": "mifuko",
+        "litres": "lita",
+        "vials": "vials",
+        "pieces": "vipande",
+        "metres": "mita",
+        "other": "nyingine"
+      },
+      "qtyLabel": "Kiasi Kilichonunuliwa *",
+      "costLabel": "Bei kwa {{unit}} (KES) *",
+      "totalCost": "Jumla: KES {{total}}",
+      "supplierLabel": "Muuzaji / Mahali Ulinunua",
+      "supplierPlaceholder": "mf. Nakuru Agrovets",
+      "dateLabel": "Tarehe ya Ununuzi *",
+      "farmLabel": "Shamba Linalohusika",
+      "farmPlaceholder": "Chagua shamba",
+      "farmPickerTitle": "Chagua Shamba",
+      "farmOptionSub": "{{county}} · ekari {{area}}",
+      "farmPickerEmpty": "Hakuna shamba. Ongeza shamba kwanza.",
+      "reorderLabel": "Tahadhari ya Kujaza Upya",
+      "reorderPreview": "Tahadhari wakati chini ya {{qty}} {{unit}} zinabaki",
+      "notesLabel": "Maelezo (si lazima)",
+      "notesPlaceholder": "mf. Imehifadhiwa ghalani A",
+      "saveBtn": "Ongeza Hifadhi ✓",
+      "saving": "Inahifadhi...",
+      "successToast": "{{name}} imeongezwa. {{qty}} {{unit}} ipo hifadhini.",
+      "aiTitle": "🤖 AI itafanya kiotomatiki:",
+      "aiExpense": "Unda gharama ya KES {{amount}} katika Fedha",
+      "aiVaccine": "Ongeza ratiba ya chanjo kwa wanyama wako",
+      "aiFertiliser": "Unganisha na shughuli za mbolea zinazokuja"
+    },
+    "recordProduct": {
+      "titleEggs": "🥚 Rekodi Makusanyo ya Mayai",
+      "titleMilk": "🥛 Rekodi Makusanyo ya Maziwa",
+      "forGroup": "Kwa: {{name}} (ndege/wanyama {{count}})",
+      "todayRecord": "Rekodi ya leo: {{qty}} {{unit}} · Inasasishwa",
+      "updatingAlert": "Inasasisha rekodi ya leo iliyopo",
+      "dupDateAlert": "Tayari umerekodia {{qty}} {{unit}} kwa tarehe hii. Inasasisha.",
+      "qtyLabel": "Kiasi *",
+      "unitEggs": "Trays",
+      "unitMilk": "Lita",
+      "fractionBtn": "+{{frac}}",
+      "aiHint": "🤖 Jana: {{yesterday}} · Wastani wa wiki: {{weekAvg}}",
+      "dateLabel": "Tarehe ya Kukusanya *",
+      "notesLabel": "Maelezo (si lazima)",
+      "notesPlaceholder": "mf. Ndege wachache wagonjwa leo",
+      "streakMsg": "{{emoji}} Msururu wa siku {{days}} za kurekodi! Endelea.",
+      "saveBtn": "Hifadhi Makusanyo ✓",
+      "updateBtn": "Sasisha Rekodi ya Leo",
+      "saving": "Inahifadhi...",
+      "successToast": "Makusanyo yamerekodiwa! {{qty}} {{unit}} tarehe {{date}}",
+      "savedOfflineToast": "Imehifadhiwa nje ya mtandao. Itasawazishwa ukiwa mtandaoni."
     }
   }
 }

@@ -12,10 +12,12 @@ export type AuthStackParamList = {
 };
 
 export type AppTabParamList = {
+  Home:      undefined;
   Farm:      undefined;
   Diagnose:  undefined;
   Market:    undefined;
   Finance:   undefined;
+  Inventory: undefined;
   Community: undefined;
   Profile:   undefined;
   Govt:      undefined;
@@ -23,26 +25,32 @@ export type AppTabParamList = {
 };
 
 export type FarmStackParamList = {
-  FarmList:         undefined;
-  FarmProfile:      { farmId: string };
-  FarmSetupWizard:  undefined;
-  ActivityCalendar: { farmId: string };
-  ActivityForm:     { farmId: string; activityId?: string };
-  InputLog:         { farmId: string };
-  InputForm:        { farmId: string };
-  HarvestLog:       { farmId: string };
-  HarvestForm:      { farmId: string };
-  WeatherDetail:    { lat?: number | null; lng?: number | null; county?: string | null };
+  FarmList:        undefined;
+  FarmProfile:     { farmId: string; initialTab?: 'overview' | 'my_tasks' | 'workers' };
+  AddCropScreen:   { farmId: string };
+  AddAnimalScreen: { farmId: string };
+  AddWorkerScreen: { farmId: string };
+  ActivityCalendar:  { farmId: string };
+  ActivityForm:      { farmId?: string; activityId?: string; activityType?: string; cropName?: string; streak?: number };
+  ActivityLogModal:  { farmId: string; activityId: string };
+  InputLog:        { farmId: string };
+  InputForm:       { farmId: string };
+  HarvestLog:      { farmId: string };
+  HarvestForm:     { farmId: string };
+  WeatherDetail:   { lat?: number | null; lng?: number | null; county?: string | null };
 };
 
 export type DiagnoseStackParamList = {
-  DiagnoseHome:       undefined;
-  DiagnoseCamera:     { farmId: string };
-  DiagnoseSubject:    { farmId: string; photoUris: string[] };
-  DiagnoseLoading:    { diagnosisId: string; farmId: string };
-  DiagnoseResult:     { diagnosisId: string; farmId: string };
-  DiagnoseFeedback:   { diagnosisId: string };
-  SupplierProducts:   { productName: string };
+  DiagnosisHome:   undefined;
+  DiagnosisInput:  { mode: 'text' | 'photo' | 'both' };
+  DiagnosisResult: { diagnosisId: string; farmId?: string };
+  SupplierProducts: { productName: string };
+  DiagnoseHome:    undefined;
+  DiagnoseCamera:  { farmId: string };
+  DiagnoseSubject: { farmId: string; photoUris: string[] };
+  DiagnoseLoading: { diagnosisId: string; farmId: string };
+  DiagnoseResult:  { diagnosisId: string; farmId?: string };
+  DiagnoseFeedback: { diagnosisId: string };
 };
 
 export type MarketStackParamList = {
@@ -56,6 +64,7 @@ export type MarketStackParamList = {
 
 export type FinanceStackParamList = {
   FinanceHome:       undefined;
+  AddTransaction:    undefined;
   CreditScoreDetail: undefined;
   LoanProducts:      undefined;
   LoanApplication:   { productId: string };
@@ -66,7 +75,10 @@ export type CommunityStackParamList = {
   CommunityHome:  undefined;
   ThreadDetail:   { threadId: string };
   NewThread:      undefined;
+  ExpertsList:    undefined;
   ExpertProfile:  { expertId: string };
+  ArticlesList:   undefined;
+  ArticleDetail:  { slug: string };
   WeatherDetail:  { lat?: number | null; lng?: number | null; county?: string | null };
 };
 
@@ -87,4 +99,9 @@ export type GovtStackParamList = {
 
 export type InsightsStackParamList = {
   Insights: undefined;
+};
+
+export type StockStackParamList = {
+  InventoryHome: undefined;
+  AddStockScreen: undefined;
 };

@@ -39,8 +39,8 @@ export function LoanProductsScreen({ navigation }: Props) {
     staleTime: isOnline ? 5 * 60 * 1000 : Infinity,
   });
 
-  const isLoading = scoreQuery.isLoading || productsQuery.isLoading;
-  const isError = scoreQuery.isError || productsQuery.isError;
+  const isLoading = productsQuery.isLoading || (scoreQuery.isLoading && !scoreQuery.isError);
+  const isError = productsQuery.isError;
 
   if (isLoading) {
     return (

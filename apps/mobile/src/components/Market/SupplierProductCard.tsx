@@ -8,6 +8,9 @@ interface SupplierProductCardProps {
   onAddToCart: () => void;
 }
 
+const fmtKes = (n: number | null | undefined): string =>
+  Math.round(n ?? 0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
 const STOCK_COLORS: Record<StockStatus, { bg: string; text: string }> = {
   in_stock:    { bg: '#E8F5E9', text: '#1B5E20' },
   low_stock:   { bg: '#FFF9C4', text: '#F57F17' },
@@ -16,7 +19,7 @@ const STOCK_COLORS: Record<StockStatus, { bg: string; text: string }> = {
 
 export function SupplierProductCard({ product, onAddToCart }: SupplierProductCardProps) {
   const { t } = useTranslation();
-  const stockColor = STOCK_COLORS[product.stockStatus];
+  const stockColor = STOCK_COLORS[product.stockStatus] ?? { bg: '#F5F5F5', text: '#757575' };
 
   return (
     <View style={styles.card}>
@@ -36,7 +39,7 @@ export function SupplierProductCard({ product, onAddToCart }: SupplierProductCar
 
       <View style={styles.midRow}>
         <Text style={styles.price}>
-          KES {product.pricePerUnit.toLocaleString()}/{product.unit}
+          KES {fmtKes(product.pricePerUnit)}/{product.unit}
         </Text>
         <Text style={styles.category}>
           {t(`market.product.filter.${product.category}`)}

@@ -13,7 +13,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { govtApi } from '../../api/govt';
-import type { LicenseStatus } from '../../api/govt';
+import type { LicenseStatus, FarmLicense } from '../../api/govt';
 import type { GovtStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<GovtStackParamList, 'Licenses'>;
@@ -82,10 +82,10 @@ export function LicensesScreen({ navigation: _navigation }: Props) {
           </View>
         )}
 
-        {licenses.map((lic) => (
+        {licenses.map((lic: FarmLicense) => (
           <View key={lic.id} style={s.row}>
             <View style={s.rowInfo}>
-              <Text style={s.rowName}>{lic.licenseType}</Text>
+              <Text style={s.rowName}>{lic.type}</Text>
               <Text style={s.rowSub}>{lic.licenseNumber ?? lic.id}</Text>
               {lic.expiresAt ? (
                 <Text style={s.rowExpiry}>{lic.expiresAt}</Text>

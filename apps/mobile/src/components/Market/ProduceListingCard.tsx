@@ -36,10 +36,10 @@ export function ProduceListingCard({ listing, onPress }: ProduceListingCardProps
 
       <View style={styles.midRow}>
         <Text style={styles.price}>
-          {t('market.listing.card.pricePerKg', { price: listing.pricePerKg.toLocaleString() })}
+          {t('market.listing.card.pricePerKg', { price: (listing.pricePerKg ?? 0).toLocaleString() })}
         </Text>
         <Text style={styles.qty}>
-          {t('market.listing.card.quantityKg', { quantity: listing.quantityKg.toLocaleString() })}
+          {t('market.listing.card.quantityKg', { quantity: (listing.quantityKg ?? 0).toLocaleString() })}
         </Text>
       </View>
 

@@ -6,6 +6,8 @@
     "back": "Back",
     "next": "Next",
     "skip": "Skip",
+    "saving": "Saving...",
+    "loading": "Loading...",
     "savedOffline": "Saved. Will sync when online.",
     "offline": "Working offline",
     "comingSoon": "Coming soon",
@@ -22,6 +24,12 @@
     },
     "login": {
       "title": "Welcome back",
+      "appName": "AgroConnect",
+      "tagline": "Smart Farming Platform",
+      "phoneLabel": "Phone Number",
+      "pinLabel": "PIN",
+      "signIn": "Sign In →",
+      "forgotPin": "Forgot PIN? Contact your farm administrator",
       "phone": "Phone number (+254...)",
       "password": "Password",
       "submit": "Sign in",
@@ -57,20 +65,150 @@
         "invalid": "Incorrect code. Please try again."
       }
     },
+    "setPin": {
+      "topBarTitle": "Set Your PIN",
+      "title": "Create Your Secure PIN",
+      "subtitle": "This replaces the temporary PIN. Keep it private — never share it.",
+      "currentPasswordLabel": "Current Password / PIN",
+      "newPinLabel": "New PIN (4 digits)",
+      "confirmPinLabel": "Confirm PIN",
+      "submit": "Save PIN & Continue →",
+      "warning": "⚠️ Don't use your birth year or phone number digits",
+      "errorMismatch": "PINs don't match",
+      "errorSimple": "PIN too simple — avoid 1234 or four identical digits"
+    },
+    "onboarding": {
+      "topBarTitle": "Welcome, {{name}}! 👋",
+      "skip": "Skip",
+      "progressLabel": "{{count}} of 5 complete",
+      "title": "Let's Set Up Your Farm",
+      "subtitle": "Complete these steps to unlock the full power of AgroConnect",
+      "step1": {
+        "name": "Account Created",
+        "sub": "Your AgroConnect account is active"
+      },
+      "step2": {
+        "name": "PIN Set Up",
+        "sub": "Your account is secured with a personal PIN"
+      },
+      "step3": {
+        "name": "Add Your First Farm",
+        "sub": "Track yields, activities & income"
+      },
+      "step4": {
+        "name": "Log Your First Activity",
+        "sub": "Build your farming history"
+      },
+      "step5": {
+        "name": "Record Your First Harvest",
+        "sub": "Track your earnings and yields"
+      },
+      "cta": "➕ Add Farm Now",
+      "newBadge": "NEW"
+    },
     "error": {
       "invalidCredentials": "Incorrect phone number or password.",
-      "networkError": "Network error. Please try again."
+      "networkError": "Network error. Please try again.",
+      "loginFailed": "Login failed. Please try again.",
+      "phoneTaken": "This phone number is already registered."
     }
   },
   "tabs": {
+    "home": "Home",
     "farm": "Farm",
     "diagnose": "Diagnose",
     "market": "Market",
     "finance": "Finance",
+    "inventory": "Inventory",
+    "stock": "Stock",
     "community": "Community",
     "profile": "Profile",
+    "me": "Me",
     "govt": "Govt",
     "insights": "Insights"
+  },
+  "dashboard": {
+    "greeting": "Hello, {{name}} 👋",
+    "greetingTime": "Good morning",
+    "stat": {
+      "net": "Net Cash",
+      "kesValue": "KES {{value}}",
+      "band": "Credit",
+      "bandValue": "Band {{band}}",
+      "streak": "Streak",
+      "streakValue": "{{days}}d",
+      "netThisMonth": "Net This Month",
+      "creditScore": "Credit Score",
+      "activeFarms": "Active Farms"
+    },
+    "streak": {
+      "label": "day streak",
+      "best": "Best: {{days}}d"
+    },
+    "nudge": {
+      "sectionTitle": "🤖 AI Advisor",
+      "urgentBadge": "URGENT",
+      "soonBadge": "SOON",
+      "upcomingBadge": "UPCOMING",
+      "overdueTask": "{{type}} is {{days}} day(s) overdue",
+      "upcomingTask": "{{type}} due in {{days}} day(s)",
+      "logNow": "Log Now",
+      "schedule": "Schedule"
+    },
+    "priceAlert": {
+      "label": "{{crop}} KES {{price}}/kg",
+      "thisWeek": "this week"
+    },
+    "actions": {
+      "title": "Quick Actions"
+    },
+    "action": {
+      "logActivity": "Log Activity",
+      "addTransaction": "Add Transaction",
+      "diagnose": "Diagnose",
+      "recordStock": "Record Stock",
+      "viewFarms": "View Farms",
+      "market": "Market"
+    },
+    "analytics": {
+      "income": "Income",
+      "expenses": "Expenses",
+      "net": "Net",
+      "creditTitle": "Credit Score",
+      "band": "Band {{band}}",
+      "maxLoan": "Max Loan KES {{amount}}",
+      "remaining": "remaining",
+      "due": "due",
+      "periodLabel": "This Month",
+      "activities": "Activities",
+      "done": "done",
+      "pending": "pending",
+      "late": "late"
+    },
+    "new": {
+      "welcome": "Welcome, {{name}}! 🌱",
+      "subtitle": "Start by adding your first farm",
+      "setupBody": "Name it, set the location, and add crops or animals to unlock AI recommendations.",
+      "complete": "complete",
+      "cta": "Add Farm →",
+      "step": "Step {{n}} of 5"
+    },
+    "locked": {
+      "cashFlow": "Cash Flow",
+      "aiNudge": "AI Recommendations",
+      "creditScore": "Credit Score",
+      "addFarm": "Add Your Farm",
+      "desc": "Add your farm to unlock this feature"
+    },
+    "inventory": {
+      "title": "📦 Farm Store",
+      "lowEmpty": "⚠️ Low/Empty items",
+      "collections": "💰 Customer collections",
+      "inStore": "🌾 Produce in store",
+      "eggsToday": "🥚 Eggs today",
+      "eggsTrays": "{{count}} trays",
+      "viewAll": "View Inventory →"
+    }
   },
   "profile": {
     "title": "My Profile",
@@ -81,73 +219,73 @@
       "en": "English"
     },
     "role": {
-      "farmer":           "Farmer",
-      "admin":            "Administrator",
-      "extension_officer":"Extension Officer",
-      "vet":              "Veterinarian"
+      "farmer": "Farmer",
+      "admin": "Administrator",
+      "extension_officer": "Extension Officer",
+      "vet": "Veterinarian"
     },
     "stats": {
-      "farms":     "Farms",
+      "farms": "Farms",
       "diagnoses": "Diagnoses",
-      "listings":  "Listings"
+      "listings": "Listings"
     },
     "menu": {
-      "editProfile":   "Edit profile",
+      "editProfile": "Edit profile",
       "notifications": "Notifications",
-      "farmExport":    "Farm Summary",
+      "farmExport": "Farm Summary",
       "offlineStatus": "Offline Status"
     },
     "edit": {
-      "title":             "Edit profile",
-      "avatar":            "Tap to change photo",
-      "name":              "Full name",
-      "county":            "County",
+      "title": "Edit profile",
+      "avatar": "Tap to change photo",
+      "name": "Full name",
+      "county": "County",
       "countyPickerTitle": "Select your county",
-      "language":          "Language",
-      "save":              "Save changes",
-      "saving":            "Saving...",
-      "success":           "Profile saved!"
+      "language": "Language",
+      "save": "Save changes",
+      "saving": "Saving...",
+      "success": "Profile saved!"
     },
     "notifications": {
-      "title":              "Notification Settings",
-      "activityReminders":  "Activity reminders",
-      "diagnosisResults":   "Diagnosis results",
-      "priceAlerts":        "Price alerts",
-      "loanUpdates":        "Loan updates",
-      "weatherAlerts":      "Weather alerts",
-      "communityReplies":   "Community replies",
-      "save":               "Save",
-      "saving":             "Saving...",
-      "success":            "Settings saved!"
+      "title": "Notification Settings",
+      "activityReminders": "Activity reminders",
+      "diagnosisResults": "Diagnosis results",
+      "priceAlerts": "Price alerts",
+      "loanUpdates": "Loan updates",
+      "weatherAlerts": "Weather alerts",
+      "communityReplies": "Community replies",
+      "save": "Save",
+      "saving": "Saving...",
+      "success": "Settings saved!"
     },
     "export": {
-      "title":        "Farm Summary",
-      "selectFarm":   "Select farm",
+      "title": "Farm Summary",
+      "selectFarm": "Select farm",
       "selectSeason": "Select season",
       "previewTitle": "Summary — {{name}}",
-      "previewSeason":"Season {{year}}",
-      "yield":        "Yield (kg)",
-      "revenue":      "Revenue (KES)",
-      "costs":        "Costs (KES)",
-      "profit":       "Profit (KES)",
-      "download":     "Download PDF",
-      "downloading":  "Downloading...",
+      "previewSeason": "Season {{year}}",
+      "yield": "Yield (kg)",
+      "revenue": "Revenue (KES)",
+      "costs": "Costs (KES)",
+      "profit": "Profit (KES)",
+      "download": "Download PDF",
+      "downloading": "Downloading...",
       "empty": {
         "title": "No farms yet",
-        "body":  "Add a farm first"
+        "body": "Add a farm first"
       }
     },
     "offline": {
-      "title":        "Offline Status",
+      "title": "Offline Status",
       "networkLabel": "Network Status",
-      "online":       "Connected",
-      "offline":      "No connection",
+      "online": "Connected",
+      "offline": "No connection",
       "pendingCount": "Pending changes: {{count}}",
-      "noPending":    "No pending changes",
-      "syncBtn":      "Sync Now",
-      "syncing":      "Syncing...",
-      "lastSynced":   "Last synced: {{time}}",
-      "neverSynced":  "Never synced",
+      "noPending": "No pending changes",
+      "syncBtn": "Sync Now",
+      "syncing": "Syncing...",
+      "lastSynced": "Last synced: {{time}}",
+      "neverSynced": "Never synced",
       "opLabel": {
         "CREATE": "Add",
         "UPDATE": "Update",
@@ -156,14 +294,29 @@
     }
   },
   "farm": {
-    "list": {
-      "title": "My Farms",
-      "addFarm": "Add farm",
-      "empty": {
-        "title": "No farms yet",
-        "body": "Add your first farm to get started",
-        "cta": "Add farm"
-      }
+    "add": {
+      "topBarTitle": "Add New Farm",
+      "stepInfo": "📌 Step 1 of 2: Farm details. You'll add crops/animals in step 2.",
+      "nameLabel": "Farm Name *",
+      "namePlaceholder": "e.g. Nakuru Farm",
+      "countyLabel": "County *",
+      "countyPlaceholder": "Select county",
+      "subCountyLabel": "Sub-county",
+      "subCountyPlaceholder": "e.g. Nakuru East",
+      "areaLabel": "Farm Area (acres) *",
+      "areaPlaceholder": "e.g. 2.5",
+      "gpsLabel": "GPS Location *",
+      "gpsButton": "📍 Use My Current Location",
+      "gpsNote": "or drag pin on map to set location",
+      "farmTypeLabel": "What do you farm? *",
+      "cropsOnly": "Crops Only",
+      "animalsOnly": "Animals Only",
+      "both": "Both",
+      "continueCrops": "Continue: Add Crops →",
+      "continueAnimals": "Continue: Add Animals →",
+      "errorSave": "Failed to save farm. Please try again.",
+      "countyModalTitle": "Select County",
+      "countySearch": "Search county..."
     },
     "dashboard": {
       "title": "My Farms",
@@ -194,19 +347,209 @@
         "open": "Open in Maps"
       },
       "tab": {
+        "overview": "Overview",
+        "myTasks": "My Tasks",
+        "workers": "Workers",
         "activities": "Activities",
         "inputs": "Inputs",
         "harvests": "Harvests"
+      },
+      "activities": {
+        "title": "Scheduled Activities",
+        "viewAll": "View full schedule →",
+        "overdueLabel": "{{count}} activity overdue — action needed"
+      },
+      "menuViewOnWeb": "View on Web",
+      "menuCallOwner": "Call Owner",
+      "menuEditFarm": "Edit Farm",
+      "backLabel": "My Farms",
+      "stat": {
+        "health": "Farm Health",
+        "overdue": "Overdue"
+      }
+    },
+    "care": {
+      "title": "AI Care Cards",
+      "careSuffix": "Care",
+      "urgent": "Urgent",
+      "onTrack": "On Track",
+      "done": "Done",
+      "soon": "Soon",
+      "late": "Late",
+      "logNow": "⚡ Log {{type}} Now",
+      "daysOverdue": "{{count}} days overdue",
+      "lastDate": "Last: {{date}} · Due every {{days}} days",
+      "doneSub": "Yesterday · Next: {{date}}",
+      "dueDays": "Due in {{count}} days",
+      "dueThisWeek": "Due this week",
+      "dueOnDate": "Due {{date}} ({{count}} days)"
+    },
+    "workers": {
+      "empty": "No workers on this farm yet.",
+      "manageOnWeb": "Manage workers on web at agroconnect.co.ke",
+      "webPortalInfo": "To add or remove workers, visit the farm portal on web.",
+      "teamOn": "Team on {{farmName}}",
+      "active": "Active",
+      "inactive": "Inactive",
+      "tasks": "{{count}} tasks",
+      "tasksAssigned": "{{count}} tasks assigned to you",
+      "taskDistribution": "Task Distribution",
+      "manageTitle": "Manage workers at agroconnect.co.ke",
+      "manageSub": "Add, remove, and assign roles from the farm portal",
+      "role": {
+        "worker": "Worker",
+        "manager": "Manager",
+        "field_worker": "Field Worker",
+        "harvester": "Harvester",
+        "sprayer": "Sprayer",
+        "driver": "Driver"
+      }
+    },
+    "stat": {
+      "crops": "Crops",
+      "animals": "Animals",
+      "workers": "Workers",
+      "plots": "Plots"
+    },
+    "switcher": {
+      "title": "Switch Farm",
+      "switch": "Switch farm"
+    },
+    "list": {
+      "title": "My Farms",
+      "selectFarm": "Select Farm",
+      "selectPrompt": "You have {{count}} farms — select one to continue",
+      "empty": {
+        "title": "No farms yet",
+        "body": "Add your first farm to get started",
+        "cta": "Add farm",
+        "webTitle": "Create farms on web",
+        "webBody": "Visit agroconnect.co.ke on a browser or computer to set up your farms and crops.",
+        "openWebsite": "Open Website"
       }
     },
     "quickAction": {
+      "label": "QUICK ACTIONS",
+      "manageLabel": "MANAGE",
       "logActivity": "Log activity",
       "logInput": "Log input",
       "recordHarvest": "Record harvest",
       "viewCalendar": "Activity calendar",
       "viewInputs": "Inputs",
       "viewHarvests": "Harvests",
-      "diagnose": "Diagnose"
+      "diagnose": "Diagnose",
+      "addCrop": "Add Crop",
+      "addAnimal": "Add Animals",
+      "addWorker": "Add Worker"
+    },
+    "schedule": {
+      "scheduleActivity": "Schedule Activity",
+      "sectionOverdue": "⚠️ Overdue",
+      "sectionToday": "Today",
+      "sectionThisWeek": "This Week",
+      "sectionUpcoming": "Upcoming",
+      "allCaughtUp": "✅ All caught up! No tasks for today.",
+      "assignedTo": "Assigned to",
+      "unassigned": "Unassigned",
+      "unassignedTap": "Unassigned — tap to assign",
+      "logNow": "Log ✓",
+      "logNowOverdue": "Log Now ✓",
+      "aiScheduled": "🤖 AI Scheduled",
+      "due": "Due",
+      "whyActivity": "Why this activity?",
+      "completedOn": "Completed On",
+      "actualCost": "Actual Cost (KES)",
+      "costHint": "Labour + materials used",
+      "notes": "Notes (optional)",
+      "notesPlaceholder": "Add details...",
+      "assignTo": "Assign to Worker",
+      "markComplete": "✅ Mark Complete",
+      "skipForNow": "Skip for now",
+      "completedToast": "Activity logged! 🔥 Streak continues.",
+      "completedError": "Failed to save. Please try again."
+    }
+  },
+  "animal": {
+    "add": {
+      "topBarTitle": "Add Animals",
+      "typeSection": "ANIMAL TYPE",
+      "customTypeLabel": "Animal type (or type a custom name)",
+      "customTypePlaceholder": "e.g. Tilapia, Donkey",
+      "countLabel": "Number of animals *",
+      "countPlaceholder": "e.g. 20",
+      "breedLabel": "Breed (optional)",
+      "breedPlaceholder": "e.g. Friesian, Kenbro",
+      "notesLabel": "Notes (optional)",
+      "notesPlaceholder": "e.g. Vaccinated March 2025",
+      "saveBtn": "✅ Save Animals",
+      "errorSave": "Failed to save. Please try again.",
+      "tile": {
+        "cattle": "Cattle",
+        "goats": "Goats",
+        "sheep": "Sheep",
+        "poultry": "Poultry",
+        "pigs": "Pigs",
+        "rabbits": "Rabbits"
+      }
+    }
+  },
+  "worker": {
+    "add": {
+      "topBarTitle": "Add Worker",
+      "lookupSection": "FIND WORKER",
+      "phoneLabel": "Worker's phone number *",
+      "phonePlaceholder": "+254712345678",
+      "lookupBtn": "Find",
+      "lookupError": "No AgroConnect account found with this number.",
+      "roleSection": "ASSIGN ROLE",
+      "saveBtn": "✅ Add Worker to Farm",
+      "errorSave": "Failed to add worker. Please try again.",
+      "role": {
+        "fieldWorker": "Field Worker",
+        "harvester": "Harvester",
+        "sprayer": "Sprayer",
+        "driver": "Driver",
+        "manager": "Manager"
+      }
+    }
+  },
+  "crop": {
+    "add": {
+      "topBarTitle": "Add Crops",
+      "aiScheduleAlert": "🤖 Planting date is used to auto-generate your watering, weeding, fertilising, and harvest schedule.",
+      "cropTypeLabel": "Crop Type *",
+      "varietyLabel": "Variety / Seed Type",
+      "varietyPlaceholder": "e.g. H614D (Hybrid)",
+      "plantingDateLabel": "Planting Date *",
+      "plantingDatePlaceholder": "📅 Select date",
+      "areaLabel": "Area (acres)",
+      "areaPlaceholder": "1.5",
+      "aiPreviewWith2Fert": "🤖 AI will generate: Watering every {{water}} days · Weeding by {{weedDate}} (week {{weedWeek}}) · Fertiliser: {{fert1}} + {{fert2}} · Harvest: ~{{harvest}}",
+      "aiPreviewWith1Fert": "🤖 AI will generate: Watering every {{water}} days · Weeding by {{weedDate}} (week {{weedWeek}}) · Fertiliser: {{fert1}} · Harvest: ~{{harvest}}",
+      "plotLabel": "Field / Plot Number",
+      "plotPlaceholder": "e.g. Plot A (North Field)",
+      "saveCrop": "Save Crop & View Schedule →",
+      "addAnother": "+ Add Another Crop",
+      "errorSave": "Failed to save crop. Please try again.",
+      "crops": {
+        "maize": "Maize",
+        "tomato": "Tomato",
+        "beans": "Beans",
+        "cabbage": "Cabbage",
+        "potato": "Potato",
+        "other": "Other"
+      },
+      "dateModal": {
+        "title": "Select Planting Date",
+        "select": "Select",
+        "su": "Su",
+        "mo": "Mo",
+        "tu": "Tu",
+        "we": "We",
+        "th": "Th",
+        "fr": "Fr",
+        "sa": "Sa"
+      }
     }
   },
   "wizard": {
@@ -255,6 +598,52 @@
     }
   },
   "activity": {
+    "schedule": {
+      "title": "Activity Schedule",
+      "tab": {
+        "all": "All",
+        "overdue": "Overdue",
+        "today": "Today",
+        "done": "Done"
+      },
+      "overdue": {
+        "sectionTitle": "⚠️ OVERDUE — Action Required",
+        "logWatering": "Log Watering Now ✓",
+        "bookVet": "Book Vet ✓",
+        "logSpraying": "Log Spraying ✓",
+        "logNow": "Log Now ✓"
+      },
+      "badge": {
+        "late": "Late",
+        "today": "Today",
+        "done": "Done ✓",
+        "daysAway": "{{n}} days"
+      },
+      "sub": {
+        "daysLate": "{{daysLate}} days late"
+      },
+      "logBtn": "Log ✓",
+      "completedOn": "Completed {{date}}",
+      "empty": {
+        "title": "No activities",
+        "body": "Add your first activity to get started",
+        "cta": "Add activity"
+      },
+      "whyNowLabel": "🤖 Why now?",
+      "whyUrgentLabel": "🤖 Why urgent?",
+      "whyThenLabel": "🤖 Why then?",
+      "todaySection": "Today — {{date}}",
+      "assignedToYou": "Assigned to you",
+      "completedThisMonth": "COMPLETED THIS MONTH",
+      "completedOnDate": "Completed: {{date}}",
+      "btn": {
+        "logWatering": "⚡ Log Watering Now",
+        "bookVet": "📅 Book Vet",
+        "logSpraying": "⚡ Log Spraying Now",
+        "logNow": "⚡ Log Now",
+        "logDone": "Log ✓"
+      }
+    },
     "calendar": {
       "title": "Activity calendar",
       "monthNav": {
@@ -292,6 +681,10 @@
         "create": "Add activity",
         "edit": "Edit activity"
       },
+      "topBarTitle": "Log Activity",
+      "streakAlert": "🔥 Log this activity to maintain your {{streak}}-Day Streak! (+1 credit score point)",
+      "activityTypeSection": "ACTIVITY TYPE",
+      "detailsSection": "DETAILS",
       "type": "Activity type",
       "description": "Description",
       "plannedDate": "Planned date",
@@ -299,8 +692,55 @@
         "label": "Plot",
         "none": "Whole farm"
       },
+      "farmLabel": "Farm *",
+      "farmPlaceholder": "Select farm",
+      "cropAnimalLabel": "Crop / Animal *",
+      "cropAnimalPlaceholder": "Select crop or animal",
+      "dateLabel": "Date *",
+      "durationLabel": "Duration",
+      "durationPlaceholder": "2 hours",
+      "costLabel": "Cost (KES)",
+      "costPlaceholder": "e.g. 500",
       "labourCost": "Labour cost (KES)",
-      "save": "Save"
+      "labourCostPlaceholder": "e.g. 800",
+      "notesLabel": "Notes (optional)",
+      "notesPlaceholder": "Add details...",
+      "saveBtn": "✅ Save Activity (+1 Streak)",
+      "successToast": "Activity logged! 🔥 {{streak}}-day streak",
+      "errorSave": "Failed to save activity. Please try again.",
+      "farmPickerTitle": "Select Farm",
+      "cropPickerTitle": "Select Crop / Animal",
+      "timeLabel": "Time (optional)",
+      "timePlaceholder": "Select time",
+      "timePickerTitle": "Select Time",
+      "timePickerHour": "Hour",
+      "timePickerMinute": "Minute",
+      "timePickerConfirm": "Set Time",
+      "assignWorker": "Assign to Worker (optional)",
+      "assignWorkerPlaceholder": "Select worker",
+      "assignWorkerNone": "None — leave unassigned",
+      "workerPickerTitle": "Assign Worker",
+      "save": "Save",
+      "animalType": {
+        "layers": "Layers (Chicken)",
+        "dairyCattle": "Dairy Cattle",
+        "beefCattle": "Beef Cattle",
+        "goats": "Goats",
+        "sheep": "Sheep",
+        "pigs": "Pigs",
+        "rabbits": "Rabbits"
+      },
+      "tile": {
+        "watering": "Watering",
+        "spraying": "Spraying",
+        "fertilising": "Fertilise",
+        "weeding": "Weeding",
+        "planting": "Planting",
+        "harvesting": "Harvest",
+        "vaccination": "Vaccination",
+        "deworming": "Deworming",
+        "feeding": "Feeding"
+      }
     },
     "type": {
       "planting": "Planting",
@@ -310,7 +750,29 @@
       "harvesting": "Harvesting",
       "scouting": "Scouting",
       "spraying": "Spraying",
-      "other": "Other"
+      "other": "Other",
+      "vaccination": "Vaccination",
+      "deworming": "Deworming",
+      "feeding": "Feeding"
+    },
+    "log": {
+      "completedOn": "Completed On",
+      "actualCost": "Actual Cost (KES)",
+      "assignTo": "Assign To",
+      "notes": "Notes (optional)",
+      "notesPh": "e.g. Used 3m hose, full irrigation...",
+      "unassigned": "Unassigned",
+      "aiScheduled": "🤖 AI Scheduled",
+      "whyTitle": "🤖 Why this activity?",
+      "streakMsg": "Log to keep {{streak}}-day streak!",
+      "streakCredit": "+1 credit score point",
+      "completeBtn": "✅ Mark Complete",
+      "skipLink": "Skip for now",
+      "errorRequired": "Please set a completion date",
+      "errorSave": "Failed to save. Please try again.",
+      "successToast": "Logged! 🔥 {{streak}}-day streak",
+      "workerPickerTitle": "Assign To",
+      "datePickerSelect": "Select"
     }
   },
   "input": {
@@ -348,77 +810,109 @@
   },
   "diagnose": {
     "home": {
-      "title": "Disease Diagnosis",
-      "subtitle": "Select a farm to start a diagnosis",
-      "startBtn": "Start Diagnosis",
-      "noFarms": "Add a farm first"
-    },
-    "camera": {
-      "title": "Take photos",
-      "permission": "Camera permission is required to continue",
-      "permissionBtn": "Allow Camera",
-      "photoCount": "{{count}}/3 photos",
-      "retake": "Retake",
-      "usePhoto": "Use this photo",
-      "continue": "Continue"
-    },
-    "subject": {
-      "title": "Diagnosis details",
-      "typeLabel": "What are you examining?",
-      "plant": "Plant",
-      "animal": "Animal",
-      "nameLabel": "Plant / animal name",
-      "namePlaceholder": "e.g. maize, dairy cow",
-      "symptomsLabel": "Symptoms (optional)",
-      "symptomsPlaceholder": "Describe what you have observed...",
-      "durationLabel": "Duration of symptoms",
-      "duration": {
-        "today": "Today",
-        "1_3_days": "1–3 days",
-        "1_week": "1 week",
-        "over_1_week": "Over a week"
+      "title": "AI Diagnosis",
+      "infoAlert": "🤖 Ask me any farming problem — in English or Swahili. I'll give you a simple answer.",
+      "sectionAsk": "How would you like to ask?",
+      "sectionHistory": "Past Diagnoses",
+      "mode": {
+        "text": "Type a Question",
+        "textSub": "Describe the problem in your own words",
+        "photo": "Upload Photos",
+        "photoSub": "Take 1–3 photos of the problem",
+        "both": "Question + Photos",
+        "bothSub": "Most accurate — AI sees full context",
+        "recommended": "RECOMMENDED"
       },
-      "submit": "Submit for diagnosis"
+      "history": {
+        "empty": {
+          "title": "No diagnoses yet",
+          "body": "Tap above to ask your first question"
+        }
+      },
+      "historyItem": {
+        "confidence": "{{pct}}%",
+        "resolved": "Resolved",
+        "pending": "Pending"
+      }
     },
-    "loading": {
-      "title": "Analysing...",
-      "subtitle": "Please wait. This may take about a minute.",
-      "timeout": "Taking longer than expected.",
-      "retry": "Try again"
+    "input": {
+      "title": "Describe the Problem",
+      "questionLabel": "What is the problem? *",
+      "questionPlaceholder": "e.g. My maize leaves are turning yellow from the edges. Started after heavy rain...",
+      "charCount": "{{count}}/500",
+      "photosLabel": "Photos (optional but helps)",
+      "cameraPrompt": "Tap to take photo",
+      "cropChip": "🌿 Crop",
+      "animalChip": "🐄 Animal",
+      "subjectLabel": "Which crop/animal?",
+      "submitBtn": "🤖 Get AI Answer",
+      "submitting": "Analyzing...",
+      "submitNote": "Answer ready in 10–30 seconds",
+      "errorSubmit": "Failed to submit. Please try again.",
+      "ussdFallback": "No internet? Dial {{code}} for basic diagnosis"
     },
     "result": {
-      "title": "Diagnosis result",
+      "title": "AI Answer",
+      "save": "Save",
+      "aiThinks": "AI thinks this is...",
       "confidence": "Confidence",
-      "confidence_high": "High confidence diagnosis",
-      "confidence_medium": "Medium confidence — review carefully",
+      "confidence_high": "High-confidence result",
+      "confidence_medium": "Moderate-confidence result",
       "confidence_low": "Low confidence — consult an expert",
-      "processed_in": "Processed in {{ms}}ms",
-      "severity": "Severity",
-      "description": "Description",
-      "prescriptions": "Treatment Plan",
-      "buyMedicine": "Buy medicine",
-      "saveFarm": "Save to farm",
-      "share": "Share report",
+      "processed_in": "⚡ Analysed in {{ms}}ms",
+      "description": "Disease Description",
+      "prescriptions": "Treatment Steps",
+      "buyMedicine": "Buy Medicine",
+      "saveFarm": "Save to Farm",
+      "shareTitle": "AgroConnect — Diagnosis Report",
+      "shareDiseaseLabel": "Disease",
+      "shareSeverityLabel": "Severity",
+      "shareConfidenceLabel": "Confidence",
       "severity_mild": "Mild",
       "severity_moderate": "Moderate",
       "severity_severe": "Severe",
-      "severity_critical": "Critical"
+      "severity_critical": "Critical",
+      "whatHappening": "❓ What is happening to your {{subject}}?",
+      "stepsTitle": "✅ What to do — {{n}} Simple Steps:",
+      "recovery": "💡 Good news: If you start treatment today, your crop should recover in 2–3 weeks.",
+      "buyProduct": "🛒 Buy {{product}} Nearby",
+      "saveRecord": "📥 Save to Farm Record",
+      "suppliers": {
+        "title": "🛒 Where to Buy",
+        "subtitle": "Products matching the recommended medicines available near you",
+        "in_stock": "In stock",
+        "out_of_stock": "Out of stock"
+      },
+      "loading": {
+        "title": "Analysing...",
+        "subtitle": "Please wait. This may take 10–30 seconds."
+      },
+      "error": {
+        "title": "Analysis failed",
+        "body": "Please try again"
+      }
     },
     "feedback": {
-      "title": "Was the diagnosis accurate?",
-      "accuracyLabel": "Diagnosis accuracy",
+      "title": "Rate this Result",
+      "accuracyLabel": "AI accuracy (1–5 stars)",
       "outcomeLabel": "Outcome after treatment",
       "outcome": {
-        "resolved": "Resolved",
-        "better": "Better",
-        "same": "Same",
-        "worse": "Worse"
+        "resolved": "✅ Fully resolved",
+        "improved": "📈 Improved",
+        "no_change": "➡️ No change",
+        "worsened": "📉 Got worse"
       },
       "notesLabel": "Additional notes (optional)",
-      "submit": "Submit feedback",
-      "success": "Thank you for your feedback!"
+      "submit": "Submit Feedback",
+      "success": "Thank you! Your feedback helps improve the AI."
     },
-    "savedOffline": "Saved — will sync when you reconnect"
+    "savedOffline": "Saved — will sync when you reconnect",
+    "loading": {
+      "title": "Analyzing...",
+      "subtitle": "Please wait. This may take 10–30 seconds.",
+      "timeout": "Taking longer than expected. Try again?",
+      "retry": "Retry"
+    }
   },
   "market": {
     "home": {
@@ -561,10 +1055,88 @@
     }
   },
   "finance": {
+    "transaction": {
+      "topBarTitle": "Add Transaction",
+      "incomeToggle": "Income",
+      "expenseToggle": "Expense",
+      "incomeSubtitle": "Money received",
+      "expenseSubtitle": "Money spent",
+      "amountLabel": "Amount (KES) *",
+      "amountPrefix": "KES",
+      "categoryLabel": "Category *",
+      "linkedToLabel": "Linked To (optional)",
+      "linkedToPlaceholder": "Select farm / crop / animal",
+      "buyerLabel": "Buyer / Supplier",
+      "buyerPlaceholder": "e.g. Peter Buyer",
+      "dateLabel": "Date *",
+      "notesLabel": "Receipt / Notes",
+      "notesPlaceholder": "e.g. 200kg @ KES 40/kg",
+      "infoAlert": "💡 This will be added to your June cash flow and update your credit score.",
+      "saveBtn": "Save Transaction ✓",
+      "saving": "Saving...",
+      "errorSave": "Failed to save. Please try again.",
+      "savedOffline": "Saved offline. Will sync when connected.",
+      "category": {
+        "crop_sale": "🌽 Crop Sale",
+        "animal_products": "🥚 Animal Products",
+        "fertiliser": "🌾 Fertiliser",
+        "pesticide_drugs": "💊 Pesticide/Drugs",
+        "tools_equipment": "🔧 Tools/Equipment",
+        "labour": "👷 Labour",
+        "water_irrigation": "💧 Water/Irrigation",
+        "other_input": "📦 Other Input"
+      },
+      "linkedToModal": {
+        "title": "Linked To",
+        "close": "Close"
+      },
+      "dateModal": {
+        "title": "Select Date",
+        "done": "Done"
+      }
+    },
     "home": {
       "title": "Finance",
       "applyBtn": "Apply for loan",
       "loanHistory": "Loan history",
+      "reports": {
+        "periodMonth": "This Month",
+        "periodQuarter": "3 Months",
+        "periodYear": "This Year",
+        "income": "Income",
+        "expenses": "Expenses",
+        "netProfit": "Net Profit",
+        "margin": "margin",
+        "breakdown": "Category Breakdown",
+        "export": "Export / Share Report"
+      },
+      "tabs": {
+        "cashflow": "Cash Flow",
+        "loans": "Loans",
+        "reports": "Reports"
+      },
+      "addTransaction": "Add Transaction",
+      "netBanner": {
+        "period": "{{month}} — Net Position",
+        "income": "💚 Income",
+        "expenses": "❤️ Expenses",
+        "netProfit": "Net Profit",
+        "vsLastMonth": "{{pct}}% vs last month"
+      },
+      "chart": {
+        "title": "Cash Flow — Last 4 Weeks",
+        "income": "Income",
+        "expenses": "Expenses"
+      },
+      "transactions": {
+        "title": "Recent Transactions",
+        "income": "Income",
+        "expense": "Expense",
+        "empty": {
+          "title": "No transactions yet",
+          "body": "Record income and expenses to track your cash flow"
+        }
+      },
       "loans": {
         "empty": {
           "title": "No loans yet",
@@ -658,7 +1230,14 @@
         "mpesaRef": "M-Pesa reference",
         "rateFormat": "{{rate}}% p.a.",
         "rejectedNote": "Application rejected. Improve your credit score and try again.",
-        "cancelledNote": "Application was cancelled."
+        "cancelledNote": "Application was cancelled.",
+        "cancelBtn": "Cancel Application",
+        "cancelConfirmTitle": "Cancel application?",
+        "cancelConfirmMsg": "This will withdraw your loan request. You can apply again later.",
+        "cancelYes": "Yes, Cancel",
+        "cancelNo": "Keep",
+        "repaymentSchedule": "Repayment Schedule",
+        "repaymentMonth": "Month {{n}}"
       }
     }
   },
@@ -666,67 +1245,108 @@
     "home": {
       "title": "Community",
       "categoryAll": "All",
-      "newThread": "New question",
+      "newThread": "New Post",
       "category": {
-        "crops":      "Crop Advice",
-        "livestock":  "Livestock Health",
-        "market":     "Market",
-        "weather":    "Weather",
-        "finance":    "Finance",
-        "government": "Government",
-        "success":    "Success Stories",
-        "tools":      "Tools & Equipment"
+        "crops": "🌿 Crops",
+        "livestock": "🐄 Livestock",
+        "market": "📈 Market",
+        "weather": "🌦 Weather",
+        "finance": "💰 Finance",
+        "government": "🏛 Gov't",
+        "success": "Success Stories",
+        "tools": "Tools & Equipment"
       },
       "thread": {
-        "replies_one":   "{{count}} reply",
+        "replies_one": "{{count}} reply",
         "replies_other": "{{count}} replies",
-        "upvotes":       "{{count}} upvotes"
+        "upvotes": "{{count}} upvotes"
       },
       "empty": {
-        "title": "No discussions yet",
-        "body":  "Be the first to ask a question",
-        "cta":   "Start a discussion"
+        "title": "No posts yet",
+        "body": "No posts yet. Be the first to ask!",
+        "categoryBody": "No posts in {{category}} yet. Be the first to ask!",
+        "cta": "Start a discussion"
+      },
+      "tabs": {
+        "discussions": "Discussions",
+        "experts": "Experts",
+        "articles": "Learn"
       }
     },
     "thread": {
-      "title":       "Discussion",
-      "upvote":      "Upvote",
-      "reply":       "Reply",
-      "replyPlaceholder": "Write your reply...",
-      "send":        "Send",
-      "expert":      "Expert",
-      "verified":    "Verified by expert",
-      "liveReply":   "New reply received",
+      "title": "Discussion",
+      "upvote": "Upvote",
+      "reply": "Reply",
+      "replyPlaceholder": "Write a reply...",
+      "send": "Send",
+      "expert": "Expert",
+      "verified": "Verified by expert",
+      "liveReply": "New reply received",
+      "repliesHeader": "{{count}} Replies — sorted by most helpful",
+      "replyAction": "↩ Reply",
+      "report": "⚑ Report",
+      "reportTitle": "Report Reply",
+      "reportBody": "Flag this reply for moderator review?",
+      "reportSuccess": "Reported",
+      "reportSuccessBody": "Thank you. Our team will review this reply.",
       "empty": {
         "title": "No replies yet",
-        "body":  "Be the first to reply"
+        "body": "Be the first to reply"
       }
     },
     "newThread": {
-      "title":            "New question",
-      "category":         "Select category",
-      "cropTag":          "Crop (optional)",
+      "title": "New Post",
+      "questionLabel": "Title / Question *",
+      "questionPlaceholder": "What is your question?",
+      "detailsLabel": "Details *",
+      "detailsPlaceholder": "Describe in detail...",
+      "categoryLabel": "Category *",
+      "cropAnimalLabel": "Crop / Animal",
+      "cropAnimalPlaceholder": "e.g. Maize",
+      "farmLabel": "Farm",
+      "farmPlaceholder": "e.g. Nakuru Farm",
+      "photosLabel": "Photos (optional)",
+      "addPhoto": "Add photo",
+      "photosComingSoon": "Photo upload coming soon. You can still post your question now.",
+      "category": "Select category",
+      "cropTag": "Crop (optional)",
       "cropTagPlaceholder": "e.g. Maize",
-      "threadTitle":      "Title",
+      "threadTitle": "Title",
       "titlePlaceholder": "Write your question briefly",
-      "body":             "Details",
-      "bodyPlaceholder":  "Describe your problem in more detail...",
-      "charCount":        "{{count}} characters",
-      "submit":           "Post",
-      "submitting":       "Posting...",
-      "success":          "Question posted!"
+      "body": "Details",
+      "bodyPlaceholder": "Describe in detail...",
+      "charCount": "{{count}} characters",
+      "submit": "Post Question 📢",
+      "submitting": "Posting...",
+      "success": "Question posted!"
     },
     "expert": {
-      "title":          "Expert Profile",
+      "title": "Expert Profile",
       "specialisations": "Specialisations",
-      "counties":       "Counties served",
-      "rating":         "{{rating}}/5 · {{count}} reviews",
-      "callBtn":        "Call",
-      "whatsappBtn":    "WhatsApp",
+      "counties": "Counties served",
+      "bio": "About",
+      "rating": "{{rating}}/5 · {{count}} reviews",
+      "callBtn": "Call",
+      "whatsappBtn": "WhatsApp",
       "type": {
-        "agronomist":        "Agronomist",
-        "vet":               "Veterinarian",
+        "agronomist": "Agronomist",
+        "vet": "Veterinarian",
         "extension_officer": "Extension Officer"
+      }
+    },
+    "experts": {
+      "title": "Find an Expert",
+      "filterAll": "All Experts",
+      "empty": {
+        "title": "No experts yet",
+        "body": "Extension officers and agronomists will appear here."
+      }
+    },
+    "articles": {
+      "title": "Knowledge Base",
+      "empty": {
+        "title": "No articles yet",
+        "body": "Farming guides and tips will appear here."
       }
     }
   },
@@ -778,14 +1398,28 @@
   "govt": {
     "home": {
       "title": "Government Services",
-      "registrations": { "title": "Farm Registration", "desc": "Register your farm officially" },
-      "subsidies": { "title": "Subsidies", "desc": "Apply for government support" },
-      "licenses": { "title": "Licenses", "desc": "Apply for farming licenses" }
+      "registrations": {
+        "title": "Farm Registration",
+        "desc": "Register your farm officially"
+      },
+      "subsidies": {
+        "title": "Subsidies",
+        "desc": "Apply for government support"
+      },
+      "licenses": {
+        "title": "Licenses",
+        "desc": "Apply for farming licenses"
+      }
     },
     "registrations": {
       "title": "Farm Registrations",
       "empty": "No registrations yet",
-      "status": { "pending": "Pending", "under_review": "Under Review", "approved": "Approved", "rejected": "Rejected" },
+      "status": {
+        "pending": "Pending",
+        "under_review": "Under Review",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
       "new": "New Registration"
     },
     "subsidies": {
@@ -794,13 +1428,23 @@
       "myApplications": "My Applications",
       "apply": "Apply",
       "empty": "No subsidies available",
-      "status": { "pending": "Pending", "approved": "Approved", "disbursed": "Disbursed", "rejected": "Rejected" }
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "disbursed": "Disbursed",
+        "rejected": "Rejected"
+      }
     },
     "licenses": {
       "title": "Licenses",
       "empty": "No licenses yet",
       "new": "Apply for License",
-      "status": { "pending": "Pending", "issued": "Issued", "rejected": "Rejected", "expired": "Expired" }
+      "status": {
+        "pending": "Pending",
+        "issued": "Issued",
+        "rejected": "Rejected",
+        "expired": "Expired"
+      }
     }
   },
   "insights": {
@@ -808,7 +1452,11 @@
     "signals": "Market Signals",
     "yield": "Yield Estimates",
     "prices": "Price Forecast",
-    "signal": { "sell_now": "Sell Now", "hold": "Hold", "buy_now": "Buy Now" },
+    "signal": {
+      "sell_now": "Sell Now",
+      "hold": "Hold",
+      "buy_now": "Buy Now"
+    },
     "empty": "No forecast data available"
   },
   "harvest": {
@@ -840,6 +1488,284 @@
       "totalRevenue": "Total revenue (KES)",
       "notes": "Notes",
       "save": "Save"
+    }
+  },
+  "inventory": {
+    "title": "Inventory",
+    "tab": {
+      "inputs": "Inputs",
+      "products": "Products",
+      "animalProducts": "Animal Products",
+      "harvest": "Harvest Store",
+      "collections": "Collections"
+    },
+    "summary": {
+      "lowEmpty": "Low/Empty",
+      "pendingKes": "Pending KES",
+      "inStore": "In Store",
+      "todayEggs": "Today Eggs",
+      "trays": "{{count}} trays"
+    },
+    "inputs": {
+      "urgentAlert": "⚠️ {{count}} item out of stock — {{activity}} scheduled soon",
+      "urgentBanner": "⚠️ {{count}} item{{plural}} out of stock — {{activity}} scheduled {{when}}",
+      "purchased": "Purchased: {{qty}}",
+      "used": "Used: {{qty}}",
+      "left": "Left: {{qty}}",
+      "recordUse": "Record Use",
+      "restock": "Restock 🛒",
+      "buyMore": "Buy More 🛒",
+      "buyNow": "Buy Now — KES {{price}} 🛒",
+      "buyNowFull": "Buy Now — KES {{price}}/{{unit}} 🛒",
+      "outOfStock": "🚨 Out of stock — order urgently",
+      "scheduledUse": "⚠️ Scheduled use: {{date}}",
+      "supplier": "Supplier: {{supplier}} · Cost: KES {{cost}}/{{unit}}",
+      "addCta": "➕ Add Input Stock",
+      "addInputCard": "➕ Add Input Stock",
+      "loading": "Loading inputs...",
+      "category": {
+        "all": "All",
+        "fertiliser": "🌾 Fertiliser",
+        "pesticide": "🌿 Pesticide",
+        "seed": "🌱 Seeds",
+        "animalFeed": "🐾 Animal Feed",
+        "vaccine": "💉 Vaccines",
+        "tool": "🔧 Tools"
+      },
+      "empty": {
+        "title": "No inputs recorded",
+        "body": "Track seeds, fertilisers and pesticides here",
+        "body2": "No inputs added yet. Tap + to add fertiliser, seeds, or medicine.",
+        "cta": "➕ Add Input Stock",
+        "ctaFirst": "Add First Item"
+      }
+    },
+    "products": {
+      "sectionTitle": "Today's Collection",
+      "trays": "Trays",
+      "litres": "Litres",
+      "eggs": {
+        "today": "Today, {{date}}"
+      },
+      "milk": {
+        "today": "Today, {{date}}"
+      },
+      "update": "Update",
+      "recordAlert": "Record today's collection",
+      "recordNow": "Record Now",
+      "recorded": "✓ Recorded",
+      "weekTitle": "Egg Collection — This Week",
+      "weekMilkTitle": "Milk Production — This Week",
+      "weekSummary": "Weekly total: {{total}} trays · Avg: {{avg}}/day",
+      "weekMilkSummary": "Weekly total: {{total}}L · Avg: {{avg}}L/day",
+      "sellTitle": "Record a Sale",
+      "sellEggs": "Sell Eggs 🥚",
+      "sellMilk": "Sell Milk 🥛",
+      "cropOnlyMsg": "Animal products are tracked for livestock farmers.",
+      "days": {
+        "mon": "M",
+        "tue": "T",
+        "wed": "W",
+        "thu": "T",
+        "fri": "F",
+        "sat": "S",
+        "sun": "S"
+      },
+      "empty": {
+        "title": "No collections today",
+        "body": "Record your egg and milk collections"
+      }
+    },
+    "harvest": {
+      "section": "Produce in Store",
+      "empty": "No harvest in store. Record a harvest to track what you have.",
+      "totalTitle": "🌾 Total Store Value",
+      "totalSub": "{{count}} crop types · {{totalKg}}kg total",
+      "harvested": "Harvested: {{date}} · Grade {{grade}}",
+      "storage": "Storage: {{location}}",
+      "sold": "Sold: {{kg}}kg",
+      "remaining": "Remaining: {{kg}}kg",
+      "estimatedValue": "Estimated value: KES {{value}}",
+      "marketPriceNote": "({{kg}}kg × KES {{price}}/kg)",
+      "recordSale": "Record Sale",
+      "updateStock": "Update Stock",
+      "addNew": "➕ Record New Harvest in Store",
+      "soldOut": "Sold Out ✓"
+    },
+    "collections": {
+      "pendingBanner": "💰 Total pending: KES {{total}} from {{count}} customers",
+      "pendingBannerFull": "💰 Total pending: KES {{total}} from {{count}} customer{{plural}}",
+      "allPaid": "✅ All customers are up to date!",
+      "notPaid": "{{product}} taken · Not yet paid",
+      "productTaken": "{{product}} — {{qty}} {{unit}} taken",
+      "since": "Since: {{date}}",
+      "paidOn": "✅ Paid on {{date}}",
+      "daysOwing": "{{count}} day{{plural}} outstanding",
+      "markPaid": "✓ Mark as Paid",
+      "callBtn": "📞 Call",
+      "filterAll": "All",
+      "filterUnpaid": "Unpaid",
+      "filterPaid": "Paid",
+      "addNew": "➕ Add Customer Collection",
+      "paidToast": "Payment recorded. Adding KES {{amount}} to cash flow.",
+      "empty": {
+        "title": "No pending payments",
+        "body": "All customer collections are settled"
+      }
+    },
+    "restock": {
+      "title": "🛒 Restock {{name}}",
+      "currentStock": "Current stock: {{qty}}",
+      "qtyPurchased": "Quantity Purchased *",
+      "costPerUnit": "Cost per {{unit}} (KES) *",
+      "totalCost": "Total cost: KES {{total}}",
+      "supplierLabel": "Supplier *",
+      "supplierPlaceholder": "e.g. Nakuru Agrovets",
+      "dateLabel": "Purchase Date *",
+      "receiptLabel": "Receipt Number (optional)",
+      "receiptPlaceholder": "For record-keeping",
+      "previewTitle": "After restocking:",
+      "previewNewQty": "{{qty}} total in stock",
+      "previewTotalSpent": "Total spent: KES {{total}}",
+      "previewNote": "This will be added to your farm expenses automatically.",
+      "saveBtn": "Confirm Purchase",
+      "saving": "Saving...",
+      "successToast": "Restocked! KES {{cost}} added to farm expenses.",
+      "savedOfflineToast": "Saved offline. KES {{cost}} will sync when online."
+    },
+    "recordUse": {
+      "title": "Record Use — {{name}}",
+      "remaining": "Remaining: {{qty}}",
+      "qtyUsed": "Quantity Used *",
+      "decrease": "Decrease quantity",
+      "increase": "Increase quantity",
+      "exceeds": "Only {{remaining}} available",
+      "dateLabel": "Date of Use *",
+      "prevDay": "Previous day",
+      "nextDay": "Next day",
+      "activityLabel": "Linked Activity (optional)",
+      "noActivity": "None — no linked activity",
+      "notesLabel": "Notes (optional)",
+      "notesPlaceholder": "e.g. Applied to North field, Plot A",
+      "afterRecord": "After recording: {{qty}} remaining",
+      "saveBtn": "Record {{qty}} Used ✓",
+      "saving": "Saving...",
+      "outOfStock": {
+        "title": "Now out of stock",
+        "message": "This item is now out of stock. Would you like to order more?",
+        "findSupplier": "Yes, Find Supplier",
+        "notNow": "Not Now"
+      }
+    },
+    "addCollection": {
+      "title": "➕ Record Customer Collection",
+      "subtitle": "Record what a customer has taken — you'll mark it paid when they pay.",
+      "nameLabel": "Customer Name *",
+      "namePlaceholder": "e.g. Grace Kamau",
+      "recent": "Recent:",
+      "phoneLabel": "Phone Number",
+      "phonePlaceholder": "+254 7__ ___ ___",
+      "productLabel": "Product *",
+      "productEggs": "Eggs",
+      "productMilk": "Milk",
+      "productMaize": "Maize",
+      "productCabbage": "Cabbage",
+      "productBeans": "Beans",
+      "productOther": "Other",
+      "qtyLabel": "Quantity *",
+      "unitLabel": "Unit",
+      "priceLabel": "Price per {{unit}} (KES) *",
+      "totalPreview": "Total: KES {{total}}",
+      "dateLabel": "Date Taken *",
+      "notesLabel": "Notes (optional)",
+      "notesPlaceholder": "e.g. Will pay Friday",
+      "saveBtn": "Record Collection · KES {{total}}",
+      "saveBtnEmpty": "Fill in all required fields",
+      "saving": "Saving...",
+      "successToast": "Recorded! {{name}} owes KES {{total}}"
+    },
+    "addItem": {
+      "topBarTitle": "Add to Inventory",
+      "infoAlert": "Track any farm item here — fertiliser, feed, medicine, seeds, or tools.",
+      "categoryTitle": "What type of item?",
+      "category": {
+        "fertiliser": "Fertiliser",
+        "pesticide": "Pesticide",
+        "herbicide": "Herbicide",
+        "seed": "Seeds",
+        "animal_feed": "Animal Feed",
+        "animal_medicine": "Animal Medicine",
+        "vaccine": "Vaccine",
+        "tool_equipment": "Tools & Equipment",
+        "other": "Other"
+      },
+      "nameLabel": "Item Name *",
+      "namePlaceholderDefault": "Enter item name",
+      "namePlaceholder": {
+        "fertiliser": "e.g. CAN Fertiliser, DAP, NPK",
+        "pesticide": "e.g. Mancozeb 80WP, Ridomil Gold",
+        "herbicide": "e.g. Roundup, Atrazine",
+        "seed": "e.g. Maize H614D, Tomato F1",
+        "animal_feed": "e.g. Layers Mash, Dairy Concentrate",
+        "animal_medicine": "e.g. Oxytetracycline, Multivitamin",
+        "vaccine": "e.g. Newcastle Vaccine, FMD Vaccine",
+        "tool_equipment": "e.g. Knapsack Sprayer, Jembe",
+        "other": "e.g. Twine, Polythene bags"
+      },
+      "unitLabel": "Unit",
+      "unit": {
+        "kg": "kg",
+        "bags": "bags",
+        "litres": "litres",
+        "vials": "vials",
+        "pieces": "pieces",
+        "metres": "metres",
+        "other": "other"
+      },
+      "qtyLabel": "Quantity Purchased *",
+      "costLabel": "Cost per {{unit}} (KES) *",
+      "totalCost": "Total: KES {{total}}",
+      "supplierLabel": "Supplier / Where Purchased",
+      "supplierPlaceholder": "e.g. Nakuru Agrovets",
+      "dateLabel": "Purchase Date *",
+      "farmLabel": "Linked Farm",
+      "farmPlaceholder": "Select farm",
+      "farmPickerTitle": "Select Farm",
+      "farmOptionSub": "{{county}} · {{area}} acres",
+      "farmPickerEmpty": "No farms found. Add a farm first.",
+      "reorderLabel": "Reorder Alert When Below",
+      "reorderPreview": "Alert when less than {{qty}} {{unit}} remaining",
+      "notesLabel": "Notes (optional)",
+      "notesPlaceholder": "e.g. Stored in granary A",
+      "saveBtn": "Add to Inventory ✓",
+      "saving": "Saving...",
+      "successToast": "{{name}} added to inventory. {{qty}} {{unit}} in stock.",
+      "aiTitle": "🤖 AI will automatically:",
+      "aiExpense": "Create a KES {{amount}} expense in Finance",
+      "aiVaccine": "Add vaccination schedule for your animals",
+      "aiFertiliser": "Link to upcoming fertiliser activities"
+    },
+    "recordProduct": {
+      "titleEggs": "🥚 Record Egg Collection",
+      "titleMilk": "🥛 Record Milk Collection",
+      "forGroup": "For: {{name}} ({{count}} birds/animals)",
+      "todayRecord": "Today's record: {{qty}} {{unit}} · Updating",
+      "updatingAlert": "Updating today's existing record",
+      "dupDateAlert": "You already recorded {{qty}} {{unit}} for this date. Updating.",
+      "qtyLabel": "Quantity *",
+      "unitEggs": "Trays",
+      "unitMilk": "Litres",
+      "fractionBtn": "+{{frac}}",
+      "aiHint": "🤖 Yesterday: {{yesterday}} · This week avg: {{weekAvg}}",
+      "dateLabel": "Collection Date *",
+      "notesLabel": "Notes (optional)",
+      "notesPlaceholder": "e.g. A few sick birds today",
+      "streakMsg": "{{emoji}} {{days}}-day recording streak! Keep it up.",
+      "saveBtn": "Save Collection ✓",
+      "updateBtn": "Update Today's Record",
+      "saving": "Saving...",
+      "successToast": "Collection recorded! {{qty}} {{unit}} on {{date}}",
+      "savedOfflineToast": "Saved offline. Will sync when online."
     }
   }
 }

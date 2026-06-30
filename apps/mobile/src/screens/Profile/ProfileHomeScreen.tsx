@@ -75,7 +75,7 @@ export function ProfileHomeScreen({ navigation }: Props) {
   }
 
   const profile = profileQuery.data?.user;
-  const displayName = profile?.full_name ?? authUser?.full_name ?? '—';
+  const displayName = profile?.full_name ?? authUser?.fullName ?? '—';
   const displayPhone = profile?.phone ?? authUser?.phone ?? '—';
   const role = profile?.role ?? authUser?.role ?? 'farmer';
   const roleColor = ROLE_COLOR[role] ?? '#2E7D32';

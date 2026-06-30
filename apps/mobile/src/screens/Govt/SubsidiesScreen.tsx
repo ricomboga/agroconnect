@@ -13,18 +13,18 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { govtApi } from '../../api/govt';
-import type { SubsidyApplicationStatus } from '../../api/govt';
+import type { SubsidyStatus, SubsidyProgram, SubsidyApplication } from '../../api/govt';
 import type { GovtStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<GovtStackParamList, 'Subsidies'>;
 
-const STATUS_COLOR: Record<SubsidyApplicationStatus, string> = {
+const STATUS_COLOR: Record<SubsidyStatus, string> = {
   pending:   '#E65100',
   approved:  '#1B5E20',
   disbursed: '#00695C',
   rejected:  '#B71C1C',
 };
-const STATUS_BG: Record<SubsidyApplicationStatus, string> = {
+const STATUS_BG: Record<SubsidyStatus, string> = {
   pending:   '#FFF3E0',
   approved:  '#E8F5E9',
   disbursed: '#E0F2F1',
@@ -73,7 +73,7 @@ export function SubsidiesScreen({ navigation: _navigation }: Props) {
           </View>
         )}
 
-        {programs.map((program) => (
+        {programs.map((program: SubsidyProgram) => (
           <View key={program.id} style={s.programCard}>
             <View style={s.programInfo}>
               <Text style={s.programName}>{program.name}</Text>
@@ -103,7 +103,7 @@ export function SubsidiesScreen({ navigation: _navigation }: Props) {
           </View>
         )}
 
-        {applications.map((app) => (
+        {applications.map((app: SubsidyApplication) => (
           <View key={app.id} style={s.row}>
             <View style={s.rowInfo}>
               <Text style={s.rowName}>{app.programName}</Text>

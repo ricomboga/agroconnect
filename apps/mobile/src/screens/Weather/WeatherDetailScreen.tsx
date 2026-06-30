@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { weatherApi } from '../../api/weather';
-import type { WeatherCondition, WeatherAlert } from '../../api/weather';
+import type { WeatherCondition, WeatherAlert, WeatherDay } from '../../api/weather';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
 
 type NavParams = {
@@ -108,7 +108,7 @@ export function WeatherDetailScreen({ navigation, route }: Props) {
           {alerts.length > 0 && (
             <View style={s.section}>
               <Text style={s.sectionTitle}>{t('weather.detail.alert.title')}</Text>
-              {alerts.map((alert) => (
+              {alerts.map((alert: WeatherAlert) => (
                 <View
                   key={alert.id}
                   style={[s.alertCard, { backgroundColor: SEVERITY_BG[alert.severity], borderColor: SEVERITY_COLOR[alert.severity] }]}
@@ -133,7 +133,7 @@ export function WeatherDetailScreen({ navigation, route }: Props) {
           <View style={s.section}>
             <Text style={s.sectionTitle}>{t('weather.detail.forecast')}</Text>
             <View style={s.forecastCard}>
-              {days.map((day, idx) => {
+              {days.map((day: WeatherDay, idx: number) => {
                 const date = new Date(day.date);
                 const dayName = idx === 0 ? t('weather.widget.today') : SHORT_DAY[date.getDay()];
                 return (
