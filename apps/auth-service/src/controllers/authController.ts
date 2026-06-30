@@ -9,6 +9,7 @@ import type { RefreshDto } from '../schemas/refresh.schema.js';
 import type { OtpSendDto } from '../schemas/otpSend.schema.js';
 import type { OtpVerifyDto } from '../schemas/otpVerify.schema.js';
 import type { UpdateMeDto } from '../schemas/updateMe.schema.js';
+import type { ChangePasswordDto } from '../schemas/changePassword.schema.js';
 
 export async function registerHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -70,6 +71,17 @@ export async function getMeHandler(req: AuthenticatedRequest, res: Response, nex
   }
 }
 
+export async function changePasswordHandler(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const userId = req.user!.id;
+    const { current_password, new_password } = req.body as ChangePasswordDto;
+    await authService.changePassword(userId, current_password, new_password);
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function updateMeHandler(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     const userId = req.user!.id;
@@ -106,6 +118,24 @@ export async function verifyOtpHandler(req: Request, res: Response, next: NextFu
     const user = await findUserByPhone(phone);
     if (user) await verifyUserPhone(user.id);
     res.json({ data: { verified: true } });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function lookupUserByPhoneHandler(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const phone = req.query['phone'] as string | undefined;
+    if (!phone) {
+      res.status(400).json({ error_code: 'PHONE_REQUIRED', message_key: 'error.phone.required' });
+      return;
+    }
+    const user = await findUserByPhone(phone);
+    if (!user) {
+      res.status(404).json({ error_code: 'USER_NOT_FOUND', message_key: 'error.user.notFound' });
+      return;
+    }
+    res.json({ data: { id: user.id, fullName: user.fullName, phone: user.phone } });
   } catch (err) {
     next(err);
   }

@@ -61,3 +61,7 @@ export interface UpdateProfileParams {
 export async function updateUserProfile(id: string, data: UpdateProfileParams) {
   return prisma.user.update({ where: { id }, data });
 }
+
+export async function updatePasswordHash(id: string, passwordHash: string) {
+  return prisma.user.update({ where: { id }, data: { passwordHash } });
+}

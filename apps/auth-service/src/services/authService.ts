@@ -8,6 +8,7 @@ import {
   createUser,
   updateUserLastLogin,
   updateUserProfile,
+  updatePasswordHash,
   type UpdateProfileParams,
 } from '../repositories/userRepository.js';
 import {
@@ -149,6 +150,17 @@ export async function getMe(userId: string) {
     kycStatus: user.kycStatus,
     createdAt: user.createdAt,
   };
+}
+
+export async function changePassword(userId: string, currentPassword: string, newPassword: string) {
+  const user = await findUserById(userId);
+  if (!user) throw Object.assign(new Error('error.user.not_found'), { statusCode: 404, errorCode: 'USER_NOT_FOUND' });
+
+  const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+  if (!valid) throw Object.assign(new Error('error.credentials.invalid'), { statusCode: 401, errorCode: 'INVALID_CREDENTIALS' });
+
+  const newHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+  await updatePasswordHash(userId, newHash);
 }
 
 export async function updateMe(userId: string, dto: UpdateMeDto) {
