@@ -5,6 +5,8 @@ import { creditRouter } from './routes/creditRoutes.js';
 import { loanRouter } from './routes/loanRoutes.js';
 import { mpesaRouter } from './routes/mpesaRoutes.js';
 import { partnerRouter } from './routes/partnerRoutes.js';
+import { productsRouter } from './routes/productsRoutes.js';
+import { transactionRouter } from './routes/transactionRoutes.js';
 import { internalStatsRouter } from './routes/internalStatsRoutes.js';
 import { lenderRouter } from './routes/lenderRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -21,6 +23,8 @@ app.use('/api/v1/finance/credit-score', creditRouter);
 app.use('/api/v1/finance/loans', loanRouter);
 app.use('/api/v1/finance/mpesa', mpesaRouter);
 app.use('/api/v1/finance/partners', partnerRouter);
+app.use('/api/v1/finance/products', productsRouter);
+app.use('/api/v1/finance/transactions', transactionRouter);
 app.use('/api/v1/finance/lender', lenderRouter);
 app.use('/internal/admin', internalStatsRouter);
 

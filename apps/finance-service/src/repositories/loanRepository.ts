@@ -12,8 +12,8 @@ export async function createLoan(
   return prisma.loanApplication.create({
     data: {
       farmerId,
-      farmId: dto.farmId,
-      type: dto.type,
+      farmId: dto.farmId ?? '',
+      type: dto.type ?? 'agricultural_working_capital',
       amountRequestedKes: dto.amountRequestedKes,
       purpose: dto.purpose,
       repaymentMonths: dto.repaymentMonths,
@@ -48,6 +48,13 @@ export async function updateLoanFailed(loanId: string, reason: string) {
   return prisma.loanApplication.update({
     where: { id: loanId },
     data: { status: 'rejected', rejectionReason: reason },
+  });
+}
+
+export async function cancelLoan(loanId: string) {
+  return prisma.loanApplication.update({
+    where: { id: loanId },
+    data: { status: 'cancelled' },
   });
 }
 

@@ -20,6 +20,7 @@ router.post('/', auth, validateBody(createLoanSchema), toAuth(loanController.sub
 router.get('/', auth, toAuth(loanController.listLoans));
 router.get('/:loanId', auth, toAuth(loanController.getLoan));
 
+router.post('/:loanId/cancel', auth, toAuth(loanController.cancelLoan));
 router.get('/:loanId/documents', auth, toAuth(loanController.listDocuments));
 router.post(
   '/:loanId/documents',
