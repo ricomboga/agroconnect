@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from '../types/index.js';
 import * as registrationService from '../services/registrationService.js';
 import { parsePaginationParams } from '../utils/pagination.js';
+import { ListRegistrationsQuery } from '../schemas/listRegistrations.schema.js';
 
 /**
  * @openapi
@@ -59,9 +60,12 @@ export async function listRegistrations(
 ): Promise<void> {
   try {
     const pagination = parsePaginationParams(req.query);
+    const query = req.query as unknown as ListRegistrationsQuery;
     const { registrations, total } = await registrationService.listRegistrations(
       req.user.id,
+      req.user.role,
       pagination,
+      { county: query.county, status: query.status },
     );
     res.json({
       data: registrations,

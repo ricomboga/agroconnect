@@ -6,7 +6,10 @@ jest.mock('../../../src/repositories/registrationRepository', () => ({
   createRegistration: jest.fn(),
   findRegistrationsByFarmer: jest.fn(),
   countRegistrationsByFarmer: jest.fn(),
+  findAllRegistrations: jest.fn(),
+  countAllRegistrations: jest.fn(),
   findRegistrationById: jest.fn(),
+  findRegistrationByFarmId: jest.fn(),
   updateRegistrationStatus: jest.fn(),
 }));
 
@@ -23,6 +26,8 @@ import { publishRegistrationSubmitted } from '../../../src/events/producers/regi
 const mockCreateRegistration = jest.mocked(registrationRepo.createRegistration);
 const mockFindRegistrationsByFarmer = jest.mocked(registrationRepo.findRegistrationsByFarmer);
 const mockCountRegistrationsByFarmer = jest.mocked(registrationRepo.countRegistrationsByFarmer);
+const mockFindAllRegistrations = jest.mocked(registrationRepo.findAllRegistrations);
+const mockCountAllRegistrations = jest.mocked(registrationRepo.countAllRegistrations);
 const mockFindRegistrationById = jest.mocked(registrationRepo.findRegistrationById);
 const mockUpdateRegistrationStatus = jest.mocked(registrationRepo.updateRegistrationStatus);
 const mockSubmitFarmRegistration = jest.mocked(ecitizenClient.submitFarmRegistration);
@@ -63,14 +68,50 @@ describe('registrationService.submitRegistration', () => {
 });
 
 describe('registrationService.listRegistrations', () => {
-  it('returns registrations and total', async () => {
+  it('scopes to the caller farmerId when role is farmer', async () => {
     mockFindRegistrationsByFarmer.mockResolvedValue([fakeRegistration] as never);
     mockCountRegistrationsByFarmer.mockResolvedValue(1);
 
-    const result = await registrationService.listRegistrations('farmer-1', { take: 20, skip: 0 });
+    const result = await registrationService.listRegistrations(
+      'farmer-1',
+      'farmer',
+      { take: 20, skip: 0 },
+      { county: 'Meru', status: 'approved' },
+    );
 
     expect(result.registrations).toHaveLength(1);
     expect(result.total).toBe(1);
+    expect(mockFindRegistrationsByFarmer).toHaveBeenCalledWith('farmer-1', { take: 20, skip: 0 });
+    expect(mockFindAllRegistrations).not.toHaveBeenCalled();
+  });
+
+  it('lists across all farmers filtered by county/status when role is govt_officer', async () => {
+    mockFindAllRegistrations.mockResolvedValue([fakeRegistration] as never);
+    mockCountAllRegistrations.mockResolvedValue(1);
+
+    const filters = { county: 'Meru', status: 'submitted' as const };
+    const result = await registrationService.listRegistrations(
+      'officer-1',
+      'govt_officer',
+      { take: 20, skip: 0 },
+      filters,
+    );
+
+    expect(result.registrations).toHaveLength(1);
+    expect(result.total).toBe(1);
+    expect(mockFindAllRegistrations).toHaveBeenCalledWith(filters, { take: 20, skip: 0 });
+    expect(mockCountAllRegistrations).toHaveBeenCalledWith(filters);
+    expect(mockFindRegistrationsByFarmer).not.toHaveBeenCalled();
+  });
+
+  it('lists across all farmers when role is admin', async () => {
+    mockFindAllRegistrations.mockResolvedValue([]);
+    mockCountAllRegistrations.mockResolvedValue(0);
+
+    await registrationService.listRegistrations('admin-1', 'admin', { take: 20, skip: 0 }, {});
+
+    expect(mockFindAllRegistrations).toHaveBeenCalledWith({}, { take: 20, skip: 0 });
+    expect(mockFindRegistrationsByFarmer).not.toHaveBeenCalled();
   });
 });
 

@@ -1,8 +1,9 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { requireAuth, authorize } from '../middleware/auth.js';
-import { validateBody } from '../middleware/validate.js';
+import { validateBody, validateQuery } from '../middleware/validate.js';
 import { createRegistrationSchema } from '../schemas/createRegistration.schema.js';
 import { updateRegistrationStatusSchema } from '../schemas/updateRegistrationStatus.schema.js';
+import { listRegistrationsQuerySchema } from '../schemas/listRegistrations.schema.js';
 import * as registrationController from '../controllers/registrationController.js';
 import { AuthenticatedRequest } from '../types/index.js';
 
@@ -20,6 +21,7 @@ router.post(
 router.get(
   '/',
   auth,
+  validateQuery(listRegistrationsQuerySchema),
   (req, res, next) => registrationController.listRegistrations(req as AuthenticatedRequest, res, next),
 );
 

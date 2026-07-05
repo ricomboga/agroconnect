@@ -62,3 +62,71 @@ export async function listLicenses(
     next(err);
   }
 }
+
+/**
+ * @openapi
+ * /api/v1/govt/licenses/{licenseId}:
+ *   get:
+ *     summary: Get license application detail (owner, govt_officer, or admin)
+ *     tags: [Government]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: License detail
+ *       401:
+ *         description: Missing or invalid JWT
+ *       404:
+ *         description: Not found
+ */
+export async function getLicense(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const license = await licenseService.getLicense(
+      req.params['licenseId'] as string,
+      req.user.id,
+      req.user.role,
+    );
+    res.json({ data: license });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * @openapi
+ * /api/v1/govt/licenses/{licenseId}/status:
+ *   patch:
+ *     summary: Update license application status (govt_officer only)
+ *     tags: [Government]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Status updated
+ *       401:
+ *         description: Missing or invalid JWT
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Not found
+ */
+export async function updateStatus(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const license = await licenseService.updateStatus(
+      req.params['licenseId'] as string,
+      req.user.id,
+      req.body,
+    );
+    res.json({ data: license });
+  } catch (err) {
+    next(err);
+  }
+}

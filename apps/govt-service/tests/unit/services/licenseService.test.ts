@@ -6,12 +6,14 @@ jest.mock('../../../src/repositories/licenseRepository', () => ({
   findLicensesByFarmer: jest.fn(),
   countLicensesByFarmer: jest.fn(),
   findLicenseById: jest.fn(),
+  updateLicenseStatus: jest.fn(),
 }));
 
 const mockCreateLicense = jest.mocked(licenseRepo.createLicense);
 const mockFindLicensesByFarmer = jest.mocked(licenseRepo.findLicensesByFarmer);
 const mockCountLicensesByFarmer = jest.mocked(licenseRepo.countLicensesByFarmer);
 const mockFindLicenseById = jest.mocked(licenseRepo.findLicenseById);
+const mockUpdateLicenseStatus = jest.mocked(licenseRepo.updateLicenseStatus);
 
 const fakeLicense = {
   id: 'license-1',
@@ -87,5 +89,28 @@ describe('licenseService.getLicense', () => {
     await expect(
       licenseService.getLicense('license-1', 'farmer-1', 'farmer'),
     ).rejects.toMatchObject({ statusCode: 404, errorCode: 'LICENSE_NOT_FOUND' });
+  });
+});
+
+describe('licenseService.updateStatus', () => {
+  it('updates status after verifying the license exists', async () => {
+    mockFindLicenseById.mockResolvedValue(fakeLicense as never);
+    mockUpdateLicenseStatus.mockResolvedValue({ ...fakeLicense, status: 'approved' } as never);
+
+    const dto = { status: 'approved' as const, notes: 'All good' };
+    const result = await licenseService.updateStatus('license-1', 'officer-1', dto);
+
+    expect(mockUpdateLicenseStatus).toHaveBeenCalledWith('license-1', 'officer-1', dto);
+    expect(result.status).toBe('approved');
+  });
+
+  it('throws 404 LICENSE_NOT_FOUND when the license does not exist', async () => {
+    mockFindLicenseById.mockResolvedValue(null);
+
+    await expect(
+      licenseService.updateStatus('ghost', 'officer-1', { status: 'approved' as const }),
+    ).rejects.toMatchObject({ statusCode: 404, errorCode: 'LICENSE_NOT_FOUND' });
+
+    expect(mockUpdateLicenseStatus).not.toHaveBeenCalled();
   });
 });

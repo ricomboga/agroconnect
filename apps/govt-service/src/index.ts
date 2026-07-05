@@ -5,6 +5,7 @@ import { registrationRouter } from './routes/registrationRoutes.js';
 import { subsidyRouter } from './routes/subsidyRoutes.js';
 import { licenseRouter } from './routes/licenseRoutes.js';
 import { documentRouter } from './routes/documentRoutes.js';
+import { reportRouter } from './routes/reportRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { startFarmCreatedConsumer } from './events/consumers/farmCreatedConsumer.js';
 
@@ -20,6 +21,7 @@ app.use('/api/v1/govt/registrations', registrationRouter);
 app.use('/api/v1/govt/subsidies', subsidyRouter);
 app.use('/api/v1/govt/licenses', licenseRouter);
 app.use('/api/v1/govt/documents', documentRouter);
+app.use('/api/v1/govt/reports', reportRouter);
 
 app.use(errorHandler);
 

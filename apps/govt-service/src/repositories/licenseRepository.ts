@@ -1,5 +1,6 @@
 import { prisma } from '@agroconnect/db/govt';
 import { CreateLicenseDto } from '../schemas/createLicense.schema.js';
+import { UpdateLicenseStatusDto } from '../schemas/updateLicenseStatus.schema.js';
 import { PaginationParams } from '../types/index.js';
 
 export async function createLicense(farmerId: string, dto: CreateLicenseDto) {
@@ -23,4 +24,15 @@ export async function countLicensesByFarmer(farmerId: string) {
 
 export async function findLicenseById(id: string) {
   return prisma.licenseApplication.findUnique({ where: { id } });
+}
+
+export async function updateLicenseStatus(
+  id: string,
+  officerId: string,
+  dto: UpdateLicenseStatusDto,
+) {
+  return prisma.licenseApplication.update({
+    where: { id },
+    data: { status: dto.status, notes: dto.notes, officerId },
+  });
 }

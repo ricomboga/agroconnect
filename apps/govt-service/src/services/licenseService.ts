@@ -1,5 +1,6 @@
 import * as licenseRepo from '../repositories/licenseRepository.js';
 import { CreateLicenseDto } from '../schemas/createLicense.schema.js';
+import { UpdateLicenseStatusDto } from '../schemas/updateLicenseStatus.schema.js';
 import { PaginationParams } from '../types/index.js';
 import { createError } from '../middleware/errorHandler.js';
 
@@ -24,4 +25,12 @@ export async function getLicense(id: string, farmerId: string, role: string) {
     throw createError('License not found', 404, 'LICENSE_NOT_FOUND', 'error.license.not_found');
   }
   return license;
+}
+
+export async function updateStatus(licenseId: string, officerId: string, dto: UpdateLicenseStatusDto) {
+  const license = await licenseRepo.findLicenseById(licenseId);
+  if (!license) {
+    throw createError('License not found', 404, 'LICENSE_NOT_FOUND', 'error.license.not_found');
+  }
+  return licenseRepo.updateLicenseStatus(licenseId, officerId, dto);
 }
