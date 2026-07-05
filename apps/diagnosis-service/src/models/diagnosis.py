@@ -111,7 +111,7 @@ class SubmitDiagnosisRequest(BaseModel):
     farmer_id: str
     subject_type: Literal["plant", "animal"]
     subject_name: str
-    image_urls: list[str] = Field(min_length=1, max_length=5)
+    image_urls: list[str] = Field(min_length=0, max_length=5)
     symptoms: str | None = None
     duration_days: int | None = None
 

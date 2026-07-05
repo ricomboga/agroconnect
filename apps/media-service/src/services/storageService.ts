@@ -8,7 +8,19 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import type { UploadResult } from '../types/index.js';
 
 function getS3Client(): S3Client {
-  return new S3Client({ region: process.env['AWS_REGION'] ?? 'af-south-1' });
+  const endpoint = process.env['S3_ENDPOINT'];
+  return new S3Client({
+    region: process.env['AWS_REGION'] ?? 'af-south-1',
+    // S3_ENDPOINT targets a local S3-compatible store (MinIO) in dev; unset in production uses real AWS S3.
+    ...(endpoint && {
+      endpoint,
+      forcePathStyle: true,
+      credentials: {
+        accessKeyId: process.env['AWS_ACCESS_KEY_ID'] ?? '',
+        secretAccessKey: process.env['AWS_SECRET_ACCESS_KEY'] ?? '',
+      },
+    }),
+  });
 }
 
 function bucket(): string {
@@ -38,8 +50,9 @@ export async function uploadToS3(
     }),
   );
 
+  const endpoint = process.env['S3_ENDPOINT'];
   const region = process.env['AWS_REGION'] ?? 'af-south-1';
-  const url = `https://${b}.s3.${region}.amazonaws.com/${key}`;
+  const url = endpoint ? `${endpoint.replace(/\/$/, '')}/${b}/${key}` : `https://${b}.s3.${region}.amazonaws.com/${key}`;
   const cdn_url = `${cdnBase()}/${key}`;
 
   return { url, cdn_url, key, size_bytes: buffer.length, mime_type: mimeType };

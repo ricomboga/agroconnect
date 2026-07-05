@@ -10,7 +10,7 @@ const submitSchema = z.object({
   farmer_id: z.string().min(1),
   subject_type: z.enum(['plant', 'animal']),
   subject_name: z.string().min(1),
-  image_urls: z.array(z.string().url()).min(1).max(5),
+  image_urls: z.array(z.string().url()).min(0).max(5),
   symptoms: z.string().max(2000).optional(),
   duration_days: z.number().int().positive().optional(),
 });

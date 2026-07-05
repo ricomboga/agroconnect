@@ -1,4 +1,5 @@
 import * as threadRepo from '../repositories/threadRepository.js';
+import * as replyRepo from '../repositories/replyRepository.js';
 import { publishPostCreated } from '../events/producers/postCreatedProducer.js';
 import { CreateThreadDto } from '../schemas/createThread.schema.js';
 import { UpdateThreadDto } from '../schemas/updateThread.schema.js';
@@ -12,11 +13,9 @@ export async function createThread(authorId: string, dto: CreateThreadDto) {
   const status = containsBlockedWord(dto.title + ' ' + dto.body) ? 'flagged' : 'active';
   const thread = await threadRepo.createThread(authorId, dto, status);
 
-  try {
-    await publishPostCreated(thread.id, authorId, dto.category);
-  } catch (err) {
+  publishPostCreated(thread.id, authorId, dto.category).catch((err: unknown) => {
     logger.warn({ err, threadId: thread.id }, 'Kafka publish failed — thread still created');
-  }
+  });
 
   return thread;
 }
@@ -38,7 +37,8 @@ export async function listThreads(query: ListThreadsQuery, pagination: Paginatio
 export async function getThread(id: string) {
   const thread = await threadRepo.findThreadById(id);
   if (!thread) throw createError('Thread not found', 404, 'THREAD_NOT_FOUND', 'error.thread.not_found');
-  return thread;
+  const replies = await replyRepo.findRepliesByThread(id, { take: 500, skip: 0 });
+  return { thread, replies };
 }
 
 export async function updateThread(

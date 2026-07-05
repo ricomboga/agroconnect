@@ -14,6 +14,7 @@ import { marketOrderUpdatedHandler } from '../handlers/marketOrderUpdatedHandler
 import { govtRegistrationSubmittedHandler } from '../handlers/govtRegistrationSubmittedHandler.js';
 import { weatherAlertIssuedHandler } from '../handlers/weatherAlertIssuedHandler.js';
 import { communityPostCreatedHandler } from '../handlers/communityPostCreatedHandler.js';
+import { communityReplyCreatedHandler } from '../handlers/communityReplyCreatedHandler.js';
 import { userRegisteredHandler } from '../handlers/userRegisteredHandler.js';
 import { notificationSendHandler } from '../handlers/notificationSendHandler.js';
 import { farmWorkerAssignedHandler } from '../handlers/farmWorkerAssignedHandler.js';
@@ -37,6 +38,7 @@ const TOPICS = [
   'govt.registration.submitted',
   'weather.alert.issued',
   'community.post.created',
+  'community.reply.created',
   'user.registered',
   'notification.send',
 ] as const;
@@ -59,6 +61,7 @@ const HANDLER_MAP: Record<Topic, (payload: unknown) => Promise<void>> = {
   'govt.registration.submitted': govtRegistrationSubmittedHandler,
   'weather.alert.issued': weatherAlertIssuedHandler,
   'community.post.created': communityPostCreatedHandler,
+  'community.reply.created': communityReplyCreatedHandler,
   'user.registered': userRegisteredHandler,
   'notification.send': notificationSendHandler,
 };

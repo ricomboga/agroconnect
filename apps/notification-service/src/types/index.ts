@@ -164,6 +164,18 @@ export const FarmWorkerAssignedPayload = z.object({
 });
 export type FarmWorkerAssignedPayload = z.infer<typeof FarmWorkerAssignedPayload>;
 
+// community.reply.created
+export const CommunityReplyCreatedPayload = z.object({
+  replyId: z.string(),
+  threadId: z.string(),
+  threadTitle: z.string(),
+  threadAuthorId: z.string(),
+  replierId: z.string(),
+  replierName: z.string(),
+  occurredAt: z.string(),
+});
+export type CommunityReplyCreatedPayload = z.infer<typeof CommunityReplyCreatedPayload>;
+
 // notification.send (generic pass-through)
 export const NotificationSendPayload = z.object({
   userId: z.string(),

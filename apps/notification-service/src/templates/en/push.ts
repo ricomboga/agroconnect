@@ -59,6 +59,10 @@ export const enPushTemplates: Record<string, (data: TemplateData) => PushTemplat
     title: 'New Community Post',
     body: `New post in ${d['category'] ?? 'community'}: "${d['title'] ?? ''}".`,
   }),
+  'community.reply.created': (d) => ({
+    title: `${d['replierName'] ?? 'Someone'} replied to your post`,
+    body: `"${d['threadTitle'] ?? 'your post'}" has a new reply. Tap to read and respond.`,
+  }),
   'user.registered': (d) => ({
     title: `Welcome to AgroConnect, ${d['fullName'] ?? ''}!`,
     body: 'Your account is ready. Start managing your farm today.',

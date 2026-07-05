@@ -34,6 +34,7 @@ const UPSTREAMS: Record<string, string> = {
   activities: FARM,
   inputs:     FARM,
   harvests:   FARM,
+  inventory:  FARM,
   diagnose:   DIAGNOSE,
   // soil-service (3002)
   soil:       SOIL,

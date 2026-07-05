@@ -5,6 +5,8 @@ import { PaginationParams } from '../types/index.js';
 import { createError } from '../middleware/errorHandler.js';
 import { containsBlockedWord } from '../utils/blocklist.js';
 import { getIo } from '../socket.js';
+import { publishReplyCreated } from '../events/producers/replyCreatedProducer.js';
+import { logger } from '../logger.js';
 
 const EXPERT_ROLES = ['extension_officer', 'vet_officer'];
 
@@ -22,6 +24,19 @@ export async function createReply(
 
   if (status === 'active') {
     getIo()?.to(`thread:${threadId}`).emit('new_reply', reply);
+
+    if (authorId !== thread.authorId) {
+      publishReplyCreated({
+        replyId: reply.id,
+        threadId,
+        threadTitle: thread.title,
+        threadAuthorId: thread.authorId,
+        replierId: authorId,
+        replierName: dto.authorName,
+      }).catch((err: unknown) => {
+        logger.warn({ err, replyId: reply.id }, 'Kafka publish failed — reply still created');
+      });
+    }
   }
 
   return reply;

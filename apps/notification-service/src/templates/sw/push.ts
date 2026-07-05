@@ -62,6 +62,10 @@ export const swPushTemplates: Record<string, (data: TemplateData) => PushTemplat
     title: 'Chapisho Jipya Kwenye Jamii',
     body: `Chapisho jipya kwenye ${d['category'] ?? 'jamii'}: "${d['title'] ?? ''}".`,
   }),
+  'community.reply.created': (d) => ({
+    title: `${d['replierName'] ?? 'Mtu'} amejibu chapisho lako`,
+    body: `"${d['threadTitle'] ?? 'chapisho lako'}" lina jibu jipya. Gonga kuona na kujibu.`,
+  }),
   'user.registered': (d) => ({
     title: `Karibu AgroConnect, ${d['fullName'] ?? ''}!`,
     body: 'Akaunti yako imeundwa. Anza kusimamia shamba lako leo.',
