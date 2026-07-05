@@ -56,6 +56,10 @@ export async function adminCountFarmers() {
   return prisma.user.count({ where: { role: 'farmer' } });
 }
 
+export async function adminCountUsersByKycStatus(kycStatus: KycStatus) {
+  return prisma.user.count({ where: { kycStatus } });
+}
+
 export async function adminSetUserActive(id: string, isActive: boolean) {
   return prisma.user.update({ where: { id }, data: { isActive } });
 }

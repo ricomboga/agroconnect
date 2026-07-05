@@ -8,7 +8,8 @@ export type UserRole =
   | 'buyer'
   | 'govt_officer'
   | 'admin'
-  | 'lender';
+  | 'lender'
+  | 'farm_worker';
 
 export type Language = 'sw' | 'en';
 
@@ -64,4 +65,11 @@ export async function updateUserProfile(id: string, data: UpdateProfileParams) {
 
 export async function updatePasswordHash(id: string, passwordHash: string) {
   return prisma.user.update({ where: { id }, data: { passwordHash } });
+}
+
+export async function findUsersByIds(ids: string[]) {
+  return prisma.user.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, fullName: true, phone: true },
+  });
 }

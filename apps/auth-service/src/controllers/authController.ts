@@ -10,6 +10,7 @@ import type { OtpSendDto } from '../schemas/otpSend.schema.js';
 import type { OtpVerifyDto } from '../schemas/otpVerify.schema.js';
 import type { UpdateMeDto } from '../schemas/updateMe.schema.js';
 import type { ChangePasswordDto } from '../schemas/changePassword.schema.js';
+import type { ResetPasswordDto } from '../schemas/resetPassword.schema.js';
 
 export async function registerHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -76,6 +77,16 @@ export async function changePasswordHandler(req: AuthenticatedRequest, res: Resp
     const userId = req.user!.id;
     const { current_password, new_password } = req.body as ChangePasswordDto;
     await authService.changePassword(userId, current_password, new_password);
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function resetPasswordHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { phone, code, new_password } = req.body as ResetPasswordDto;
+    await authService.resetPassword(phone, code, new_password);
     res.status(204).send();
   } catch (err) {
     next(err);

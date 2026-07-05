@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { verifyJwt, type JwtPayload } from '@agroconnect/shared';
 import type { UpdateMeDto } from '../schemas/updateMe.schema.js';
+import * as otpService from './otpService.js';
 import {
   findUserByPhone,
   findUserById,
@@ -54,7 +55,10 @@ export async function register(dto: RegisterDto, ipAddress: string, userAgent?: 
   const { password: _pw, ...userFields } = dto;
   const user = await createUser({ ...userFields, passwordHash });
 
-  const accessToken = signJwt({ sub: user.id, role: user.role, phone: user.phone }, ACCESS_TTL);
+  const accessToken = signJwt(
+    { sub: user.id, role: user.role, phone: user.phone, partner_bank_id: user.partnerBankId ?? undefined },
+    ACCESS_TTL,
+  );
   const refreshToken = crypto.randomBytes(48).toString('hex');
   const refreshTokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
 
@@ -83,7 +87,10 @@ export async function login(dto: LoginDto, ipAddress: string, userAgent?: string
 
   await updateUserLastLogin(user.id);
 
-  const accessToken = signJwt({ sub: user.id, role: user.role, phone: user.phone }, ACCESS_TTL);
+  const accessToken = signJwt(
+    { sub: user.id, role: user.role, phone: user.phone, partner_bank_id: user.partnerBankId ?? undefined },
+    ACCESS_TTL,
+  );
   const refreshToken = crypto.randomBytes(48).toString('hex');
   const refreshTokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
 
@@ -109,7 +116,10 @@ export async function refresh(refreshToken: string, ipAddress: string, userAgent
   await deleteSession(session.id);
 
   const { user } = session;
-  const newAccessToken = signJwt({ sub: user.id, role: user.role, phone: user.phone }, ACCESS_TTL);
+  const newAccessToken = signJwt(
+    { sub: user.id, role: user.role, phone: user.phone, partner_bank_id: user.partnerBankId ?? undefined },
+    ACCESS_TTL,
+  );
   const newRefreshToken = crypto.randomBytes(48).toString('hex');
   const newRefreshHash = crypto.createHash('sha256').update(newRefreshToken).digest('hex');
 
@@ -161,6 +171,20 @@ export async function changePassword(userId: string, currentPassword: string, ne
 
   const newHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
   await updatePasswordHash(userId, newHash);
+}
+
+export async function resetPassword(phone: string, code: string, newPassword: string) {
+  const otpValid = await otpService.verifyOtp(phone, code);
+  if (!otpValid) {
+    throw Object.assign(new Error('error.otp.invalid'), { statusCode: 400, errorCode: 'OTP_INVALID' });
+  }
+
+  const user = await findUserByPhone(phone);
+  if (!user) throw Object.assign(new Error('error.user.not_found'), { statusCode: 404, errorCode: 'USER_NOT_FOUND' });
+
+  const newHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+  await updatePasswordHash(user.id, newHash);
+  await deleteSessionsByUserId(user.id);
 }
 
 export async function updateMe(userId: string, dto: UpdateMeDto) {

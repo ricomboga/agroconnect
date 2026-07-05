@@ -9,6 +9,7 @@ import { otpSendSchema } from '../schemas/otpSend.schema.js';
 import { otpVerifySchema } from '../schemas/otpVerify.schema.js';
 import { updateMeSchema } from '../schemas/updateMe.schema.js';
 import { changePasswordSchema } from '../schemas/changePassword.schema.js';
+import { resetPasswordSchema } from '../schemas/resetPassword.schema.js';
 import {
   registerHandler,
   loginHandler,
@@ -17,6 +18,7 @@ import {
   getMeHandler,
   updateMeHandler,
   changePasswordHandler,
+  resetPasswordHandler,
   sendOtpHandler,
   verifyOtpHandler,
   lookupUserByPhoneHandler,
@@ -31,6 +33,7 @@ router.post('/logout', validateBody(refreshSchema), logoutHandler);
 router.get('/me', requireAuth as RequestHandler, getMeHandler as RequestHandler);
 router.patch('/me', requireAuth as RequestHandler, validateBody(updateMeSchema), updateMeHandler as RequestHandler);
 router.patch('/password', requireAuth as RequestHandler, validateBody(changePasswordSchema), changePasswordHandler as RequestHandler);
+router.post('/password/reset', validateBody(resetPasswordSchema), resetPasswordHandler);
 router.post('/otp/send', validateBody(otpSendSchema), sendOtpHandler);
 router.post('/otp/verify', validateBody(otpVerifySchema), verifyOtpHandler);
 router.get('/users/lookup', requireAuth as RequestHandler, lookupUserByPhoneHandler as RequestHandler);

@@ -1,5 +1,6 @@
 import * as userRepo from '../../src/repositories/userRepository';
 import * as sessionRepo from '../../src/repositories/sessionRepository';
+import * as otpService from '../../src/services/otpService';
 import * as authService from '../../src/services/authService';
 
 jest.mock('../../src/repositories/userRepository', () => ({
@@ -9,6 +10,7 @@ jest.mock('../../src/repositories/userRepository', () => ({
   updateUserLastLogin: jest.fn(),
   verifyUserPhone: jest.fn(),
   updateUserProfile: jest.fn(),
+  updatePasswordHash: jest.fn(),
 }));
 
 jest.mock('../../src/repositories/sessionRepository', () => ({
@@ -16,6 +18,10 @@ jest.mock('../../src/repositories/sessionRepository', () => ({
   findSessionByHash: jest.fn(),
   deleteSession: jest.fn(),
   deleteSessionsByUserId: jest.fn(),
+}));
+
+jest.mock('../../src/services/otpService', () => ({
+  verifyOtp: jest.fn(),
 }));
 
 // Suppress Kafka connection errors in test environment
@@ -28,10 +34,12 @@ const mockFindUserById = jest.mocked(userRepo.findUserById);
 const mockCreateUser = jest.mocked(userRepo.createUser);
 const mockUpdateUserLastLogin = jest.mocked(userRepo.updateUserLastLogin);
 const mockUpdateUserProfile = jest.mocked(userRepo.updateUserProfile);
+const mockUpdatePasswordHash = jest.mocked(userRepo.updatePasswordHash);
 const mockCreateSession = jest.mocked(sessionRepo.createSession);
 const mockFindSessionByHash = jest.mocked(sessionRepo.findSessionByHash);
 const mockDeleteSession = jest.mocked(sessionRepo.deleteSession);
 const mockDeleteSessionsByUserId = jest.mocked(sessionRepo.deleteSessionsByUserId);
+const mockVerifyOtp = jest.mocked(otpService.verifyOtp);
 
 const fakeUser = {
   id: 'user-uuid-001',
@@ -219,6 +227,40 @@ describe('authService.updateMe', () => {
       statusCode: 404,
       errorCode: 'USER_NOT_FOUND',
     });
+  });
+});
+
+describe('authService.resetPassword', () => {
+  it('updates the password hash and revokes all sessions when the OTP is valid', async () => {
+    mockVerifyOtp.mockResolvedValue(true);
+    mockFindUserByPhone.mockResolvedValue(fakeUser as never);
+    mockUpdatePasswordHash.mockResolvedValue(undefined as never);
+    mockDeleteSessionsByUserId.mockResolvedValue(undefined as never);
+
+    await authService.resetPassword('+254712345678', '123456', 'newpin1234');
+
+    expect(mockVerifyOtp).toHaveBeenCalledWith('+254712345678', '123456');
+    expect(mockUpdatePasswordHash).toHaveBeenCalledWith('user-uuid-001', expect.any(String));
+    expect(mockDeleteSessionsByUserId).toHaveBeenCalledWith('user-uuid-001');
+  });
+
+  it('throws 400 OTP_INVALID when the OTP is wrong or expired', async () => {
+    mockVerifyOtp.mockResolvedValue(false);
+
+    await expect(
+      authService.resetPassword('+254712345678', '000000', 'newpin1234'),
+    ).rejects.toMatchObject({ statusCode: 400, errorCode: 'OTP_INVALID' });
+    expect(mockUpdatePasswordHash).not.toHaveBeenCalled();
+  });
+
+  it('throws 404 USER_NOT_FOUND when the phone has no matching user', async () => {
+    mockVerifyOtp.mockResolvedValue(true);
+    mockFindUserByPhone.mockResolvedValue(null);
+
+    await expect(
+      authService.resetPassword('+254799999999', '123456', 'newpin1234'),
+    ).rejects.toMatchObject({ statusCode: 404, errorCode: 'USER_NOT_FOUND' });
+    expect(mockUpdatePasswordHash).not.toHaveBeenCalled();
   });
 });
 

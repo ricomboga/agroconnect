@@ -3,6 +3,7 @@ import {
   adminListUsers,
   adminCountUsers,
   adminCountFarmers,
+  adminCountUsersByKycStatus,
   adminSetUserActive,
   adminVerifyUser,
   adminCreateUser,
@@ -10,6 +11,7 @@ import {
   type AdminUserFilter,
 } from '../repositories/adminUserRepository.js';
 import { findUserByPhone } from '../repositories/userRepository.js';
+import { findExpertsByCounty, upsertFarmerExpertAssignment } from '../repositories/expertRepository.js';
 import { createError } from '../middleware/errorHandler.js';
 
 export interface ListUsersParams {
@@ -89,8 +91,11 @@ export async function deleteUser(id: string) {
 }
 
 export async function getStats() {
-  const total_farmers = await adminCountFarmers();
-  return { total_farmers };
+  const [total_farmers, pending_kyc] = await Promise.all([
+    adminCountFarmers(),
+    adminCountUsersByKycStatus('pending'),
+  ]);
+  return { total_farmers, pending_kyc };
 }
 
 export async function setUserStatus(id: string, isActive: boolean) {
@@ -107,4 +112,26 @@ export async function verifyUser(id: string) {
   } catch {
     throw createError('User not found', 404, 'USER_NOT_FOUND', 'error.user_not_found');
   }
+}
+
+export async function listExperts(county?: string) {
+  const experts = await findExpertsByCounty(county);
+  return experts
+    .map((e) => ({
+      id: e.userId,
+      full_name: e.user?.fullName ?? '',
+      county: e.user?.county ?? '',
+      type: e.type,
+      specialisations: e.specialisations,
+      counties_served: e.countiesServed,
+      rating_avg: Number(e.ratingAvg),
+      rating_count: e.ratingCount,
+      current_farmers: e.currentFarmers,
+      max_farmers: e.maxFarmers,
+    }))
+    .sort((a, b) => a.current_farmers / a.max_farmers - b.current_farmers / b.max_farmers);
+}
+
+export async function assignExpert(farmerId: string, expertId: string) {
+  return upsertFarmerExpertAssignment(farmerId, expertId);
 }
