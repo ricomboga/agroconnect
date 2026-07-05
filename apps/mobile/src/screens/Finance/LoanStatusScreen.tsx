@@ -30,6 +30,8 @@ const STATUS_ORDER: Record<LoanStatus, number> = {
   rejected: 3,
   disbursed: 4,
   cancelled: 2,
+  repaid: 5,
+  defaulted: 4,
 };
 
 function computeRepaymentSchedule(loan: LoanApplication) {
@@ -104,7 +106,7 @@ export function LoanStatusScreen({ navigation, route }: Props) {
   if (loanQuery.isLoading) {
     return (
       <SafeAreaView style={s.safe}>
-        <View style={s.center}><ActivityIndicator size="large" color="#1565C0" /></View>
+        <View style={s.center}><ActivityIndicator size="large" color="#1A6B3C" /></View>
       </SafeAreaView>
     );
   }
@@ -126,12 +128,14 @@ export function LoanStatusScreen({ navigation, route }: Props) {
   if (!loan) return null;
 
   const STATUS_COLOR: Record<LoanStatus, string> = {
-    draft: '#424242', submitted: '#1565C0', under_review: '#E65100',
+    draft: '#424242', submitted: '#2E8B57', under_review: '#E65100',
     approved: '#1B5E20', rejected: '#B71C1C', disbursed: '#00695C', cancelled: '#616161',
+    repaid: '#1B5E20', defaulted: '#7B1FA2',
   };
   const STATUS_BG: Record<LoanStatus, string> = {
-    draft: '#F5F5F5', submitted: '#E3F2FD', under_review: '#FFF3E0',
+    draft: '#F5F5F5', submitted: '#EAF4EE', under_review: '#FFF3E0',
     approved: '#E8F5E9', rejected: '#FFEBEE', disbursed: '#E0F2F1', cancelled: '#EEEEEE',
+    repaid: '#E8F5E9', defaulted: '#F3E5F5',
   };
 
   const MILESTONE_STATUS_MAP: Record<MilestoneKey, LoanStatus> = {
@@ -184,7 +188,7 @@ export function LoanStatusScreen({ navigation, route }: Props) {
             const dotColor = isRejected || isCancelled
               ? '#B71C1C'
               : isDone ? '#1B5E20'
-              : isActive ? '#1565C0'
+              : isActive ? '#2E8B57'
               : '#BDBDBD';
 
             return (
@@ -315,12 +319,12 @@ const s = StyleSheet.create({
   safe:           { flex: 1, backgroundColor: '#FAFAFA' },
   center:         { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
   errorText:      { fontSize: 15, color: '#B71C1C', marginBottom: 12, textAlign: 'center' },
-  retryBtn:       { minHeight: 48, justifyContent: 'center', paddingHorizontal: 24, backgroundColor: '#E3F2FD', borderRadius: 8 },
-  retryLabel:     { fontSize: 15, color: '#1565C0', fontWeight: '600' },
+  retryBtn:       { minHeight: 48, justifyContent: 'center', paddingHorizontal: 24, backgroundColor: '#EAF4EE', borderRadius: 8 },
+  retryLabel:     { fontSize: 15, color: '#1A6B3C', fontWeight: '600' },
 
   topBar:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#FFF', borderBottomWidth: 1, borderBottomColor: '#EEEEEE' },
   backBtn:        { minWidth: 60, minHeight: 44, justifyContent: 'center' },
-  backLabel:      { fontSize: 15, color: '#1565C0', fontWeight: '600' },
+  backLabel:      { fontSize: 15, color: '#1A6B3C', fontWeight: '600' },
   topTitle:       { fontSize: 16, fontWeight: '700', color: '#1A1A1A' },
 
   scroll:         { padding: 16, paddingBottom: 48 },
@@ -344,7 +348,7 @@ const s = StyleSheet.create({
   milestoneTs:    { fontSize: 12, color: '#BDBDBD', marginTop: 2 },
 
   approvalCard:   { backgroundColor: '#E8F5E9', borderRadius: 14, padding: 16, marginBottom: 12 },
-  approvalTitle:  { fontSize: 13, fontWeight: '700', color: '#388E3C', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 },
+  approvalTitle:  { fontSize: 15, fontWeight: '700', color: '#388E3C', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 },
   infoRow:        { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: '#C8E6C9' },
   infoLabel:      { fontSize: 13, color: '#555' },
   infoValue:      { fontSize: 14, fontWeight: '700', color: '#1B5E20' },
@@ -366,7 +370,7 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: '#EEEEEE',
   },
   repayTitle: {
-    fontSize: 12, fontWeight: '700', color: '#1A1A1A', marginBottom: 12,
+    fontSize: 14, fontWeight: '700', color: '#1A1A1A', marginBottom: 12,
     textTransform: 'uppercase', letterSpacing: 0.5,
   },
   repayRow: {
@@ -376,5 +380,5 @@ const s = StyleSheet.create({
   repayLeft:   { gap: 2 },
   repayMonth:  { fontSize: 12, fontWeight: '600', color: '#1A1A1A' },
   repayDue:    { fontSize: 11, color: '#757575' },
-  repayAmount: { fontSize: 13, fontWeight: '700', color: '#1565C0' },
+  repayAmount: { fontSize: 13, fontWeight: '700', color: '#1A6B3C' },
 });

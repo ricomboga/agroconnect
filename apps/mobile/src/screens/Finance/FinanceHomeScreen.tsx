@@ -7,6 +7,8 @@ import {
   ActivityIndicator,
   StatusBar,
   StyleSheet,
+  Share,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
@@ -14,7 +16,17 @@ import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
 import { financeApi } from '../../api/finance';
-import type { CreditBand, LoanStatus, LoanApplication, Transaction } from '../../api/finance';
+import type {
+  CreditBand,
+  LoanStatus,
+  LoanApplication,
+  Transaction,
+  FarmerFinancialReport,
+  CropHarvestTotal,
+  AnimalProductTotal,
+} from '../../api/finance';
+import { productLabel } from '../../constants/animalProducts';
+import { exportReportAsCsv, exportReportAsPdf } from '../../utils/reportExport';
 import type { FinanceStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<FinanceStackParamList, 'FinanceHome'>;
@@ -32,18 +44,20 @@ function formatTxDate(dateStr: string): string {
 // ── Loan-tab colour maps ──────────────────────────────────────────────────────
 
 const BAND_COLOR: Record<CreditBand, string> = {
-  A: '#1B5E20', B: '#1565C0', C: '#E65100', D: '#B71C1C',
+  A: '#1B5E20', B: '#2E8B57', C: '#E65100', D: '#B71C1C', ineligible: '#616161',
 };
 const BAND_BG: Record<CreditBand, string> = {
-  A: '#E8F5E9', B: '#E3F2FD', C: '#FFF3E0', D: '#FFEBEE',
+  A: '#E8F5E9', B: '#EAF4EE', C: '#FFF3E0', D: '#FFEBEE', ineligible: '#EEEEEE',
 };
 const STATUS_COLOR: Record<LoanStatus, string> = {
-  draft: '#424242', submitted: '#1565C0', under_review: '#E65100',
+  draft: '#424242', submitted: '#2E8B57', under_review: '#E65100',
   approved: '#1B5E20', rejected: '#B71C1C', disbursed: '#00695C', cancelled: '#616161',
+  repaid: '#1B5E20', defaulted: '#7B1FA2',
 };
 const STATUS_BG: Record<LoanStatus, string> = {
-  draft: '#F5F5F5', submitted: '#E3F2FD', under_review: '#FFF3E0',
+  draft: '#F5F5F5', submitted: '#EAF4EE', under_review: '#FFF3E0',
   approved: '#E8F5E9', rejected: '#FFEBEE', disbursed: '#E0F2F1', cancelled: '#EEEEEE',
+  repaid: '#E8F5E9', defaulted: '#F3E5F5',
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -395,6 +409,10 @@ export function FinanceHomeScreen({ navigation }: Props) {
             </>
           )}
 
+          {loans.length > 0 && score && (
+            <LoanOverviewCard loans={loans} maxLoanKes={score.maxLoanKes} t={t} />
+          )}
+
           <Text style={s.loansSectionTitle}>{t('finance.home.loanHistory')}</Text>
 
           {loansQuery.isLoading && (
@@ -434,7 +452,7 @@ export function FinanceHomeScreen({ navigation }: Props) {
 
       {/* ── Reports tab ─────────────────────────────────────────────────────── */}
       {activeTab === 'reports' && (
-        <ReportsTab t={t} />
+        <ReportsTab t={t} allTxs={allTxs} isOnline={isOnline} />
       )}
 
       {/* FAB */}
@@ -450,41 +468,235 @@ export function FinanceHomeScreen({ navigation }: Props) {
   );
 }
 
+// ── Loan Overview Card ────────────────────────────────────────────────────────
+
+interface LoanOverviewCardProps {
+  loans: LoanApplication[];
+  maxLoanKes: number;
+  t: (key: string, opts?: Record<string, unknown>) => string;
+}
+
+function computeNextPayment(loans: LoanApplication[]): string | null {
+  const disbursed = loans.filter((l) => l.status === 'disbursed' && l.approvedAmountKes && l.interestRate !== null && l.disbursedAt);
+  if (disbursed.length === 0) return null;
+  let earliest: Date | null = null;
+  for (const loan of disbursed) {
+    const start = new Date(loan.disbursedAt!);
+    const now = new Date();
+    for (let i = 1; i <= loan.repaymentMonths; i++) {
+      const due = new Date(start.getFullYear(), start.getMonth() + i, start.getDate());
+      if (due >= now) {
+        if (!earliest || due < earliest) earliest = due;
+        break;
+      }
+    }
+  }
+  if (!earliest) return null;
+  return earliest.toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function LoanOverviewCard({ loans, maxLoanKes, t }: LoanOverviewCardProps) {
+  const activeLoans   = loans.filter((l) => l.status === 'disbursed').length;
+  const defaulted     = loans.filter((l) => l.status === 'defaulted').length;
+  const nextPayment   = computeNextPayment(loans);
+
+  return (
+    <View style={ov.card}>
+      <Text style={ov.title}>{t('finance.home.loanOverview.title')}</Text>
+      <View style={ov.grid}>
+        <View style={ov.cell}>
+          <Text style={ov.cellLabel}>{t('finance.home.loanOverview.creditLimit')}</Text>
+          <Text style={ov.cellValue}>KES {maxLoanKes.toLocaleString()}</Text>
+        </View>
+        <View style={[ov.cell, ov.cellRight]}>
+          <Text style={ov.cellLabel}>{t('finance.home.loanOverview.activeLoans')}</Text>
+          <Text style={[ov.cellValue, { color: activeLoans > 0 ? '#00695C' : '#424242' }]}>
+            {activeLoans}
+          </Text>
+        </View>
+      </View>
+      <View style={ov.divider} />
+      <View style={ov.grid}>
+        <View style={ov.cell}>
+          <Text style={ov.cellLabel}>{t('finance.home.loanOverview.nextPayment')}</Text>
+          <Text style={[ov.cellValue, { fontSize: 13 }]}>
+            {nextPayment ?? '—'}
+          </Text>
+        </View>
+        <View style={[ov.cell, ov.cellRight]}>
+          <Text style={ov.cellLabel}>{t('finance.home.loanOverview.nonPerforming')}</Text>
+          <Text style={[ov.cellValue, { color: defaulted > 0 ? '#7B1FA2' : '#424242' }]}>
+            {defaulted}
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+const ov = StyleSheet.create({
+  card:      { backgroundColor: '#F0FDF4', borderRadius: 12, borderWidth: 1, borderColor: '#BBF7D0', padding: 12, marginBottom: 12 },
+  title:     { fontSize: 12, fontWeight: '700', color: '#1A6B3C', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 },
+  grid:      { flexDirection: 'row' },
+  cell:      { flex: 1, gap: 2 },
+  cellRight: { alignItems: 'flex-end' },
+  cellLabel: { fontSize: 10, color: '#6B7280' },
+  cellValue: { fontSize: 15, fontWeight: '800', color: '#111827' },
+  divider:   { borderTopWidth: 1, borderColor: '#BBF7D0', marginVertical: 8 },
+});
+
 // ── Reports tab ───────────────────────────────────────────────────────────────
 
 type ReportPeriod = 'month' | 'quarter' | 'year';
 
-const CATEGORY_BREAKDOWN = {
-  income: [
-    { label: 'Maize / Grains', amount: 18000, pct: 42 },
-    { label: 'Eggs & Poultry', amount: 11500, pct: 27 },
-    { label: 'Milk & Dairy', amount: 8000, pct: 19 },
-    { label: 'Vegetables', amount: 3500, pct: 8 },
-    { label: 'Other', amount: 1500, pct: 4 },
-  ],
-  expense: [
-    { label: 'Inputs & Chemicals', amount: 7200, pct: 40 },
-    { label: 'Animal Feed', amount: 5500, pct: 30 },
-    { label: 'Labour', amount: 3200, pct: 18 },
-    { label: 'Equipment', amount: 1500, pct: 8 },
-    { label: 'Other', amount: 800, pct: 4 },
-  ],
-};
+interface CategoryRow {
+  category: string;
+  amount: number;
+  pct: number;
+}
 
-const PERIOD_DATA: Record<ReportPeriod, { income: number; expenses: number; label: string }> = {
-  month:   { income: 42500, expenses: 18200, label: 'June 2025' },
-  quarter: { income: 118000, expenses: 52400, label: 'Apr – Jun 2025' },
-  year:    { income: 390000, expenses: 185000, label: 'Jan – Jun 2025' },
-};
+function periodStart(period: ReportPeriod, now: Date): Date {
+  if (period === 'month') return new Date(now.getFullYear(), now.getMonth(), 1);
+  if (period === 'quarter') return new Date(now.getFullYear(), now.getMonth() - 2, 1);
+  return new Date(now.getFullYear(), 0, 1);
+}
 
-function ReportsTab({ t }: { t: (key: string, opts?: Record<string, unknown>) => string }) {
+function periodLabel(period: ReportPeriod, start: Date, now: Date): string {
+  if (period === 'month') {
+    return now.toLocaleDateString('en-KE', { month: 'long', year: 'numeric' });
+  }
+  const startLabel = start.toLocaleDateString('en-KE', { month: 'short', year: 'numeric' });
+  const endLabel = now.toLocaleDateString('en-KE', { month: 'short', year: 'numeric' });
+  return `${startLabel} – ${endLabel}`;
+}
+
+function toDateStr(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
+function buildShareText(
+  t: (key: string, opts?: Record<string, unknown>) => string,
+  label: string,
+  income: number,
+  expenses: number,
+  net: number,
+  report: FarmerFinancialReport | undefined,
+): string {
+  const lines = [
+    `${t('finance.home.title')} — ${t('finance.home.tabs.reports')}`,
+    label,
+    '',
+    `${t('finance.home.reports.income')}: KES ${income.toLocaleString()}`,
+    `${t('finance.home.reports.expenses')}: KES ${expenses.toLocaleString()}`,
+    `${t('finance.home.reports.netProfit')}: KES ${net.toLocaleString()}`,
+  ];
+
+  if (report) {
+    const { cropHarvests, animalProducts, collections } = report.production;
+    if (cropHarvests.byCrop.length > 0) {
+      lines.push('', t('finance.home.reports.production.crops') + ':');
+      for (const c of cropHarvests.byCrop) {
+        lines.push(`  ${c.cropName}: ${c.harvestedKg}kg (${c.soldKg}kg sold) — KES ${c.revenueKes.toLocaleString()}`);
+      }
+    }
+    if (animalProducts.byType.length > 0) {
+      lines.push('', t('finance.home.reports.production.animalProducts') + ':');
+      for (const p of animalProducts.byType) {
+        lines.push(`  ${productLabel(p.productType, t)}: ${p.totalQty} ${p.unit} — KES ${p.revenueKes.toLocaleString()}`);
+      }
+    }
+    if (collections.totalSalesKes > 0) {
+      lines.push(
+        '',
+        `${t('finance.home.reports.production.collections')}: KES ${collections.totalSalesKes.toLocaleString()}` +
+          ` (${t('finance.home.reports.production.paid')} ${collections.paidKes.toLocaleString()}, ` +
+          `${t('finance.home.reports.production.pending')} ${collections.pendingKes.toLocaleString()})`,
+      );
+    }
+    if (report.creditScore) {
+      lines.push('', `${t('finance.score.title')}: ${report.creditScore.score} (${report.creditScore.band})`);
+    }
+  }
+
+  return lines.join('\n');
+}
+
+function ReportsTab({
+  t,
+  allTxs,
+  isOnline,
+}: {
+  t: (key: string, opts?: Record<string, unknown>) => string;
+  allTxs: Transaction[];
+  isOnline: boolean;
+}) {
   const [period, setPeriod] = React.useState<ReportPeriod>('month');
   const [categoryTab, setCategoryTab] = React.useState<'income' | 'expense'>('income');
+  const [exporting, setExporting] = React.useState(false);
 
-  const data = PERIOD_DATA[period];
-  const net = data.income - data.expenses;
-  const netPct = data.income > 0 ? Math.round((net / data.income) * 100) : 0;
-  const breakdown = CATEGORY_BREAKDOWN[categoryTab];
+  const runExport = async (fn: () => Promise<void>) => {
+    setExporting(true);
+    try {
+      await fn();
+    } catch (err) {
+      Alert.alert(t('common.error.loadFailed'), err instanceof Error ? err.message : String(err));
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const { fromDate, toDate } = React.useMemo(() => {
+    const now = new Date();
+    const start = periodStart(period, now);
+    return { fromDate: toDateStr(start), toDate: toDateStr(now) };
+  }, [period]);
+
+  const reportQuery = useQuery({
+    queryKey: ['finance/report', fromDate, toDate],
+    queryFn: () => financeApi.reports.me({ fromDate, toDate }),
+    enabled: isOnline,
+    staleTime: isOnline ? 2 * 60 * 1000 : Infinity,
+  });
+  const report = reportQuery.data?.data;
+
+  const { income, expenses, label, incomeByCategory, expenseByCategory } = React.useMemo(() => {
+    const now = new Date();
+    const start = periodStart(period, now);
+    let income = 0;
+    let expenses = 0;
+    const incomeByCategory = new Map<string, number>();
+    const expenseByCategory = new Map<string, number>();
+
+    for (const tx of allTxs) {
+      const parts = tx.date.split('-').map(Number);
+      const txDate = new Date(parts[0] ?? 0, (parts[1] ?? 1) - 1, parts[2] ?? 1);
+      if (txDate < start || txDate > now) continue;
+      if (tx.type === 'income') {
+        income += tx.amountKes;
+        incomeByCategory.set(tx.category, (incomeByCategory.get(tx.category) ?? 0) + tx.amountKes);
+      } else {
+        expenses += tx.amountKes;
+        expenseByCategory.set(tx.category, (expenseByCategory.get(tx.category) ?? 0) + tx.amountKes);
+      }
+    }
+
+    return { income, expenses, label: periodLabel(period, start, now), incomeByCategory, expenseByCategory };
+  }, [allTxs, period]);
+
+  const net = income - expenses;
+  const netPct = income > 0 ? Math.round((net / income) * 100) : 0;
+
+  const breakdown: CategoryRow[] = React.useMemo(() => {
+    const map = categoryTab === 'income' ? incomeByCategory : expenseByCategory;
+    const total = Array.from(map.values()).reduce((sum, v) => sum + v, 0);
+    return Array.from(map.entries())
+      .map(([category, amount]) => ({
+        category,
+        amount,
+        pct: total > 0 ? Math.round((amount / total) * 100) : 0,
+      }))
+      .sort((a, b) => b.amount - a.amount);
+  }, [incomeByCategory, expenseByCategory, categoryTab]);
 
   const PERIODS: Array<{ key: ReportPeriod; label: string }> = [
     { key: 'month',   label: t('finance.home.reports.periodMonth') },
@@ -510,18 +722,18 @@ function ReportsTab({ t }: { t: (key: string, opts?: Record<string, unknown>) =>
 
       {/* P&L summary card */}
       <View style={rs.plCard}>
-        <Text style={rs.plPeriod}>{data.label}</Text>
+        <Text style={rs.plPeriod}>{label}</Text>
         <View style={rs.plRow}>
           <View style={rs.plCol}>
             <Text style={rs.plColLabel}>{t('finance.home.reports.income')}</Text>
             <Text style={[rs.plColAmount, { color: '#1A6B3C' }]}>
-              KES {data.income.toLocaleString()}
+              KES {income.toLocaleString()}
             </Text>
           </View>
           <View style={[rs.plCol, rs.plColRight]}>
             <Text style={[rs.plColLabel, { textAlign: 'right' }]}>{t('finance.home.reports.expenses')}</Text>
             <Text style={[rs.plColAmount, { color: '#DC2626', textAlign: 'right' }]}>
-              KES {data.expenses.toLocaleString()}
+              KES {expenses.toLocaleString()}
             </Text>
           </View>
         </View>
@@ -543,8 +755,8 @@ function ReportsTab({ t }: { t: (key: string, opts?: Record<string, unknown>) =>
 
       {/* Income / Expense bar */}
       <View style={rs.incExpBar}>
-        <View style={[rs.incBar, { flex: data.income }]} />
-        <View style={[rs.expBar, { flex: data.expenses }]} />
+        <View style={[rs.incBar, { flex: income || 1 }]} />
+        <View style={[rs.expBar, { flex: expenses || 1 }]} />
       </View>
       <View style={rs.incExpLegend}>
         <View style={rs.legendItem}>
@@ -574,10 +786,16 @@ function ReportsTab({ t }: { t: (key: string, opts?: Record<string, unknown>) =>
         ))}
       </View>
 
-      {breakdown.map((row, i) => (
-        <View key={i} style={rs.breakdownRow}>
+      {breakdown.length === 0 && (
+        <View style={rs.emptyBox}>
+          <Text style={rs.emptyBody}>{t('finance.home.reports.noData')}</Text>
+        </View>
+      )}
+
+      {breakdown.map((row) => (
+        <View key={row.category} style={rs.breakdownRow}>
           <View style={rs.breakdownLeft}>
-            <Text style={rs.breakdownLabel}>{row.label}</Text>
+            <Text style={rs.breakdownLabel}>{t(`finance.transaction.category.${row.category}`)}</Text>
             <View style={rs.breakdownTrack}>
               <View
                 style={[
@@ -597,9 +815,121 @@ function ReportsTab({ t }: { t: (key: string, opts?: Record<string, unknown>) =>
         </View>
       ))}
 
+      {/* Farm production (harvests, eggs/milk/honey, collections) */}
+      <Text style={rs.sectionHeader}>{t('finance.home.reports.production.title')}</Text>
+      <Text style={rs.productionSubtitle}>{t('finance.home.reports.production.subtitle')}</Text>
+
+      {!isOnline && (
+        <View style={rs.emptyBox}>
+          <Text style={rs.emptyBody}>{t('finance.home.reports.production.offline')}</Text>
+        </View>
+      )}
+
+      {isOnline && reportQuery.isLoading && (
+        <ActivityIndicator size="small" color="#1A6B3C" style={{ marginVertical: 12 }} />
+      )}
+
+      {isOnline && reportQuery.isError && (
+        <View style={rs.emptyBox}>
+          <Text style={rs.emptyBody}>{t('finance.home.reports.production.loadFailed')}</Text>
+          <Pressable onPress={() => reportQuery.refetch()} style={rs.retryBtn} accessibilityRole="button">
+            <Text style={rs.retryLabel}>{t('common.retry')}</Text>
+          </Pressable>
+        </View>
+      )}
+
+      {isOnline && report && (
+        <>
+          {report.production.cropHarvests.byCrop.length === 0 &&
+            report.production.animalProducts.byType.length === 0 &&
+            report.production.collections.byProductType.length === 0 && (
+              <View style={rs.emptyBox}>
+                <Text style={rs.emptyBody}>{t('finance.home.reports.production.empty')}</Text>
+              </View>
+            )}
+
+          {report.production.cropHarvests.byCrop.length > 0 && (
+            <View style={rs.prodCard}>
+              <Text style={rs.prodCardTitle}>{t('finance.home.reports.production.crops')}</Text>
+              {report.production.cropHarvests.byCrop.map((c: CropHarvestTotal) => (
+                <View key={c.cropName} style={rs.prodRow}>
+                  <Text style={rs.prodRowLabel} numberOfLines={1}>{c.cropName}</Text>
+                  <Text style={rs.prodRowSub}>
+                    {t('finance.home.reports.production.harvested')} {c.harvestedKg}kg ·{' '}
+                    {t('finance.home.reports.production.sold')} {c.soldKg}kg
+                  </Text>
+                  <Text style={rs.prodRowAmount}>KES {c.revenueKes.toLocaleString()}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {report.production.animalProducts.byType.length > 0 && (
+            <View style={rs.prodCard}>
+              <Text style={rs.prodCardTitle}>{t('finance.home.reports.production.animalProducts')}</Text>
+              {report.production.animalProducts.byType.map((p: AnimalProductTotal) => (
+                <View key={p.productType} style={rs.prodRow}>
+                  <Text style={rs.prodRowLabel} numberOfLines={1}>{productLabel(p.productType, t)}</Text>
+                  <Text style={rs.prodRowSub}>{p.totalQty} {p.unit}</Text>
+                  <Text style={rs.prodRowAmount}>KES {p.revenueKes.toLocaleString()}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {report.production.collections.totalSalesKes > 0 && (
+            <View style={rs.prodCard}>
+              <Text style={rs.prodCardTitle}>{t('finance.home.reports.production.collections')}</Text>
+              <View style={rs.prodRow}>
+                <Text style={rs.prodRowLabel}>{t('finance.home.reports.production.totalSales')}</Text>
+                <Text style={rs.prodRowAmount}>KES {report.production.collections.totalSalesKes.toLocaleString()}</Text>
+              </View>
+              <View style={rs.prodRow}>
+                <Text style={rs.prodRowLabel}>{t('finance.home.reports.production.paid')}</Text>
+                <Text style={[rs.prodRowAmount, { color: '#1A6B3C' }]}>KES {report.production.collections.paidKes.toLocaleString()}</Text>
+              </View>
+              <View style={rs.prodRow}>
+                <Text style={rs.prodRowLabel}>{t('finance.home.reports.production.pending')}</Text>
+                <Text style={[rs.prodRowAmount, { color: '#DC2626' }]}>KES {report.production.collections.pendingKes.toLocaleString()}</Text>
+              </View>
+            </View>
+          )}
+        </>
+      )}
+
       {/* Export button */}
-      <Pressable style={rs.exportBtn} accessibilityRole="button">
-        <Text style={rs.exportLabel}>{t('finance.home.reports.export')}</Text>
+      <Pressable
+        style={rs.exportBtn}
+        accessibilityRole="button"
+        disabled={exporting}
+        onPress={() => {
+          if (!report) {
+            // Offline / not yet loaded — fall back to a plain-text share of what we have locally.
+            void Share.share({ message: buildShareText(t, label, income, expenses, net, report) });
+            return;
+          }
+          Alert.alert(
+            t('finance.home.reports.export'),
+            t('finance.home.reports.exportFormatPrompt'),
+            [
+              {
+                text: t('finance.home.reports.exportCsv'),
+                onPress: () => void runExport(() => exportReportAsCsv(report, t, label)),
+              },
+              {
+                text: t('finance.home.reports.exportPdf'),
+                onPress: () => void runExport(() => exportReportAsPdf(report, t, label)),
+              },
+              { text: t('common.cancel'), style: 'cancel' },
+            ],
+          );
+        }}
+      >
+        {exporting ? (
+          <ActivityIndicator size="small" color="#1A6B3C" />
+        ) : (
+          <Text style={rs.exportLabel}>{t('finance.home.reports.export')}</Text>
+        )}
       </Pressable>
     </ScrollView>
   );
@@ -646,10 +976,13 @@ const rs = StyleSheet.create({
   legendText:   { fontSize: 9, color: '#6B7280' },
 
   sectionHeader: {
-    fontSize: 9, fontWeight: '700', color: '#1A6B3C',
+    fontSize: 12, fontWeight: '700', color: '#1A6B3C',
     textTransform: 'uppercase', letterSpacing: 0.8,
     marginBottom: 8,
   },
+
+  emptyBox:  { paddingVertical: 20, alignItems: 'center' },
+  emptyBody: { fontSize: 11, color: '#6B7280', textAlign: 'center' },
 
   catToggle:    { flexDirection: 'row', gap: 6, marginBottom: 10 },
   catBtn:       {
@@ -677,6 +1010,20 @@ const rs = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', marginTop: 16,
   },
   exportLabel: { fontSize: 12, fontWeight: '700', color: '#1A6B3C' },
+
+  productionSubtitle: { fontSize: 9, color: '#9CA3AF', marginTop: -4, marginBottom: 10 },
+  retryBtn:  { minHeight: 44, justifyContent: 'center', alignSelf: 'center',
+               paddingHorizontal: 20, backgroundColor: '#EAF4EE', borderRadius: 8, marginTop: 8 },
+  retryLabel:{ fontSize: 12, color: '#1A6B3C', fontWeight: '600' },
+
+  prodCard:      { backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#E5E7EB',
+                   borderRadius: 10, padding: 12, marginBottom: 10 },
+  prodCardTitle: { fontSize: 11, fontWeight: '700', color: '#111827', marginBottom: 8 },
+  prodRow:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+                   paddingVertical: 5, gap: 8 },
+  prodRowLabel:  { fontSize: 10, color: '#374151', flex: 1 },
+  prodRowSub:    { fontSize: 9, color: '#6B7280' },
+  prodRowAmount: { fontSize: 10, fontWeight: '700', color: '#111827' },
 });
 
 // ── Styles ────────────────────────────────────────────────────────────────────
@@ -722,7 +1069,7 @@ const s = StyleSheet.create({
   vsPillText:       { fontSize: 9, color: '#fff' },
 
   // ── Chart ─────────────────────────────────────────────────────────────────
-  sectionHeader:    { fontSize: 9, fontWeight: '700', color: '#1A6B3C',
+  sectionHeader:    { fontSize: 12, fontWeight: '700', color: '#1A6B3C',
                       textTransform: 'uppercase', letterSpacing: 0.8,
                       marginTop: 10, marginBottom: 5 },
   chartCard:        { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB',
@@ -752,24 +1099,24 @@ const s = StyleSheet.create({
   txAmount:         { fontSize: 10, fontWeight: '700' },
 
   // ── Loans tab ─────────────────────────────────────────────────────────────
-  scoreCard:        { borderRadius: 12, borderWidth: 1.5, padding: 14, marginBottom: 12 },
+  scoreCard:        { borderRadius: 12, borderWidth: 1.5, padding: 10, marginBottom: 12 },
   scoreTop:         { flexDirection: 'row', justifyContent: 'space-between',
-                      alignItems: 'flex-start', marginBottom: 10 },
-  scoreLeft:        { gap: 2 },
-  scoreTitleLabel:  { fontSize: 10, color: '#555', fontWeight: '500',
+                      alignItems: 'flex-start', marginBottom: 6 },
+  scoreLeft:        { gap: 1 },
+  scoreTitleLabel:  { fontSize: 9, color: '#555', fontWeight: '500',
                       textTransform: 'uppercase', letterSpacing: 0.8 },
-  scoreNum:         { fontSize: 48, fontWeight: '800', lineHeight: 56 },
-  scoreOutOf:       { fontSize: 11, color: '#757575' },
-  bandBadge:        { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20 },
-  bandText:         { color: '#FFF', fontSize: 14, fontWeight: '700' },
-  maxLoan:          { fontSize: 12, fontWeight: '600', marginBottom: 12 },
-  bars:             { gap: 6, marginBottom: 10 },
-  barRow:           { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  barLabel:         { fontSize: 10, color: '#555', width: 72 },
-  barTrack:         { flex: 1, height: 6, backgroundColor: '#E0E0E0', borderRadius: 3, overflow: 'hidden' },
-  barFill:          { height: 6, borderRadius: 3 },
-  barVal:           { fontSize: 10, fontWeight: '700', width: 22, textAlign: 'right' },
-  tapHint:          { fontSize: 10, color: '#888', textAlign: 'right' },
+  scoreNum:         { fontSize: 32, fontWeight: '800', lineHeight: 36 },
+  scoreOutOf:       { fontSize: 10, color: '#757575' },
+  bandBadge:        { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
+  bandText:         { color: '#FFF', fontSize: 12, fontWeight: '700' },
+  maxLoan:          { fontSize: 11, fontWeight: '600', marginBottom: 8 },
+  bars:             { gap: 4, marginBottom: 6 },
+  barRow:           { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  barLabel:         { fontSize: 9, color: '#555', width: 64 },
+  barTrack:         { flex: 1, height: 5, backgroundColor: '#E0E0E0', borderRadius: 3, overflow: 'hidden' },
+  barFill:          { height: 5, borderRadius: 3 },
+  barVal:           { fontSize: 9, fontWeight: '700', width: 20, textAlign: 'right' },
+  tapHint:          { fontSize: 9, color: '#888', textAlign: 'right' },
   ctaBtn:           { minHeight: 48, borderRadius: 8, justifyContent: 'center',
                       alignItems: 'center', marginBottom: 20 },
   ctaLabel:         { color: '#FFF', fontSize: 13, fontWeight: '700' },

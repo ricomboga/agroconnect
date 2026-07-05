@@ -18,6 +18,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { FarmStackParamList } from '../../navigation/types';
 import { activityApi, type ActivityType, type CreateActivityDto } from '../../api/activity';
+import { ApiError } from '../../api/client';
 import { farmApi } from '../../api/farm';
 import type { Farm, FarmPlot, FarmWorker } from '../../api/farm';
 import { useFarms, useFarmWorkers } from '../../hooks/useFarms';
@@ -46,9 +47,9 @@ const UI_TO_API: Record<UiActivityType, ActivityType> = {
 };
 
 const CROP_TILES: { value: UiActivityType; icon: string; tileKey: string }[] = [
-  { value: 'watering',    icon: '💧', tileKey: 'activity.form.tile.watering'    },
-  { value: 'spraying',    icon: '🌿', tileKey: 'activity.form.tile.spraying'    },
-  { value: 'fertilising', icon: '🌾', tileKey: 'activity.form.tile.fertilising' },
+  { value: 'watering',    icon: '🪣', tileKey: 'activity.form.tile.watering'    },
+  { value: 'spraying',    icon: '🪲⚡', tileKey: 'activity.form.tile.spraying'    },
+  { value: 'fertilising', icon: '🧂', tileKey: 'activity.form.tile.fertilising' },
   { value: 'weeding',     icon: '✂️', tileKey: 'activity.form.tile.weeding'     },
   { value: 'planting',    icon: '🌱', tileKey: 'activity.form.tile.planting'    },
   { value: 'harvesting',  icon: '🌽', tileKey: 'activity.form.tile.harvesting'  },
@@ -181,8 +182,8 @@ function TimePickerModal({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
-  const [hour, setHour] = useState(value.split(':')[0] ?? '08');
-  const [minute, setMinute] = useState(value.split(':')[1] ?? '00');
+  const [hour, setHour] = useState(value.split(':')[0] || '08');
+  const [minute, setMinute] = useState(value.split(':')[1] || '00');
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
@@ -358,7 +359,7 @@ export function ActivityFormScreen({ navigation, route }: Props) {
     const items: { id: string; label: string }[] = [];
     if (selectedFarm) {
       selectedFarm.plots.forEach((p: FarmPlot) => {
-        if (p.cropType) items.push({ id: p.id, label: `${p.cropType}${p.name ? ` (${p.name})` : ''}` });
+        if (p.currentCrop) items.push({ id: p.id, label: `${p.currentCrop}${p.name ? ` (${p.name})` : ''}` });
       });
       const ft = selectedFarm.farmType;
       if (ft === 'animal' || ft === 'both' || selectedFarm.plots.length === 0) {
@@ -390,14 +391,18 @@ export function ActivityFormScreen({ navigation, route }: Props) {
     const titleParts = [t(`activity.form.tile.${activityType}`)];
     if (cropOrAnimal) titleParts.push(cropOrAnimal);
 
+    const parsedCost = Number(labourCostKes);
+    const d = date;
+    const localDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
     const dto: CreateActivityDto = {
       type: UI_TO_API[activityType],
       title: titleParts.join(' – '),
       description: notes.trim() || undefined,
-      scheduledDate: date.toISOString().split('T')[0] as string,
-      scheduledTime: scheduledTime || undefined,
+      scheduledDate: localDate,
+      scheduledTime: /^\d{2}:\d{2}$/.test(scheduledTime) ? scheduledTime : undefined,
       plotId: selectedPlotId,
-      labourCostKes: labourCostKes ? Number(labourCostKes) : undefined,
+      labourCostKes: labourCostKes.trim() && !isNaN(parsedCost) && parsedCost >= 0 ? parsedCost : undefined,
       assignedToWorkerId: assignedWorkerId,
     };
 
@@ -417,15 +422,24 @@ export function ActivityFormScreen({ navigation, route }: Props) {
       const newStreak = streak + 1;
       showToast(t('activity.form.successToast', { streak: newStreak }), 'success');
       navigation.goBack();
-    } catch {
-      setErrorMsg(t('activity.form.errorSave'));
+    } catch (err) {
+      let msg = t('activity.form.errorSave');
+      if (err instanceof ApiError) {
+        if (err.statusCode === 400) {
+          msg = t('activity.form.errorValidation');
+        } else if (err.statusCode === 403) {
+          msg = t('activity.form.errorForbidden');
+        }
+      }
+      setErrorMsg(msg);
+      showToast(msg, 'error');
     } finally {
       setSubmitting(false);
     }
   }, [
     canSubmit, activityType, selectedFarmId, cropOrAnimal, notes, date,
-    selectedPlotId, labourCostKes, isOnline, queueWrite, queryClient,
-    navigation, showToast, streak, t,
+    scheduledTime, selectedPlotId, labourCostKes, assignedWorkerId,
+    isOnline, queueWrite, queryClient, navigation, showToast, streak, t,
   ]);
 
   const renderTile = (tile: { value: UiActivityType; icon: string; tileKey: string }) => {

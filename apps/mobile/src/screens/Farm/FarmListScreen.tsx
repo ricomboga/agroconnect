@@ -1,332 +1,288 @@
-import React, { useLayoutEffect } from 'react';
+import React, { useEffect, useLayoutEffect } from 'react';
 import {
+  ActivityIndicator,
   FlatList,
   Linking,
-  ScrollView,
+  Pressable,
   StatusBar,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { FarmStackParamList } from '../../navigation/types';
-import { farmApi, type Farm } from '../../api/farm';
+import { useFarms } from '../../hooks/useFarms';
+import type { Farm } from '../../api/farm';
+import { useFarmStore } from '../../store/farm.store';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
-import { useAuthStore } from '../../stores/authStore';
 import { OfflineBanner } from '../../components/Common/OfflineBanner';
 
 type Props = NativeStackScreenProps<FarmStackParamList, 'FarmList'>;
 
-interface FarmWithStats extends Farm {
-  overdueCount?: number;
-  healthScore?: number;
-  workerCount?: number;
-  crops?: Array<{ name: string }>;
-  activitiesThisMonth?: number;
-}
-
-const farmEmoji = (farm: FarmWithStats): string => {
+function farmEmoji(farm: Farm): string {
   if (farm.farmType === 'animal') return '🐄';
   if (farm.farmType === 'both') return '🌾🐄';
-  const firstCrop =
-    (farm.crops?.[0]?.name ?? farm.plots?.[0]?.currentCrop ?? '').toLowerCase();
-  if (firstCrop.includes('maize')) return '🌽';
-  if (firstCrop.includes('tomato')) return '🍅';
-  if (firstCrop.includes('bean')) return '🫘';
-  if (firstCrop.includes('cabbage')) return '🥬';
+  const first = (farm.plots?.[0]?.currentCrop ?? '').toLowerCase();
+  if (first.includes('maize') || first.includes('corn')) return '🌽';
+  if (first.includes('tomato')) return '🍅';
+  if (first.includes('bean')) return '🫘';
+  if (first.includes('cabbage')) return '🥬';
   return '🌾';
-};
+}
+
+function farmTypeLabel(farm: Farm, t: (k: string) => string): string {
+  if (farm.farmType === 'animal') return t('farm.add.animalsOnly');
+  if (farm.farmType === 'both') return t('farm.add.both');
+  return t('farm.add.cropsOnly');
+}
+
+function cropSummary(farm: Farm): string {
+  const crops = (farm.plots ?? [])
+    .map((p) => p.currentCrop)
+    .filter((c): c is string => Boolean(c))
+    .filter((v, i, a) => a.indexOf(v) === i);
+  return crops.length > 0 ? crops.join(', ') : '—';
+}
 
 export function FarmListScreen({ navigation }: Props) {
+  const { t } = useTranslation();
   const { isOnline } = useOfflineSync();
-  const user = useAuthStore((s) => s.user);
+  const setActiveFarmId = useFarmStore((s) => s.setActiveFarmId);
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['farms', user?.id],
-    queryFn: () => farmApi.list({ pageSize: 50 }),
-    staleTime: isOnline ? 5 * 60 * 1000 : Infinity,
-  });
+  const { data, isLoading, isError, refetch } = useFarms(1, 50);
+  const farms = (data?.data ?? []) as Farm[];
 
-  const farms = (data?.data ?? []) as FarmWithStats[];
+  // If only one farm, select it automatically
+  useEffect(() => {
+    if (!isLoading && farms.length === 1 && farms[0]) {
+      setActiveFarmId(farms[0].id);
+      navigation.replace('FarmProfile', { farmId: farms[0].id });
+    }
+  }, [isLoading, farms, navigation, setActiveFarmId]);
 
-  const worstFarm = farms.reduce<FarmWithStats | undefined>((acc, f) => {
-    const count = f.overdueCount ?? 0;
-    if (count > 0 && (acc === undefined || count > (acc.overdueCount ?? 0))) return f;
-    return acc;
-  }, undefined);
+  const selectFarm = (farm: Farm) => {
+    setActiveFarmId(farm.id);
+    navigation.navigate('FarmProfile', { farmId: farm.id });
+  };
 
-  const renderFarmCard = ({ item: farm }: { item: FarmWithStats }) => {
-    const overdueCount = farm.overdueCount ?? 0;
-    const healthScore = farm.healthScore ?? 0;
-    const cropList =
-      (farm.plots ?? [])
-        .map((p) => p.currentCrop)
-        .filter((c): c is string => c !== null)
-        .filter((v, i, a) => a.indexOf(v) === i)
-        .join(' · ') || '—';
+  const renderCard = ({ item: farm, index }: { item: Farm; index: number }) => {
+    const overdue = farm.overdueCount ?? 0;
+    const health = farm.healthScore ?? 0;
+    const crops = cropSummary(farm);
+    const workerCount = farm.workerCount ?? 0;
+    const plotCount = (farm.plots ?? []).filter((p) => p.currentCrop).length;
 
-    const cardInner = (
-      <View
-        style={[
-          s.card,
-          overdueCount > 0
-            ? { borderWidth: 1.5, borderColor: '#1A6B3C' }
-            : { borderWidth: 1, borderColor: '#E5E7EB' },
-        ]}
+    return (
+      <Pressable
+        style={[s.card, index === 0 && s.cardFirst]}
+        onPress={() => selectFarm(farm)}
+        accessibilityRole="button"
+        android_ripple={{ color: '#EAF4EE' }}
       >
-        {/* Row 1 */}
-        <View style={s.cardRow1}>
-          <View style={s.cardRowLeft}>
-            <Text style={s.farmName} numberOfLines={1}>
-              {farmEmoji(farm)} {farm.name}
-            </Text>
-            <Text style={s.farmMeta} numberOfLines={1}>
-              {farm.areaAcres} acres · {farm.county} · {cropList}
+        {/* Header row */}
+        <View style={s.cardHeader}>
+          <Text style={s.cardEmoji}>{farmEmoji(farm)}</Text>
+          <View style={s.cardHeaderText}>
+            <Text style={s.cardName} numberOfLines={1}>{farm.name}</Text>
+            <Text style={s.cardMeta} numberOfLines={1}>
+              {farm.county}{farm.subCounty ? `, ${farm.subCounty}` : ''} · {farm.areaAcres} {t('farm.card.area')}
             </Text>
           </View>
-          {overdueCount > 0 ? (
+          {overdue > 0 ? (
             <View style={s.badgeRed}>
-              <Text style={s.badgeRedText}>{overdueCount} Late</Text>
+              <Text style={s.badgeRedText}>{overdue} {t('farm.care.late')}</Text>
             </View>
           ) : (
             <View style={s.badgeGreen}>
-              <Text style={s.badgeGreenText}>Healthy</Text>
+              <Text style={s.badgeGreenText}>✓ {t('farm.care.onTrack')}</Text>
             </View>
           )}
         </View>
 
-        {/* Row 2 — 4 stat pills */}
+        {/* Type + crops row */}
+        <View style={s.typeRow}>
+          <View style={s.typeChip}>
+            <Text style={s.typeChipText}>{farmTypeLabel(farm, t)}</Text>
+          </View>
+          {crops !== '—' && (
+            <Text style={s.cropsText} numberOfLines={1}>{crops}</Text>
+          )}
+        </View>
+
+        {/* Stats pills */}
         <View style={s.pillsRow}>
           <View style={[s.pill, s.pillHealth]}>
-            <Text
-              style={[
-                s.pillValue,
-                {
-                  color:
-                    healthScore >= 70
-                      ? '#1A6B3C'
-                      : healthScore >= 40
-                        ? '#D97706'
-                        : '#DC2626',
-                },
-              ]}
-            >
-              {healthScore}%
+            <Text style={[s.pillVal, { color: health >= 70 ? '#1A6B3C' : health >= 40 ? '#D97706' : '#DC2626' }]}>
+              {health}%
             </Text>
-            <Text style={s.pillLabel}>Health</Text>
+            <Text style={s.pillLabel}>{t('farm.profile.stat.health')}</Text>
           </View>
           <View style={s.pill}>
-            <Text style={[s.pillValue, s.pillValueDark]}>
-              {farm.crops?.length ?? 0}
-            </Text>
-            <Text style={s.pillLabel}>
-              {farm.farmType === 'animal' ? 'Animals' : 'Crops'}
-            </Text>
+            <Text style={[s.pillVal, s.pillValDark]}>{plotCount}</Text>
+            <Text style={s.pillLabel}>{t('farm.stat.crops')}</Text>
           </View>
           <View style={s.pill}>
-            <Text style={[s.pillValue, s.pillValueDark]}>
-              {farm.activitiesThisMonth ?? 0}
-            </Text>
-            <Text style={s.pillLabel}>Tasks</Text>
+            <Text style={[s.pillVal, s.pillValDark]}>{farm.activitiesThisMonth ?? 0}</Text>
+            <Text style={s.pillLabel}>{t('farm.profile.tab.activities')}</Text>
           </View>
           <View style={s.pill}>
-            <Text style={[s.pillValue, s.pillValueDark]}>
-              {farm.workerCount ?? 0}
-            </Text>
-            <Text style={s.pillLabel}>Workers</Text>
+            <Text style={[s.pillVal, s.pillValDark]}>{workerCount}</Text>
+            <Text style={s.pillLabel}>{t('farm.stat.workers')}</Text>
           </View>
         </View>
 
-        {/* Row 3 — action buttons only for farms with overdue tasks */}
-        {overdueCount > 0 && (
-          <View style={s.btnRow}>
-            <TouchableOpacity
-              style={s.btnOutline}
-              onPress={() => navigation.navigate('FarmProfile', { farmId: farm.id })}
-            >
-              <Text style={s.btnOutlineText}>View Details</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={s.btnSolid}
-              onPress={() => navigation.navigate('ActivityForm', { farmId: farm.id })}
-            >
-              <Text style={s.btnSolidText}>Log Activity</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
+        {/* Select caret */}
+        <View style={s.cardFooter}>
+          <Text style={s.cardFooterText}>{t('farm.list.selectFarm')} →</Text>
+        </View>
+      </Pressable>
     );
-
-    // Healthy farms (no overdue): whole card is tappable for navigation
-    if (overdueCount === 0) {
-      return (
-        <TouchableOpacity
-          activeOpacity={0.85}
-          onPress={() => navigation.navigate('FarmProfile', { farmId: farm.id })}
-        >
-          {cardInner}
-        </TouchableOpacity>
-      );
-    }
-
-    return cardInner;
   };
 
-  const listFooter = (
-    <View style={s.dashedCard}>
-      <Text style={s.dashedEmoji}>🌐</Text>
-      <Text style={s.dashedTitle}>Add farm at agroconnect.co.ke</Text>
-      <Text style={s.dashedSub}>Farm setup happens on web</Text>
-    </View>
-  );
+  const isMultiple = farms.length > 1;
 
   return (
     <View style={s.root}>
       <StatusBar backgroundColor="#1A6B3C" barStyle="light-content" />
 
       <View style={s.topBar}>
-        <Text style={s.topBarTitle}>My Farms</Text>
-        <TouchableOpacity
+        <Text style={s.topBarTitle}>
+          {isMultiple ? t('farm.list.selectFarm') : t('farm.list.title')}
+        </Text>
+        <Pressable
           onPress={() => void Linking.openURL('https://agroconnect.co.ke/farms/new')}
+          accessibilityRole="link"
         >
-          <Text style={s.topBarLink}>Create on web →</Text>
-        </TouchableOpacity>
+          <Text style={s.topBarLink}>{t('farm.list.empty.cta')} →</Text>
+        </Pressable>
       </View>
 
       {!isOnline && <OfflineBanner />}
 
-      {worstFarm !== undefined && (
-        <View style={s.alertBar}>
-          <Text style={s.alertBarText}>
-            ⚠️ {worstFarm.name}: {worstFarm.overdueCount} activities overdue
-          </Text>
-        </View>
-      )}
-
       {isLoading ? (
-        <ScrollView style={s.scrollBg} contentContainerStyle={s.content}>
-          <View style={s.skelCard} />
-          <View style={s.skelCard} />
-        </ScrollView>
+        <View style={s.center}>
+          <ActivityIndicator size="large" color="#1A6B3C" />
+        </View>
+      ) : isError ? (
+        <View style={s.center}>
+          <Text style={s.errorText}>{t('common.error.loadFailed')}</Text>
+          <Pressable style={s.retryBtn} onPress={() => void refetch()} accessibilityRole="button">
+            <Text style={s.retryText}>{t('common.retry')}</Text>
+          </Pressable>
+        </View>
       ) : farms.length === 0 ? (
-        <ScrollView style={s.scrollBg} contentContainerStyle={s.content}>
-          <View style={s.emptyState}>
-            <Text style={s.emptyEmoji}>🌐</Text>
-            <Text style={s.emptyTitle}>Create farms on web</Text>
-            <Text style={s.emptyBody}>
-              Visit agroconnect.co.ke on a browser to set up your farms and crops.
-            </Text>
-            <TouchableOpacity
-              style={s.emptyBtn}
-              onPress={() => void Linking.openURL('https://agroconnect.co.ke/farms/new')}
-            >
-              <Text style={s.emptyBtnText}>Open Website</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
+        <View style={s.center}>
+          <Text style={s.emptyEmoji}>🌾</Text>
+          <Text style={s.emptyTitle}>{t('farm.list.empty.webTitle')}</Text>
+          <Text style={s.emptyBody}>{t('farm.list.empty.webBody')}</Text>
+          <Pressable
+            style={s.emptyBtn}
+            onPress={() => void Linking.openURL('https://agroconnect.co.ke/farms/new')}
+            accessibilityRole="link"
+          >
+            <Text style={s.emptyBtnText}>{t('farm.list.empty.openWebsite')}</Text>
+          </Pressable>
+        </View>
       ) : (
-        <FlatList
-          style={s.scrollBg}
-          contentContainerStyle={s.content}
-          data={farms}
-          keyExtractor={(item) => item.id}
-          renderItem={renderFarmCard}
-          ListFooterComponent={listFooter}
-        />
+        <>
+          {isMultiple && (
+            <View style={s.promptBar}>
+              <Text style={s.promptText}>
+                {t('farm.list.selectPrompt', { count: farms.length })}
+              </Text>
+            </View>
+          )}
+          <FlatList
+            style={s.list}
+            contentContainerStyle={s.listContent}
+            data={farms}
+            keyExtractor={(f) => f.id}
+            renderItem={renderCard}
+            showsVerticalScrollIndicator={false}
+          />
+        </>
       )}
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#fff' },
+  root: { flex: 1, backgroundColor: '#F3F4F6' },
 
   topBar: {
     backgroundColor: '#1A6B3C',
-    paddingHorizontal: 12,
-    paddingVertical: 9,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  topBarTitle: { color: '#fff', fontSize: 15, fontWeight: '600' },
-  topBarLink: { color: 'rgba(255,255,255,0.65)', fontSize: 10 },
+  topBarTitle: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  topBarLink:  { color: 'rgba(255,255,255,0.65)', fontSize: 10 },
 
-  alertBar: {
-    backgroundColor: '#FEF3C7',
-    borderLeftWidth: 3,
-    borderLeftColor: '#D97706',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+  promptBar: {
+    backgroundColor: '#EAF4EE',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#D1FAE5',
   },
-  alertBarText: { fontSize: 9, color: '#78350F' },
+  promptText: { fontSize: 11, color: '#0D4A28', fontWeight: '500' },
 
-  scrollBg: { flex: 1, backgroundColor: '#fff' },
-  content: { padding: 11, paddingBottom: 96 },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
 
-  skelCard: { height: 100, backgroundColor: '#F3F4F6', borderRadius: 8, marginBottom: 8 },
-
-  emptyState: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40 },
-  emptyEmoji: { fontSize: 36, marginBottom: 8 },
-  emptyTitle: { fontSize: 13, fontWeight: '700', color: '#111827', marginBottom: 4 },
-  emptyBody: { fontSize: 10, color: '#6B7280', textAlign: 'center', marginBottom: 16 },
-  emptyBtn: { backgroundColor: '#1A6B3C', borderRadius: 6, paddingVertical: 9, paddingHorizontal: 16 },
-  emptyBtnText: { color: '#fff', fontSize: 10, fontWeight: '600' },
+  list:        { flex: 1 },
+  listContent: { padding: 12, paddingBottom: 32 },
 
   card: {
     backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 8,
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
     elevation: 1,
   },
-  cardRow1: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  cardRowLeft: { flex: 1, marginRight: 8 },
-  farmName: { fontSize: 11, fontWeight: '600', color: '#111827' },
-  farmMeta: { fontSize: 9, color: '#6B7280', marginTop: 1 },
+  cardFirst: { marginTop: 0 },
 
-  badgeGreen: { backgroundColor: '#EAF4EE', borderRadius: 8, paddingHorizontal: 6, paddingVertical: 2 },
+  cardHeader:     { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  cardEmoji:      { fontSize: 28, marginRight: 10 },
+  cardHeaderText: { flex: 1, marginRight: 8 },
+  cardName:       { fontSize: 13, fontWeight: '700', color: '#111827' },
+  cardMeta:       { fontSize: 9, color: '#6B7280', marginTop: 2 },
+
+  badgeGreen:     { backgroundColor: '#EAF4EE', borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3 },
   badgeGreenText: { fontSize: 8, fontWeight: '600', color: '#0D4A28' },
-  badgeRed: { backgroundColor: '#FEE2E2', borderRadius: 8, paddingHorizontal: 6, paddingVertical: 2 },
-  badgeRedText: { fontSize: 8, fontWeight: '600', color: '#991B1B' },
+  badgeRed:       { backgroundColor: '#FEE2E2', borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3 },
+  badgeRedText:   { fontSize: 8, fontWeight: '600', color: '#991B1B' },
 
-  pillsRow: { flexDirection: 'row', gap: 3, marginVertical: 5 },
-  pill: { flex: 1, backgroundColor: '#F9FAFB', borderRadius: 3, paddingVertical: 4, alignItems: 'center' },
+  typeRow:      { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
+  typeChip:     { backgroundColor: '#F3F4F6', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
+  typeChipText: { fontSize: 9, fontWeight: '600', color: '#374151' },
+  cropsText:    { fontSize: 9, color: '#6B7280', flex: 1 },
+
+  pillsRow: { flexDirection: 'row', gap: 4, marginBottom: 10 },
+  pill:     { flex: 1, backgroundColor: '#F9FAFB', borderRadius: 5, paddingVertical: 5, alignItems: 'center' },
   pillHealth: { backgroundColor: '#EAF4EE' },
-  pillValue: { fontSize: 10, fontWeight: '700' },
-  pillValueDark: { color: '#111827' },
-  pillLabel: { fontSize: 8, color: '#6B7280' },
+  pillVal:    { fontSize: 12, fontWeight: '700' },
+  pillValDark: { color: '#111827' },
+  pillLabel:  { fontSize: 8, color: '#6B7280', marginTop: 1 },
 
-  btnRow: { flexDirection: 'row', gap: 5, marginTop: 4 },
-  btnOutline: {
-    flex: 1,
-    backgroundColor: '#fff',
-    borderWidth: 1.5,
-    borderColor: '#1A6B3C',
-    borderRadius: 6,
-    paddingVertical: 7,
-  },
-  btnOutlineText: { color: '#1A6B3C', fontSize: 10, fontWeight: '600', textAlign: 'center' },
-  btnSolid: { flex: 1, backgroundColor: '#1A6B3C', borderRadius: 6, paddingVertical: 7 },
-  btnSolidText: { color: '#fff', fontSize: 10, fontWeight: '600', textAlign: 'center' },
+  cardFooter:     { borderTopWidth: 1, borderTopColor: '#F3F4F6', paddingTop: 8, alignItems: 'flex-end' },
+  cardFooterText: { fontSize: 10, fontWeight: '600', color: '#1A6B3C' },
 
-  dashedCard: {
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    borderColor: '#E5E7EB',
-    borderRadius: 8,
-    backgroundColor: '#F9FAFB',
-    alignItems: 'center',
-    padding: 12,
-    marginTop: 4,
-  },
-  dashedEmoji: { fontSize: 18, marginBottom: 3 },
-  dashedTitle: { fontSize: 10, fontWeight: '600', color: '#1A6B3C' },
-  dashedSub: { fontSize: 8, color: '#6B7280', marginTop: 2 },
+  errorText: { fontSize: 12, color: '#374151', marginBottom: 12, textAlign: 'center' },
+  retryBtn:  { backgroundColor: '#1A6B3C', borderRadius: 6, paddingVertical: 9, paddingHorizontal: 20 },
+  retryText: { color: '#fff', fontSize: 10, fontWeight: '600' },
+
+  emptyEmoji: { fontSize: 40, marginBottom: 12 },
+  emptyTitle: { fontSize: 14, fontWeight: '700', color: '#111827', marginBottom: 6, textAlign: 'center' },
+  emptyBody:  { fontSize: 11, color: '#6B7280', textAlign: 'center', marginBottom: 16, lineHeight: 16 },
+  emptyBtn:   { backgroundColor: '#1A6B3C', borderRadius: 6, paddingVertical: 10, paddingHorizontal: 20 },
+  emptyBtnText: { color: '#fff', fontSize: 11, fontWeight: '600' },
 });

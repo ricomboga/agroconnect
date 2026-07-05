@@ -9,6 +9,8 @@ export type AuthStackParamList = {
   Login:          undefined;
   Register:       undefined;
   OtpVerify:      { phone: string };
+  ForgotPin:      undefined;
+  ResetPin:       { phone: string };
 };
 
 export type AppTabParamList = {
@@ -18,8 +20,9 @@ export type AppTabParamList = {
   Market:    undefined;
   Finance:   undefined;
   Inventory: undefined;
-  Community: undefined;
-  Profile:   undefined;
+  Community:         undefined;
+  FarmersCommunity:  undefined;
+  Profile:           undefined;
   Govt:      undefined;
   Insights:  undefined;
 };
@@ -45,12 +48,6 @@ export type DiagnoseStackParamList = {
   DiagnosisInput:  { mode: 'text' | 'photo' | 'both' };
   DiagnosisResult: { diagnosisId: string; farmId?: string };
   SupplierProducts: { productName: string };
-  DiagnoseHome:    undefined;
-  DiagnoseCamera:  { farmId: string };
-  DiagnoseSubject: { farmId: string; photoUris: string[] };
-  DiagnoseLoading: { diagnosisId: string; farmId: string };
-  DiagnoseResult:  { diagnosisId: string; farmId?: string };
-  DiagnoseFeedback: { diagnosisId: string };
 };
 
 export type MarketStackParamList = {
@@ -63,12 +60,13 @@ export type MarketStackParamList = {
 };
 
 export type FinanceStackParamList = {
-  FinanceHome:       undefined;
-  AddTransaction:    undefined;
-  CreditScoreDetail: undefined;
-  LoanProducts:      undefined;
-  LoanApplication:   { productId: string };
-  LoanStatus:        { loanId: string };
+  FinanceHome:         undefined;
+  AddTransaction:      undefined;
+  CreditScoreDetail:   undefined;
+  LoanProducts:        undefined;
+  LoanProductDetail:   { productId: string };
+  LoanApplication:     { productId: string };
+  LoanStatus:          { loanId: string };
 };
 
 export type CommunityStackParamList = {
@@ -104,4 +102,11 @@ export type InsightsStackParamList = {
 export type StockStackParamList = {
   InventoryHome: undefined;
   AddStockScreen: undefined;
+  RestockScreen: { itemId: string; itemName: string; unit: string; remainingQty: number; supplier: string; costPerUnit: number };
+  RecordUseScreen: { itemId: string; itemName: string; unit: string; remainingQty: number };
+  RecordAnimalProductScreen: { productType: string; existingId?: string; existingQty?: number; farmId: string; animalGroupId: string; pricePerUnit: number };
+  RecordHarvestSaleScreen: { harvestId: string; cropName: string; remainingKg: number; estimatedPricePerKg: number };
+  UpdateHarvestStockScreen: { harvestId: string; cropName: string; remainingKg: number };
+  AddHarvestScreen: undefined;
+  AddCollectionScreen: { productType?: string };
 };

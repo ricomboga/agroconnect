@@ -26,6 +26,11 @@ export interface Farm {
   ownerId: string;
   plots: FarmPlot[];
   createdAt: string;
+  // Stats added by listFarms
+  overdueCount?: number;
+  healthScore?: number;
+  workerCount?: number;
+  activitiesThisMonth?: number;
 }
 
 export interface FarmSummary {
@@ -64,8 +69,9 @@ export interface ScheduledActivity {
   title: string;
   activityType: string;
   activityEmoji: string;
-  status: 'overdue' | 'today' | 'this_week' | 'upcoming';
+  status: 'overdue' | 'today' | 'this_week' | 'upcoming' | 'completed' | 'skipped';
   scheduledDate: string;
+  completedDate: string | null;
   plotName: string | null;
   cropName: string | null;
   animalName: string | null;

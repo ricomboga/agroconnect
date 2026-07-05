@@ -2,11 +2,11 @@ import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useInventorySummary } from '../../hooks/useInventory';
-import { farmApi, type Farm } from '../../api/farm';
+import type { AnimalProductToday } from '../../hooks/useInventory';
 import type { AppTabParamList } from '../../navigation/types';
+import { getProductConfig, productLabel } from '../../constants/animalProducts';
 
 type WidgetNav = BottomTabNavigationProp<AppTabParamList, 'Home'>;
 
@@ -22,23 +22,8 @@ export function InventorySummaryWidget() {
 
   const { data: summary } = useInventorySummary();
 
-  // Reuse the farms cache (same queryKey as useDashboardData) for navigation
-  const { data: farmsData } = useQuery<{ data: Farm[] }>({
-    queryKey: ['farms'],
-    queryFn: () => farmApi.list({ pageSize: 10 }),
-    staleTime: 5 * 60 * 1000,
-  });
-  const primaryFarmId =
-    farmsData?.data?.find((f: Farm) => f.status === 'active')?.id ??
-    farmsData?.data?.[0]?.id;
-
   const goToInventory = () => {
-    if (primaryFarmId) {
-      navigation.navigate('Farm', {
-        screen: 'InputLog',
-        params: { farmId: primaryFarmId },
-      } as never);
-    }
+    navigation.navigate('Inventory', { screen: 'InventoryHome' } as never);
   };
 
   if (!summary) return null;
@@ -72,15 +57,21 @@ export function InventorySummaryWidget() {
         </Text>
       </View>
 
-      {/* Row 4 — Eggs today (conditional) */}
-      {summary.eggsCollectedToday != null && (
-        <View style={s.row}>
-          <Text style={s.label}>{t('dashboard.inventory.eggsToday')}</Text>
-          <Text style={[s.value, { color: '#1A6B3C' }]}>
-            {t('dashboard.inventory.eggsTrays', { count: summary.eggsCollectedToday })}
-          </Text>
-        </View>
-      )}
+      {/* Row 4+ — Animal products collected today (one row per product type) */}
+      {(summary.animalProductsToday ?? []).map((p: AnimalProductToday) => {
+        const config = getProductConfig(p.productType);
+        const unit = t(`inventory.units.${config.unit}`, { defaultValue: config.unit });
+        return (
+          <View style={s.row} key={p.productType}>
+            <Text style={s.label}>
+              {config.emoji} {t('dashboard.inventory.productToday', { product: productLabel(p.productType, t) })}
+            </Text>
+            <Text style={[s.value, { color: '#1A6B3C' }]}>
+              {p.quantity} {unit}
+            </Text>
+          </View>
+        );
+      })}
 
       <View style={s.divider} />
 

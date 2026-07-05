@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useFocusEffect } from '@react-navigation/native';
 import type { FarmStackParamList } from '../../navigation/types';
 import { useActivities } from '../../hooks/useActivities';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
@@ -40,6 +41,12 @@ export function ActivityCalendarScreen({ navigation, route }: Props) {
 
   const { fromDate, toDate, daysInMonth, firstDayOfWeek } = monthBounds(year, month);
   const { data, isLoading, isError, refetch } = useActivities({ farmId, fromDate, toDate });
+
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch]),
+  );
 
   const activities: Activity[] = data?.data ?? [];
 

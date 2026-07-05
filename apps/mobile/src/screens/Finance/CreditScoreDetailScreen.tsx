@@ -19,10 +19,10 @@ import type { FinanceStackParamList } from '../../navigation/types';
 type Props = NativeStackScreenProps<FinanceStackParamList, 'CreditScoreDetail'>;
 
 const BAND_COLOR: Record<CreditBand, string> = {
-  A: '#1B5E20', B: '#1565C0', C: '#E65100', D: '#B71C1C',
+  A: '#1B5E20', B: '#2E8B57', C: '#E65100', D: '#B71C1C', ineligible: '#616161',
 };
 const BAND_BG: Record<CreditBand, string> = {
-  A: '#E8F5E9', B: '#E3F2FD', C: '#FFF3E0', D: '#FFEBEE',
+  A: '#E8F5E9', B: '#EAF4EE', C: '#FFF3E0', D: '#FFEBEE', ineligible: '#EEEEEE',
 };
 
 type CompKey = 'yield' | 'inputs' | 'activities' | 'platform';
@@ -51,7 +51,7 @@ export function CreditScoreDetailScreen({ navigation }: Props) {
   if (scoreQuery.isLoading) {
     return (
       <SafeAreaView style={s.safe}>
-        <View style={s.center}><ActivityIndicator size="large" color="#1565C0" /></View>
+        <View style={s.center}><ActivityIndicator size="large" color="#1A6B3C" /></View>
       </SafeAreaView>
     );
   }
@@ -161,19 +161,19 @@ const s = StyleSheet.create({
   safe:           { flex: 1, backgroundColor: '#FAFAFA' },
   center:         { flex: 1, justifyContent: 'center', alignItems: 'center' },
   errorText:      { fontSize: 15, color: '#B71C1C', marginBottom: 12 },
-  retryBtn:       { minHeight: 48, justifyContent: 'center', paddingHorizontal: 24, backgroundColor: '#E3F2FD', borderRadius: 8 },
-  retryLabel:     { fontSize: 15, color: '#1565C0', fontWeight: '600' },
+  retryBtn:       { minHeight: 48, justifyContent: 'center', paddingHorizontal: 24, backgroundColor: '#EAF4EE', borderRadius: 8 },
+  retryLabel:     { fontSize: 15, color: '#1A6B3C', fontWeight: '600' },
 
   topBar:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#FFF', borderBottomWidth: 1, borderBottomColor: '#EEEEEE' },
   backBtn:        { minWidth: 60, minHeight: 44, justifyContent: 'center' },
-  backLabel:      { fontSize: 15, color: '#1565C0', fontWeight: '600' },
+  backLabel:      { fontSize: 15, color: '#1A6B3C', fontWeight: '600' },
   topTitle:       { fontSize: 16, fontWeight: '700', color: '#1A1A1A' },
 
   scroll:         { padding: 16, paddingBottom: 40 },
 
-  summaryCard:    { borderRadius: 16, borderWidth: 1.5, padding: 16, marginBottom: 20 },
-  summaryRow:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  bigScore:       { fontSize: 52, fontWeight: '800' },
+  summaryCard:    { borderRadius: 16, borderWidth: 1.5, padding: 12, marginBottom: 16 },
+  summaryRow:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  bigScore:       { fontSize: 36, fontWeight: '800' },
   outOf:          { fontSize: 13, color: '#757575' },
   bandBadge:      { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20 },
   bandText:       { color: '#FFF', fontSize: 16, fontWeight: '700' },
@@ -185,7 +185,7 @@ const s = StyleSheet.create({
   compScore:      { fontSize: 15, fontWeight: '700' },
   barTrack:       { height: 10, backgroundColor: '#E0E0E0', borderRadius: 5, overflow: 'hidden', marginBottom: 12 },
   barFill:        { height: 10, borderRadius: 5 },
-  improveTip:     { fontSize: 11, fontWeight: '700', color: '#888', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
+  improveTip:     { fontSize: 14, fontWeight: '700', color: '#888', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
   tipText:        { fontSize: 13, color: '#555', lineHeight: 18 },
 
   msgBox:         { borderRadius: 10, padding: 12, marginBottom: 12 },

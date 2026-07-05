@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { FarmStackParamList } from '../../navigation/types';
 import { useFarm, useFarmSchedule, useFarmWorkers, useFarms, useFarmAnimals } from '../../hooks/useFarms';
+import { useFarmStore } from '../../store/farm.store';
 import type { Farm, FarmWorker, ScheduledActivity } from '../../api/farm';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
 import { LoadingScreen } from '../../components/Common/LoadingScreen';
@@ -90,6 +91,46 @@ function getLogBtnKey(activityType: string): string {
     case 'pesticide':   return 'activity.schedule.btn.logSpraying';
     default:            return 'activity.schedule.btn.logNow';
   }
+}
+
+// Progress bar showing urgency/time-to-due for a task
+function TaskProgressBar({
+  status,
+  daysUntil,
+}: {
+  status: string;
+  daysUntil: number | null;
+}) {
+  if (status === 'completed' || status === 'skipped') return null;
+
+  let progress: number;
+  let fillColor: string;
+
+  if (status === 'overdue') {
+    progress = 100;
+    fillColor = '#DC2626';
+  } else if (status === 'today') {
+    progress = 100;
+    fillColor = '#D97706';
+  } else if (status === 'this_week') {
+    const days = daysUntil ?? 7;
+    progress = Math.max(12, Math.round(((7 - days) / 7) * 100));
+    fillColor = days <= 2 ? '#D97706' : '#16A34A';
+  } else {
+    // upcoming
+    const days = daysUntil ?? 14;
+    progress = Math.max(5, Math.round(((21 - Math.min(days, 21)) / 21) * 100));
+    fillColor = '#9CA3AF';
+  }
+
+  const empty = 100 - progress;
+
+  return (
+    <View style={mt.progressTrack}>
+      <View style={{ flex: progress, backgroundColor: fillColor }} />
+      {empty > 0 && <View style={{ flex: empty }} />}
+    </View>
+  );
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -588,19 +629,24 @@ function OnTrackCareCard({ group }: { group: CropGroup }) {
         <Text style={styles.careCardTitle}>
           {emoji} {group.name} {t('farm.care.careSuffix')}
         </Text>
-        <View style={styles.badgeAmber}>
-          <Text style={[styles.badgeTextAmber, styles.careBadgeText]}>
+        <View style={styles.badgeGreen}>
+          <Text style={[styles.badgeTextGreen, styles.careBadgeText]}>
             {t('farm.care.onTrack')}
           </Text>
         </View>
       </View>
 
       {group.upcomingActs.map((act, i) => {
+        const isDone = act.status === 'completed' || act.status === 'skipped';
         const isToday = act.status === 'today';
-        const badge = isToday
+        const badge = isDone
           ? { view: styles.badgeGreen, text: styles.badgeTextGreen, label: t('farm.care.done') }
+          : isToday
+          ? { view: styles.badgeAmber, text: styles.badgeTextAmber, label: t('activity.schedule.badge.today') }
           : { view: styles.badgeBlue, text: styles.badgeTextBlue, label: t('farm.care.soon') };
-        const sub = isToday
+        const sub = isDone
+          ? t('farm.care.doneSub', { date: formatShortDate((act as ScheduledActivity & { completedDate?: string | null }).completedDate ?? act.scheduledDate) })
+          : isToday
           ? t('farm.care.doneSub', { date: formatShortDate(act.scheduledDate) })
           : act.daysUntil != null
           ? t('farm.care.dueOnDate', { date: formatShortDate(act.scheduledDate), count: act.daysUntil })
@@ -615,11 +661,11 @@ function OnTrackCareCard({ group }: { group: CropGroup }) {
             ]}
           >
             <Text style={styles.careRowEmoji}>
-              {isToday ? '✅' : act.activityEmoji}
+              {isDone ? '✅' : act.activityEmoji}
             </Text>
             <View style={styles.careRowBody}>
               <Text style={styles.careRowTitle}>
-                {activityDisplayLabel(act.activityType)}{isToday ? ` — ${t('farm.care.done')}` : ''}
+                {activityDisplayLabel(act.activityType)}{isDone ? ` — ${t('farm.care.done')}` : ''}
               </Text>
               <Text style={styles.careRowSub}>{sub}</Text>
             </View>
@@ -639,11 +685,13 @@ const MyTasksTab = ({
   farmId,
   currentUserId,
   isWorkerRole,
+  hasWorkers,
   onLogNow,
 }: {
   farmId: string;
   currentUserId: string;
   isWorkerRole: boolean;
+  hasWorkers: boolean;
   onLogNow: (activity: ScheduledActivity) => void;
 }) => {
   const { t } = useTranslation();
@@ -654,17 +702,55 @@ const MyTasksTab = ({
     [scheduleQ.data],
   );
 
-  const overdue = useMemo(() => allActs.filter((a) => a.status === 'overdue'), [allActs]);
-  const today   = useMemo(() => allActs.filter((a) => a.status === 'today'), [allActs]);
-  const future  = useMemo(
-    () => allActs.filter((a) => a.status === 'this_week' || a.status === 'upcoming'),
+  // ── Group 1: Pending = overdue + today ──────────────────────────────────────
+  const pending = useMemo(
+    () => allActs.filter((a) => a.status === 'overdue' || a.status === 'today'),
     [allActs],
   );
-  const done = useMemo(
+
+  // ── Group 2: Completed — sub-divided by recency ─────────────────────────────
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const weekAgoIso = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const monthStartIso = new Date(
+    new Date().getFullYear(),
+    new Date().getMonth(),
+    1,
+  ).toISOString().slice(0, 10);
+
+  const completedActs = useMemo(
     () =>
-      allActs
-        .filter((a): a is ActivityWithDone => Boolean((a as ActivityWithDone).completedDate))
-        .slice(0, 5),
+      allActs.filter(
+        (a): a is ActivityWithDone =>
+          (a.status === 'completed' || a.status === 'skipped') &&
+          Boolean((a as ActivityWithDone).completedDate),
+      ),
+    [allActs],
+  );
+
+  const completedToday = useMemo(
+    () => completedActs.filter((a) => a.completedDate!.slice(0, 10) === todayIso),
+    [completedActs, todayIso],
+  );
+  const completedThisWeek = useMemo(
+    () =>
+      completedActs.filter((a) => {
+        const d = a.completedDate!.slice(0, 10);
+        return d >= weekAgoIso && d < todayIso;
+      }),
+    [completedActs, weekAgoIso, todayIso],
+  );
+  const completedThisMonth = useMemo(
+    () =>
+      completedActs.filter((a) => {
+        const d = a.completedDate!.slice(0, 10);
+        return d >= monthStartIso && d < weekAgoIso;
+      }),
+    [completedActs, monthStartIso, weekAgoIso],
+  );
+
+  // ── Group 3: Upcoming = this_week + upcoming ────────────────────────────────
+  const upcoming = useMemo(
+    () => allActs.filter((a) => a.status === 'this_week' || a.status === 'upcoming'),
     [allActs],
   );
 
@@ -676,7 +762,12 @@ const MyTasksTab = ({
     );
   }
 
-  if (overdue.length === 0 && today.length === 0 && future.length === 0 && done.length === 0) {
+  const hasAny =
+    pending.length > 0 ||
+    completedActs.length > 0 ||
+    upcoming.length > 0;
+
+  if (!hasAny) {
     return (
       <View style={styles.tabCenter}>
         <Text style={styles.allCaughtUp}>{t('farm.schedule.allCaughtUp')}</Text>
@@ -684,188 +775,226 @@ const MyTasksTab = ({
     );
   }
 
-  const todayDateLabel = new Date().toLocaleDateString('en-KE', { month: 'short', day: 'numeric' });
-  const overdueSectionTitle = isWorkerRole
-    ? '⚠️ Your Overdue Tasks'
-    : t('activity.schedule.overdue.sectionTitle');
-  const futureSectionLabel = isWorkerRole
-    ? t('farm.schedule.sectionUpcoming')
-    : t('farm.schedule.sectionThisWeek');
+  // ── Reusable card renderer ──────────────────────────────────────────────────
+
+  const renderPendingCard = (activity: ActivityWithDone) => {
+    const emoji = resolveActivityEmoji(activity.activityType);
+    const isOverdue = activity.status === 'overdue';
+    const isAssigned = activity.assignedToWorkerId === currentUserId;
+
+    return (
+      <View
+        key={activity.id}
+        style={[mt.pendingCard, isOverdue ? mt.pendingCardRed : mt.pendingCardAmber]}
+      >
+        <View style={mt.cardRow}>
+          <Text style={mt.cardTitle} numberOfLines={1}>
+            {emoji} {activity.title}
+          </Text>
+          {isOverdue ? (
+            <View style={mt.badgeLate}>
+              <Text style={mt.badgeLateText}>
+                {t('activity.schedule.sub.daysLate', { daysLate: activity.daysLate ?? 0 })}
+              </Text>
+            </View>
+          ) : (
+            <View style={mt.badgeToday}>
+              <Text style={mt.badgeTodayText}>{t('activity.schedule.badge.today')}</Text>
+            </View>
+          )}
+        </View>
+        {(activity.plotName ?? activity.cropName ?? activity.animalName) ? (
+          <Text style={mt.cardSub}>
+            {[activity.plotName, activity.cropName ?? activity.animalName]
+              .filter(Boolean)
+              .join(' · ')}
+          </Text>
+        ) : null}
+        {isAssigned && activity.assignedToWorkerName ? (
+          <View style={mt.workerChip}>
+            <View style={mt.workerInitialCircle}>
+              <Text style={mt.workerInitialText}>
+                {getWorkerInitials(activity.assignedToWorkerName)}
+              </Text>
+            </View>
+            <Text style={mt.workerChipLabel}>{t('activity.schedule.assignedToYou')}</Text>
+          </View>
+        ) : null}
+        {activity.aiReason ? (
+          <View style={mt.aiBox}>
+            <Text style={mt.aiBoxTitle}>
+              {isOverdue
+                ? (isWorkerRole ? t('activity.schedule.whyUrgentLabel') : t('activity.schedule.whyNowLabel'))
+                : t('activity.schedule.whyNowLabel')}
+            </Text>
+            <Text style={mt.aiBoxBody}>{activity.aiReason}</Text>
+          </View>
+        ) : null}
+        <TaskProgressBar status={activity.status} daysUntil={activity.daysUntil} />
+        <View style={mt.actionBtnRow}>
+          <Pressable
+            style={[isOverdue ? mt.actionBtnRed : mt.actionBtnGreen, mt.actionBtnFlex]}
+            onPress={() => onLogNow(activity)}
+            accessibilityRole="button"
+          >
+            <Text style={mt.actionBtnText}>
+              {isOverdue ? t(getLogBtnKey(activity.activityType)) : t('activity.schedule.btn.logDone')}
+            </Text>
+          </Pressable>
+          {hasWorkers && !isWorkerRole && !activity.assignedToWorkerId && (
+            <Pressable
+              style={mt.assignChip}
+              onPress={() => onLogNow(activity)}
+              accessibilityRole="button"
+            >
+              <Text style={mt.assignChipText}>{t('activity.schedule.btn.assign')}</Text>
+            </Pressable>
+          )}
+        </View>
+      </View>
+    );
+  };
+
+  const renderCompletedCard = (activity: ActivityWithDone) => {
+    const emoji = resolveActivityEmoji(activity.activityType);
+    const isSkipped = activity.status === 'skipped';
+    return (
+      <View key={activity.id} style={[mt.card, mt.cardGreenLeft, mt.cardDoneOpacity]}>
+        <View style={mt.cardRow}>
+          <Text style={mt.cardTitle} numberOfLines={1}>
+            {isSkipped ? '⏭ ' : '✅ '}{activity.title}
+          </Text>
+          <View style={isSkipped ? mt.badgeGrey : mt.badgeDone}>
+            <Text style={isSkipped ? mt.badgeGreyText : mt.badgeDoneText}>
+              {isSkipped ? t('activity.status.skipped') : t('activity.schedule.badge.done')}
+            </Text>
+          </View>
+        </View>
+        {(activity.plotName ?? activity.cropName ?? activity.animalName) ? (
+          <Text style={mt.cardSub}>
+            {[activity.plotName, activity.cropName ?? activity.animalName]
+              .filter(Boolean)
+              .join(' · ')}
+          </Text>
+        ) : null}
+        {activity.completedDate ? (
+          <Text style={mt.cardSub}>
+            {t('activity.schedule.completedOnDate', {
+              date: formatShortDate(activity.completedDate),
+            })}
+          </Text>
+        ) : null}
+      </View>
+    );
+  };
+
+  const renderUpcomingCard = (activity: ActivityWithDone) => {
+    const emoji = resolveActivityEmoji(activity.activityType);
+    return (
+      <View key={activity.id} style={[mt.card, mt.cardGreyLeft]}>
+        <View style={mt.cardRow}>
+          <Text style={mt.cardTitle} numberOfLines={1}>
+            {emoji} {activity.title}
+          </Text>
+          <View style={mt.badgeBlue}>
+            <Text style={mt.badgeBlueText}>{formatShortDate(activity.scheduledDate)}</Text>
+          </View>
+        </View>
+        {(activity.plotName ?? activity.cropName ?? activity.animalName) ? (
+          <Text style={mt.cardSub}>
+            {[activity.plotName, activity.cropName ?? activity.animalName]
+              .filter(Boolean)
+              .join(' · ')}
+          </Text>
+        ) : null}
+        {activity.aiReason ? (
+          <View style={mt.aiBox}>
+            <Text style={mt.aiBoxTitle}>{t('activity.schedule.whyThenLabel')}</Text>
+            <Text style={mt.aiBoxBody}>{activity.aiReason}</Text>
+          </View>
+        ) : null}
+        <TaskProgressBar status={activity.status} daysUntil={activity.daysUntil} />
+        <View style={mt.actionBtnRow}>
+          <Pressable
+            style={[mt.actionBtnOutline, mt.actionBtnFlex]}
+            onPress={() => onLogNow(activity)}
+            accessibilityRole="button"
+          >
+            <Text style={mt.actionBtnOutlineText}>{t('activity.schedule.btn.logEarly')}</Text>
+          </Pressable>
+          {hasWorkers && !isWorkerRole && !activity.assignedToWorkerId && (
+            <Pressable
+              style={mt.assignChip}
+              onPress={() => onLogNow(activity)}
+              accessibilityRole="button"
+            >
+              <Text style={mt.assignChipText}>{t('activity.schedule.btn.assign')}</Text>
+            </Pressable>
+          )}
+        </View>
+      </View>
+    );
+  };
+
+  const hasCompleted =
+    completedToday.length > 0 || completedThisWeek.length > 0 || completedThisMonth.length > 0;
 
   return (
     <ScrollView contentContainerStyle={mt.scrollPad}>
 
-      {/* ── SECTION 1: OVERDUE ── */}
-      {overdue.length > 0 && (
-        <View style={mt.overdueContainer}>
-          <Text style={mt.overdueSectionTitle}>{overdueSectionTitle}</Text>
-          {overdue.map((activity) => {
-            const emoji = resolveActivityEmoji(activity.activityType);
-            const isAssigned = activity.assignedToWorkerId === currentUserId;
-            return (
-              <View key={activity.id} style={mt.overdueCard}>
-                <View style={mt.cardRow}>
-                  <Text style={mt.cardTitle} numberOfLines={1}>
-                    {emoji} {activity.title}
-                  </Text>
-                  <View style={mt.badgeLate}>
-                    <Text style={mt.badgeLateText}>
-                      {t('activity.schedule.sub.daysLate', { daysLate: activity.daysLate ?? 0 })}
-                    </Text>
-                  </View>
-                </View>
-                {(activity.plotName ?? activity.cropName) ? (
-                  <Text style={mt.cardSub}>
-                    {[activity.plotName, activity.cropName].filter(Boolean).join(' · ')}
-                  </Text>
-                ) : null}
-                {isAssigned && activity.assignedToWorkerName ? (
-                  <View style={mt.workerChip}>
-                    <View style={mt.workerInitialCircle}>
-                      <Text style={mt.workerInitialText}>
-                        {getWorkerInitials(activity.assignedToWorkerName)}
-                      </Text>
-                    </View>
-                    <Text style={mt.workerChipLabel}>
-                      {t('activity.schedule.assignedToYou')}
-                    </Text>
-                  </View>
-                ) : null}
-                {activity.aiReason ? (
-                  <View style={mt.aiBox}>
-                    <Text style={mt.aiBoxTitle}>
-                      {isWorkerRole
-                        ? t('activity.schedule.whyUrgentLabel')
-                        : t('activity.schedule.whyNowLabel')}
-                    </Text>
-                    <Text style={mt.aiBoxBody}>{activity.aiReason}</Text>
-                  </View>
-                ) : null}
-                <Pressable
-                  style={mt.actionBtnRed}
-                  onPress={() => onLogNow(activity)}
-                  accessibilityRole="button"
-                >
-                  <Text style={mt.actionBtnText}>{t(getLogBtnKey(activity.activityType))}</Text>
-                </Pressable>
-              </View>
-            );
-          })}
+      {/* ── GROUP 1: PENDING TASKS (overdue + today) ── */}
+      {pending.length > 0 && (
+        <View style={mt.groupBlock}>
+          <View style={mt.groupHeader}>
+            <Text style={mt.groupHeaderText}>{t('farm.schedule.groupPending')}</Text>
+            <View style={mt.groupCountBadge}>
+              <Text style={mt.groupCountText}>{pending.length}</Text>
+            </View>
+          </View>
+          {pending.map(renderPendingCard)}
         </View>
       )}
 
-      {/* ── SECTION 2: TODAY ── */}
-      {today.length > 0 && (
-        <View>
-          <Text style={mt.sectionLabel}>
-            {t('activity.schedule.todaySection', { date: todayDateLabel })}
-          </Text>
-          {today.map((activity) => {
-            const emoji = resolveActivityEmoji(activity.activityType);
-            const isAssigned = activity.assignedToWorkerId === currentUserId;
-            return (
-              <View key={activity.id} style={[mt.card, mt.cardAmberLeft]}>
-                <View style={mt.cardRow}>
-                  <Text style={mt.cardTitle} numberOfLines={1}>
-                    {emoji} {activity.title}
-                  </Text>
-                  <View style={mt.badgeToday}>
-                    <Text style={mt.badgeTodayText}>
-                      {t('activity.schedule.badge.today')}
-                    </Text>
-                  </View>
-                </View>
-                {(activity.plotName ?? activity.cropName) ? (
-                  <Text style={mt.cardSub}>
-                    {[activity.plotName, activity.cropName].filter(Boolean).join(' · ')}
-                  </Text>
-                ) : null}
-                {isAssigned && activity.assignedToWorkerName ? (
-                  <View style={mt.workerChip}>
-                    <View style={mt.workerInitialCircle}>
-                      <Text style={mt.workerInitialText}>
-                        {getWorkerInitials(activity.assignedToWorkerName)}
-                      </Text>
-                    </View>
-                    <Text style={mt.workerChipLabel}>
-                      {t('activity.schedule.assignedToYou')}
-                    </Text>
-                  </View>
-                ) : null}
-                <Pressable
-                  style={mt.actionBtnGreen}
-                  onPress={() => onLogNow(activity)}
-                  accessibilityRole="button"
-                >
-                  <Text style={mt.actionBtnText}>{t('activity.schedule.btn.logDone')}</Text>
-                </Pressable>
-              </View>
-            );
-          })}
+      {/* ── GROUP 2: COMPLETED TASKS ── */}
+      {hasCompleted && (
+        <View style={mt.groupBlock}>
+          <View style={mt.groupHeader}>
+            <Text style={mt.groupHeaderText}>{t('farm.schedule.groupCompleted')}</Text>
+            <View style={[mt.groupCountBadge, mt.groupCountBadgeGreen]}>
+              <Text style={mt.groupCountText}>{completedActs.length}</Text>
+            </View>
+          </View>
+          {completedToday.length > 0 && (
+            <>
+              <Text style={mt.subGroupLabel}>{t('farm.schedule.subToday')}</Text>
+              {completedToday.map(renderCompletedCard)}
+            </>
+          )}
+          {completedThisWeek.length > 0 && (
+            <>
+              <Text style={mt.subGroupLabel}>{t('farm.schedule.subThisWeek')}</Text>
+              {completedThisWeek.map(renderCompletedCard)}
+            </>
+          )}
+          {completedThisMonth.length > 0 && (
+            <>
+              <Text style={mt.subGroupLabel}>{t('farm.schedule.subThisMonth')}</Text>
+              {completedThisMonth.map(renderCompletedCard)}
+            </>
+          )}
         </View>
       )}
 
-      {/* ── SECTION 3: THIS WEEK / UPCOMING (single group, no date sub-headers) ── */}
-      {future.length > 0 && (
-        <View>
-          <Text style={mt.sectionLabel}>{futureSectionLabel}</Text>
-          {future.map((activity) => {
-            const emoji = resolveActivityEmoji(activity.activityType);
-            return (
-              <View key={activity.id} style={[mt.card, mt.cardGreyLeft]}>
-                <View style={mt.cardRow}>
-                  <Text style={mt.cardTitle} numberOfLines={1}>
-                    {emoji} {activity.title}
-                  </Text>
-                  <View style={mt.badgeBlue}>
-                    <Text style={mt.badgeBlueText}>
-                      {formatShortDate(activity.scheduledDate)}
-                    </Text>
-                  </View>
-                </View>
-                {(activity.plotName ?? activity.cropName) ? (
-                  <Text style={mt.cardSub}>
-                    {[activity.plotName, activity.cropName].filter(Boolean).join(' · ')}
-                  </Text>
-                ) : null}
-                {activity.aiReason ? (
-                  <View style={mt.aiBox}>
-                    <Text style={mt.aiBoxTitle}>{t('activity.schedule.whyThenLabel')}</Text>
-                    <Text style={mt.aiBoxBody}>{activity.aiReason}</Text>
-                  </View>
-                ) : null}
-              </View>
-            );
-          })}
-        </View>
-      )}
-
-      {/* ── SECTION 4: DONE ── */}
-      {done.length > 0 && (
-        <View>
-          <Text style={mt.sectionLabel}>{t('activity.schedule.completedThisMonth')}</Text>
-          {done.map((activity) => {
-            const emoji = resolveActivityEmoji(activity.activityType);
-            return (
-              <View key={activity.id} style={[mt.card, mt.cardGreenLeft, mt.cardDoneOpacity]}>
-                <View style={mt.cardRow}>
-                  <Text style={mt.cardTitle} numberOfLines={1}>
-                    {emoji} {activity.title}
-                  </Text>
-                  <View style={mt.badgeDone}>
-                    <Text style={mt.badgeDoneText}>{t('activity.schedule.badge.done')}</Text>
-                  </View>
-                </View>
-                {activity.completedDate ? (
-                  <Text style={mt.cardSub}>
-                    {t('activity.schedule.completedOnDate', {
-                      date: formatShortDate(activity.completedDate),
-                    })}
-                  </Text>
-                ) : null}
-              </View>
-            );
-          })}
+      {/* ── GROUP 3: UPCOMING TASKS (this week + later) ── */}
+      {upcoming.length > 0 && (
+        <View style={mt.groupBlock}>
+          <View style={mt.groupHeader}>
+            <Text style={mt.groupHeaderText}>{t('farm.schedule.groupUpcoming')}</Text>
+            <View style={[mt.groupCountBadge, mt.groupCountBadgeBlue]}>
+              <Text style={mt.groupCountText}>{upcoming.length}</Text>
+            </View>
+          </View>
+          {upcoming.map(renderUpcomingCard)}
         </View>
       )}
     </ScrollView>
@@ -992,6 +1121,7 @@ export function FarmProfileScreen({ navigation, route }: Props) {
   const isWorker = user?.role === 'farm_worker';
   const canManage = !isWorker;
 
+  const setActiveFarmId = useFarmStore((s) => s.setActiveFarmId);
   const [farmId, setFarmId] = useState(initialFarmId);
   const [activeTab, setActiveTab] = useState<ProfileTab>(
     initialTab ?? (isWorker ? 'my_tasks' : 'overview'),
@@ -1066,7 +1196,7 @@ export function FarmProfileScreen({ navigation, route }: Props) {
           allFarms={allFarms}
           activeTab={activeTab}
           onBack={handleBack}
-          onSwitchFarm={(id) => setFarmId(id)}
+          onSwitchFarm={(id) => { setFarmId(id); setActiveFarmId(id); }}
           onAddActivity={() => navigation.navigate('ActivityForm', { farmId })}
         />
       )}
@@ -1122,6 +1252,7 @@ export function FarmProfileScreen({ navigation, route }: Props) {
             farmId={farmId}
             currentUserId={user?.id ?? ''}
             isWorkerRole={isWorker}
+            hasWorkers={workers.length > 0}
             onLogNow={setSelectedActivity}
           />
         </View>
@@ -1413,7 +1544,60 @@ const styles = StyleSheet.create({
 const mt = StyleSheet.create({
   scrollPad: { padding: 11, paddingBottom: 88 },
 
-  // Overdue container
+  // ── Group block ────────────────────────────────────────────────────────────
+  groupBlock: {
+    marginBottom: 12,
+  },
+  groupHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 6,
+  },
+  groupHeaderText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#374151',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    flex: 1,
+  },
+  groupCountBadge: {
+    backgroundColor: '#DC2626',
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 5,
+  },
+  groupCountBadgeGreen: { backgroundColor: '#1A6B3C' },
+  groupCountBadgeBlue:  { backgroundColor: '#1D4ED8' },
+  groupCountText: { fontSize: 8, fontWeight: '700', color: '#fff' },
+
+  // Sub-group label (Today / This Week / This Month inside Completed)
+  subGroupLabel: {
+    fontSize: 8,
+    fontWeight: '700',
+    color: '#9CA3AF',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginTop: 4,
+    marginBottom: 4,
+  },
+
+  // Pending cards (replaces overdueCard / today card)
+  pendingCard: {
+    backgroundColor: '#fff',
+    borderRadius: 7,
+    padding: 10,
+    borderWidth: 1,
+    marginBottom: 6,
+  },
+  pendingCardRed:   { borderColor: '#DC2626', backgroundColor: '#FFF9F9' },
+  pendingCardAmber: { borderColor: '#D97706', backgroundColor: '#FFFDF0' },
+
+  // Keep for legacy references (overview urgent care card)
   overdueContainer: {
     backgroundColor: '#FEE2E2',
     borderRadius: 8,
@@ -1426,8 +1610,6 @@ const mt = StyleSheet.create({
     color: '#DC2626',
     marginBottom: 5,
   },
-
-  // Overdue card
   overdueCard: {
     backgroundColor: '#fff',
     borderRadius: 7,
@@ -1470,6 +1652,8 @@ const mt = StyleSheet.create({
   badgeBlueText:  { fontSize: 8, fontWeight: '600', color: '#1E40AF' },
   badgeDone:      { backgroundColor: '#EAF4EE', borderRadius: 8, paddingHorizontal: 6, paddingVertical: 2 },
   badgeDoneText:  { fontSize: 8, fontWeight: '600', color: '#0D4A28' },
+  badgeGrey:      { backgroundColor: '#F3F4F6', borderRadius: 8, paddingHorizontal: 6, paddingVertical: 2 },
+  badgeGreyText:  { fontSize: 8, fontWeight: '600', color: '#6B7280' },
 
   // Worker chip
   workerChip: {
@@ -1516,7 +1700,25 @@ const mt = StyleSheet.create({
   },
   aiToggleText: { fontSize: 9, color: '#1A6B3C' },
 
+  // Progress bar
+  progressTrack: {
+    flexDirection: 'row',
+    height: 3,
+    borderRadius: 2,
+    overflow: 'hidden',
+    backgroundColor: '#F3F4F6',
+    marginTop: 6,
+    marginBottom: 2,
+  },
+
   // Action buttons
+  actionBtnRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 6,
+  },
+  actionBtnFlex: { flex: 1 },
   actionBtnRed: {
     backgroundColor: '#DC2626',
     borderRadius: 6,
@@ -1529,12 +1731,35 @@ const mt = StyleSheet.create({
     backgroundColor: '#1A6B3C',
     borderRadius: 6,
     paddingVertical: 5,
-    marginTop: 5,
     alignItems: 'center',
     minHeight: 36,
     justifyContent: 'center',
   },
+  actionBtnOutline: {
+    borderWidth: 1.5,
+    borderColor: '#1A6B3C',
+    borderRadius: 6,
+    paddingVertical: 5,
+    alignItems: 'center',
+    minHeight: 36,
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  actionBtnOutlineText: { fontSize: 10, fontWeight: '600', color: '#1A6B3C' },
   actionBtnText: { fontSize: 10, fontWeight: '600', color: '#fff' },
+
+  // Quick assign chip
+  assignChip: {
+    borderWidth: 1,
+    borderColor: '#1A6B3C',
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    minHeight: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#EAF4EE',
+  },
+  assignChipText: { fontSize: 9, fontWeight: '600', color: '#0D4A28' },
 
   // Section label (day header / section title)
   sectionLabel: {

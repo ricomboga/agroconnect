@@ -37,8 +37,8 @@ export interface InventoryItem {
 export interface AnimalProductRecord {
   id: string;
   date: string;              // ISO date (one record per day per product type)
-  productType: 'eggs' | 'milk' | 'honey' | 'other';
-  quantity: number;          // trays for eggs, litres for milk
+  productType: string;       // e.g. "eggs", "cow_milk", "fish", or a farmer-typed custom name
+  quantity: number;
   unit: string;
   farmId: string;
   animalGroupId: string;
@@ -77,13 +77,17 @@ export interface CustomerCollection {
   notes: string;
 }
 
+export interface AnimalProductToday {
+  productType: string;
+  quantity: number;
+}
+
 export interface InventorySummary {
   totalItemsLow: number;     // items below 20% remaining
   totalItemsEmpty: number;   // items at 0
   totalPendingCollectionsKes: number;
   totalHarvestInStoreKes: number;
-  eggsCollectedToday: number | null;
-  milkCollectedTodayL: number | null;
+  animalProductsToday: AnimalProductToday[];
 }
 
 // ── Hooks ──────────────────────────────────────────────────────────
@@ -91,141 +95,59 @@ export interface InventorySummary {
 export function useInventoryItems(farmId?: string) {
   return useQuery<InventoryItem[]>({
     queryKey: ['inventory', 'inputs', farmId],
-    queryFn: () => api.get<InventoryItem[]>(`/inventory/inputs${farmId ? `?farmId=${farmId}` : ''}`).then((r: AxiosResponse<InventoryItem[]>) => r.data),
+    queryFn: () =>
+      api
+        .get<{ data: InventoryItem[] }>(`/inventory/inputs${farmId ? `?farmId=${farmId}` : ''}`)
+        .then((r: AxiosResponse<{ data: InventoryItem[] }>) => r.data.data),
+    enabled: farmId === undefined || !!farmId,
     staleTime: 5 * 60 * 1000,
-    initialDataUpdatedAt: 0,
-    initialData: [
-      {
-        id: 'inv-1', farmId: 'farm-1', name: 'CAN Fertiliser',
-        category: 'fertiliser' as InputCategory, emoji: '🌾', unit: 'bags',
-        purchasedQty: 10, usedQty: 6, remainingQty: 4,
-        totalPurchasedQty: 10, costPerUnit: 3200, supplier: 'Farmers Choice Ltd',
-        lastUsedDate: '2025-06-01', reorderAlert: false,
-        scheduledUseDate: '2025-06-10', notes: '',
-      },
-      {
-        id: 'inv-2', farmId: 'farm-1', name: 'Mancozeb 80WP',
-        category: 'pesticide' as InputCategory, emoji: '🌿', unit: 'kg',
-        purchasedQty: 5, usedQty: 4.9, remainingQty: 0.1,
-        totalPurchasedQty: 5, costPerUnit: 480, supplier: 'Nakuru Agrovets',
-        lastUsedDate: '2025-05-28', reorderAlert: true,
-        scheduledUseDate: '2025-06-08', notes: 'For Grey Leaf Spot prevention',
-      },
-      {
-        id: 'inv-3', farmId: 'farm-1', name: 'Maize Seed H614D',
-        category: 'seed' as InputCategory, emoji: '🌱', unit: 'kg',
-        purchasedQty: 5, usedQty: 3, remainingQty: 2,
-        totalPurchasedQty: 5, costPerUnit: 850, supplier: 'KALRO Seed Centre',
-        lastUsedDate: '2025-04-01', reorderAlert: false,
-        scheduledUseDate: null, notes: 'Next planting September 2025',
-      },
-      {
-        id: 'inv-4', farmId: 'farm-1', name: 'Poultry Feed',
-        category: 'animal_feed' as InputCategory, emoji: '🐾', unit: 'sacks',
-        purchasedQty: 10, usedQty: 7, remainingQty: 3,
-        totalPurchasedQty: 10, costPerUnit: 3500, supplier: 'Unga Feeds Ltd',
-        lastUsedDate: '2025-06-05', reorderAlert: true,
-        scheduledUseDate: null, notes: '6.5kg/day for 50 birds = ~5.4 days remaining',
-      },
-      {
-        id: 'inv-5', farmId: 'farm-1', name: 'Newcastle Vaccine (vials)',
-        category: 'vaccine' as InputCategory, emoji: '💉', unit: 'vials',
-        purchasedQty: 5, usedQty: 5, remainingQty: 0,
-        totalPurchasedQty: 5, costPerUnit: 450, supplier: 'AgroVet Supplies',
-        lastUsedDate: '2025-01-15', reorderAlert: true,
-        scheduledUseDate: '2025-04-15', notes: 'OVERDUE — 7 weeks late',
-      },
-      {
-        id: 'inv-6', farmId: 'farm-1', name: 'Knapsack Sprayer',
-        category: 'tool_equipment' as InputCategory, emoji: '🔧', unit: 'units',
-        purchasedQty: 1, usedQty: 0, remainingQty: 1,
-        totalPurchasedQty: 1, costPerUnit: 4500, supplier: 'Nakuru Agrovets',
-        lastUsedDate: '2025-06-04', reorderAlert: false,
-        scheduledUseDate: null, notes: 'Working condition',
-      },
-    ],
   });
 }
 
 export function useAnimalProducts(farmId?: string) {
   return useQuery<AnimalProductRecord[]>({
     queryKey: ['inventory', 'animal-products', farmId],
-    queryFn: () => api.get<AnimalProductRecord[]>(`/inventory/animal-products${farmId ? `?farmId=${farmId}` : ''}`).then((r: AxiosResponse<AnimalProductRecord[]>) => r.data),
+    queryFn: () =>
+      api
+        .get<{ data: AnimalProductRecord[] }>(`/inventory/animal-products${farmId ? `?farmId=${farmId}` : ''}`)
+        .then((r: AxiosResponse<{ data: AnimalProductRecord[] }>) => r.data.data),
+    enabled: farmId === undefined || !!farmId,
     staleTime: 5 * 60 * 1000,
-    initialDataUpdatedAt: 0,
-    initialData: [
-      { id: 'ap-1', date: '2025-06-02', productType: 'eggs', quantity: 8, unit: 'trays', farmId: 'farm-1', animalGroupId: 'ag-1', soldQty: 8, pendingQty: 0, pricePerUnit: 150 },
-      { id: 'ap-2', date: '2025-06-03', productType: 'eggs', quantity: 7.5, unit: 'trays', farmId: 'farm-1', animalGroupId: 'ag-1', soldQty: 5, pendingQty: 2.5, pricePerUnit: 150 },
-      { id: 'ap-3', date: '2025-06-04', productType: 'eggs', quantity: 8, unit: 'trays', farmId: 'farm-1', animalGroupId: 'ag-1', soldQty: 8, pendingQty: 0, pricePerUnit: 150 },
-      { id: 'ap-4', date: '2025-06-05', productType: 'eggs', quantity: 7, unit: 'trays', farmId: 'farm-1', animalGroupId: 'ag-1', soldQty: 7, pendingQty: 0, pricePerUnit: 150 },
-      { id: 'ap-5', date: '2025-06-06', productType: 'eggs', quantity: 8.5, unit: 'trays', farmId: 'farm-1', animalGroupId: 'ag-1', soldQty: 6, pendingQty: 2.5, pricePerUnit: 150 },
-      { id: 'ap-6', date: '2025-06-07', productType: 'eggs', quantity: 6.5, unit: 'trays', farmId: 'farm-1', animalGroupId: 'ag-1', soldQty: 0, pendingQty: 6.5, pricePerUnit: 150 },
-      { id: 'ap-7', date: '2025-06-07', productType: 'milk', quantity: 28, unit: 'litres', farmId: 'farm-1', animalGroupId: 'ag-2', soldQty: 8, pendingQty: 20, pricePerUnit: 60 },
-    ],
   });
 }
 
 export function useHarvestStore(farmId?: string) {
   return useQuery<HarvestStore[]>({
     queryKey: ['inventory', 'harvest-store', farmId],
-    queryFn: () => api.get<HarvestStore[]>(`/inventory/harvest-store${farmId ? `?farmId=${farmId}` : ''}`).then((r: AxiosResponse<HarvestStore[]>) => r.data),
+    queryFn: () =>
+      api
+        .get<{ data: HarvestStore[] }>(`/inventory/harvest-store${farmId ? `?farmId=${farmId}` : ''}`)
+        .then((r: AxiosResponse<{ data: HarvestStore[] }>) => r.data.data),
+    enabled: farmId === undefined || !!farmId,
     staleTime: 5 * 60 * 1000,
-    initialDataUpdatedAt: 0,
-    initialData: [
-      {
-        id: 'hs-1', farmId: 'farm-1', cropName: 'Maize', variety: 'H614D',
-        harvestDate: '2024-09-15', quantityKg: 800, soldKg: 600, remainingKg: 200,
-        gradeLabel: 'A', storageLocation: 'Granary A',
-        estimatedValueKes: 9600,
-      },
-      {
-        id: 'hs-2', farmId: 'farm-1', cropName: 'Beans', variety: 'Rose Coco',
-        harvestDate: '2024-10-01', quantityKg: 120, soldKg: 120, remainingKg: 0,
-        gradeLabel: 'A', storageLocation: '-', estimatedValueKes: 0,
-      },
-    ],
   });
 }
 
 export function useCustomerCollections(farmId?: string) {
   return useQuery<CustomerCollection[]>({
     queryKey: ['inventory', 'collections', farmId],
-    queryFn: () => api.get<CustomerCollection[]>(`/inventory/collections${farmId ? `?farmId=${farmId}` : ''}`).then((r: AxiosResponse<CustomerCollection[]>) => r.data),
+    queryFn: () =>
+      api
+        .get<{ data: CustomerCollection[] }>(`/inventory/collections${farmId ? `?farmId=${farmId}` : ''}`)
+        .then((r: AxiosResponse<{ data: CustomerCollection[] }>) => r.data.data),
+    enabled: farmId === undefined || !!farmId,
     staleTime: 2 * 60 * 1000,
-    initialDataUpdatedAt: 0,
-    initialData: [
-      {
-        id: 'cc-1', customerName: 'Grace Kamau', customerPhone: '+254722111222',
-        productType: 'eggs', quantity: 5, unit: 'trays',
-        pricePerUnit: 150, totalAmount: 750,
-        takenDate: '2025-06-03', paidDate: null, isPaid: false,
-        farmId: 'farm-1', notes: 'Regular customer',
-      },
-      {
-        id: 'cc-2', customerName: 'John Mwangi', customerPhone: '+254733222333',
-        productType: 'milk', quantity: 20, unit: 'litres',
-        pricePerUnit: 60, totalAmount: 1200,
-        takenDate: '2025-06-04', paidDate: null, isPaid: false,
-        farmId: 'farm-1', notes: 'Daily milk customer',
-      },
-    ],
   });
 }
 
 export function useInventorySummary() {
   return useQuery<InventorySummary>({
     queryKey: ['inventory', 'summary'],
-    queryFn: () => api.get<InventorySummary>('/inventory/summary').then((r: AxiosResponse<InventorySummary>) => r.data),
+    queryFn: () =>
+      api
+        .get<{ data: InventorySummary }>('/inventory/summary')
+        .then((r: AxiosResponse<{ data: InventorySummary }>) => r.data.data),
     staleTime: 5 * 60 * 1000,
-    initialDataUpdatedAt: 0,
-    initialData: {
-      totalItemsLow: 3,
-      totalItemsEmpty: 2,
-      totalPendingCollectionsKes: 1950,
-      totalHarvestInStoreKes: 9600,
-      eggsCollectedToday: 6.5,
-      milkCollectedTodayL: 28,
-    },
   });
 }
 
@@ -236,8 +158,34 @@ export function useRecordInputUsage() {
   return useMutation({
     mutationFn: (data: { itemId: string; qtyUsed: number; usedDate: string; activityId?: string; notes?: string }) =>
       api.post(`/inventory/inputs/${data.itemId}/use`, data).then((r: AxiosResponse<unknown>) => r.data),
+    onMutate: async (data) => {
+      await qc.cancelQueries({ queryKey: ['inventory', 'inputs'] });
+      const previousItems = qc.getQueriesData<InventoryItem[]>({ queryKey: ['inventory', 'inputs'] });
+      qc.setQueriesData<InventoryItem[]>({ queryKey: ['inventory', 'inputs'] }, (old) => {
+        if (!old) return old;
+        return old.map((item) =>
+          item.id === data.itemId
+            ? {
+                ...item,
+                remainingQty: Math.max(0, item.remainingQty - data.qtyUsed),
+                usedQty: item.usedQty + data.qtyUsed,
+                lastUsedDate: data.usedDate,
+              }
+            : item,
+        );
+      });
+      return { previousItems };
+    },
+    onError: (_err, _data, context) => {
+      if (context?.previousItems) {
+        for (const [queryKey, queryData] of context.previousItems) {
+          qc.setQueryData(queryKey, queryData);
+        }
+      }
+    },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['inventory'] });
+      // Don't invalidate inventory/inputs — the optimistic update is the source of truth
+      // until the backend has a real inventory DB.
     },
   });
 }
@@ -258,8 +206,36 @@ export function useRestockItem() {
   return useMutation({
     mutationFn: (data: { itemId: string; qtyAdded: number; costPerUnit: number; purchaseDate: string; supplier: string }) =>
       api.post(`/inventory/inputs/${data.itemId}/restock`, data).then((r: AxiosResponse<unknown>) => r.data),
+    onMutate: async (data) => {
+      await qc.cancelQueries({ queryKey: ['inventory', 'inputs'] });
+      const previousItems = qc.getQueriesData<InventoryItem[]>({ queryKey: ['inventory', 'inputs'] });
+      qc.setQueriesData<InventoryItem[]>({ queryKey: ['inventory', 'inputs'] }, (old) => {
+        if (!old) return old;
+        return old.map((item) =>
+          item.id === data.itemId
+            ? {
+                ...item,
+                remainingQty: item.remainingQty + data.qtyAdded,
+                totalPurchasedQty: item.totalPurchasedQty + data.qtyAdded,
+                costPerUnit: data.costPerUnit,
+                supplier: data.supplier,
+                reorderAlert: false,
+              }
+            : item,
+        );
+      });
+      return { previousItems };
+    },
+    onError: (_err, _data, context) => {
+      if (context?.previousItems) {
+        for (const [queryKey, queryData] of context.previousItems) {
+          qc.setQueryData(queryKey, queryData);
+        }
+      }
+    },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['inventory'] });
+      // Don't invalidate inventory/inputs — the optimistic update is the source of truth
+      // until the backend has a real inventory DB. Only sync finance (purchase cost recorded).
       qc.invalidateQueries({ queryKey: ['finance'] });
     },
   });
@@ -268,7 +244,7 @@ export function useRestockItem() {
 export function useRecordAnimalProduct() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { productType: string; quantity: number; date: string; farmId: string; animalGroupId: string; pricePerUnit: number }) =>
+    mutationFn: (data: { productType: string; quantity: number; date: string; farmId: string; animalGroupId: string; pricePerUnit: number; unit?: string }) =>
       api.post('/inventory/animal-products', data).then((r: AxiosResponse<unknown>) => r.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['inventory', 'animal-products'] });
@@ -306,6 +282,41 @@ export function useRecordHarvestStore() {
       api.post('/inventory/harvest-store', data).then((r: AxiosResponse<unknown>) => r.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['inventory', 'harvest-store'] });
+    },
+  });
+}
+
+export function useRecordHarvestSale() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { harvestId: string; soldKg: number; pricePerKg: number; buyerName?: string; saleDate: string }) =>
+      api.post(`/inventory/harvest-store/${data.harvestId}/sell`, data).then((r: AxiosResponse<unknown>) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['inventory', 'harvest-store'] });
+      qc.invalidateQueries({ queryKey: ['finance'] });
+    },
+  });
+}
+
+export function useUpdateHarvestStock() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { harvestId: string; newRemainingKg: number; notes?: string }) =>
+      api.patch(`/inventory/harvest-store/${data.harvestId}/stock`, data).then((r: AxiosResponse<unknown>) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['inventory', 'harvest-store'] });
+    },
+  });
+}
+
+export function useUpdateAnimalProduct() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { id: string; quantity: number; notes?: string }) =>
+      api.patch(`/inventory/animal-products/${data.id}`, data).then((r: AxiosResponse<unknown>) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['inventory', 'animal-products'] });
+      qc.invalidateQueries({ queryKey: ['inventory', 'summary'] });
     },
   });
 }

@@ -160,7 +160,13 @@ export function LoginScreen() {
             </Animated.View>
 
             {/* Forgot PIN */}
-            <Text style={styles.forgotPin}>{t('auth.login.forgotPin')}</Text>
+            <Pressable
+              onPress={() => navigation.navigate('ForgotPin')}
+              accessibilityRole="button"
+              hitSlop={8}
+            >
+              <Text style={styles.forgotPin}>{t('auth.login.forgotPin')}</Text>
+            </Pressable>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>

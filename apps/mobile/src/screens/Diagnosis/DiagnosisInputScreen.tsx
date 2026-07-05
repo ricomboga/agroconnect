@@ -19,6 +19,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { DiagnoseStackParamList } from '../../navigation/types';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
 import { diagnoseApi } from '../../api/diagnose';
+import { useFarmStore } from '../../store/farm.store';
 
 type Props = NativeStackScreenProps<DiagnoseStackParamList, 'DiagnosisInput'>;
 type SubjectType = 'crop' | 'animal';
@@ -30,6 +31,7 @@ export function DiagnosisInputScreen({ route, navigation }: Props) {
   const { mode } = route.params;
   const { t } = useTranslation();
   const { isOnline } = useOfflineSync();
+  const activeFarmId = useFarmStore((s) => s.activeFarmId);
 
   const [question,    setQuestion]    = useState('');
   const [photos,      setPhotos]      = useState<string[]>([]);
@@ -74,9 +76,10 @@ export function DiagnosisInputScreen({ route, navigation }: Props) {
     setSubmitting(true);
     try {
       const formData = new FormData();
-      if (hasQuestion) formData.append('question', question.trim());
-      formData.append('subjectType', subjectType);
-      formData.append('subjectName', subjectName);
+      if (activeFarmId) formData.append('farm_id', activeFarmId);
+      formData.append('subject_type', subjectType === 'crop' ? 'plant' : 'animal');
+      formData.append('subject_name', subjectName);
+      if (hasQuestion) formData.append('symptoms', question.trim());
       photos.forEach((uri, i) => {
         formData.append('images', {
           uri,

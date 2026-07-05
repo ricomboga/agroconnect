@@ -1,16 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   ActivityIndicator, Pressable, SafeAreaView, StyleSheet, Text, View,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../../navigation/types';
 import { changeLanguage } from '../../i18n';
 
 type Nav = NativeStackNavigationProp<AuthStackParamList, 'LanguageSelect'>;
-
-const LANG_KEY = 'language';
 
 const LANGUAGES = [
   {
@@ -31,32 +28,13 @@ const LANGUAGES = [
 
 export function LanguageSelectScreen() {
   const navigation = useNavigation<Nav>();
-  const [checking, setChecking] = useState(true);
   const [selecting, setSelecting] = useState<string | null>(null);
-
-  useEffect(() => {
-    AsyncStorage.getItem(LANG_KEY).then((saved) => {
-      if (saved) {
-        navigation.replace('Welcome');
-      } else {
-        setChecking(false);
-      }
-    });
-  }, [navigation]);
 
   const pick = async (lang: 'sw' | 'en') => {
     setSelecting(lang);
     await changeLanguage(lang);
     navigation.replace('Welcome');
   };
-
-  if (checking) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2E7D32" />
-      </View>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.safe}>

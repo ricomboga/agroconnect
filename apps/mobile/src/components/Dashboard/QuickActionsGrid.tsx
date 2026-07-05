@@ -21,7 +21,9 @@ interface QuickActionsGridProps {
 }
 
 const TILE_GAP = 8;
-const SCREEN_PADDING = 11;
+// screenWidth accounts for parent ScrollView padding (10) only;
+// container has no extra margin so tiles fill the available content area exactly.
+const SCREEN_PADDING = 10;
 const NUM_COLS = 3;
 
 export function QuickActionsGrid({ actions }: QuickActionsGridProps) {
@@ -60,7 +62,6 @@ export function QuickActionsGrid({ actions }: QuickActionsGridProps) {
 
 const s = StyleSheet.create({
   container: {
-    marginHorizontal: 11,
     marginBottom: 8,
   },
   sectionTitle: {

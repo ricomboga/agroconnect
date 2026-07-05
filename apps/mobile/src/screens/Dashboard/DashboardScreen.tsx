@@ -26,6 +26,9 @@ import { QuickActionsGrid, type QuickAction } from '../../components/Dashboard/Q
 import { MiniAnalytics } from '../../components/Dashboard/MiniAnalytics';
 import { LockedCard } from '../../components/Dashboard/LockedCard';
 import { InventorySummaryWidget } from '../../components/widgets/InventorySummaryWidget';
+import { WeatherWidget } from '../../components/Dashboard/WeatherWidget';
+import { FinanceSnapshotCard } from '../../components/Dashboard/FinanceSnapshotCard';
+import { InventoryAlertCard } from '../../components/Dashboard/InventoryAlertCard';
 import type { AppTabParamList } from '../../navigation/types';
 import type { Activity } from '../../api/activity';
 
@@ -84,8 +87,8 @@ export function DashboardScreen() {
     navigation.navigate('Farm', {
       screen: 'WeatherDetail',
       params: {
-        lat: dash.primaryFarm?.gpsLat,
-        lng: dash.primaryFarm?.gpsLng,
+        lat: dash.primaryFarm?.locationLat,
+        lng: dash.primaryFarm?.locationLng,
         county: dash.primaryFarm?.county,
       },
     } as never);
@@ -118,7 +121,7 @@ export function DashboardScreen() {
   }, [navigation]);
 
   const goToDiagnose = useCallback(() => {
-    navigation.navigate('Diagnose', { screen: 'DiagnoseHome' } as never);
+    navigation.navigate('Diagnose', { screen: 'DiagnosisHome' } as never);
   }, [navigation]);
 
   const goToMarket = useCallback(() => {
@@ -202,8 +205,8 @@ export function DashboardScreen() {
         <DashboardHero
           farmerName={farmerName}
           county={county}
-          farmLat={dash.primaryFarm?.gpsLat}
-          farmLng={dash.primaryFarm?.gpsLng}
+          farmLat={dash.primaryFarm?.locationLat}
+          farmLng={dash.primaryFarm?.locationLng}
           netCashFlow={dash.cashFlowNet}
           creditScore={dash.creditScore}
           farmCount={dash.farmCount}
@@ -219,6 +222,16 @@ export function DashboardScreen() {
             <StreakBar current={dash.streak} best={dash.bestStreak} />
           )}
 
+          {/* Weather — expanded 5-day forecast */}
+          {dash.primaryFarm && (
+            <WeatherWidget
+              lat={dash.primaryFarm.locationLat ?? -1.286}
+              lng={dash.primaryFarm.locationLng ?? 36.817}
+              county={county}
+              onPress={goToWeather}
+            />
+          )}
+
           <AiNudgeSection nudges={nudges} loading={false} />
 
           {dash.topPriceAlert && (
@@ -232,6 +245,18 @@ export function DashboardScreen() {
           )}
 
           <QuickActionsGrid actions={activeActions} />
+
+          {/* Finance: bar chart + donut */}
+          <FinanceSnapshotCard
+            income={dash.cashFlowIncome}
+            expenses={dash.cashFlowExpenses}
+            net={dash.cashFlowNet}
+            monthBars={dash.monthBars}
+            onPress={goToFinance}
+          />
+
+          {/* Inventory low-stock alerts */}
+          <InventoryAlertCard farmId={farmId} />
 
           <InventorySummaryWidget />
 

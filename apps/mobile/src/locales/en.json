@@ -29,7 +29,7 @@
       "phoneLabel": "Phone Number",
       "pinLabel": "PIN",
       "signIn": "Sign In →",
-      "forgotPin": "Forgot PIN? Contact your farm administrator",
+      "forgotPin": "Forgot PIN?",
       "phone": "Phone number (+254...)",
       "password": "Password",
       "submit": "Sign in",
@@ -63,6 +63,24 @@
       "success": "Phone verified! Please sign in.",
       "error": {
         "invalid": "Incorrect code. Please try again."
+      }
+    },
+    "forgotPin": {
+      "title": "Reset your PIN",
+      "subtitle": "Enter your registered phone number. We'll send you a code to reset your PIN.",
+      "sendCode": "Send code",
+      "error": {
+        "phoneInvalid": "Enter a valid Kenya number (+254...)"
+      }
+    },
+    "resetPin": {
+      "title": "Enter code & new PIN",
+      "subtitle": "Enter the code sent to {{phone}} and choose a new 4-digit PIN.",
+      "codeLabel": "Verification code",
+      "submit": "Reset PIN",
+      "success": "PIN reset! Please sign in with your new PIN.",
+      "error": {
+        "invalidCode": "Incorrect or expired code. Please try again."
       }
     },
     "setPin": {
@@ -120,8 +138,9 @@
     "market": "Market",
     "finance": "Finance",
     "inventory": "Inventory",
-    "stock": "Stock",
+    "farmInventory": "Farm Inventory",
     "community": "Community",
+    "farmersCommunity": "Farmers Community",
     "profile": "Profile",
     "me": "Me",
     "govt": "Govt",
@@ -202,12 +221,25 @@
     },
     "inventory": {
       "title": "📦 Farm Store",
+      "alertTitle": "⚠️ Stock Alerts",
       "lowEmpty": "⚠️ Low/Empty items",
       "collections": "💰 Customer collections",
       "inStore": "🌾 Produce in store",
-      "eggsToday": "🥚 Eggs today",
-      "eggsTrays": "{{count}} trays",
-      "viewAll": "View Inventory →"
+      "productToday": "{{product}} today",
+      "viewAll": "View Inventory →",
+      "out": "out of stock",
+      "low": "running low"
+    },
+    "weather": {
+      "title": "🌤 Weather",
+      "viewFull": "Full forecast",
+      "rain": "rain chance",
+      "unavailable": "Weather data unavailable",
+      "serviceDown": "Weather service offline — set OPENWEATHER_API_KEY"
+    },
+    "finance": {
+      "title": "💰 Finance Snapshot",
+      "income": "Income"
     }
   },
   "profile": {
@@ -448,6 +480,12 @@
       "sectionToday": "Today",
       "sectionThisWeek": "This Week",
       "sectionUpcoming": "Upcoming",
+      "groupPending": "⚠️ Pending Tasks",
+      "groupCompleted": "✅ Completed Tasks",
+      "groupUpcoming": "📅 Upcoming Tasks",
+      "subToday": "Today",
+      "subThisWeek": "This Week",
+      "subThisMonth": "This Month",
       "allCaughtUp": "✅ All caught up! No tasks for today.",
       "assignedTo": "Assigned to",
       "unassigned": "Unassigned",
@@ -641,7 +679,9 @@
         "bookVet": "📅 Book Vet",
         "logSpraying": "⚡ Log Spraying Now",
         "logNow": "⚡ Log Now",
-        "logDone": "Log ✓"
+        "logDone": "Log ✓",
+        "logEarly": "Log Early",
+        "assign": "Assign ›"
       }
     },
     "calendar": {
@@ -708,6 +748,8 @@
       "saveBtn": "✅ Save Activity (+1 Streak)",
       "successToast": "Activity logged! 🔥 {{streak}}-day streak",
       "errorSave": "Failed to save activity. Please try again.",
+      "errorValidation": "Check your entries — some fields are invalid.",
+      "errorForbidden": "You don't have permission to create activities on this farm.",
       "farmPickerTitle": "Select Farm",
       "cropPickerTitle": "Select Crop / Animal",
       "timeLabel": "Time (optional)",
@@ -1097,8 +1139,15 @@
     },
     "home": {
       "title": "Finance",
-      "applyBtn": "Apply for loan",
+      "applyBtn": "See available loans",
       "loanHistory": "Loan history",
+      "loanOverview": {
+        "title": "Loan overview",
+        "creditLimit": "Credit limit",
+        "activeLoans": "Active loans",
+        "nextPayment": "Next payment",
+        "nonPerforming": "Non-performing"
+      },
       "reports": {
         "periodMonth": "This Month",
         "periodQuarter": "3 Months",
@@ -1108,7 +1157,27 @@
         "netProfit": "Net Profit",
         "margin": "margin",
         "breakdown": "Category Breakdown",
-        "export": "Export / Share Report"
+        "export": "Export / Share Report",
+        "exportFormatPrompt": "Choose a file format to download and share",
+        "exportCsv": "CSV (spreadsheet)",
+        "exportPdf": "PDF (document)",
+        "noData": "No transactions recorded for this period",
+        "production": {
+          "title": "Farm Production",
+          "subtitle": "Included when you share this report with a lender",
+          "crops": "Crop Harvests",
+          "harvested": "Harvested",
+          "sold": "Sold",
+          "revenue": "Revenue",
+          "animalProducts": "Animal & Farm Products",
+          "collections": "Customer Collections",
+          "totalSales": "Total Sales",
+          "paid": "Paid",
+          "pending": "Pending",
+          "empty": "No production data recorded for this period",
+          "offline": "Connect to the internet to view farm production data",
+          "loadFailed": "Could not load farm production data"
+        }
       },
       "tabs": {
         "cashflow": "Cash Flow",
@@ -1179,10 +1248,12 @@
         "approved": "Approved",
         "rejected": "Rejected",
         "disbursed": "Disbursed",
-        "cancelled": "Cancelled"
+        "cancelled": "Cancelled",
+        "repaid": "Repaid",
+        "defaulted": "Defaulted"
       },
       "products": {
-        "title": "Loan Products",
+        "title": "Available Loans",
         "interestRate": "Rate: {{rate}}% p.a.",
         "maxAmount": "Up to KES {{amount}}",
         "minAmount": "From KES {{amount}}",
@@ -1190,9 +1261,36 @@
         "eligibility": "Min. band: {{band}}",
         "applyBtn": "Apply",
         "notEligible": "Score too low",
+        "viewDetails": "View details",
+        "partnerType": {
+          "bank": "Bank",
+          "microfinance": "Microfinance",
+          "sacco": "SACCO"
+        },
         "empty": {
           "title": "No loan products",
           "body": "Loan products will appear here"
+        }
+      },
+      "productDetail": {
+        "title": "Loan Details",
+        "interestRate": "Interest Rate",
+        "repaymentTerm": "Repayment Term",
+        "minAmount": "Min. Amount",
+        "maxAmount": "Max. Amount",
+        "minCreditBand": "Min. Credit Band",
+        "yourLimit": "Your Limit",
+        "months": "{{n}} months",
+        "eligibleBadge": "Eligible",
+        "notEligibleBadge": "Not Eligible",
+        "applyBtn": "Apply for this Loan",
+        "ineligibleNote": "You need a credit band of {{band}} or better to apply for this loan. Improve your credit score by recording more farm activity.",
+        "category": {
+          "back_to_school": "Back to School",
+          "farm_input": "Farm Input",
+          "asset_finance": "Asset Finance",
+          "emergency": "Emergency",
+          "general": "General"
         }
       },
       "application": {
@@ -1503,8 +1601,22 @@
       "lowEmpty": "Low/Empty",
       "pendingKes": "Pending KES",
       "inStore": "In Store",
-      "todayEggs": "Today Eggs",
-      "trays": "{{count}} trays"
+      "todayProducts": "Today's Produce"
+    },
+    "units": {
+      "trays": "trays",
+      "litres": "litres",
+      "kg": "kg",
+      "units": "units"
+    },
+    "productTypes": {
+      "eggs": "🥚 Eggs",
+      "cowMilk": "🥛 Cow Milk",
+      "goatMilk": "🐐 Goat Milk",
+      "fish": "🐟 Fish",
+      "honey": "🍯 Honey",
+      "wool": "🧶 Wool",
+      "other": "📦 Other"
     },
     "inputs": {
       "urgentAlert": "⚠️ {{count}} item out of stock — {{activity}} scheduled soon",
@@ -1544,24 +1656,19 @@
       "sectionTitle": "Today's Collection",
       "trays": "Trays",
       "litres": "Litres",
-      "eggs": {
-        "today": "Today, {{date}}"
-      },
-      "milk": {
-        "today": "Today, {{date}}"
-      },
       "update": "Update",
       "recordAlert": "Record today's collection",
       "recordNow": "Record Now",
       "recorded": "✓ Recorded",
-      "weekTitle": "Egg Collection — This Week",
-      "weekMilkTitle": "Milk Production — This Week",
-      "weekSummary": "Weekly total: {{total}} trays · Avg: {{avg}}/day",
-      "weekMilkSummary": "Weekly total: {{total}}L · Avg: {{avg}}L/day",
+      "weekTitleGeneric": "{{product}} — This Week",
+      "weekSummaryGeneric": "Weekly total: {{total}} {{unit}} · Avg: {{avg}}/day",
       "sellTitle": "Record a Sale",
-      "sellEggs": "Sell Eggs 🥚",
-      "sellMilk": "Sell Milk 🥛",
+      "sellGeneric": "Sell {{product}}",
       "cropOnlyMsg": "Animal products are tracked for livestock farmers.",
+      "addProductTitle": "Track a New Product",
+      "otherProduct": "Other",
+      "otherProductPlaceholder": "e.g. Rabbit, Quail",
+      "startTracking": "Start Tracking",
       "days": {
         "mon": "M",
         "tue": "T",
@@ -1666,12 +1773,11 @@
       "phoneLabel": "Phone Number",
       "phonePlaceholder": "+254 7__ ___ ___",
       "productLabel": "Product *",
-      "productEggs": "Eggs",
-      "productMilk": "Milk",
       "productMaize": "Maize",
       "productCabbage": "Cabbage",
       "productBeans": "Beans",
       "productOther": "Other",
+      "customProductPlaceholder": "Enter product name",
       "qtyLabel": "Quantity *",
       "unitLabel": "Unit",
       "priceLabel": "Price per {{unit}} (KES) *",
@@ -1746,15 +1852,12 @@
       "aiFertiliser": "Link to upcoming fertiliser activities"
     },
     "recordProduct": {
-      "titleEggs": "🥚 Record Egg Collection",
-      "titleMilk": "🥛 Record Milk Collection",
+      "titleGeneric": "{{emoji}} Record {{product}} Collection",
       "forGroup": "For: {{name}} ({{count}} birds/animals)",
       "todayRecord": "Today's record: {{qty}} {{unit}} · Updating",
       "updatingAlert": "Updating today's existing record",
       "dupDateAlert": "You already recorded {{qty}} {{unit}} for this date. Updating.",
       "qtyLabel": "Quantity *",
-      "unitEggs": "Trays",
-      "unitMilk": "Litres",
       "fractionBtn": "+{{frac}}",
       "aiHint": "🤖 Yesterday: {{yesterday}} · This week avg: {{weekAvg}}",
       "dateLabel": "Collection Date *",
@@ -1766,6 +1869,60 @@
       "saving": "Saving...",
       "successToast": "Collection recorded! {{qty}} {{unit}} on {{date}}",
       "savedOfflineToast": "Saved offline. Will sync when online."
+    },
+    "recordHarvestSale": {
+      "title": "Record Sale — {{crop}}",
+      "availableNote": "Available: {{kg}}kg in store",
+      "kgLabel": "Quantity Sold (kg) *",
+      "kgPlaceholder": "0",
+      "priceLabel": "Price per kg (KES) *",
+      "pricePlaceholder": "0",
+      "totalPreview": "Sale total: KES {{total}}",
+      "buyerLabel": "Buyer Name (optional)",
+      "buyerPlaceholder": "e.g. Nakuru Maize Miller",
+      "dateLabel": "Sale Date *",
+      "exceeds": "Only {{kg}}kg available in store",
+      "saveBtn": "Record Sale ✓",
+      "saving": "Saving...",
+      "successToast": "Sale recorded. KES {{amount}} added to income."
+    },
+    "updateHarvestStock": {
+      "title": "Update Stock — {{crop}}",
+      "currentNote": "Recorded stock: {{kg}}kg",
+      "newQtyLabel": "Actual Remaining (kg) *",
+      "newQtyPlaceholder": "0",
+      "reasonLabel": "Reason for Adjustment (optional)",
+      "reasonPlaceholder": "e.g. Spoilage, recount, additional sale",
+      "saveBtn": "Update Stock ✓",
+      "saving": "Saving...",
+      "successToast": "Stock updated to {{kg}}kg."
+    },
+    "addHarvest": {
+      "title": "Record Harvest in Store",
+      "cropLabel": "Crop *",
+      "cropPlaceholder": "e.g. Maize, Beans, Wheat",
+      "varietyLabel": "Variety (optional)",
+      "varietyPlaceholder": "e.g. H614D, Rose Coco",
+      "harvestDateLabel": "Harvest Date *",
+      "qtyLabel": "Quantity (kg) *",
+      "qtyPlaceholder": "0",
+      "gradeLabel": "Grade",
+      "gradeA": "Grade A",
+      "gradeB": "Grade B",
+      "gradeC": "Grade C",
+      "storageLabel": "Storage Location *",
+      "storagePlaceholder": "e.g. Granary A, Cold Storage",
+      "priceLabel": "Est. Price per kg (KES)",
+      "pricePlaceholder": "0",
+      "totalPreview": "Estimated value: KES {{total}}",
+      "farmLabel": "Linked Farm",
+      "farmPlaceholder": "Select farm",
+      "farmPickerTitle": "Select Farm",
+      "farmOptionSub": "{{county}} · {{area}} acres",
+      "farmPickerEmpty": "No farms found. Add a farm first.",
+      "saveBtn": "Add to Store ✓",
+      "saving": "Saving...",
+      "successToast": "{{qty}}kg {{crop}} recorded in store."
     }
   }
 }

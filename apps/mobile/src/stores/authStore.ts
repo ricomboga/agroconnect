@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFarmStore } from '../store/farm.store';
 
 const ACCESS_KEY = 'auth_access_token';
 const REFRESH_KEY = 'auth_refresh_token';
@@ -31,15 +31,18 @@ interface AuthState {
   isAuthenticated: boolean;
   mustSetPin: boolean;
   mustShowOnboarding: boolean;
+  mustSelectFarm: boolean;
   /** Password used at last login — held in memory only so SetPINScreen can call changePassword correctly */
   loginPassword: string | null;
   login: (credentials: { phone: string; password: string }) => Promise<void>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  resetPin: (phone: string, code: string, newPin: string) => Promise<void>;
   restoreSession: () => Promise<void>;
   completePinSetup: () => Promise<void>;
   completeOnboarding: () => void;
+  completeFarmSelection: () => void;
 }
 
 const PIN_SETUP_KEY = 'pin_setup_done';
@@ -52,6 +55,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isAuthenticated: false,
   mustSetPin: false,
   mustShowOnboarding: false,
+  mustSelectFarm: false,
   loginPassword: null,
 
   login: async (credentials) => {
@@ -93,7 +97,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await SecureStore.setItemAsync(ACCESS_KEY, data.accessToken);
       await SecureStore.setItemAsync(REFRESH_KEY, data.refreshToken);
       const pinDone = await SecureStore.getItemAsync(PIN_SETUP_KEY);
-      set({ token: data.accessToken, refreshToken: data.refreshToken, user: data.user, isAuthenticated: true, isLoading: false, mustSetPin: pinDone === null, loginPassword: credentials.password });
+      set({ token: data.accessToken, refreshToken: data.refreshToken, user: data.user, isAuthenticated: true, isLoading: false, mustSetPin: pinDone === null, mustSelectFarm: true, loginPassword: credentials.password });
     } catch (err) {
       clearTimeout(timer);
       set({ isLoading: false });
@@ -115,7 +119,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
     await SecureStore.deleteItemAsync(ACCESS_KEY);
     await SecureStore.deleteItemAsync(REFRESH_KEY);
-    set({ token: null, refreshToken: null, user: null, isAuthenticated: false });
+    useFarmStore.getState().clearActiveFarm();
+    set({ token: null, refreshToken: null, user: null, isAuthenticated: false, mustSelectFarm: false });
   },
 
   refreshSession: async () => {
@@ -156,6 +161,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  resetPin: async (phone, code, newPin) => {
+    const res = await fetch(`${BASE_URL}/auth/password/reset`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, code, new_password: newPin }),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      let errorCode: string | undefined;
+      try {
+        const body = JSON.parse(text) as { error_code?: string };
+        errorCode = body.error_code;
+      } catch { /* response was not JSON */ }
+      const message =
+        errorCode === 'OTP_INVALID' ? 'auth.resetPin.error.invalidCode'
+        : errorCode === 'USER_NOT_FOUND' ? 'auth.error.invalidCredentials'
+        : 'auth.error.loginFailed';
+      throw new Error(message);
+    }
+    // A reset PIN counts as an already-completed setup — skip SetPINScreen on next login
+    await SecureStore.setItemAsync(PIN_SETUP_KEY, '1');
+  },
+
   completePinSetup: async () => {
     await SecureStore.setItemAsync(PIN_SETUP_KEY, '1');
     set({ mustSetPin: false, mustShowOnboarding: true, loginPassword: null });
@@ -165,83 +193,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ mustShowOnboarding: false });
   },
 
+  completeFarmSelection: () => {
+    set({ mustSelectFarm: false });
+  },
+
   restoreSession: async () => {
+    // Sessions never persist across an app restart — the user must always log in
+    // (and re-enter their PIN) after relaunching the app. Any tokens left over
+    // from a previous run are discarded rather than silently re-authenticated.
     try {
-      const [storedAccess, storedRefresh, pinDone, onboardingDone] = await Promise.all([
-        SecureStore.getItemAsync(ACCESS_KEY),
-        SecureStore.getItemAsync(REFRESH_KEY),
-        SecureStore.getItemAsync(PIN_SETUP_KEY),
-        AsyncStorage.getItem('onboarding_complete'),
+      await Promise.all([
+        SecureStore.deleteItemAsync(ACCESS_KEY),
+        SecureStore.deleteItemAsync(REFRESH_KEY),
       ]);
-
-      if (!storedRefresh) return; // no session stored at all
-
-      // Fast path: verify stored access token is still valid
-      if (storedAccess) {
-        const ctrl = new AbortController();
-        const t = setTimeout(() => ctrl.abort(), 5_000);
-        try {
-          const res = await fetch(`${BASE_URL}/auth/me`, {
-            headers: { Authorization: `Bearer ${storedAccess}` },
-            signal: ctrl.signal,
-          });
-          clearTimeout(t);
-          if (res.ok) {
-            const { data } = await res.json() as { data: AuthUser };
-            set({ token: storedAccess, user: data, isAuthenticated: true, mustSetPin: pinDone === null, mustShowOnboarding: onboardingDone === null && pinDone !== null });
-            return;
-          }
-        } catch {
-          clearTimeout(t);
-        }
-      }
-
-      // Access token missing or expired — exchange refresh token
-      const ctrl2 = new AbortController();
-      const t2 = setTimeout(() => ctrl2.abort(), 5_000);
-      try {
-        const res = await fetch(`${BASE_URL}/auth/refresh`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refreshToken: storedRefresh }),
-          signal: ctrl2.signal,
-        });
-        clearTimeout(t2);
-        if (res.ok) {
-          const { data } = await res.json() as { data: { accessToken: string; refreshToken: string } };
-          await SecureStore.setItemAsync(ACCESS_KEY, data.accessToken);
-          await SecureStore.setItemAsync(REFRESH_KEY, data.refreshToken);
-          // Fetch user separately — the refresh endpoint only returns tokens
-          const ctrl3 = new AbortController();
-          const t3 = setTimeout(() => ctrl3.abort(), 5_000);
-          try {
-            const meRes = await fetch(`${BASE_URL}/auth/me`, {
-              headers: { Authorization: `Bearer ${data.accessToken}` },
-              signal: ctrl3.signal,
-            });
-            clearTimeout(t3);
-            if (meRes.ok) {
-              const { data: user } = await meRes.json() as { data: AuthUser };
-              set({ token: data.accessToken, refreshToken: data.refreshToken, user, isAuthenticated: true, mustSetPin: pinDone === null, mustShowOnboarding: onboardingDone === null && pinDone !== null });
-              return;
-            }
-          } catch {
-            clearTimeout(t3);
-          }
-          // /auth/me failed after refresh — clear session
-          await SecureStore.deleteItemAsync(ACCESS_KEY);
-          await SecureStore.deleteItemAsync(REFRESH_KEY);
-          return;
-        }
-      } catch {
-        clearTimeout(t2);
-      }
-
-      // Both attempts failed — clear stored credentials
-      await SecureStore.deleteItemAsync(ACCESS_KEY);
-      await SecureStore.deleteItemAsync(REFRESH_KEY);
-    } catch {
-      set({ token: null, refreshToken: null, user: null, isAuthenticated: false });
+    } finally {
+      set({ token: null, refreshToken: null, user: null, isAuthenticated: false, mustSetPin: false, mustShowOnboarding: false, mustSelectFarm: false });
     }
   },
 }));

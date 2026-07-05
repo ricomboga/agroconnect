@@ -8,6 +8,7 @@ import {
   StatusBar,
   StyleSheet,
   Linking,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -25,6 +26,7 @@ import type {
   InputCategory,
   InventoryItem,
   AnimalProductRecord,
+  AnimalProductToday,
   HarvestStore,
   CustomerCollection,
 } from '../../hooks/useInventory';
@@ -37,12 +39,16 @@ import {
 } from '../../utils/inventoryHelpers';
 import { useUiStore } from '../../store/ui.store';
 import type { StockStackParamList } from '../../navigation/types';
+import {
+  ANIMAL_PRODUCT_TYPES,
+  getProductConfig,
+  productLabel,
+} from '../../constants/animalProducts';
 
 type Props = NativeStackScreenProps<StockStackParamList, 'InventoryHome'>;
 type ActiveTab = 'inputs' | 'products' | 'harvest' | 'collections';
 type CategoryFilter = 'all' | InputCategory;
 type CollectionFilter = 'all' | 'unpaid' | 'paid';
-type ParentNav = { navigate: (screen: string, params?: object) => void };
 
 // ── Module-level helpers ──────────────────────────────────────────────────────
 
@@ -126,6 +132,8 @@ export function InventoryScreen({ navigation }: Props) {
   const [activeTab, setActiveTab]             = useState<ActiveTab>('inputs');
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>('all');
   const [collectionFilter, setCollectionFilter] = useState<CollectionFilter>('unpaid');
+  const [showCustomProductInput, setShowCustomProductInput] = useState(false);
+  const [customProductName, setCustomProductName] = useState('');
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
@@ -156,13 +164,15 @@ export function InventoryScreen({ navigation }: Props) {
 
   // ── Derived data ──────────────────────────────────────────────────────────
 
-  const summary = summaryQ.data ?? {
+  const summary = {
     totalItemsLow: 0,
     totalItemsEmpty: 0,
     totalPendingCollectionsKes: 0,
     totalHarvestInStoreKes: 0,
-    eggsCollectedToday: null,
-    milkCollectedTodayL: null,
+    ...summaryQ.data,
+    // Defend against a stale cached response (from before this field existed)
+    // that has the other summary fields but not this one.
+    animalProductsToday: (summaryQ.data?.animalProductsToday ?? []) as AnimalProductToday[],
   };
 
   const allItems: InventoryItem[] = inputsQ.data ?? [];
@@ -182,28 +192,25 @@ export function InventoryScreen({ navigation }: Props) {
     (i) => i.remainingQty <= 0 && isWithin7Days(i.scheduledUseDate),
   );
 
-  const allProducts: AnimalProductRecord[]  = productsQ.data ?? [];
-  const eggRecords  = allProducts.filter((r) => r.productType === 'eggs');
-  const milkRecords = allProducts.filter((r) => r.productType === 'milk');
-  const hasChickens  = eggRecords.length > 0;
-  const hasDairy     = milkRecords.length > 0;
+  const allProducts: AnimalProductRecord[] = productsQ.data ?? [];
+  const today    = new Date();
+  const weekDays = getWeekDays();
 
-  const today        = new Date();
-  const weekDays     = getWeekDays();
+  // Group records by product type — this drives one card + one weekly grid per
+  // product the farmer actually tracks (eggs, cow milk, fish, honey, or any
+  // custom-typed product), instead of two hardcoded egg/milk sections.
+  const productTypesPresent = Array.from(new Set(allProducts.map((r) => r.productType)));
 
-  const todayEggRecord  = eggRecords.find((r) => isSameDay(r.date, today));
-  const todayMilkRecord = milkRecords.find((r) => isSameDay(r.date, today));
-
-  const weekEggValues = weekDays.map((d) => {
-    const rec = eggRecords.find((r) => isSameDay(r.date, d));
-    return rec?.quantity ?? null;
+  const productGroups = productTypesPresent.map((productType) => {
+    const records = allProducts.filter((r) => r.productType === productType);
+    const todayRecord = records.find((r) => isSameDay(r.date, today));
+    const weekValues = weekDays.map((d) => records.find((r) => isSameDay(r.date, d))?.quantity ?? null);
+    const maxValue = Math.max(...weekValues.filter((v): v is number => v !== null), 1);
+    return { productType, records, todayRecord, weekValues, maxValue };
   });
-  const weekMilkValues = weekDays.map((d) => {
-    const rec = milkRecords.find((r) => isSameDay(r.date, d));
-    return rec?.quantity ?? null;
-  });
-  const maxEgg  = Math.max(...weekEggValues.filter((v): v is number => v !== null), 1);
-  const maxMilk = Math.max(...weekMilkValues.filter((v): v is number => v !== null), 1);
+
+  const trackedProductTypes = new Set(productTypesPresent);
+  const untrackedProductTypes = ANIMAL_PRODUCT_TYPES.filter((p) => !trackedProductTypes.has(p.key));
 
   const allHarvest: HarvestStore[]        = harvestQ.data ?? [];
   const totalHarvestValue = allHarvest.reduce((s, h) => s + h.estimatedValueKes, 0);
@@ -286,11 +293,13 @@ export function InventoryScreen({ navigation }: Props) {
         </View>
         <View style={s.summaryItem}>
           <Text style={[s.summaryValue, { color: '#1A6B3C' }]}>
-            {summary.eggsCollectedToday != null
-              ? t('inventory.summary.trays', { count: summary.eggsCollectedToday })
+            {summary.animalProductsToday.length > 0
+              ? summary.animalProductsToday
+                  .map((p: AnimalProductToday) => `${p.quantity} ${t(`inventory.units.${getProductConfig(p.productType).unit}`, { defaultValue: getProductConfig(p.productType).unit })}`)
+                  .join(' · ')
               : '—'}
           </Text>
-          <Text style={s.summaryLabel}>{t('inventory.summary.todayEggs')}</Text>
+          <Text style={s.summaryLabel}>{t('inventory.summary.todayProducts')}</Text>
         </View>
       </View>
 
@@ -478,10 +487,14 @@ export function InventoryScreen({ navigation }: Props) {
                         </View>
                         <Pressable
                           style={s.buyNowBtn}
-                          onPress={() =>
-                            (navigation.getParent() as ParentNav | undefined)
-                              ?.navigate('Market', { screen: 'MarketHome' })
-                          }
+                          onPress={() => navigation.navigate('RestockScreen', {
+                            itemId:       item.id,
+                            itemName:     item.name,
+                            unit:         item.unit,
+                            remainingQty: item.remainingQty,
+                            supplier:     item.supplier,
+                            costPerUnit:  item.costPerUnit,
+                          })}
                           accessibilityRole="button"
                         >
                           <Text style={s.buyNowLabel}>
@@ -497,12 +510,32 @@ export function InventoryScreen({ navigation }: Props) {
                     {/* Record Use / Restock */}
                     {!isEmpty && (
                       <View style={s.actionRow}>
-                        <Pressable style={s.outlineBtn} accessibilityRole="button">
+                        <Pressable
+                          style={s.outlineBtn}
+                          onPress={() => navigation.navigate('RecordUseScreen', {
+                            itemId:       item.id,
+                            itemName:     item.name,
+                            unit:         item.unit,
+                            remainingQty: item.remainingQty,
+                          })}
+                          accessibilityRole="button"
+                        >
                           <Text style={s.outlineBtnLabel}>
                             {t('inventory.inputs.recordUse')}
                           </Text>
                         </Pressable>
-                        <Pressable style={s.primaryBtn} accessibilityRole="button">
+                        <Pressable
+                          style={s.primaryBtn}
+                          onPress={() => navigation.navigate('RestockScreen', {
+                            itemId:       item.id,
+                            itemName:     item.name,
+                            unit:         item.unit,
+                            remainingQty: item.remainingQty,
+                            supplier:     item.supplier,
+                            costPerUnit:  item.costPerUnit,
+                          })}
+                          accessibilityRole="button"
+                        >
                           <Text style={s.primaryBtnLabel}>
                             {t('inventory.inputs.restock')}
                           </Text>
@@ -548,183 +581,194 @@ export function InventoryScreen({ navigation }: Props) {
             <ActivityIndicator size="large" color="#1A6B3C" style={s.loader} />
           )}
 
-          {!productsQ.isLoading && !hasChickens && !hasDairy && (
+          {!productsQ.isLoading && productGroups.length === 0 && (
             <View style={s.emptyBox}>
               <Text style={s.emptyTitle}>{t('inventory.products.cropOnlyMsg')}</Text>
             </View>
           )}
 
-          {!productsQ.isLoading && (hasChickens || hasDairy) && (
+          {!productsQ.isLoading && productGroups.length > 0 && (
             <>
               {/* Today's Collection */}
               <Text style={s.sectionHeader}>{t('inventory.products.sectionTitle')}</Text>
               <View style={s.productGrid}>
-                {hasChickens && (
-                  <View style={[s.productCard, s.productCardGreen]}>
-                    <Text style={s.productEmoji}>🥚</Text>
-                    <Text style={[s.productValue, { color: '#1A6B3C' }]}>
-                      {todayEggRecord?.quantity ?? '—'}
-                    </Text>
-                    <Text style={s.productUnit}>{t('inventory.products.trays')}</Text>
-                    <Text style={s.productDate}>
-                      {t('inventory.products.eggs.today', {
-                        date: today.toLocaleDateString('en-GB', {
+                {productGroups.map(({ productType, records, todayRecord }) => {
+                  const config = getProductConfig(productType);
+                  const unit = t(`inventory.units.${config.unit}`, { defaultValue: config.unit });
+                  return (
+                    <View key={productType} style={[s.productCard, { borderColor: config.color }]}>
+                      <Text style={s.productEmoji}>{config.emoji}</Text>
+                      <Text style={[s.productValue, { color: config.color }]}>
+                        {todayRecord?.quantity ?? '—'}
+                      </Text>
+                      <Text style={s.productUnit}>{unit}</Text>
+                      <Text style={s.productDate}>
+                        {productLabel(productType, t)} · {today.toLocaleDateString('en-GB', {
                           month: 'short',
                           day: 'numeric',
-                        }),
-                      })}
-                    </Text>
-                    {todayEggRecord ? (
-                      <>
-                        <Text style={s.recordedLabel}>
-                          {t('inventory.products.recorded')}
-                        </Text>
-                        <Pressable
-                          style={[s.productActionBtn, { backgroundColor: '#1A6B3C' }]}
-                          accessibilityRole="button"
-                        >
-                          <Text style={s.productActionLabel}>
-                            {t('inventory.products.update')}
+                        })}
+                      </Text>
+                      {todayRecord ? (
+                        <>
+                          <Text style={[s.recordedLabel, { color: config.color }]}>
+                            {t('inventory.products.recorded')}
                           </Text>
-                        </Pressable>
-                      </>
-                    ) : (
-                      <>
-                        <View style={s.mb4}>
-                          <AlertBox
-                            variant="amber"
-                            message={t('inventory.products.recordAlert')}
-                          />
-                        </View>
-                        <Pressable
-                          style={[s.productActionBtn, { backgroundColor: '#1A6B3C' }]}
-                          accessibilityRole="button"
-                        >
-                          <Text style={s.productActionLabel}>
-                            {t('inventory.products.recordNow')}
-                          </Text>
-                        </Pressable>
-                      </>
-                    )}
-                  </View>
-                )}
-
-                {hasDairy && (
-                  <View style={[s.productCard, s.productCardTeal]}>
-                    <Text style={s.productEmoji}>🥛</Text>
-                    <Text style={[s.productValue, { color: '#0E7490' }]}>
-                      {todayMilkRecord?.quantity ?? '—'}
-                    </Text>
-                    <Text style={s.productUnit}>{t('inventory.products.litres')}</Text>
-                    <Text style={s.productDate}>
-                      {t('inventory.products.milk.today', {
-                        date: today.toLocaleDateString('en-GB', {
-                          month: 'short',
-                          day: 'numeric',
-                        }),
-                      })}
-                    </Text>
-                    {todayMilkRecord ? (
-                      <>
-                        <Text style={[s.recordedLabel, { color: '#0E7490' }]}>
-                          {t('inventory.products.recorded')}
-                        </Text>
-                        <Pressable
-                          style={[s.productActionBtn, { backgroundColor: '#0E7490' }]}
-                          accessibilityRole="button"
-                        >
-                          <Text style={s.productActionLabel}>
-                            {t('inventory.products.update')}
-                          </Text>
-                        </Pressable>
-                      </>
-                    ) : (
-                      <>
-                        <View style={s.mb4}>
-                          <AlertBox
-                            variant="amber"
-                            message={t('inventory.products.recordAlert')}
-                          />
-                        </View>
-                        <Pressable
-                          style={[s.productActionBtn, { backgroundColor: '#0E7490' }]}
-                          accessibilityRole="button"
-                        >
-                          <Text style={s.productActionLabel}>
-                            {t('inventory.products.recordNow')}
-                          </Text>
-                        </Pressable>
-                      </>
-                    )}
-                  </View>
-                )}
+                          <Pressable
+                            style={[s.productActionBtn, { backgroundColor: config.color }]}
+                            onPress={() => navigation.navigate('RecordAnimalProductScreen', {
+                              productType,
+                              existingId:   todayRecord.id,
+                              existingQty:  todayRecord.quantity,
+                              farmId:       todayRecord.farmId,
+                              animalGroupId: todayRecord.animalGroupId,
+                              pricePerUnit: todayRecord.pricePerUnit,
+                            })}
+                            accessibilityRole="button"
+                          >
+                            <Text style={s.productActionLabel}>
+                              {t('inventory.products.update')}
+                            </Text>
+                          </Pressable>
+                        </>
+                      ) : (
+                        <>
+                          <View style={s.mb4}>
+                            <AlertBox
+                              variant="amber"
+                              message={t('inventory.products.recordAlert')}
+                            />
+                          </View>
+                          <Pressable
+                            style={[s.productActionBtn, { backgroundColor: config.color }]}
+                            onPress={() => navigation.navigate('RecordAnimalProductScreen', {
+                              productType,
+                              farmId:        records[0]?.farmId ?? 'farm-1',
+                              animalGroupId: records[0]?.animalGroupId ?? `ag-${productType}`,
+                              pricePerUnit:  records[0]?.pricePerUnit ?? 0,
+                            })}
+                            accessibilityRole="button"
+                          >
+                            <Text style={s.productActionLabel}>
+                              {t('inventory.products.recordNow')}
+                            </Text>
+                          </Pressable>
+                        </>
+                      )}
+                    </View>
+                  );
+                })}
               </View>
 
-              {/* 7-day egg grid */}
-              {hasChickens && (
-                <>
-                  <Text style={s.sectionHeader}>{t('inventory.products.weekTitle')}</Text>
+              {/* 7-day grids, one per tracked product */}
+              {productGroups.map(({ productType, weekValues, maxValue }) => (
+                <React.Fragment key={productType}>
+                  <Text style={s.sectionHeader}>
+                    {t('inventory.products.weekTitleGeneric', { product: productLabel(productType, t) })}
+                  </Text>
                   <WeeklyGrid
                     weekDays={weekDays}
-                    values={weekEggValues}
-                    maxValue={maxEgg}
+                    values={weekValues}
+                    maxValue={maxValue}
                     today={today}
-                    footerText={t('inventory.products.weekSummary', {
-                      total: weekEggValues.reduce<number>(
-                        (a, v) => a + (v ?? 0),
-                        0,
-                      ),
+                    footerText={t('inventory.products.weekSummaryGeneric', {
+                      total: weekValues.reduce<number>((a, v) => a + (v ?? 0), 0),
+                      unit: t(`inventory.units.${getProductConfig(productType).unit}`, {
+                        defaultValue: getProductConfig(productType).unit,
+                      }),
                       avg: (
-                        weekEggValues.reduce<number>((a, v) => a + (v ?? 0), 0) /
-                        Math.max(weekEggValues.filter((v) => v !== null).length, 1)
+                        weekValues.reduce<number>((a, v) => a + (v ?? 0), 0) /
+                        Math.max(weekValues.filter((v) => v !== null).length, 1)
                       ).toFixed(1),
                     })}
                     dayKeys={DAY_KEYS.map((k) => t(`inventory.products.days.${k}`))}
                   />
-                </>
-              )}
-
-              {/* 7-day milk grid */}
-              {hasDairy && (
-                <>
-                  <Text style={s.sectionHeader}>{t('inventory.products.weekMilkTitle')}</Text>
-                  <WeeklyGrid
-                    weekDays={weekDays}
-                    values={weekMilkValues}
-                    maxValue={maxMilk}
-                    today={today}
-                    footerText={t('inventory.products.weekMilkSummary', {
-                      total: weekMilkValues.reduce<number>(
-                        (a, v) => a + (v ?? 0),
-                        0,
-                      ),
-                      avg: (
-                        weekMilkValues.reduce<number>((a, v) => a + (v ?? 0), 0) /
-                        Math.max(weekMilkValues.filter((v) => v !== null).length, 1)
-                      ).toFixed(1),
-                    })}
-                    dayKeys={DAY_KEYS.map((k) => t(`inventory.products.days.${k}`))}
-                  />
-                </>
-              )}
+                </React.Fragment>
+              ))}
 
               {/* Quick Sell */}
               <Text style={s.sectionHeader}>{t('inventory.products.sellTitle')}</Text>
               <View style={s.actionRow}>
-                {hasChickens && (
-                  <Pressable style={s.primaryBtn} accessibilityRole="button">
-                    <Text style={s.primaryBtnLabel}>{t('inventory.products.sellEggs')}</Text>
-                  </Pressable>
-                )}
-                {hasDairy && (
+                {productGroups.map(({ productType }) => {
+                  const config = getProductConfig(productType);
+                  return (
+                    <Pressable
+                      key={productType}
+                      style={[s.primaryBtn, { backgroundColor: config.color }]}
+                      onPress={() => navigation.navigate('AddCollectionScreen', { productType })}
+                      accessibilityRole="button"
+                    >
+                      <Text style={s.primaryBtnLabel}>
+                        {t('inventory.products.sellGeneric', { product: productLabel(productType, t) })} {config.emoji}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </>
+          )}
+
+          {/* Start tracking a new product type */}
+          {!productsQ.isLoading && untrackedProductTypes.length > 0 && (
+            <>
+              <Text style={s.sectionHeader}>{t('inventory.products.addProductTitle')}</Text>
+              <View style={[s.chipRow, s.chipRowWrap]}>
+                {untrackedProductTypes.map((p) => (
                   <Pressable
-                    style={[s.primaryBtn, { backgroundColor: '#0E7490' }]}
+                    key={p.key}
+                    style={[s.chip, s.chipInactive]}
+                    onPress={() => navigation.navigate('RecordAnimalProductScreen', {
+                      productType: p.key,
+                      farmId: allProducts[0]?.farmId ?? 'farm-1',
+                      animalGroupId: `ag-${p.key}`,
+                      pricePerUnit: 0,
+                    })}
                     accessibilityRole="button"
                   >
-                    <Text style={s.primaryBtnLabel}>{t('inventory.products.sellMilk')}</Text>
+                    <Text style={s.chipTextInactive}>
+                      {p.emoji} {t(p.labelKey)}
+                    </Text>
                   </Pressable>
-                )}
+                ))}
+                <Pressable
+                  style={[s.chip, s.chipInactive]}
+                  onPress={() => setShowCustomProductInput(true)}
+                  accessibilityRole="button"
+                >
+                  <Text style={s.chipTextInactive}>
+                    ➕ {t('inventory.products.otherProduct')}
+                  </Text>
+                </Pressable>
               </View>
+
+              {showCustomProductInput && (
+                <View style={s.customProductRow}>
+                  <TextInput
+                    style={s.textInputFlex}
+                    value={customProductName}
+                    onChangeText={setCustomProductName}
+                    placeholder={t('inventory.products.otherProductPlaceholder')}
+                    placeholderTextColor="#9CA3AF"
+                  />
+                  <Pressable
+                    style={[s.primaryBtn, !customProductName.trim() && s.btnDisabled]}
+                    disabled={!customProductName.trim()}
+                    onPress={() => {
+                      const productType = customProductName.trim();
+                      setShowCustomProductInput(false);
+                      setCustomProductName('');
+                      navigation.navigate('RecordAnimalProductScreen', {
+                        productType,
+                        farmId: allProducts[0]?.farmId ?? 'farm-1',
+                        animalGroupId: `ag-${productType}`,
+                        pricePerUnit: 0,
+                      });
+                    }}
+                    accessibilityRole="button"
+                  >
+                    <Text style={s.primaryBtnLabel}>{t('inventory.products.startTracking')}</Text>
+                  </Pressable>
+                </View>
+              )}
             </>
           )}
         </ScrollView>
@@ -857,12 +901,31 @@ export function InventoryScreen({ navigation }: Props) {
                         </Text>
 
                         <View style={[s.actionRow, s.mt6]}>
-                          <Pressable style={s.primaryBtn} accessibilityRole="button">
+                          <Pressable
+                            style={s.primaryBtn}
+                            onPress={() => navigation.navigate('RecordHarvestSaleScreen', {
+                              harvestId:           item.id,
+                              cropName:            item.cropName,
+                              remainingKg:         item.remainingKg,
+                              estimatedPricePerKg: item.quantityKg > 0
+                                ? Math.round(item.estimatedValueKes / Math.max(item.remainingKg, 1))
+                                : 0,
+                            })}
+                            accessibilityRole="button"
+                          >
                             <Text style={s.primaryBtnLabel}>
                               {t('inventory.harvest.recordSale')}
                             </Text>
                           </Pressable>
-                          <Pressable style={s.outlineBtn} accessibilityRole="button">
+                          <Pressable
+                            style={s.outlineBtn}
+                            onPress={() => navigation.navigate('UpdateHarvestStockScreen', {
+                              harvestId:   item.id,
+                              cropName:    item.cropName,
+                              remainingKg: item.remainingKg,
+                            })}
+                            accessibilityRole="button"
+                          >
                             <Text style={s.outlineBtnLabel}>
                               {t('inventory.harvest.updateStock')}
                             </Text>
@@ -873,7 +936,11 @@ export function InventoryScreen({ navigation }: Props) {
                   })}
 
                   {/* Add harvest card */}
-                  <Pressable style={s.dashedCard} accessibilityRole="button">
+                  <Pressable
+                    style={s.dashedCard}
+                    onPress={() => navigation.navigate('AddHarvestScreen')}
+                    accessibilityRole="button"
+                  >
                     <Text style={s.dashedCardLabel}>
                       {t('inventory.harvest.addNew')}
                     </Text>
@@ -1036,7 +1103,11 @@ export function InventoryScreen({ navigation }: Props) {
                 })}
 
               {/* Add collection card */}
-              <Pressable style={s.dashedCard} accessibilityRole="button">
+              <Pressable
+                style={s.dashedCard}
+                onPress={() => navigation.navigate('AddCollectionScreen', {})}
+                accessibilityRole="button"
+              >
                 <Text style={s.dashedCardLabel}>
                   {t('inventory.collections.addNew')}
                 </Text>
@@ -1167,6 +1238,13 @@ const s = StyleSheet.create({
   // ── Chips ─────────────────────────────────────────────────────────────────
   chipScroll:    { marginBottom: 10 },
   chipRow:       { flexDirection: 'row', gap: 6, paddingVertical: 2 },
+  chipRowWrap:   { flexWrap: 'wrap' },
+  customProductRow: { flexDirection: 'row', gap: 6, marginTop: 8, alignItems: 'center' },
+  textInputFlex: {
+    flex: 1, borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 5,
+    paddingVertical: 7, paddingHorizontal: 9, fontSize: 10, color: '#111827',
+    backgroundColor: '#F9FAFB', minHeight: 40,
+  },
   filterRow:     { flexDirection: 'row', gap: 6, marginBottom: 10 },
   chip:          { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5 },
   chipActive:    { backgroundColor: '#1A6B3C' },
@@ -1249,13 +1327,11 @@ const s = StyleSheet.create({
   dashedCardLabel: { fontSize: 10, fontWeight: '600', color: '#1A6B3C' },
 
   // ── Animal Products ───────────────────────────────────────────────────────
-  productGrid:      { flexDirection: 'row', gap: 6, marginBottom: 8 },
+  productGrid:      { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 },
   productCard:      {
-    flex: 1, borderWidth: 1.5, borderRadius: 8, padding: 10, alignItems: 'center',
-    backgroundColor: '#fff',
+    flexBasis: '47%', flexGrow: 1, borderWidth: 1.5, borderRadius: 8, padding: 10,
+    alignItems: 'center', backgroundColor: '#fff',
   },
-  productCardGreen: { borderColor: '#1A6B3C' },
-  productCardTeal:  { borderColor: '#0E7490' },
   productEmoji:     { fontSize: 22, marginBottom: 2 },
   productValue:     { fontSize: 16, fontWeight: '800', marginBottom: 1 },
   productUnit:      { fontSize: 9, color: '#6B7280' },

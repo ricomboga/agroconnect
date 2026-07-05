@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { farmApi, type Farm } from '../api/farm';
 import { activityApi, type Activity } from '../api/activity';
-import { financeApi, type LoanApplication } from '../api/finance';
+import { financeApi, type LoanApplication, type Transaction } from '../api/finance';
 import { priceAlertsApi, type PriceAlert } from '../api/marketPriceAlerts';
 import { useOfflineSync } from './useOfflineSync';
+import type { MonthBar } from '../components/Dashboard/FinanceSnapshotCard';
 
 export interface TopPriceAlert {
   crop: string;
@@ -27,6 +28,7 @@ export interface DashboardData {
   cashFlowIncome: number;
   cashFlowExpenses: number;
   cashFlowNet: number;
+  monthBars: MonthBar[];
   creditScore: number;
   creditBand: string;
   maxLoanKes: number;
@@ -130,6 +132,13 @@ export function useDashboardData(): DashboardData {
     staleTime: staleMs,
   });
 
+  const transactionsQ = useQuery({
+    queryKey: ['transactions'],
+    queryFn: () => financeApi.transactions.list(),
+    enabled: hasData,
+    staleTime: staleMs,
+  });
+
   const allActivities = allActivitiesQ.data?.data ?? [];
   const { current: streak, best: bestStreak } = computeStreak(allActivities);
 
@@ -199,13 +208,35 @@ export function useDashboardData(): DashboardData {
       void creditQ.refetch();
       void loansQ.refetch();
       void priceAlertsQ.refetch();
+      void transactionsQ.refetch();
     }
   };
 
-  // Cashflow totals will come from GET /finance/cashflow-summary once that endpoint is added.
-  const cashFlowIncome = 0;
-  const cashFlowExpenses = 0;
-  const cashFlowNet = 0;
+  // Compute cashflow from transactions
+  const transactions: Transaction[] = transactionsQ.data?.data ?? [];
+  const thisMonthStr = today.slice(0, 7);
+  const monthTxs = transactions.filter((tx: Transaction) => tx.date.startsWith(thisMonthStr));
+  const cashFlowIncome = monthTxs
+    .filter((tx: Transaction) => tx.type === 'income')
+    .reduce((sum: number, tx: Transaction) => sum + tx.amountKes, 0);
+  const cashFlowExpenses = monthTxs
+    .filter((tx: Transaction) => tx.type === 'expense')
+    .reduce((sum: number, tx: Transaction) => sum + tx.amountKes, 0);
+  const cashFlowNet = cashFlowIncome - cashFlowExpenses;
+
+  // Last 6 months for the bar chart
+  const SHORT_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const monthBars: MonthBar[] = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() - (5 - i));
+    const key = d.toISOString().slice(0, 7);
+    const monthName = SHORT_MONTHS[d.getMonth()] ?? '';
+    const mTxs = transactions.filter((tx: Transaction) => tx.date.startsWith(key));
+    const income = mTxs.filter((tx: Transaction) => tx.type === 'income').reduce((s: number, tx: Transaction) => s + tx.amountKes, 0);
+    const expense = mTxs.filter((tx: Transaction) => tx.type === 'expense').reduce((s: number, tx: Transaction) => s + tx.amountKes, 0);
+    return { month: monthName, income, expense };
+  });
 
   return {
     hasData,
@@ -222,6 +253,7 @@ export function useDashboardData(): DashboardData {
     cashFlowIncome,
     cashFlowExpenses,
     cashFlowNet,
+    monthBars,
     creditScore: credit?.score ?? 0,
     creditBand: credit?.band ?? '—',
     maxLoanKes: credit?.maxLoanKes ?? 0,

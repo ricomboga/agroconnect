@@ -95,7 +95,7 @@ export function LoanApplicationScreen({ navigation, route }: Props) {
   if (isLoading) {
     return (
       <SafeAreaView style={s.safe}>
-        <View style={s.center}><ActivityIndicator size="large" color="#1565C0" /></View>
+        <View style={s.center}><ActivityIndicator size="large" color="#1A6B3C" /></View>
       </SafeAreaView>
     );
   }
@@ -240,21 +240,21 @@ const s = StyleSheet.create({
   flex:               { flex: 1 },
   center:             { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
   errorText:          { fontSize: 15, color: '#B71C1C', marginBottom: 12, textAlign: 'center' },
-  retryBtn:           { minHeight: 48, justifyContent: 'center', paddingHorizontal: 24, backgroundColor: '#E3F2FD', borderRadius: 8 },
-  retryLabel:         { fontSize: 15, color: '#1565C0', fontWeight: '600' },
+  retryBtn:           { minHeight: 48, justifyContent: 'center', paddingHorizontal: 24, backgroundColor: '#EAF4EE', borderRadius: 8 },
+  retryLabel:         { fontSize: 15, color: '#1A6B3C', fontWeight: '600' },
 
   topBar:             { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#FFF', borderBottomWidth: 1, borderBottomColor: '#EEEEEE' },
   backBtn:            { minWidth: 60, minHeight: 44, justifyContent: 'center' },
-  backLabel:          { fontSize: 15, color: '#1565C0', fontWeight: '600' },
+  backLabel:          { fontSize: 15, color: '#1A6B3C', fontWeight: '600' },
   topTitle:           { fontSize: 16, fontWeight: '700', color: '#1A1A1A' },
 
   scroll:             { padding: 16, paddingBottom: 48 },
 
-  productHeader:      { backgroundColor: '#E3F2FD', borderRadius: 12, padding: 14, marginBottom: 20 },
-  productName:        { fontSize: 15, fontWeight: '700', color: '#1565C0', marginBottom: 2 },
+  productHeader:      { backgroundColor: '#EAF4EE', borderRadius: 12, padding: 14, marginBottom: 20 },
+  productName:        { fontSize: 15, fontWeight: '700', color: '#1A6B3C', marginBottom: 2 },
   partnerName:        { fontSize: 13, color: '#555' },
 
-  sectionLabel:       { fontSize: 12, fontWeight: '700', color: '#888', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8, marginTop: 4 },
+  sectionLabel:       { fontSize: 14, fontWeight: '700', color: '#888', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8, marginTop: 4 },
 
   readOnlyCard:       { backgroundColor: '#F5F5F5', borderRadius: 12, marginBottom: 20 },
   readOnlyRow:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#EEEEEE' },
@@ -270,7 +270,7 @@ const s = StyleSheet.create({
 
   monthChips:         { flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 4 },
   monthChip:          { minWidth: 56, minHeight: 48, borderRadius: 10, borderWidth: 1.5, borderColor: '#DDDDDD', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 14 },
-  monthChipActive:    { backgroundColor: '#1565C0', borderColor: '#1565C0' },
+  monthChipActive:    { backgroundColor: '#1A6B3C', borderColor: '#1A6B3C' },
   monthChipText:      { fontSize: 15, fontWeight: '600', color: '#555' },
   monthChipTextActive:{ color: '#FFF' },
 
@@ -278,8 +278,8 @@ const s = StyleSheet.create({
   summaryLabel:       { fontSize: 13, color: '#388E3C', fontWeight: '600' },
   summaryValue:       { fontSize: 18, fontWeight: '800', color: '#1B5E20' },
 
-  submitBtn:          { minHeight: 52, backgroundColor: '#1565C0', borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginTop: 24 },
-  submitDisabled:     { backgroundColor: '#90CAF9' },
+  submitBtn:          { minHeight: 52, backgroundColor: '#1A6B3C', borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginTop: 24 },
+  submitDisabled:     { backgroundColor: '#A7D7B9' },
   submitLabel:        { color: '#FFF', fontSize: 16, fontWeight: '700' },
   submitError:        { fontSize: 13, color: '#B71C1C', textAlign: 'center', marginTop: 8 },
 });

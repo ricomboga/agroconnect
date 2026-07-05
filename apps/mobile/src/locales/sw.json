@@ -29,7 +29,7 @@
       "phoneLabel": "Nambari ya Simu",
       "pinLabel": "PIN",
       "signIn": "Ingia →",
-      "forgotPin": "Umesahau PIN? Wasiliana na msimamizi wa shamba",
+      "forgotPin": "Umesahau PIN?",
       "phone": "Nambari ya simu (+254...)",
       "password": "Nenosiri",
       "submit": "Ingia",
@@ -63,6 +63,24 @@
       "success": "Simu imethibitishwa! Ingia sasa.",
       "error": {
         "invalid": "Nambari si sahihi. Jaribu tena."
+      }
+    },
+    "forgotPin": {
+      "title": "Weka upya PIN yako",
+      "subtitle": "Ingiza nambari yako ya simu iliyosajiliwa. Tutakutumia nambari ya kuweka upya PIN yako.",
+      "sendCode": "Tuma nambari",
+      "error": {
+        "phoneInvalid": "Ingiza nambari sahihi ya Kenya (+254...)"
+      }
+    },
+    "resetPin": {
+      "title": "Ingiza nambari na PIN mpya",
+      "subtitle": "Ingiza nambari iliyotumwa kwa {{phone}} kisha chagua PIN mpya ya tarakimu 4.",
+      "codeLabel": "Nambari ya uthibitisho",
+      "submit": "Weka Upya PIN",
+      "success": "PIN imewekwa upya! Tafadhali ingia kwa PIN yako mpya.",
+      "error": {
+        "invalidCode": "Nambari si sahihi au imeisha muda. Jaribu tena."
       }
     },
     "setPin": {
@@ -120,8 +138,9 @@
     "market": "Soko",
     "finance": "Fedha",
     "inventory": "Hifadhi",
-    "stock": "Ghala",
+    "farmInventory": "Ghala la Shamba",
     "community": "Jamii",
+    "farmersCommunity": "Jamii ya Wakulima",
     "profile": "Wasifu",
     "me": "Mimi",
     "govt": "Serikali",
@@ -202,12 +221,25 @@
     },
     "inventory": {
       "title": "📦 Duka la Shamba",
+      "alertTitle": "⚠️ Tahadhari za Hifadhi",
       "lowEmpty": "⚠️ Vitu vya Chini/Tupu",
       "collections": "💰 Malipo ya Wateja",
       "inStore": "🌾 Mazao Ghalani",
-      "eggsToday": "🥚 Mayai Leo",
-      "eggsTrays": "trerei {{count}}",
-      "viewAll": "Angalia Hifadhi →"
+      "productToday": "{{product}} leo",
+      "viewAll": "Angalia Hifadhi →",
+      "out": "imeisha",
+      "low": "inakwisha"
+    },
+    "weather": {
+      "title": "🌤 Hali ya Hewa",
+      "viewFull": "Utabiri kamili",
+      "rain": "uwezekano wa mvua",
+      "unavailable": "Taarifa ya hali ya hewa haipatikani",
+      "serviceDown": "Huduma ya hewa imezimwa — weka OPENWEATHER_API_KEY"
+    },
+    "finance": {
+      "title": "💰 Muhtasari wa Fedha",
+      "income": "Mapato"
     }
   },
   "profile": {
@@ -448,6 +480,12 @@
       "sectionToday": "Leo",
       "sectionThisWeek": "Wiki Hii",
       "sectionUpcoming": "Zinazokuja",
+      "groupPending": "⚠️ Kazi Zinazongoja",
+      "groupCompleted": "✅ Kazi Zilizokamilika",
+      "groupUpcoming": "📅 Kazi Zinazokuja",
+      "subToday": "Leo",
+      "subThisWeek": "Wiki Hii",
+      "subThisMonth": "Mwezi Huu",
       "allCaughtUp": "✅ Umefanya vizuri! Hakuna kazi leo.",
       "assignedTo": "Amepewa",
       "unassigned": "Hajapewa",
@@ -641,7 +679,9 @@
         "bookVet": "📅 Panga Daktari",
         "logSpraying": "⚡ Rekodi Kunyunyizia Sasa",
         "logNow": "⚡ Rekodi Sasa",
-        "logDone": "Rekodi ✓"
+        "logDone": "Rekodi ✓",
+        "logEarly": "Rekodi Mapema",
+        "assign": "Gawia ›"
       }
     },
     "calendar": {
@@ -708,6 +748,8 @@
       "saveBtn": "✅ Hifadhi Shughuli (+1 Msururu)",
       "successToast": "Shughuli imerekodiwa! 🔥 Msururu wa siku {{streak}}",
       "errorSave": "Imeshindwa kuhifadhi shughuli. Jaribu tena.",
+      "errorValidation": "Angalia maingizo yako — baadhi ya sehemu haziko sahihi.",
+      "errorForbidden": "Huna ruhusa ya kuunda shughuli kwenye shamba hili.",
       "farmPickerTitle": "Chagua Shamba",
       "cropPickerTitle": "Chagua Zao / Mnyama",
       "timeLabel": "Wakati (si lazima)",
@@ -1097,8 +1139,15 @@
     },
     "home": {
       "title": "Fedha",
-      "applyBtn": "Omba mkopo",
+      "applyBtn": "Ona mikopo inayopatikana",
       "loanHistory": "Historia ya mikopo",
+      "loanOverview": {
+        "title": "Muhtasari wa mikopo",
+        "creditLimit": "Kikomo cha mkopo",
+        "activeLoans": "Mikopo inayoendelea",
+        "nextPayment": "Malipo yanayofuata",
+        "nonPerforming": "Mikopo mibovu"
+      },
       "reports": {
         "periodMonth": "Mwezi Huu",
         "periodQuarter": "Miezi 3",
@@ -1108,7 +1157,27 @@
         "netProfit": "Faida Halisi",
         "margin": "pembejeo",
         "breakdown": "Mgawanyo wa Kategoria",
-        "export": "Hamisha / Shiriki Ripoti"
+        "export": "Hamisha / Shiriki Ripoti",
+        "exportFormatPrompt": "Chagua muundo wa faili wa kupakua na kushiriki",
+        "exportCsv": "CSV (lahajedwali)",
+        "exportPdf": "PDF (hati)",
+        "noData": "Hakuna miamala iliyorekodiwa kwa kipindi hiki",
+        "production": {
+          "title": "Uzalishaji wa Shamba",
+          "subtitle": "Inajumuishwa unaposhiriki ripoti hii na mkopeshaji",
+          "crops": "Mavuno ya Mazao",
+          "harvested": "Yaliyovunwa",
+          "sold": "Yaliyouzwa",
+          "revenue": "Mapato",
+          "animalProducts": "Bidhaa za Wanyama na Shamba",
+          "collections": "Ukusanyaji wa Wateja",
+          "totalSales": "Jumla ya Mauzo",
+          "paid": "Yaliyolipwa",
+          "pending": "Yanayosubiri",
+          "empty": "Hakuna data ya uzalishaji iliyorekodiwa kwa kipindi hiki",
+          "offline": "Unganisha kwenye intaneti kuona data ya uzalishaji wa shamba",
+          "loadFailed": "Imeshindwa kupakia data ya uzalishaji wa shamba"
+        }
       },
       "tabs": {
         "cashflow": "Mtiririko wa Fedha",
@@ -1179,10 +1248,12 @@
         "approved": "Imeidhinishwa",
         "rejected": "Imekataliwa",
         "disbursed": "Imetolewa",
-        "cancelled": "Imefutwa"
+        "cancelled": "Imefutwa",
+        "repaid": "Imelipwa",
+        "defaulted": "Haijalipiwa"
       },
       "products": {
-        "title": "Bidhaa za Mikopo",
+        "title": "Mikopo Inayopatikana",
         "interestRate": "Riba: {{rate}}% / mwaka",
         "maxAmount": "Hadi KES {{amount}}",
         "minAmount": "Kuanzia KES {{amount}}",
@@ -1190,9 +1261,36 @@
         "eligibility": "Kiwango: {{band}}+",
         "applyBtn": "Omba",
         "notEligible": "Alama haitoshi",
+        "viewDetails": "Tazama maelezo",
+        "partnerType": {
+          "bank": "Benki",
+          "microfinance": "Microfinance",
+          "sacco": "SACCO"
+        },
         "empty": {
           "title": "Hakuna bidhaa za mkopo",
           "body": "Bidhaa za mikopo zitaonekana hapa"
+        }
+      },
+      "productDetail": {
+        "title": "Maelezo ya Mkopo",
+        "interestRate": "Riba",
+        "repaymentTerm": "Muda wa Kulipa",
+        "minAmount": "Kiwango cha Chini",
+        "maxAmount": "Kiwango cha Juu",
+        "minCreditBand": "Kiwango cha Mikopo",
+        "yourLimit": "Kikomo Chako",
+        "months": "miezi {{n}}",
+        "eligibleBadge": "Unastahili",
+        "notEligibleBadge": "Hustahili",
+        "applyBtn": "Omba Mkopo Huu",
+        "ineligibleNote": "Unahitaji kiwango cha mkopo cha {{band}} au zaidi. Imarisha alama yako kwa kurekodi shughuli zaidi za shamba.",
+        "category": {
+          "back_to_school": "Kurudi Shule",
+          "farm_input": "Pembejeo za Shamba",
+          "asset_finance": "Fedha za Mali",
+          "emergency": "Dharura",
+          "general": "Jumla"
         }
       },
       "application": {
@@ -1503,8 +1601,22 @@
       "lowEmpty": "Chini/Imekwisha",
       "pendingKes": "KES Inayosubiri",
       "inStore": "Ghalani",
-      "todayEggs": "Mayai Leo",
-      "trays": "{{count}} trays"
+      "todayProducts": "Mazao ya Leo"
+    },
+    "units": {
+      "trays": "trerei",
+      "litres": "lita",
+      "kg": "kg",
+      "units": "vipande"
+    },
+    "productTypes": {
+      "eggs": "🥚 Mayai",
+      "cowMilk": "🥛 Maziwa ya Ng'ombe",
+      "goatMilk": "🐐 Maziwa ya Mbuzi",
+      "fish": "🐟 Samaki",
+      "honey": "🍯 Asali",
+      "wool": "🧶 Sufu",
+      "other": "📦 Nyingine"
     },
     "inputs": {
       "urgentAlert": "⚠️ bidhaa {{count}} zimekwisha — {{activity}} imepangwa hivi karibuni",
@@ -1544,24 +1656,19 @@
       "sectionTitle": "Makusanyo ya Leo",
       "trays": "Trays",
       "litres": "Lita",
-      "eggs": {
-        "today": "Leo, {{date}}"
-      },
-      "milk": {
-        "today": "Leo, {{date}}"
-      },
       "update": "Sasisha",
       "recordAlert": "Rekodi makusanyo ya leo",
       "recordNow": "Rekodi Sasa",
       "recorded": "✓ Imerekodiwa",
-      "weekTitle": "Mayai — Wiki Hii",
-      "weekMilkTitle": "Maziwa — Wiki Hii",
-      "weekSummary": "Jumla ya wiki: {{total}} trays · Wastani: {{avg}}/siku",
-      "weekMilkSummary": "Jumla ya wiki: {{total}}L · Wastani: {{avg}}L/siku",
+      "weekTitleGeneric": "{{product}} — Wiki Hii",
+      "weekSummaryGeneric": "Jumla ya wiki: {{total}} {{unit}} · Wastani: {{avg}}/siku",
       "sellTitle": "Rekodi Uuzaji",
-      "sellEggs": "Uza Mayai 🥚",
-      "sellMilk": "Uza Maziwa 🥛",
+      "sellGeneric": "Uza {{product}}",
       "cropOnlyMsg": "Mazao ya wanyama yanafuatiliwa kwa wakulima wa mifugo.",
+      "addProductTitle": "Fuatilia Bidhaa Mpya",
+      "otherProduct": "Nyingine",
+      "otherProductPlaceholder": "mf. Sungura, Kware",
+      "startTracking": "Anza Kufuatilia",
       "days": {
         "mon": "J",
         "tue": "K",
@@ -1666,12 +1773,11 @@
       "phoneLabel": "Nambari ya Simu",
       "phonePlaceholder": "+254 7__ ___ ___",
       "productLabel": "Bidhaa *",
-      "productEggs": "Mayai",
-      "productMilk": "Maziwa",
       "productMaize": "Mahindi",
       "productCabbage": "Kabichi",
       "productBeans": "Maharagwe",
       "productOther": "Nyingine",
+      "customProductPlaceholder": "Ingiza jina la bidhaa",
       "qtyLabel": "Kiasi *",
       "unitLabel": "Kipimo",
       "priceLabel": "Bei kwa {{unit}} (KES) *",
@@ -1746,15 +1852,12 @@
       "aiFertiliser": "Unganisha na shughuli za mbolea zinazokuja"
     },
     "recordProduct": {
-      "titleEggs": "🥚 Rekodi Makusanyo ya Mayai",
-      "titleMilk": "🥛 Rekodi Makusanyo ya Maziwa",
+      "titleGeneric": "{{emoji}} Rekodi Makusanyo ya {{product}}",
       "forGroup": "Kwa: {{name}} (ndege/wanyama {{count}})",
       "todayRecord": "Rekodi ya leo: {{qty}} {{unit}} · Inasasishwa",
       "updatingAlert": "Inasasisha rekodi ya leo iliyopo",
       "dupDateAlert": "Tayari umerekodia {{qty}} {{unit}} kwa tarehe hii. Inasasisha.",
       "qtyLabel": "Kiasi *",
-      "unitEggs": "Trays",
-      "unitMilk": "Lita",
       "fractionBtn": "+{{frac}}",
       "aiHint": "🤖 Jana: {{yesterday}} · Wastani wa wiki: {{weekAvg}}",
       "dateLabel": "Tarehe ya Kukusanya *",
@@ -1766,6 +1869,60 @@
       "saving": "Inahifadhi...",
       "successToast": "Makusanyo yamerekodiwa! {{qty}} {{unit}} tarehe {{date}}",
       "savedOfflineToast": "Imehifadhiwa nje ya mtandao. Itasawazishwa ukiwa mtandaoni."
+    },
+    "recordHarvestSale": {
+      "title": "Rekodi Uuzaji — {{crop}}",
+      "availableNote": "Inapatikana: {{kg}}kg ghalani",
+      "kgLabel": "Kiasi Kilichouzwa (kg) *",
+      "kgPlaceholder": "0",
+      "priceLabel": "Bei kwa kg (KES) *",
+      "pricePlaceholder": "0",
+      "totalPreview": "Jumla ya mauzo: KES {{total}}",
+      "buyerLabel": "Jina la Mnunuzi (si lazima)",
+      "buyerPlaceholder": "mf. Nakuru Maize Miller",
+      "dateLabel": "Tarehe ya Uuzaji *",
+      "exceeds": "{{kg}}kg peke yake ndiyo ipo ghalani",
+      "saveBtn": "Rekodi Uuzaji ✓",
+      "saving": "Inahifadhi...",
+      "successToast": "Uuzaji umerekodiwa. KES {{amount}} imeongezwa kwenye mapato."
+    },
+    "updateHarvestStock": {
+      "title": "Sasisha Hifadhi — {{crop}}",
+      "currentNote": "Hifadhi iliyorekodiwa: {{kg}}kg",
+      "newQtyLabel": "Iliyobaki Halisi (kg) *",
+      "newQtyPlaceholder": "0",
+      "reasonLabel": "Sababu ya Marekebisho (si lazima)",
+      "reasonPlaceholder": "mf. Kuoza, kuhesabu upya, uuzaji",
+      "saveBtn": "Sasisha Hifadhi ✓",
+      "saving": "Inahifadhi...",
+      "successToast": "Hifadhi imesasishwa kuwa {{kg}}kg."
+    },
+    "addHarvest": {
+      "title": "Rekodi Mavuno Ghalani",
+      "cropLabel": "Zao *",
+      "cropPlaceholder": "mf. Mahindi, Maharagwe, Ngano",
+      "varietyLabel": "Aina (si lazima)",
+      "varietyPlaceholder": "mf. H614D, Rose Coco",
+      "harvestDateLabel": "Tarehe ya Kuvuna *",
+      "qtyLabel": "Kiasi (kg) *",
+      "qtyPlaceholder": "0",
+      "gradeLabel": "Daraja",
+      "gradeA": "Daraja A",
+      "gradeB": "Daraja B",
+      "gradeC": "Daraja C",
+      "storageLabel": "Mahali pa Kuhifadhi *",
+      "storagePlaceholder": "mf. Ghala A, Baridi",
+      "priceLabel": "Bei inayokadiriwa kwa kg (KES)",
+      "pricePlaceholder": "0",
+      "totalPreview": "Thamani inayokadiriwa: KES {{total}}",
+      "farmLabel": "Shamba Linalohusika",
+      "farmPlaceholder": "Chagua shamba",
+      "farmPickerTitle": "Chagua Shamba",
+      "farmOptionSub": "{{county}} · ekari {{area}}",
+      "farmPickerEmpty": "Hakuna shamba. Ongeza shamba kwanza.",
+      "saveBtn": "Ongeza Ghalani ✓",
+      "saving": "Inahifadhi...",
+      "successToast": "{{qty}}kg {{crop}} imerekodiwa ghalani."
     }
   }
 }

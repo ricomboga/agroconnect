@@ -53,13 +53,21 @@ export async function apiFetch<T>(
 
   if (!response.ok) {
     let errorCode = 'UNKNOWN_ERROR';
+    let message = response.statusText;
     try {
-      const body = await response.json() as { error?: { code?: string; message?: string } };
-      errorCode = body.error?.code ?? errorCode;
-      throw new ApiError(response.status, errorCode, body.error?.message ?? response.statusText);
+      const body = await response.json() as {
+        error?: { code?: string; message?: string };
+        error_code?: string;
+        message_key?: string;
+      };
+      if (body.error?.code) errorCode = body.error.code;
+      else if (body.error_code) errorCode = body.error_code;
+      if (body.error?.message) message = body.error.message;
+      else if (body.message_key) message = body.message_key;
+      throw new ApiError(response.status, errorCode, message);
     } catch (err) {
       if (err instanceof ApiError) throw err;
-      throw new ApiError(response.status, errorCode, response.statusText);
+      throw new ApiError(response.status, errorCode, message);
     }
   }
 
