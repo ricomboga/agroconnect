@@ -19,7 +19,7 @@ export default function MarketLayout({ children }: { children: React.ReactNode }
             AgroConnect
           </Link>
           <nav className="flex flex-1 gap-6 text-sm font-medium text-gray-600">
-            <Link href="/" className="transition-colors hover:text-green-700">
+            <Link href="/market" className="transition-colors hover:text-green-700">
               Produce
             </Link>
             <Link href="/products" className="transition-colors hover:text-green-700">

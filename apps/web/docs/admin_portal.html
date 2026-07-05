@@ -1,0 +1,2358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AgroConnect — Admin Portal</title>
+<style>
+:root{
+  --g:#1A6B3C;--gd:#0D4A28;--gm:#2E8B57;--gl:#EAF4EE;
+  --gold:#C9A84C;--goldd:#F5E9C8;
+  --t:#0E7490;--tl:#CFFAFE;
+  --pur:#7C3AED;--purl:#F3E8FF;
+  --ink:#111827;--ink2:#374151;--muted:#6B7280;--muted2:#9CA3AF;
+  --surf:#F9FAFB;--surf2:#F3F4F6;--bord:#E5E7EB;
+  --red:#DC2626;--redl:#FEE2E2;--amb:#D97706;--ambl:#FEF3C7;
+  --blue:#1D4ED8;--bluel:#DBEAFE;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#ECEFF4;color:var(--ink)}
+/* Topbar */
+.topbar{background:var(--gd);color:#fff;padding:0 24px;height:48px;display:flex;align-items:center;justify-content:space-between}
+.tb-brand{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+.tb-portal{font-size:10px;background:rgba(255,255,255,.15);padding:2px 8px;border-radius:10px;margin-left:6px}
+.tb-links{display:flex;gap:4px}
+.tb-link{color:rgba(255,255,255,.6);font-size:11px;padding:6px 10px;border-radius:4px;cursor:pointer;transition:.12s}
+.tb-link:hover{color:#fff;background:rgba(255,255,255,.1)}
+.tb-link.a{color:#fff;background:rgba(255,255,255,.15);font-weight:500}
+.tb-right{display:flex;align-items:center;gap:8px}
+.tb-user{color:rgba(255,255,255,.8);font-size:11px;display:flex;align-items:center;gap:5px}
+.tb-avatar{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center}
+/* Layout */
+.layout{display:flex;min-height:calc(100vh - 48px)}
+.sidebar{width:200px;background:#fff;border-right:1px solid var(--bord);padding:12px 8px;flex-shrink:0}
+.sb-sect{font-size:9px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.08em;padding:10px 8px 4px}
+.sb-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;font-size:11px;color:var(--muted);cursor:pointer;margin-bottom:2px;transition:.1s}
+.sb-item:hover:not(.a){background:var(--surf)}
+.sb-item.a{background:var(--gl);color:var(--g);font-weight:600}
+.sb-item .ic{font-size:14px;width:16px;text-align:center}
+.sb-badge{margin-left:auto;background:var(--red);color:#fff;border-radius:8px;font-size:8px;font-weight:700;padding:1px 5px}
+.sb-badge.gold{background:var(--gold)}
+.sb-badge.g{background:var(--g)}
+/* Content */
+.content{flex:1;padding:20px 24px;overflow-y:auto;background:var(--surf2)}
+.page-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.page-title{font-size:17px;font-weight:700;color:var(--ink)}
+.page-sub{font-size:11px;color:var(--muted);margin-top:2px}
+/* Breadcrumb */
+.bc{font-size:11px;color:var(--muted);margin-bottom:14px}
+.bc span{color:var(--g);cursor:pointer}
+/* KPI grid */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px}
+.kpi{background:#fff;border:1px solid var(--bord);border-radius:8px;padding:14px 16px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;left:0;top:0;width:3px;height:100%;background:var(--g)}
+.kpi.red::before{background:var(--red)}.kpi.gold::before{background:var(--gold)}.kpi.teal::before{background:var(--t)}.kpi.pur::before{background:var(--pur)}.kpi.blue::before{background:var(--blue)}.kpi.amb::before{background:var(--amb)}
+.kpi-v{font-size:20px;font-weight:800;color:var(--g);line-height:1}
+.kpi.red .kpi-v{color:var(--red)}.kpi.gold .kpi-v{color:var(--gold)}.kpi.teal .kpi-v{color:var(--t)}.kpi.pur .kpi-v{color:var(--pur)}.kpi.blue .kpi-v{color:var(--blue)}.kpi.amb .kpi-v{color:var(--amb)}
+.kpi-l{font-size:10px;color:var(--muted);margin-bottom:4px}
+.kpi-d{font-size:9px;margin-top:3px;color:var(--muted2)}
+.kpi-d.up{color:var(--g)}.kpi-d.dn{color:var(--red)}
+/* Cards & panels */
+.card{background:#fff;border:1px solid var(--bord);border-radius:8px;margin-bottom:14px}
+.card-hd{padding:12px 16px;border-bottom:1px solid var(--bord);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:12px;font-weight:600;color:var(--ink)}
+.card-body{padding:14px 16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+/* Table */
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:8px 12px;text-align:left;border-bottom:1px solid var(--bord);background:var(--surf);white-space:nowrap}
+td{font-size:11px;padding:9px 12px;border-bottom:1px solid var(--bord);color:var(--ink2);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surf)}
+tr.flag td{background:#FFF5F5}
+/* Badges */
+.b{display:inline-flex;align-items:center;font-size:9px;font-weight:600;padding:2px 7px;border-radius:8px;white-space:nowrap}
+.bg{background:var(--gl);color:var(--gd)}
+.ba{background:var(--ambl);color:#92400E}
+.br{background:var(--redl);color:#991B1B}
+.bb{background:var(--bluel);color:var(--blue)}
+.bt{background:var(--tl);color:var(--t)}
+.bp{background:var(--purl);color:var(--pur)}
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:5px;background:var(--g);color:#fff;border:none;border-radius:5px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer;text-decoration:none}
+.btn.sm{padding:4px 8px;font-size:10px}
+.btn.red{background:var(--red)}.btn.gold{background:var(--gold)}.btn.teal{background:var(--t)}.btn.pur{background:var(--pur)}.btn.blue{background:var(--blue)}.btn.amb{background:var(--amb)}
+.btno{display:inline-flex;align-items:center;gap:5px;background:#fff;color:var(--g);border:1.5px solid var(--g);border-radius:5px;padding:5px 11px;font-size:11px;font-weight:600;cursor:pointer}
+.btno.sm{padding:3px 7px;font-size:10px}.btno.red{color:var(--red);border-color:var(--red)}
+/* Form */
+.form-section{margin-bottom:18px}
+.form-section-title{font-size:11px;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--gl);padding-bottom:5px;margin-bottom:12px}
+.fg{display:grid;gap:10px;margin-bottom:10px}
+.fg2{grid-template-columns:1fr 1fr}
+.fg3{grid-template-columns:1fr 1fr 1fr}
+.fg4{grid-template-columns:1fr 1fr 1fr 1fr}
+.field{display:flex;flex-direction:column;gap:3px}
+.field label{font-size:10px;font-weight:600;color:var(--ink2);text-transform:uppercase;letter-spacing:.04em}
+.field input,.field select,.field textarea{border:1px solid var(--bord);border-radius:5px;padding:7px 10px;font-size:11px;color:var(--ink);background:#fff;transition:.1s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--g);outline:none;box-shadow:0 0 0 3px var(--gl)}
+.field textarea{height:72px;resize:vertical}
+.field-hint{font-size:9px;color:var(--muted);margin-top:2px}
+/* Alerts */
+.al{padding:8px 12px;border-radius:0 5px 5px 0;font-size:10px;line-height:1.6;margin-bottom:10px}
+.al-g{background:var(--gl);border-left:3px solid var(--g);color:var(--gd)}
+.al-a{background:var(--ambl);border-left:3px solid var(--amb);color:#78350F}
+.al-r{background:var(--redl);border-left:3px solid var(--red);color:#7F1D1D}
+.al-b{background:var(--bluel);border-left:3px solid var(--blue);color:var(--blue)}
+/* Progress */
+.prog{height:6px;background:var(--bord);border-radius:3px;overflow:hidden;margin:3px 0}
+.progf{height:100%;border-radius:3px;background:var(--g)}
+/* List row */
+.lr{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bord)}
+.lr:last-child{border:none}
+.lav{width:30px;height:30px;min-width:30px;border-radius:50%;background:var(--g);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.lin{flex:1;min-width:0}
+.lit{font-size:11px;font-weight:600;color:var(--ink)}
+.lis{font-size:9px;color:var(--muted)}
+/* Chips */
+.chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.chip{font-size:10px;padding:4px 10px;border-radius:10px;border:1.5px solid var(--bord);color:var(--muted);cursor:pointer}
+.chip.a{background:var(--g);color:#fff;border-color:var(--g)}
+/* Score bars */
+.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.score-item{background:var(--surf);border-radius:6px;padding:8px 10px}
+.score-l{font-size:9px;color:var(--muted);margin-bottom:3px}
+.score-bar{height:5px;background:var(--bord);border-radius:3px;overflow:hidden;margin-bottom:2px}
+.score-f{height:100%;background:var(--g);border-radius:3px}
+.score-v{font-size:9px;color:var(--muted);text-align:right}
+/* Divider */
+.div{height:1px;background:var(--bord);margin:12px 0}
+/* Util */
+.row{display:flex;align-items:center;gap:8px}
+.row-sb{display:flex;align-items:center;justify-content:space-between}
+.ml{margin-left:auto}
+.mt{margin-top:10px}
+.txt-g{color:var(--g);font-weight:600}
+.txt-r{color:var(--red);font-weight:600}
+.txt-a{color:var(--amb);font-weight:600}
+.txt-m{color:var(--muted);font-size:10px}
+/* Tab row */
+.tab-row{display:flex;gap:2px;border-bottom:2px solid var(--bord);margin-bottom:16px}
+.tab-btn{padding:8px 14px;font-size:11px;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
+.tab-btn.a{color:var(--g);font-weight:600;border-color:var(--g)}
+/* Mini chart */
+.bars{display:flex;align-items:flex-end;gap:3px;height:48px}
+.bar{flex:1;border-radius:2px 2px 0 0;background:var(--gl)}
+.bar.hi{background:var(--g)}.bar.gld{background:var(--gold)}.bar.red{background:var(--red)}.bar.t{background:var(--t)}
+/* Timeline */
+.tl{border-left:2px solid var(--bord);padding-left:16px;margin-left:8px}
+.tl-item{display:flex;gap:8px;margin-bottom:12px;position:relative}
+.tl-item::before{content:'';width:10px;height:10px;border-radius:50%;background:var(--g);border:2px solid #fff;box-shadow:0 0 0 1px var(--g);position:absolute;left:-21px;top:2px}
+.tl-item.done::before{background:var(--g)}
+.tl-item.pend::before{background:var(--bord);box-shadow:0 0 0 1px var(--bord)}
+.tl-title{font-size:11px;font-weight:600;color:var(--ink)}
+.tl-sub{font-size:9px;color:var(--muted)}
+/* Map */
+.map-ph{background:linear-gradient(135deg,#BBF7D0,#6EE7B7);height:80px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:22px;position:relative;margin-bottom:8px}
+.map-badge{position:absolute;bottom:6px;right:8px;background:rgba(0,0,0,.5);color:#fff;font-size:8px;padding:2px 6px;border-radius:3px}
+/* Status pill */
+.status{font-size:9px;font-weight:600;padding:3px 8px;border-radius:10px}
+/* Section header */
+.sh{font-size:10px;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 7px}
+
+
+/* Step wizard */
+.wizard{display:flex;align-items:center;gap:0;margin-bottom:24px;background:#fff;border:1px solid var(--bord);border-radius:8px;padding:0;overflow:hidden}
+.wz-step{flex:1;display:flex;align-items:center;gap:8px;padding:12px 14px;font-size:11px;color:var(--muted);position:relative;cursor:pointer;border-right:1px solid var(--bord)}
+.wz-step:last-child{border-right:none}
+.wz-step.done{background:var(--gl);color:var(--g)}
+.wz-step.active{background:var(--g);color:#fff}
+.wz-step.active .wz-num{background:rgba(255,255,255,.25);color:#fff}
+.wz-num{width:22px;height:22px;border-radius:50%;background:var(--bord);color:var(--muted);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.wz-step.done .wz-num{background:var(--g);color:#fff}
+.wz-label{font-size:10px;font-weight:600;line-height:1.2}
+/* Document viewer */
+.doc-card{border:1px solid var(--bord);border-radius:8px;overflow:hidden;margin-bottom:10px}
+.doc-card-hd{padding:8px 12px;background:var(--surf);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bord)}
+.doc-card-body{padding:10px 12px}
+.doc-preview{height:120px;background:linear-gradient(135deg,#E5E7EB,#D1D5DB);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:8px;cursor:pointer;position:relative}
+.doc-preview:hover{background:linear-gradient(135deg,#D1D5DB,#9CA3AF)}
+.doc-checklist{display:flex;flex-direction:column;gap:5px}
+.doc-check{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--ink2)}
+.doc-check input[type=checkbox]{width:14px;height:14px;accent-color:var(--g)}
+/* Success screen */
+.success-screen{text-align:center;padding:40px 20px;background:#fff;border-radius:8px;border:1px solid var(--bord)}
+.success-icon{font-size:52px;margin-bottom:12px}
+.success-title{font-size:20px;font-weight:800;color:var(--g);margin-bottom:6px}
+.success-sub{font-size:12px;color:var(--muted);margin-bottom:20px;line-height:1.6}
+.creds-box{background:var(--gl);border:1.5px solid var(--g);border-radius:8px;padding:14px 20px;display:inline-block;margin:0 auto 20px;text-align:left;min-width:240px}
+.creds-box div{font-size:12px;margin-bottom:4px}
+.creds-box strong{color:var(--g)}
+/* Assign modal style (inline panel) */
+.assign-panel{background:var(--bluel);border:1.5px solid var(--blue);border-radius:8px;padding:14px 16px;margin-bottom:14px}
+.assign-panel-title{font-size:11px;font-weight:700;color:var(--blue);margin-bottom:10px}
+/* KYC status timeline */
+.kyc-tl{border-left:2px solid var(--bord);padding-left:14px;margin-left:6px}
+.kyc-tl-item{margin-bottom:10px;position:relative}
+.kyc-tl-item::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--g);position:absolute;left:-19px;top:3px}
+.kyc-tl-item.pend::before{background:var(--amb)}
+.kyc-tl-item.fail::before{background:var(--red)}
+/* Tag input style */
+.tag-list{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.tag{font-size:9px;padding:2px 8px;background:var(--gl);color:var(--g);border-radius:10px;border:1px solid var(--g)}
+/* Plot row */
+.plot-row{background:var(--surf);border:1px solid var(--bord);border-radius:6px;padding:10px 12px;margin-bottom:8px;position:relative}
+.plot-row-title{font-size:11px;font-weight:600;color:var(--g);margin-bottom:8px}
+/* Info row for summary */
+.info-row{display:flex;justify-content:space-between;font-size:11px;padding:5px 0;border-bottom:1px solid var(--bord)}
+.info-row:last-child{border:none}
+.info-label{color:var(--muted);font-size:10px}
+.info-val{font-weight:600;color:var(--ink)}
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-brand">🌱 AgroConnect <span class="tb-portal">Admin Portal</span></div>
+  <div class="tb-links">
+    <span class="tb-link a" id="nav-dashboard" onclick="show('dashboard')">Dashboard</span>
+    <span class="tb-link" id="nav-users" onclick="show('users')">Users</span>
+    <span class="tb-link" id="nav-kyc" onclick="show('kyc')">KYC Queue</span>
+    <span class="tb-link" id="nav-programs" onclick="show('programs')">Gov Programs</span>
+    <span class="tb-link" id="nav-analytics" onclick="show('analytics')">Analytics</span>
+    <span class="tb-link" id="nav-settings" onclick="show('settings')">Settings</span>
+  </div>
+  <div class="tb-right">
+    <div class="tb-user"><div class="tb-avatar">AD</div><span>Admin KE ▾</span></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: DASHBOARD
+═══════════════════════════════════════════════════ -->
+<div id="page-dashboard" class="layout">
+<div class="sidebar">
+  <div class="sb-item a" onclick="show('dashboard')"><span class="ic">📊</span>Dashboard</div>
+  <div class="sb-sect">Users</div>
+  <div class="sb-item" onclick="show('users')"><span class="ic">👥</span>All Users</div>
+  <div class="sb-item" onclick="show('create-step1')"><span class="ic">➕</span>Create User</div>
+  <div class="sb-item" onclick="show('kyc')"><span class="ic">🪪</span>KYC Queue <span class="sb-badge gold">12</span></div>
+  <div class="sb-sect">Content</div>
+  <div class="sb-item" onclick="show('moderation')"><span class="ic">⚠️</span>Moderation <span class="sb-badge">4</span></div>
+  <div class="sb-sect">Platform</div>
+  <div class="sb-item" onclick="show('farms')"><span class="ic">🌾</span>All Farms</div>
+  <div class="sb-item" onclick="show('programs')"><span class="ic">🏛</span>Gov't Programs</div>
+  <div class="sb-item" onclick="show('analytics')"><span class="ic">📈</span>Analytics</div>
+  <div class="sb-item" onclick="show('settings')"><span class="ic">⚙️</span>Settings</div>
+</div>
+<div class="content">
+  <div class="page-hd">
+    <div><div class="page-title">Platform Overview</div><div class="page-sub">Last refreshed 2 min ago · June 6, 2025</div></div>
+    <div class="row" style="gap:8px">
+      <button class="btno sm">📤 Export Report</button>
+      <button class="btn sm" onclick="show('create-step1')">➕ Create User</button>
+    </div>
+  </div>
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-l">Total Farmers</div><div class="kpi-v">48,320</div><div class="kpi-d up">↑ +312 this week</div></div>
+    <div class="kpi gold"><div class="kpi-l">Loans Disbursed (Mo)</div><div class="kpi-v">KES 14.2M</div><div class="kpi-d up">↑ +8% vs last month</div></div>
+    <div class="kpi teal"><div class="kpi-l">AI Diagnoses (Mo)</div><div class="kpi-v">12,841</div><div class="kpi-d">Maize 38%, Tomato 24%</div></div>
+    <div class="kpi red"><div class="kpi-l">KYC Pending</div><div class="kpi-v">12</div><div class="kpi-d dn">⚠️ Action needed</div></div>
+    <div class="kpi amb"><div class="kpi-l">Flagged Posts</div><div class="kpi-v">4</div></div>
+    <div class="kpi pur"><div class="kpi-l">Platform DAU</div><div class="kpi-v">18,420</div><div class="kpi-d up">73% DAU/MAU</div></div>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Recent Registrations</span><button class="btn sm" onclick="show('users')">View All →</button></div>
+        <div class="card-body" style="padding:0">
+          <table>
+            <thead><tr><th>Name</th><th>Role</th><th>County</th><th>KYC</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td><div class="row"><div class="lav" style="width:24px;height:24px;font-size:9px">JW</div>Jane Wanjiru</div></td><td><span class="b bg">🌾 Farmer</span></td><td>Nakuru</td><td><span class="b ba">Pending</span></td><td><button class="btn sm" onclick="show('kyc-detail')">Verify</button></td></tr>
+              <tr><td><div class="row"><div class="lav" style="width:24px;height:24px;font-size:9px;background:var(--t)">NA</div>Nakuru Agrovets</div></td><td><span class="b bt">📦 Supplier</span></td><td>Nakuru</td><td><span class="b ba">Pending</span></td><td><button class="btn sm" onclick="show('kyc-detail')">Verify</button></td></tr>
+              <tr><td><div class="row"><div class="lav" style="width:24px;height:24px;font-size:9px;background:var(--pur)">EQ</div>Equity Bank</div></td><td><span class="b bp">🏦 Lender</span></td><td>Nairobi</td><td><span class="b bg">Done</span></td><td><button class="btno sm">View</button></td></tr>
+              <tr><td><div class="row"><div class="lav" style="width:24px;height:24px;font-size:9px;background:var(--amb)">DO</div>Dr. Ochieng</div></td><td><span class="b bt">🩺 Vet</span></td><td>Nakuru</td><td><span class="b bg">Done</span></td><td><button class="btno sm">View</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">KYC Queue Preview</span><button class="btn sm" onclick="show('kyc')">Full Queue →</button></div>
+        <div class="card-body" style="padding:0 16px">
+          <div class="lr"><div class="lav" style="background:var(--t)">NA</div><div class="lin"><div class="lit">Nakuru Agrovets Ltd</div><div class="lis">Supplier · Business Reg uploaded · 4h ago</div></div><button class="btn sm" onclick="show('kyc-detail')">Review</button></div>
+          <div class="lr"><div class="lav" style="background:var(--gold)">MN</div><div class="lin"><div class="lit">Mary Njeri</div><div class="lis">Farmer · ID uploaded · 2d ago</div></div><button class="btn sm" onclick="show('kyc-detail')">Review</button></div>
+          <div class="lr" style="border:none"><div class="lav" style="background:var(--pur)">KF</div><div class="lin"><div class="lit">KFCB Agro Ltd</div><div class="lis">Supplier · CAC Cert · 1d ago</div></div><button class="btn sm" onclick="show('kyc-detail')">Review</button></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">User Type Distribution</span></div>
+        <div class="card-body">
+          <div style="margin-bottom:8px"><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">🌾 Farmers (Crops+Livestock)</span><span class="txt-g">48,320 (87%)</span></div><div class="prog"><div class="progf" style="width:87%"></div></div></div>
+          <div style="margin-bottom:8px"><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">📦 Suppliers / Agrovets</span><span style="font-size:11px;font-weight:600;color:var(--t)">142 (0.3%)</span></div><div class="prog"><div class="progf" style="width:14%;background:var(--t)"></div></div></div>
+          <div style="margin-bottom:8px"><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">🏦 Lender Reps</span><span style="font-size:11px;font-weight:600;color:var(--pur)">38</span></div><div class="prog"><div class="progf" style="width:6%;background:var(--pur)"></div></div></div>
+          <div style="margin-bottom:8px"><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">🩺 Vets / Ext. Officers</span><span style="font-size:11px;font-weight:600;color:var(--amb)">84</span></div><div class="prog"><div class="progf" style="width:9%;background:var(--amb)"></div></div></div>
+          <div><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">🏛 Govt / Buyers / Workers</span><span style="font-size:11px;font-weight:600">194</span></div><div class="prog"><div class="progf" style="width:12%;background:var(--blue)"></div></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Platform Health</span></div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="background:var(--gl);border-radius:6px;padding:9px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--g)">94%</div><div class="txt-m">Loan repayment</div></div>
+            <div style="background:var(--gl);border-radius:6px;padding:9px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--g)">4.7★</div><div class="txt-m">Supplier avg rating</div></div>
+            <div style="background:var(--ambl);border-radius:6px;padding:9px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--amb)">2.1%</div><div class="txt-m">NPL ratio</div></div>
+            <div style="background:var(--bluel);border-radius:6px;padding:9px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--blue)">73%</div><div class="txt-m">DAU/MAU</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: USER LIST
+═══════════════════════════════════════════════════ -->
+<div id="page-users" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('dashboard')"><span class="ic">📊</span>Dashboard</div>
+  <div class="sb-sect">Filter by Role</div>
+  <div class="sb-item a"><span class="ic">👥</span>All Users</div>
+  <div class="sb-item" onclick="show('create-step1')"><span class="ic">🌾</span>Farmers</div>
+  <div class="sb-item"><span class="ic">🏦</span>Lenders</div>
+  <div class="sb-item"><span class="ic">📦</span>Suppliers</div>
+  <div class="sb-item"><span class="ic">🩺</span>Vets / Experts</div>
+  <div class="sb-item"><span class="ic">🏛</span>Govt Officers</div>
+  <div class="sb-item"><span class="ic">🤝</span>Buyers</div>
+  <div class="sb-item"><span class="ic">👷</span>Farm Workers</div>
+  <div class="sb-sect">Actions</div>
+  <div class="sb-item" onclick="show('create-step1')"><span class="ic">➕</span>Create New User</div>
+</div>
+<div class="content">
+  <div class="bc">Dashboard › <span onclick="show('users')">Users</span></div>
+  <div class="page-hd">
+    <div><div class="page-title">User Management</div><div class="page-sub">48,778 total accounts across all roles</div></div>
+    <button class="btn" onclick="show('create-step1')">➕ Create New User</button>
+  </div>
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-l">Farmers</div><div class="kpi-v">48,320</div></div>
+    <div class="kpi teal"><div class="kpi-l">Suppliers</div><div class="kpi-v">142</div></div>
+    <div class="kpi pur"><div class="kpi-l">Lender Reps</div><div class="kpi-v">38</div></div>
+    <div class="kpi gold"><div class="kpi-l">Vets / Experts</div><div class="kpi-v">84</div></div>
+    <div class="kpi"><div class="kpi-l">Govt Officers</div><div class="kpi-v">56</div></div>
+    <div class="kpi red"><div class="kpi-l">KYC Pending</div><div class="kpi-v">12</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hd">
+      <span class="card-title">All Users</span>
+      <div class="row" style="gap:8px">
+        <input placeholder="🔍 Name or phone..." style="border:1px solid var(--bord);border-radius:5px;padding:5px 10px;font-size:11px;width:180px">
+        <select style="border:1px solid var(--bord);border-radius:5px;padding:5px 8px;font-size:11px"><option>All Roles</option><option>Farmer</option><option>Supplier</option><option>Vet</option><option>Lender</option><option>Govt Officer</option><option>Buyer</option><option>Farm Worker</option></select>
+        <select style="border:1px solid var(--bord);border-radius:5px;padding:5px 8px;font-size:11px"><option>All Counties</option><option>Nakuru</option><option>Meru</option><option>Uasin Gishu</option></select>
+        <select style="border:1px solid var(--bord);border-radius:5px;padding:5px 8px;font-size:11px"><option>All KYC Status</option><option>Pending</option><option>Verified</option><option>Rejected</option></select>
+        <button class="btno sm">📤 Export CSV</button>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>Name</th><th>Phone</th><th>Role</th><th>County</th><th>Joined</th><th>KYC</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        <tr><td><div class="row"><div class="lav" style="width:26px;height:26px;font-size:9px">JW</div><div><div style="font-size:11px;font-weight:600">Jane Wanjiru</div><div class="txt-m">Crops + Livestock</div></div></div></td><td>+254 712 345 678</td><td><span class="b bg">🌾 Farmer</span></td><td>Nakuru</td><td>Jan 2025</td><td><span class="b bg">✓ Verified</span></td><td><span class="b bg">Active</span></td><td><div class="row" style="gap:4px"><button class="btn sm" onclick="show('user-detail')">View</button><button class="btno sm">Edit</button><button class="btno sm red">Ban</button></div></td></tr>
+        <tr><td><div class="row"><div class="lav" style="width:26px;height:26px;font-size:9px;background:var(--t)">PK</div><div><div style="font-size:11px;font-weight:600">Peter Kipchoge</div><div class="txt-m">Crops only</div></div></div></td><td>+254 722 345 678</td><td><span class="b bg">🌾 Farmer</span></td><td>Uasin Gishu</td><td>Feb 2025</td><td><span class="b bg">✓ Verified</span></td><td><span class="b bg">Active</span></td><td><div class="row" style="gap:4px"><button class="btn sm" onclick="show('user-detail')">View</button><button class="btno sm">Edit</button></div></td></tr>
+        <tr><td><div class="row"><div class="lav" style="width:26px;height:26px;font-size:9px;background:var(--pur)">NA</div><div><div style="font-size:11px;font-weight:600">Nakuru Agrovets Ltd</div><div class="txt-m">Fertilisers, Pesticides</div></div></div></td><td>+254 722 100 200</td><td><span class="b bt">📦 Supplier</span></td><td>Nakuru</td><td>Mar 2025</td><td><span class="b ba">Pending</span></td><td><span class="b bg">Active</span></td><td><div class="row" style="gap:4px"><button class="btn sm" onclick="show('kyc-detail')">Verify KYC</button><button class="btno sm">View</button></div></td></tr>
+        <tr><td><div class="row"><div class="lav" style="width:26px;height:26px;font-size:9px;background:var(--amb)">DO</div><div><div style="font-size:11px;font-weight:600">Dr. Ochieng</div><div class="txt-m">Extension Officer</div></div></div></td><td>+254 733 456 789</td><td><span class="b bt">🩺 Vet/Expert</span></td><td>Nakuru</td><td>Jan 2025</td><td><span class="b bg">✓ Verified</span></td><td><span class="b bg">Active</span></td><td><div class="row" style="gap:4px"><button class="btn sm" onclick="show('user-detail')">View</button><button class="btno sm red">Revoke Badge</button></div></td></tr>
+        <tr><td><div class="row"><div class="lav" style="width:26px;height:26px;font-size:9px;background:var(--gold)">MN</div><div><div style="font-size:11px;font-weight:600">Mary Njeri</div><div class="txt-m">Livestock only</div></div></div></td><td>+254 733 345 678</td><td><span class="b bg">🌾 Farmer</span></td><td>Meru</td><td>Jun 2025</td><td><span class="b ba">Pending</span></td><td><span class="b ba">New</span></td><td><div class="row" style="gap:4px"><button class="btn sm" onclick="show('kyc-detail')">Verify</button><button class="btno sm">Edit</button></div></td></tr>
+        <tr><td><div class="row"><div class="lav" style="width:26px;height:26px;font-size:9px;background:var(--blue)">GB</div><div><div style="font-size:11px;font-weight:600">GoAg Buyers Ltd</div><div class="txt-m">Wholesale · Nairobi</div></div></div></td><td>+254 711 555 000</td><td><span class="b bb">🤝 Buyer</span></td><td>Nairobi</td><td>Apr 2025</td><td><span class="b bg">✓ Verified</span></td><td><span class="b bg">Active</span></td><td><div class="row" style="gap:4px"><button class="btn sm" onclick="show('user-detail')">View</button></div></td></tr>
+        <tr><td><div class="row"><div class="lav" style="width:26px;height:26px;font-size:9px;background:var(--gd)">JW</div><div><div style="font-size:11px;font-weight:600">John Waweru</div><div class="txt-m">Farm Worker · Field</div></div></div></td><td>+254 798 123 456</td><td><span class="b bg">👷 Farm Worker</span></td><td>Nakuru</td><td>Jan 2025</td><td><span class="b bg">✓ Verified</span></td><td><span class="b bg">Active</span></td><td><div class="row" style="gap:4px"><button class="btn sm" onclick="show('user-detail')">View</button></div></td></tr>
+      </tbody>
+    </table>
+    <div style="padding:10px 16px;border-top:1px solid var(--bord);display:flex;align-items:center;justify-content:space-between">
+      <span class="txt-m">Showing 7 of 48,778 users</span>
+      <div class="row" style="gap:5px"><button class="btno sm">← Prev</button><span style="font-size:11px;padding:4px 8px;background:var(--g);color:#fff;border-radius:4px">1</span><button class="btno sm">2</button><button class="btno sm">3</button><span class="txt-m">...</span><button class="btno sm">Next →</button></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: USER DETAIL (e.g. Jane Wanjiru)
+═══════════════════════════════════════════════════ -->
+<div id="page-user-detail" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('users')"><span class="ic">⬅</span>Back to Users</div>
+  <div class="sb-sect">Jane Wanjiru</div>
+  <div class="sb-item a"><span class="ic">👤</span>Profile</div>
+  <div class="sb-item" onclick="show('kyc-detail')"><span class="ic">🪪</span>KYC Status</div>
+  <div class="sb-item" onclick="show('assign-lender')"><span class="ic">🏦</span>Assign Lender</div>
+  <div class="sb-item" onclick="show('assign-vet')"><span class="ic">🩺</span>Assign Vet/Expert</div>
+  <div class="sb-item"><span class="ic">🌾</span>Farm Details</div>
+  <div class="sb-item"><span class="ic">📊</span>Activity Log</div>
+  <div class="sb-item"><span class="ic">💰</span>Loan History</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('users')">Users</span> › Jane Wanjiru</div>
+  <div class="row-sb" style="margin-bottom:16px">
+    <div class="row" style="gap:12px">
+      <div class="lav" style="width:52px;height:52px;font-size:18px;flex-shrink:0">JW</div>
+      <div><div class="page-title">Jane Wanjiru</div><div class="page-sub">🌾🐄 Mixed Farmer · Nakuru — Bahati · Member since Jan 2025</div>
+        <div class="row" style="gap:5px;margin-top:5px"><span class="b bg">✓ KYC Verified</span><span class="b bg">Active</span><span class="b bb">Credit: 73 / Band B</span></div></div>
+    </div>
+    <div class="row" style="gap:8px">
+      <button class="btno sm red">🚫 Suspend Account</button>
+      <button class="btno sm">✏️ Edit Profile</button>
+    </div>
+  </div>
+  <div class="assign-panel">
+    <div class="assign-panel-title">🔗 Quick Assignment Actions</div>
+    <div class="row" style="gap:8px;flex-wrap:wrap">
+      <button class="btn blue" onclick="show('assign-lender')">🏦 Assign / Change Lender</button>
+      <button class="btn teal" onclick="show('assign-vet')">🩺 Assign / Change Vet / Ext. Officer</button>
+      <button class="btn" onclick="show('kyc-detail')">🪪 Review KYC Documents</button>
+    </div>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Account Details</span></div>
+        <div class="card-body">
+          <div class="info-row"><span class="info-label">Full Name</span><span class="info-val">Jane Wanjiru</span></div>
+          <div class="info-row"><span class="info-label">Phone</span><span class="info-val">+254 712 345 678</span></div>
+          <div class="info-row"><span class="info-label">National ID</span><span class="info-val">12345678</span></div>
+          <div class="info-row"><span class="info-label">Gender</span><span class="info-val">Female</span></div>
+          <div class="info-row"><span class="info-label">County</span><span class="info-val">Nakuru</span></div>
+          <div class="info-row"><span class="info-label">Sub-county / Village</span><span class="info-val">Bahati / Dundori</span></div>
+          <div class="info-row"><span class="info-label">Language</span><span class="info-val">Kiswahili</span></div>
+          <div class="info-row"><span class="info-label">USSD Enabled</span><span class="info-val">Yes (feature phone access)</span></div>
+          <div class="info-row"><span class="info-label">Farmer Type</span><span class="info-val">🌾🐄 Crops + Livestock</span></div>
+          <div class="info-row"><span class="info-label">Primary Crops</span><span class="info-val">Maize H614D, Cabbage, Beans</span></div>
+          <div class="info-row"><span class="info-label">Animals</span><span class="info-val">50 Layers, 4 Dairy Cattle</span></div>
+          <div class="info-row"><span class="info-label">Registered</span><span class="info-val">Jan 15, 2025</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Farm Summary</span></div>
+        <div class="card-body">
+          <div class="info-row"><span class="info-label">Farm Name</span><span class="info-val">Nakuru Farm</span></div>
+          <div class="info-row"><span class="info-label">Total Area</span><span class="info-val">2.5 acres</span></div>
+          <div class="info-row"><span class="info-label">GPS Coordinates</span><span class="info-val">-0.3031, 36.0800</span></div>
+          <div class="info-row"><span class="info-label">Water Source</span><span class="info-val">Borehole + Rainwater</span></div>
+          <div class="info-row"><span class="info-label">Soil Type</span><span class="info-val">Loam</span></div>
+          <div class="info-row"><span class="info-label">Active Plots</span><span class="info-val">2 (Plot A: Maize 1.5ac, Plot B: Cabbage 1ac)</span></div>
+          <div class="info-row"><span class="info-label">Farm Workers</span><span class="info-val">John Waweru (field_worker), Mary Kamau (harvester)</span></div>
+          <div class="info-row"><span class="info-label">Farm Health Score</span><span class="info-val" style="color:var(--amb)">72% — 2 overdue activities</span></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Assignments</span></div>
+        <div class="card-body">
+          <div style="background:var(--gl);border-radius:6px;padding:10px;margin-bottom:8px">
+            <div class="row-sb"><div><div style="font-size:11px;font-weight:600">🏦 Lender: Equity Bank Kenya</div><div class="txt-m">KCB AgriLoan (secondary)</div></div><button class="btno sm" onclick="show('assign-lender')">Change</button></div>
+            <div class="info-row" style="margin-top:6px"><span class="info-label">Active Loan</span><span class="info-val">KES 80,000 · 4/12 payments</span></div>
+          </div>
+          <div style="background:var(--ambl);border-radius:6px;padding:10px">
+            <div class="row-sb"><div><div style="font-size:11px;font-weight:600">🩺 Extension Officer: Dr. Ochieng</div><div class="txt-m">Nakuru · KVB Verified · 42 farmers</div></div><button class="btno sm" onclick="show('assign-vet')">Change</button></div>
+            <div class="info-row" style="margin-top:6px"><span class="info-label">Next Visit</span><span class="info-val">Jun 12, 2025 · Maize follow-up</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Credit & Platform Activity</span></div>
+        <div class="card-body">
+          <div style="text-align:center;margin-bottom:12px"><div style="font-size:36px;font-weight:800;color:var(--g)">73</div><div class="txt-m">Credit Score · Band B · Max loan KES 200K</div></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+            <div style="background:var(--surf);border-radius:5px;padding:7px;text-align:center"><div style="font-size:13px;font-weight:700;color:var(--g)">19</div><div class="txt-m">Activities/mo</div></div>
+            <div style="background:var(--surf);border-radius:5px;padding:7px;text-align:center"><div style="font-size:13px;font-weight:700;color:var(--g)">12 days</div><div class="txt-m">Login streak</div></div>
+            <div style="background:var(--surf);border-radius:5px;padding:7px;text-align:center"><div style="font-size:13px;font-weight:700;color:var(--g)">3</div><div class="txt-m">Seasons</div></div>
+            <div style="background:var(--surf);border-radius:5px;padding:7px;text-align:center"><div style="font-size:13px;font-weight:700;color:var(--amb)">2</div><div class="txt-m">Overdue tasks</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Notifications</span></div>
+        <div class="card-body">
+          <div class="info-row"><span class="info-label">SMS Alerts</span><span class="info-val" style="color:var(--g)">✓ Enabled</span></div>
+          <div class="info-row"><span class="info-label">Push (App)</span><span class="info-val" style="color:var(--g)">✓ Enabled</span></div>
+          <div class="info-row"><span class="info-label">Language</span><span class="info-val">Kiswahili</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: CREATE USER — STEP 1 (Type Selection)
+═══════════════════════════════════════════════════ -->
+<div id="page-create-step1" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('users')"><span class="ic">⬅</span>Back to Users</div>
+  <div class="sb-sect">Create User</div>
+  <div class="sb-item a"><span class="ic">1️⃣</span>Step 1: Type</div>
+  <div class="sb-item" style="color:var(--muted2)"><span class="ic">2️⃣</span>Step 2: Personal Info</div>
+  <div class="sb-item" style="color:var(--muted2)"><span class="ic">3️⃣</span>Step 3: Role Details</div>
+  <div class="sb-item" style="color:var(--muted2)"><span class="ic">4️⃣</span>Step 4: Farm Setup</div>
+  <div class="sb-item" style="color:var(--muted2)"><span class="ic">5️⃣</span>Step 5: Assignment</div>
+  <div class="sb-item" style="color:var(--muted2)"><span class="ic">6️⃣</span>Step 6: Review</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('users')">Users</span> › Create New User</div>
+  <div class="wizard">
+    <div class="wz-step active"><div class="wz-num">1</div><div><div class="wz-label">User Type</div><div style="font-size:9px;opacity:.8">Select role</div></div></div>
+    <div class="wz-step"><div class="wz-num">2</div><div><div class="wz-label">Personal Info</div><div style="font-size:9px;opacity:.8">Name, phone, ID</div></div></div>
+    <div class="wz-step"><div class="wz-num">3</div><div><div class="wz-label">Role Details</div><div style="font-size:9px;opacity:.8">Role-specific fields</div></div></div>
+    <div class="wz-step"><div class="wz-num">4</div><div><div class="wz-label">Farm Setup</div><div style="font-size:9px;opacity:.8">Farm &amp; crops</div></div></div>
+    <div class="wz-step"><div class="wz-num">5</div><div><div class="wz-label">Assignments</div><div style="font-size:9px;opacity:.8">Lender &amp; expert</div></div></div>
+    <div class="wz-step"><div class="wz-num">6</div><div><div class="wz-label">Review</div><div style="font-size:9px;opacity:.8">Confirm &amp; create</div></div></div>
+  </div>
+  <div class="page-hd"><div><div class="page-title">Step 1 — Select User Type</div><div class="page-sub">All users are created by Admin. No self-registration. Farmer steps include farm setup.</div></div></div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Choose Role</span></div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div onclick="show('create-step2')" style="border:2px solid var(--g);border-radius:8px;padding:14px;cursor:pointer;background:var(--gl);text-align:center">
+              <div style="font-size:28px;margin-bottom:5px">🌾</div>
+              <div style="font-size:12px;font-weight:700;color:var(--g)">Farmer</div>
+              <div style="font-size:9px;color:var(--muted);margin-top:2px">6 steps incl. farm &amp; crop setup</div>
+            </div>
+            <div onclick="show('create-lender')" style="border:2px solid var(--bord);border-radius:8px;padding:14px;cursor:pointer;background:#fff;text-align:center">
+              <div style="font-size:28px;margin-bottom:5px">🏦</div>
+              <div style="font-size:12px;font-weight:700">Lender Rep</div>
+              <div style="font-size:9px;color:var(--muted);margin-top:2px">Institution + CBK details</div>
+            </div>
+            <div onclick="show('create-supplier')" style="border:2px solid var(--bord);border-radius:8px;padding:14px;cursor:pointer;background:#fff;text-align:center">
+              <div style="font-size:28px;margin-bottom:5px">📦</div>
+              <div style="font-size:12px;font-weight:700">Supplier / Agrovet</div>
+              <div style="font-size:9px;color:var(--muted);margin-top:2px">Business reg + products</div>
+            </div>
+            <div onclick="show('create-vet')" style="border:2px solid var(--bord);border-radius:8px;padding:14px;cursor:pointer;background:#fff;text-align:center">
+              <div style="font-size:28px;margin-bottom:5px">🩺</div>
+              <div style="font-size:12px;font-weight:700">Vet / Ext. Officer</div>
+              <div style="font-size:9px;color:var(--muted);margin-top:2px">KVB licence + specialisation</div>
+            </div>
+            <div onclick="show('create-govt')" style="border:2px solid var(--bord);border-radius:8px;padding:14px;cursor:pointer;background:#fff;text-align:center">
+              <div style="font-size:28px;margin-bottom:5px">🏛</div>
+              <div style="font-size:12px;font-weight:700">Govt Officer</div>
+              <div style="font-size:9px;color:var(--muted);margin-top:2px">Ministry + county posting</div>
+            </div>
+            <div onclick="show('create-buyer')" style="border:2px solid var(--bord);border-radius:8px;padding:14px;cursor:pointer;background:#fff;text-align:center">
+              <div style="font-size:28px;margin-bottom:5px">🤝</div>
+              <div style="font-size:12px;font-weight:700">Buyer</div>
+              <div style="font-size:9px;color:var(--muted);margin-top:2px">Company + trade interests</div>
+            </div>
+            <div onclick="show('create-worker')" style="border:2px solid var(--bord);border-radius:8px;padding:14px;cursor:pointer;background:#fff;text-align:center;grid-column:1/-1">
+              <div style="font-size:28px;margin-bottom:5px">👷</div>
+              <div style="font-size:12px;font-weight:700">Farm Worker</div>
+              <div style="font-size:9px;color:var(--muted);margin-top:2px">Assign to an existing farm — role: manager / field_worker / harvester / sprayer / driver</div>
+            </div>
+          </div>
+          <div class="al al-b" style="margin-top:12px;font-size:9px">🌾 <strong>Farmer</strong> is the only role with a multi-step farm + crop setup wizard. All other roles use a compact 3-step form (personal info → role details → review).</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Role Quick Reference</span></div>
+        <div class="card-body">
+          <div style="font-size:11px;display:flex;flex-direction:column;gap:7px">
+            <div style="background:var(--gl);border-radius:5px;padding:8px"><div style="font-weight:600;margin-bottom:2px">🌾 Farmer</div><div class="txt-m">Access: Mobile app + USSD. Farm creation is web-only (done by admin here). After creation: assign lender + extension officer. Can request loans, diagnose crops, sell produce.</div></div>
+            <div style="background:var(--surf);border-radius:5px;padding:8px"><div style="font-weight:600;margin-bottom:2px">🏦 Lender Rep</div><div class="txt-m">Reviews loan applications. Needs: institution name, CBK licence, M-Pesa paybill, contact person.</div></div>
+            <div style="background:var(--surf);border-radius:5px;padding:8px"><div style="font-weight:600;margin-bottom:2px">📦 Supplier</div><div class="txt-m">Lists products in marketplace. Needs: business reg no., product categories, delivery radius, county.</div></div>
+            <div style="background:var(--surf);border-radius:5px;padding:8px"><div style="font-weight:600;margin-bottom:2px">🩺 Vet / Ext. Officer</div><div class="txt-m">Reviews AI diagnoses, answers community Q&A. Needs: KVB licence or ministry cert, specialisation.</div></div>
+            <div style="background:var(--surf);border-radius:5px;padding:8px"><div style="font-weight:600;margin-bottom:2px">🏛 Govt Officer</div><div class="txt-m">Manages subsidy applications, farm registrations. Needs: ministry, county, staff ID.</div></div>
+            <div style="background:var(--surf);border-radius:5px;padding:8px"><div style="font-weight:600;margin-bottom:2px">🤝 Buyer</div><div class="txt-m">Browses produce listings, places orders. Needs: company, trade type, counties of interest.</div></div>
+            <div style="background:var(--surf);border-radius:5px;padding:8px"><div style="font-weight:600;margin-bottom:2px">👷 Farm Worker</div><div class="txt-m">Assigned to specific farm. Role: manager / field_worker / harvester / sprayer / driver. Created as user in auth_db.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: CREATE FARMER — STEP 2 (Personal Info)
+═══════════════════════════════════════════════════ -->
+<div id="page-create-step2" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('create-step1')"><span class="ic">⬅</span>Back: Type</div>
+  <div class="sb-sect">Create Farmer</div>
+  <div class="sb-item done"><span class="ic">✅</span>Step 1: Type</div>
+  <div class="sb-item a"><span class="ic">2️⃣</span>Step 2: Personal Info</div>
+  <div class="sb-item" style="color:var(--muted2)"><span class="ic">3️⃣</span>Step 3: Sub-type</div>
+  <div class="sb-item" style="color:var(--muted2)"><span class="ic">4️⃣</span>Step 4: Farm Setup</div>
+  <div class="sb-item" style="color:var(--muted2)"><span class="ic">5️⃣</span>Step 5: Assignments</div>
+  <div class="sb-item" style="color:var(--muted2)"><span class="ic">6️⃣</span>Step 6: Review</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('users')">Users</span> › <span onclick="show('create-step1')">Create</span> › Step 2: Personal Info</div>
+  <div class="wizard">
+    <div class="wz-step done" onclick="show('create-step1')"><div class="wz-num">✓</div><div><div class="wz-label">User Type</div><div style="font-size:9px">🌾 Farmer</div></div></div>
+    <div class="wz-step active"><div class="wz-num">2</div><div><div class="wz-label">Personal Info</div><div style="font-size:9px;opacity:.8">Name, phone, ID</div></div></div>
+    <div class="wz-step"><div class="wz-num">3</div><div><div class="wz-label">Farmer Sub-type</div></div></div>
+    <div class="wz-step"><div class="wz-num">4</div><div><div class="wz-label">Farm Setup</div></div></div>
+    <div class="wz-step"><div class="wz-num">5</div><div><div class="wz-label">Assignments</div></div></div>
+    <div class="wz-step"><div class="wz-num">6</div><div><div class="wz-label">Review</div></div></div>
+  </div>
+  <div class="page-hd"><div><div class="page-title">Step 2 — Farmer Personal Details</div></div></div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Identity</span></div>
+        <div class="card-body">
+          <div class="fg fg2">
+            <div class="field"><label>Full Name *</label><input value="Jane Wanjiru" placeholder="Full legal name as per ID"></div>
+            <div class="field"><label>Phone Number *</label><input value="+254712345678" placeholder="+254700000000"><div class="field-hint">Valid M-Pesa line. PIN will be sent here via SMS.</div></div>
+          </div>
+          <div class="fg fg2">
+            <div class="field"><label>National ID Number *</label><input value="12345678" placeholder="8-digit national ID"></div>
+            <div class="field"><label>Gender</label><select><option>Female</option><option>Male</option><option>Prefer not to say</option></select></div>
+          </div>
+          <div class="field" style="margin-bottom:10px"><label>Date of Birth (optional)</label><input type="date" value="1985-06-15"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Location</span></div>
+        <div class="card-body">
+          <div class="fg fg3">
+            <div class="field"><label>County *</label><select><option>Nakuru</option><option>Meru</option><option>Uasin Gishu</option><option>Kiambu</option><option>Nyandarua</option><option>Trans Nzoia</option></select></div>
+            <div class="field"><label>Sub-county *</label><input value="Bahati" placeholder="Sub-county"></div>
+            <div class="field"><label>Village / Ward</label><input value="Dundori" placeholder="Village or ward"></div>
+          </div>
+          <div class="field" style="margin-bottom:10px"><label>Nearest Town / Market</label><input value="Nakuru Town" placeholder="e.g. Nakuru Town, Bahati Market"></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Platform Access</span></div>
+        <div class="card-body">
+          <div class="fg fg2">
+            <div class="field"><label>Preferred Language</label><select><option>Kiswahili (default)</option><option>English</option><option>Kikuyu</option><option>Luo</option><option>Kalenjin</option></select></div>
+            <div class="field"><label>USSD Access (for non-smartphones)</label><select><option>Enabled — *384# access</option><option>Disabled (smartphone only)</option></select></div>
+          </div>
+          <div class="fg fg2">
+            <div class="field"><label>SMS Notifications</label><select><option>Enabled</option><option>Disabled</option></select></div>
+            <div class="field"><label>Push Notifications (App)</label><select><option>Enabled after first login</option><option>Disabled</option></select></div>
+          </div>
+          <div class="al al-a" style="margin-top:6px;font-size:9px">⚠️ A temporary PIN <strong>1234</strong> will be sent via SMS to the registered phone. User must change it on first login before any other action.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Emergency Contact (optional)</span></div>
+        <div class="card-body">
+          <div class="fg fg2">
+            <div class="field"><label>Contact Name</label><input placeholder="e.g. John Wanjiru (spouse)"></div>
+            <div class="field"><label>Contact Phone</label><input placeholder="+254700000000"></div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btno" onclick="show('create-step1')" style="flex:1;justify-content:center;padding:10px">← Back</button>
+        <button class="btn" onclick="show('create-step3')" style="flex:2;justify-content:center;padding:10px">Next: Farmer Type →</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: CREATE FARMER — STEP 3 (Sub-type + Crops/Animals)
+═══════════════════════════════════════════════════ -->
+<div id="page-create-step3" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('create-step2')"><span class="ic">⬅</span>Back: Personal Info</div>
+  <div class="sb-sect">Create Farmer</div>
+  <div class="sb-item done"><span class="ic">✅</span>Step 1: Type</div>
+  <div class="sb-item done"><span class="ic">✅</span>Step 2: Personal</div>
+  <div class="sb-item a"><span class="ic">3️⃣</span>Step 3: Sub-type</div>
+  <div class="sb-item" style="color:var(--muted2)"><span class="ic">4️⃣</span>Step 4: Farm Setup</div>
+  <div class="sb-item" style="color:var(--muted2)"><span class="ic">5️⃣</span>Step 5: Assignments</div>
+  <div class="sb-item" style="color:var(--muted2)"><span class="ic">6️⃣</span>Step 6: Review</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('users')">Users</span> › <span onclick="show('create-step1')">Create</span> › Step 3: Farmer Type</div>
+  <div class="wizard">
+    <div class="wz-step done"><div class="wz-num">✓</div><div><div class="wz-label">User Type</div></div></div>
+    <div class="wz-step done"><div class="wz-num">✓</div><div><div class="wz-label">Personal Info</div><div style="font-size:9px">Jane Wanjiru</div></div></div>
+    <div class="wz-step active"><div class="wz-num">3</div><div><div class="wz-label">Farmer Sub-type</div><div style="font-size:9px;opacity:.8">Crops / Animals</div></div></div>
+    <div class="wz-step"><div class="wz-num">4</div><div><div class="wz-label">Farm Setup</div></div></div>
+    <div class="wz-step"><div class="wz-num">5</div><div><div class="wz-label">Assignments</div></div></div>
+    <div class="wz-step"><div class="wz-num">6</div><div><div class="wz-label">Review</div></div></div>
+  </div>
+  <div class="page-hd"><div><div class="page-title">Step 3 — Farmer Sub-type &amp; Crops / Animals</div></div></div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Farming Sub-type</span></div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+            <div style="border:2px solid var(--bord);border-radius:8px;padding:12px;text-align:center;cursor:pointer">
+              <div style="font-size:24px">🌾</div>
+              <div style="font-size:11px;font-weight:600;margin-top:4px">Crops Only</div>
+            </div>
+            <div style="border:2px solid var(--bord);border-radius:8px;padding:12px;text-align:center;cursor:pointer">
+              <div style="font-size:24px">🐄</div>
+              <div style="font-size:11px;font-weight:600;margin-top:4px">Livestock Only</div>
+            </div>
+            <div style="border:2px solid var(--g);border-radius:8px;padding:12px;text-align:center;cursor:pointer;background:var(--gl)">
+              <div style="font-size:24px">🌾🐄</div>
+              <div style="font-size:11px;font-weight:600;color:var(--g);margin-top:4px">Both ✓</div>
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="form-section-title">Primary Crops (select all)</div>
+            <div class="chips">
+              <div class="chip a">🌽 Maize</div><div class="chip a">🥬 Cabbage</div><div class="chip a">🫘 Beans</div>
+              <div class="chip">🍅 Tomato</div><div class="chip">🥔 Potato</div><div class="chip">🌾 Wheat</div>
+              <div class="chip">🌻 Sunflower</div><div class="chip">☕ Coffee</div><div class="chip">🍵 Tea</div>
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="form-section-title">Livestock Types (select all)</div>
+            <div class="chips">
+              <div class="chip a">🐄 Dairy Cattle</div><div class="chip">🐂 Beef Cattle</div>
+              <div class="chip a">🐔 Layers (Eggs)</div><div class="chip">🐓 Broilers</div>
+              <div class="chip">🐖 Pigs</div><div class="chip">🐐 Goats</div><div class="chip">🐑 Sheep</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Initial Livestock Counts (optional)</span></div>
+        <div class="card-body">
+          <div class="al al-b" style="margin-bottom:10px;font-size:9px">These seed the farmer's livestock inventory. Can be updated later on the app.</div>
+          <div class="fg fg2">
+            <div class="field"><label>Dairy Cattle (heads)</label><input value="4" placeholder="0"></div>
+            <div class="field"><label>Beef Cattle (heads)</label><input placeholder="0"></div>
+          </div>
+          <div class="fg fg2">
+            <div class="field"><label>Layers / Hens (birds)</label><input value="50" placeholder="0"></div>
+            <div class="field"><label>Broilers (birds)</label><input placeholder="0"></div>
+          </div>
+          <div class="fg fg2">
+            <div class="field"><label>Goats</label><input placeholder="0"></div>
+            <div class="field"><label>Pigs</label><input placeholder="0"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Experience Level</span></div>
+        <div class="card-body">
+          <div class="field" style="margin-bottom:10px"><label>Years farming</label><select><option>0–1 years (new farmer)</option><option>2–5 years</option><option>5–10 years</option><option>10+ years</option></select></div>
+          <div class="field"><label>Primary income source</label><select><option>Farming is primary income</option><option>Farming is secondary income</option><option>Subsistence only</option></select></div>
+        </div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btno" onclick="show('create-step2')" style="flex:1;justify-content:center;padding:10px">← Back</button>
+        <button class="btn" onclick="show('create-step4')" style="flex:2;justify-content:center;padding:10px">Next: Farm Setup →</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: CREATE FARMER — STEP 4 (Farm Details + Plots + Crops)
+═══════════════════════════════════════════════════ -->
+<div id="page-create-step4" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('create-step3')"><span class="ic">⬅</span>Back: Sub-type</div>
+  <div class="sb-sect">Create Farmer</div>
+  <div class="sb-item done"><span class="ic">✅</span>Step 1: Type</div>
+  <div class="sb-item done"><span class="ic">✅</span>Step 2: Personal</div>
+  <div class="sb-item done"><span class="ic">✅</span>Step 3: Sub-type</div>
+  <div class="sb-item a"><span class="ic">4️⃣</span>Step 4: Farm Setup</div>
+  <div class="sb-item" style="color:var(--muted2)"><span class="ic">5️⃣</span>Step 5: Assignments</div>
+  <div class="sb-item" style="color:var(--muted2)"><span class="ic">6️⃣</span>Step 6: Review</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('users')">Users</span> › <span onclick="show('create-step1')">Create</span> › Step 4: Farm Setup</div>
+  <div class="wizard">
+    <div class="wz-step done"><div class="wz-num">✓</div><div><div class="wz-label">User Type</div></div></div>
+    <div class="wz-step done"><div class="wz-num">✓</div><div><div class="wz-label">Personal Info</div></div></div>
+    <div class="wz-step done"><div class="wz-num">✓</div><div><div class="wz-label">Sub-type</div><div style="font-size:9px">Crops+Livestock</div></div></div>
+    <div class="wz-step active"><div class="wz-num">4</div><div><div class="wz-label">Farm Setup</div><div style="font-size:9px;opacity:.8">GPS, plots, crops</div></div></div>
+    <div class="wz-step"><div class="wz-num">5</div><div><div class="wz-label">Assignments</div></div></div>
+    <div class="wz-step"><div class="wz-num">6</div><div><div class="wz-label">Review</div></div></div>
+  </div>
+  <div class="page-hd"><div><div class="page-title">Step 4 — Farm Details, Plots &amp; Crop Planting</div><div class="page-sub">Farm creation is web-only (AD-FM-01). AI activity schedule is auto-generated per crop on save.</div></div></div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Farm Basics</span></div>
+        <div class="card-body">
+          <div class="field" style="margin-bottom:9px"><label>Farm Name *</label><input value="Nakuru Farm" placeholder="e.g. Nakuru Farm, Shamba la Maua"></div>
+          <div class="fg fg2">
+            <div class="field"><label>Total Area (acres) *</label><input value="2.5" placeholder="e.g. 2.5"></div>
+            <div class="field"><label>GPS — Latitude *</label><input value="-0.3031" placeholder="-0.3031"><div class="field-hint">Decimal degrees</div></div>
+          </div>
+          <div class="fg fg2">
+            <div class="field"><label>GPS — Longitude *</label><input value="36.0800" placeholder="36.0800"></div>
+            <div class="field"><label>Altitude (m above sea level)</label><input value="1850" placeholder="e.g. 1850"></div>
+          </div>
+          <div class="fg fg2">
+            <div class="field"><label>Water Source *</label><select><option>Borehole + Rainwater</option><option>River / Stream</option><option>Rain-fed only</option><option>Irrigation (piped)</option><option>Dam / Water pan</option></select></div>
+            <div class="field"><label>Soil Type</label><select><option>Loam (fertile, well-draining)</option><option>Clay</option><option>Sandy</option><option>Black cotton</option><option>Red volcanic</option></select></div>
+          </div>
+          <div class="field"><label>Farming System</label><select><option>Smallholder mixed</option><option>Subsistence only</option><option>Commercial (surplus selling)</option></select></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">GPS Map Preview</span></div>
+        <div class="card-body">
+          <div class="map-ph" style="height:100px"><span style="font-size:12px;color:#065f46">📍 Nakuru Farm · -0.3031, 36.0800</span><div class="map-badge">Nakuru · Bahati Sub-county</div></div>
+          <div class="al al-b" style="font-size:9px">GPS coordinates are verified against the farmer's stated county. Mismatch triggers a KYC flag. Coordinates also verify for government farm registration (AD-GPS-01).</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Plots & Crops</span><button class="btn sm">+ Add Plot</button></div>
+        <div class="card-body">
+          <div class="al al-b" style="margin-bottom:12px;font-size:9px">🤖 When a crop is saved to a plot, the AI activity schedule (spray, fertilise, harvest dates) is auto-generated server-side. Farmer sees it immediately on the mobile app.</div>
+          <!-- Plot A -->
+          <div class="plot-row">
+            <div class="plot-row-title">Plot A</div>
+            <div class="fg fg2">
+              <div class="field"><label>Plot Size (acres)</label><input value="1.5"></div>
+              <div class="field"><label>Plot Name</label><input value="Plot A — Maize"></div>
+            </div>
+            <div class="fg fg2">
+              <div class="field"><label>Crop *</label><select><option>Maize H614D</option><option>Maize DK8031</option><option>Tomato</option><option>Beans</option><option>Cabbage</option><option>Wheat</option></select></div>
+              <div class="field"><label>Planting Date *</label><input type="date" value="2025-04-01"><div class="field-hint">Triggers AI schedule from this date</div></div>
+            </div>
+            <div class="fg fg3">
+              <div class="field"><label>Season</label><select><option>Long Rains (Mar–Jun)</option><option>Short Rains (Oct–Dec)</option><option>Dry Season (irrigation)</option></select></div>
+              <div class="field"><label>Seed Source</label><select><option>Certified (KEPHIS)</option><option>Own saved seed</option><option>Market (unverified)</option></select></div>
+              <div class="field"><label>Target Yield (kg/acre)</label><input value="800" placeholder="e.g. 800"></div>
+            </div>
+            <div style="margin-top:6px"><button class="btno sm red">🗑 Remove Plot</button></div>
+          </div>
+          <!-- Plot B -->
+          <div class="plot-row">
+            <div class="plot-row-title">Plot B</div>
+            <div class="fg fg2">
+              <div class="field"><label>Plot Size (acres)</label><input value="1.0"></div>
+              <div class="field"><label>Plot Name</label><input value="Plot B — Cabbage"></div>
+            </div>
+            <div class="fg fg2">
+              <div class="field"><label>Crop *</label><select><option>Cabbage</option><option>Maize H614D</option><option>Tomato</option></select></div>
+              <div class="field"><label>Planting Date *</label><input type="date" value="2025-05-01"></div>
+            </div>
+            <div class="fg fg3">
+              <div class="field"><label>Season</label><select><option>Long Rains (Mar–Jun)</option></select></div>
+              <div class="field"><label>Seed Source</label><select><option>Certified (KEPHIS)</option></select></div>
+              <div class="field"><label>Target Yield (kg/acre)</label><input value="420"></div>
+            </div>
+            <div style="margin-top:6px"><button class="btno sm red">🗑 Remove Plot</button></div>
+          </div>
+          <div style="margin-top:10px;display:flex;gap:8px">
+            <button class="btno" onclick="show('create-step3')" style="flex:1;justify-content:center;padding:10px">← Back</button>
+            <button class="btn" onclick="show('create-step5')" style="flex:2;justify-content:center;padding:10px">Next: Assignments →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: CREATE FARMER — STEP 5 (Assignments)
+═══════════════════════════════════════════════════ -->
+<div id="page-create-step5" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('create-step4')"><span class="ic">⬅</span>Back: Farm</div>
+  <div class="sb-sect">Create Farmer</div>
+  <div class="sb-item done"><span class="ic">✅</span>Step 1–4 Done</div>
+  <div class="sb-item a"><span class="ic">5️⃣</span>Step 5: Assignments</div>
+  <div class="sb-item" style="color:var(--muted2)"><span class="ic">6️⃣</span>Step 6: Review</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('users')">Users</span> › <span onclick="show('create-step1')">Create</span> › Step 5: Assignments</div>
+  <div class="wizard">
+    <div class="wz-step done"><div class="wz-num">✓</div><div><div class="wz-label">Type</div></div></div>
+    <div class="wz-step done"><div class="wz-num">✓</div><div><div class="wz-label">Personal</div></div></div>
+    <div class="wz-step done"><div class="wz-num">✓</div><div><div class="wz-label">Sub-type</div></div></div>
+    <div class="wz-step done"><div class="wz-num">✓</div><div><div class="wz-label">Farm Setup</div><div style="font-size:9px">Nakuru Farm · 2 plots</div></div></div>
+    <div class="wz-step active"><div class="wz-num">5</div><div><div class="wz-label">Assignments</div><div style="font-size:9px;opacity:.8">Lender + Expert</div></div></div>
+    <div class="wz-step"><div class="wz-num">6</div><div><div class="wz-label">Review</div></div></div>
+  </div>
+  <div class="page-hd"><div><div class="page-title">Step 5 — Assign Lender &amp; Extension Officer</div><div class="page-sub">Assignments can also be changed at any time from the user's profile page.</div></div></div>
+  <div class="grid2">
+    <div>
+      <div class="card" style="border-color:var(--pur)">
+        <div class="card-hd" style="background:var(--purl)"><span class="card-title" style="color:var(--pur)">🏦 Assign Lending Partner</span><span class="txt-m">Optional — farmer can also select at loan time</span></div>
+        <div class="card-body">
+          <div class="al al-b" style="margin-bottom:12px;font-size:9px">Pre-assigning a lender means this farmer's loan applications are automatically routed to that lender's pipeline. Farmer can still apply to others independently.</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <!-- Lender options -->
+            <div style="border:2px solid var(--g);border-radius:8px;padding:12px;cursor:pointer;background:var(--gl)">
+              <div class="row-sb">
+                <div class="row" style="gap:10px">
+                  <div class="lav" style="width:34px;height:34px;font-size:12px;background:var(--pur)">EQ</div>
+                  <div><div style="font-size:12px;font-weight:600">Equity Bank Kenya</div><div class="txt-m">Max loan: KES 500K · Rate: 14% p.a. · 1,840 farmers · Nakuru active</div></div>
+                </div>
+                <span class="b bg">✓ Selected</span>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px">
+                <div style="background:rgba(255,255,255,.7);border-radius:4px;padding:5px;text-align:center"><div style="font-size:11px;font-weight:600;color:var(--g)">1,840</div><div class="txt-m">Farmers</div></div>
+                <div style="background:rgba(255,255,255,.7);border-radius:4px;padding:5px;text-align:center"><div style="font-size:11px;font-weight:600;color:var(--g)">94%</div><div class="txt-m">Repayment</div></div>
+                <div style="background:rgba(255,255,255,.7);border-radius:4px;padding:5px;text-align:center"><div style="font-size:11px;font-weight:600;color:var(--g)">KES 500K</div><div class="txt-m">Max loan</div></div>
+              </div>
+            </div>
+            <div style="border:1px solid var(--bord);border-radius:8px;padding:12px;cursor:pointer">
+              <div class="row" style="gap:10px">
+                <div class="lav" style="width:34px;height:34px;font-size:12px;background:var(--t)">KC</div>
+                <div><div style="font-size:12px;font-weight:600">KCB AgriLoan</div><div class="txt-m">Max loan: KES 300K · Rate: 15% p.a. · 1,240 farmers</div></div>
+              </div>
+            </div>
+            <div style="border:1px solid var(--bord);border-radius:8px;padding:12px;cursor:pointer">
+              <div class="row" style="gap:10px">
+                <div class="lav" style="width:34px;height:34px;font-size:12px;background:var(--gold)">FA</div>
+                <div><div style="font-size:12px;font-weight:600">Faulu MFI</div><div class="txt-m">Max loan: KES 100K · Rate: 18% p.a. · Focus: smallholder</div></div>
+              </div>
+            </div>
+            <div style="border:1px dashed var(--bord);border-radius:8px;padding:10px;text-align:center;color:var(--muted);font-size:11px;cursor:pointer">
+              Skip — farmer selects lender at loan application time
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="border-color:var(--amb)">
+        <div class="card-hd" style="background:var(--ambl)"><span class="card-title" style="color:var(--amb)">🩺 Assign Extension Officer / Vet</span><span class="txt-m">Strongly recommended</span></div>
+        <div class="card-body">
+          <div class="al al-b" style="margin-bottom:12px;font-size:9px">The assigned expert reviews AI diagnoses with low confidence, answers this farmer's community questions, and schedules farm visits. Auto-assign picks the expert with capacity in the farmer's county.</div>
+          <div class="field" style="margin-bottom:10px"><label>Filter by County</label><select><option>Nakuru (farmer's county)</option><option>All Counties</option></select></div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="border:2px solid var(--amb);border-radius:8px;padding:12px;cursor:pointer;background:var(--ambl)">
+              <div class="row-sb">
+                <div class="row" style="gap:10px">
+                  <div class="lav" style="width:34px;height:34px;font-size:12px;background:var(--amb)">DO</div>
+                  <div>
+                    <div style="font-size:12px;font-weight:600">Dr. Ochieng</div>
+                    <div class="txt-m">Extension Officer · Nakuru · KVB Verified · Specialisation: Maize, Poultry</div>
+                  </div>
+                </div>
+                <span class="b ba">✓ Selected</span>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px">
+                <div style="background:rgba(255,255,255,.7);border-radius:4px;padding:5px;text-align:center"><div style="font-size:11px;font-weight:600;color:var(--amb)">42/50</div><div class="txt-m">Farmers</div></div>
+                <div style="background:rgba(255,255,255,.7);border-radius:4px;padding:5px;text-align:center"><div style="font-size:11px;font-weight:600;color:var(--g)">4.8★</div><div class="txt-m">Rating</div></div>
+                <div style="background:rgba(255,255,255,.7);border-radius:4px;padding:5px;text-align:center"><div style="font-size:11px;font-weight:600;color:var(--g)">78%</div><div class="txt-m">Q&A rate</div></div>
+              </div>
+            </div>
+            <div style="border:1px solid var(--bord);border-radius:8px;padding:12px;cursor:pointer">
+              <div class="row" style="gap:10px">
+                <div class="lav" style="width:34px;height:34px;font-size:12px;background:var(--t)">JK</div>
+                <div><div style="font-size:12px;font-weight:600">Dr. James Kamau</div><div class="txt-m">Livestock Vet · Nakuru · KVB Verified · 28/50 farmers</div></div>
+              </div>
+            </div>
+            <div style="border:1px solid var(--bord);border-radius:8px;padding:12px;cursor:pointer">
+              <div class="row" style="gap:10px">
+                <div class="lav" style="width:34px;height:34px;font-size:12px;background:var(--pur)">SO</div>
+                <div><div style="font-size:12px;font-weight:600">Sarah Otieno</div><div class="txt-m">Agronomist · Nakuru · 15/50 farmers — has capacity</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btno" onclick="show('create-step4')" style="flex:1;justify-content:center;padding:10px">← Back</button>
+        <button class="btn" onclick="show('create-step6')" style="flex:2;justify-content:center;padding:10px">Next: Review & Create →</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: CREATE FARMER — STEP 6 (Review & Confirm)
+═══════════════════════════════════════════════════ -->
+<div id="page-create-step6" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('create-step5')"><span class="ic">⬅</span>Back: Assignments</div>
+  <div class="sb-sect">Create Farmer</div>
+  <div class="sb-item done"><span class="ic">✅</span>Step 1–5 Done</div>
+  <div class="sb-item a"><span class="ic">6️⃣</span>Step 6: Review</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('users')">Users</span> › <span onclick="show('create-step1')">Create</span> › Step 6: Review</div>
+  <div class="wizard">
+    <div class="wz-step done"><div class="wz-num">✓</div><div><div class="wz-label">Type</div></div></div>
+    <div class="wz-step done"><div class="wz-num">✓</div><div><div class="wz-label">Personal</div></div></div>
+    <div class="wz-step done"><div class="wz-num">✓</div><div><div class="wz-label">Sub-type</div></div></div>
+    <div class="wz-step done"><div class="wz-num">✓</div><div><div class="wz-label">Farm Setup</div></div></div>
+    <div class="wz-step done"><div class="wz-num">✓</div><div><div class="wz-label">Assignments</div></div></div>
+    <div class="wz-step active"><div class="wz-num">6</div><div><div class="wz-label">Review &amp; Create</div></div></div>
+  </div>
+  <div class="page-hd"><div><div class="page-title">Step 6 — Review &amp; Create Account</div></div></div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Account Summary</span><button class="btno sm" onclick="show('create-step2')">✏️ Edit</button></div>
+        <div class="card-body">
+          <div class="info-row"><span class="info-label">Role</span><span class="info-val">🌾🐄 Farmer (Crops + Livestock)</span></div>
+          <div class="info-row"><span class="info-label">Full Name</span><span class="info-val">Jane Wanjiru</span></div>
+          <div class="info-row"><span class="info-label">Phone</span><span class="info-val">+254 712 345 678</span></div>
+          <div class="info-row"><span class="info-label">National ID</span><span class="info-val">12345678</span></div>
+          <div class="info-row"><span class="info-label">County / Sub-county</span><span class="info-val">Nakuru — Bahati</span></div>
+          <div class="info-row"><span class="info-label">Language</span><span class="info-val">Kiswahili · USSD Enabled</span></div>
+          <div class="info-row"><span class="info-label">Crops</span><span class="info-val">Maize H614D, Cabbage, Beans</span></div>
+          <div class="info-row"><span class="info-label">Livestock</span><span class="info-val">50 Layers, 4 Dairy Cattle</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Farm Summary</span><button class="btno sm" onclick="show('create-step4')">✏️ Edit</button></div>
+        <div class="card-body">
+          <div class="info-row"><span class="info-label">Farm Name</span><span class="info-val">Nakuru Farm</span></div>
+          <div class="info-row"><span class="info-label">Total Area</span><span class="info-val">2.5 acres</span></div>
+          <div class="info-row"><span class="info-label">GPS</span><span class="info-val">-0.3031, 36.0800 ✓ Verified</span></div>
+          <div class="info-row"><span class="info-label">Water Source</span><span class="info-val">Borehole + Rainwater</span></div>
+          <div class="info-row"><span class="info-label">Soil Type</span><span class="info-val">Loam</span></div>
+          <div class="info-row"><span class="info-label">Plot A</span><span class="info-val">1.5ac · Maize H614D · Planted Apr 1</span></div>
+          <div class="info-row"><span class="info-label">Plot B</span><span class="info-val">1.0ac · Cabbage · Planted May 1</span></div>
+          <div class="al al-g" style="margin-top:8px;font-size:9px">🤖 AI will auto-generate activity schedules for both plots immediately after account creation.</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Assignments</span><button class="btno sm" onclick="show('create-step5')">✏️ Edit</button></div>
+        <div class="card-body">
+          <div style="background:var(--gl);border-radius:6px;padding:10px;margin-bottom:8px">
+            <div style="font-size:11px;font-weight:600;margin-bottom:3px">🏦 Lender: Equity Bank Kenya</div>
+            <div class="txt-m">Max KES 500K · 14% p.a. · Loan applications auto-routed</div>
+          </div>
+          <div style="background:var(--ambl);border-radius:6px;padding:10px">
+            <div style="font-size:11px;font-weight:600;margin-bottom:3px">🩺 Extension Officer: Dr. Ochieng</div>
+            <div class="txt-m">Nakuru · Maize &amp; Poultry specialist · 42/50 capacity</div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="border-color:var(--g)">
+        <div class="card-hd" style="background:var(--gl)"><span class="card-title" style="color:var(--g)">SMS to be sent on creation</span></div>
+        <div class="card-body">
+          <div style="background:#fff;border:1px solid var(--bord);border-radius:6px;padding:12px;font-size:11px;font-family:monospace;color:var(--ink2);line-height:1.6">
+            Karibu AgroConnect! Jane Wanjiru, akaunti yako imefunguliwa. Nambari ya simu: +254712345678. PIN ya mara ya kwanza: <strong>1234</strong>. Badilisha PIN yako mara ya kwanza kuingia. App: agroconnect.app au piga *384# kwa USSD.
+          </div>
+          <div class="al al-a" style="margin-top:8px;font-size:9px">⚠️ PIN is temporary and must be changed on first login. Account is locked after 3 failed PIN attempts.</div>
+        </div>
+      </div>
+      <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
+        <button class="btn" onclick="show('create-success')" style="justify-content:center;padding:13px;font-size:13px">✅ Create Account &amp; Send SMS</button>
+        <button class="btno" onclick="show('create-step5')" style="justify-content:center;padding:10px">← Back to Assignments</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: CREATE SUCCESS
+═══════════════════════════════════════════════════ -->
+<div id="page-create-success" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('users')"><span class="ic">👥</span>All Users</div>
+  <div class="sb-item" onclick="show('create-step1')"><span class="ic">➕</span>Create Another</div>
+  <div class="sb-item" onclick="show('kyc')"><span class="ic">🪪</span>KYC Queue</div>
+</div>
+<div class="content" style="display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 48px)">
+  <div style="max-width:560px;width:100%">
+    <div class="success-screen">
+      <div class="success-icon">✅</div>
+      <div class="success-title">Account Created Successfully!</div>
+      <div class="success-sub">Jane Wanjiru's farmer account is live. Nakuru Farm has been created with 2 plots. AI activity schedules for Maize H614D and Cabbage are now generating.<br><br>SMS sent to <strong>+254 712 345 678</strong> with temporary PIN.</div>
+      <div class="creds-box">
+        <div><strong>Name:</strong> Jane Wanjiru</div>
+        <div><strong>Phone:</strong> +254 712 345 678</div>
+        <div><strong>Role:</strong> 🌾🐄 Farmer (Crops + Livestock)</div>
+        <div><strong>Farm:</strong> Nakuru Farm · 2.5 acres · 2 plots</div>
+        <div><strong>Lender:</strong> Equity Bank Kenya</div>
+        <div><strong>Expert:</strong> Dr. Ochieng (Nakuru)</div>
+        <div><strong>Temp PIN:</strong> 1234 (must change on login)</div>
+        <div><strong>KYC Status:</strong> Pending — documents needed</div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+        <button class="btn" onclick="show('kyc-detail')">🪪 Start KYC Verification</button>
+        <button class="btn teal" onclick="show('user-detail')">👤 View User Profile</button>
+        <button class="btn gold" onclick="show('assign-lender')">🏦 Adjust Assignments</button>
+        <button class="btno" onclick="show('create-step1')">➕ Create Another User</button>
+      </div>
+    </div>
+    <div class="al al-b" style="margin-top:14px;font-size:9px;text-align:center">Next steps: Complete KYC (upload ID photos), then full platform access is unlocked for Jane Wanjiru. Until KYC is approved, the farmer can log in but cannot apply for loans or list produce.</div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: OTHER USER TYPE FORMS (Lender, Supplier, Vet, Govt, Buyer, Worker)
+═══════════════════════════════════════════════════ -->
+
+<!-- CREATE LENDER REP -->
+<div id="page-create-lender" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('create-step1')"><span class="ic">⬅</span>Back: Type</div>
+  <div class="sb-sect">Create Lender Rep</div>
+  <div class="sb-item done"><span class="ic">✅</span>Step 1: Type Selected</div>
+  <div class="sb-item a"><span class="ic">2️⃣</span>Step 2: Personal + Institution</div>
+  <div class="sb-item" style="color:var(--muted2)"><span class="ic">3️⃣</span>Step 3: Review</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('users')">Users</span> › <span onclick="show('create-step1')">Create</span> › Lender Rep</div>
+  <div class="wizard">
+    <div class="wz-step done"><div class="wz-num">✓</div><div><div class="wz-label">User Type</div><div style="font-size:9px">🏦 Lender Rep</div></div></div>
+    <div class="wz-step active"><div class="wz-num">2</div><div><div class="wz-label">Personal + Institution</div></div></div>
+    <div class="wz-step"><div class="wz-num">3</div><div><div class="wz-label">Review &amp; Create</div></div></div>
+  </div>
+  <div class="page-hd"><div><div class="page-title">Create Lender Representative</div></div></div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Contact Person Details</span></div>
+        <div class="card-body">
+          <div class="fg fg2">
+            <div class="field"><label>Full Name *</label><input placeholder="e.g. David Mwangi (AgriLoan Head)"></div>
+            <div class="field"><label>Phone Number *</label><input placeholder="+254700000000"></div>
+          </div>
+          <div class="fg fg2">
+            <div class="field"><label>National ID</label><input placeholder="12345678"></div>
+            <div class="field"><label>Work Email</label><input placeholder="dmwangi@equitybank.co.ke"></div>
+          </div>
+          <div class="field"><label>Job Title</label><input placeholder="e.g. Agricultural Loans Officer"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Institution Details</span></div>
+        <div class="card-body">
+          <div class="field" style="margin-bottom:9px"><label>Institution Name *</label><input placeholder="e.g. Equity Bank Kenya Limited" value="Equity Bank Kenya Limited"></div>
+          <div class="fg fg2">
+            <div class="field"><label>Institution Type</label><select><option>Commercial Bank (CBK licensed)</option><option>MFI (AMFI Kenya licensed)</option><option>SACCO</option><option>Mobile Lender</option></select></div>
+            <div class="field"><label>CBK / AMFI Licence No. *</label><input placeholder="CBK/BANK/042" value="CBK/BANK/042"></div>
+          </div>
+          <div class="fg fg2">
+            <div class="field"><label>M-Pesa Paybill (Disbursements) *</label><input placeholder="247247" value="247247"><div class="field-hint">Farmers receive loan disbursements here</div></div>
+            <div class="field"><label>Head Office County</label><select><option>Nairobi</option><option>Nakuru</option><option>Mombasa</option></select></div>
+          </div>
+          <div class="field"><label>Counties of Operation (select all)</label><select style="height:80px" multiple><option selected>All 47 Counties</option><option>Nairobi</option><option>Nakuru</option><option>Meru</option></select><div class="field-hint">Loan applications are only routed from these counties</div></div>
+          <div class="fg fg2">
+            <div class="field"><label>Max Loan Amount (KES)</label><input value="500000"></div>
+            <div class="field"><label>Interest Rate (% p.a.)</label><input value="14"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">KYC Documents Required from Lender</span></div>
+        <div class="card-body">
+          <div class="al al-b" style="margin-bottom:10px;font-size:9px">Lender reps undergo institutional KYC before farmers can be routed to them. Upload or note which documents to collect.</div>
+          <div class="doc-check"><input type="checkbox" checked><span>CBK / AMFI Licence Certificate</span></div>
+          <div class="doc-check"><input type="checkbox" checked><span>Certificate of Incorporation</span></div>
+          <div class="doc-check"><input type="checkbox"><span>Contact Person National ID</span></div>
+          <div class="doc-check"><input type="checkbox"><span>Authorisation Letter (from CEO/Director)</span></div>
+          <div class="doc-check"><input type="checkbox"><span>M-Pesa Paybill Confirmation Letter</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Portal Access Settings</span></div>
+        <div class="card-body">
+          <div class="field" style="margin-bottom:9px"><label>Lender Portal Access</label><select><option>Full access (review, approve, disburse)</option><option>View only (read-only)</option></select></div>
+          <div class="field" style="margin-bottom:9px"><label>Additional Reps Allowed</label><input value="3" placeholder="Max additional reps"><div class="field-hint">How many other staff from this institution can be added</div></div>
+          <div class="field"><label>Auto-approve Band A farmers?</label><select><option>Yes (score ≥80 + ≥15 activities/mo)</option><option>No (always manual review)</option></select></div>
+        </div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btno" onclick="show('create-step1')" style="flex:1;justify-content:center;padding:10px">← Back</button>
+        <button class="btn" onclick="show('create-success')" style="flex:2;justify-content:center;padding:10px">✅ Create Lender Rep</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- CREATE SUPPLIER -->
+<div id="page-create-supplier" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('create-step1')"><span class="ic">⬅</span>Back: Type</div>
+  <div class="sb-sect">Create Supplier</div>
+  <div class="sb-item done"><span class="ic">✅</span>Step 1: Type Selected</div>
+  <div class="sb-item a"><span class="ic">2️⃣</span>Personal + Business</div>
+  <div class="sb-item" style="color:var(--muted2)"><span class="ic">3️⃣</span>Review</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('users')">Users</span> › <span onclick="show('create-step1')">Create</span> › Supplier / Agrovet</div>
+  <div class="wizard">
+    <div class="wz-step done"><div class="wz-num">✓</div><div><div class="wz-label">User Type</div><div style="font-size:9px">📦 Supplier</div></div></div>
+    <div class="wz-step active"><div class="wz-num">2</div><div><div class="wz-label">Personal + Business</div></div></div>
+    <div class="wz-step"><div class="wz-num">3</div><div><div class="wz-label">Review &amp; Create</div></div></div>
+  </div>
+  <div class="page-hd"><div><div class="page-title">Create Supplier / Agrovet</div></div></div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Contact Person</span></div>
+        <div class="card-body">
+          <div class="fg fg2">
+            <div class="field"><label>Full Name *</label><input placeholder="Owner / Manager name"></div>
+            <div class="field"><label>Phone Number *</label><input placeholder="+254700000000"></div>
+          </div>
+          <div class="field"><label>National ID</label><input placeholder="12345678"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Business Details</span></div>
+        <div class="card-body">
+          <div class="field" style="margin-bottom:9px"><label>Business Name *</label><input placeholder="e.g. Nakuru Agrovets Ltd" value="Nakuru Agrovets Ltd"></div>
+          <div class="fg fg2">
+            <div class="field"><label>Business Reg Number *</label><input placeholder="BRS/2008/4421" value="BRS/2008/4421"></div>
+            <div class="field"><label>VAT / PIN Number</label><input placeholder="P051234567A"></div>
+          </div>
+          <div class="fg fg2">
+            <div class="field"><label>Business County *</label><select><option>Nakuru</option><option>Nairobi</option><option>Meru</option><option>Uasin Gishu</option></select></div>
+            <div class="field"><label>Delivery Radius (km)</label><input value="30" placeholder="30"><div class="field-hint">Max km for product delivery</div></div>
+          </div>
+          <div class="field" style="margin-bottom:9px"><label>Physical Address</label><input placeholder="e.g. Kenyatta Ave, Nakuru Town" value="Kenyatta Ave, Nakuru Town"></div>
+          <div class="form-section" style="margin-top:10px">
+            <div class="form-section-title">Product Categories (select all)</div>
+            <div class="chips">
+              <div class="chip a">🌾 Fertilisers</div><div class="chip a">🌿 Pesticides</div>
+              <div class="chip a">🌱 Seeds</div><div class="chip">💊 Animal Medicine</div>
+              <div class="chip">💉 Vaccines</div><div class="chip">🔧 Equipment / Tools</div>
+              <div class="chip">📦 Packaging</div><div class="chip">🌾 Agrochemicals</div>
+            </div>
+          </div>
+          <div class="field" style="margin-top:10px"><label>Does this supplier participate in Govt programs?</label><select><option>Yes — MSAI Fertiliser, KALRO Seeds</option><option>Not currently</option></select></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">KYC Documents (Supplier)</span></div>
+        <div class="card-body">
+          <div class="doc-check"><input type="checkbox" checked><span>Certificate of Incorporation (BRS)</span></div>
+          <div class="doc-check"><input type="checkbox" checked><span>Agrochemical Dealer Licence (PCPB)</span></div>
+          <div class="doc-check"><input type="checkbox"><span>Business Permit (County)</span></div>
+          <div class="doc-check"><input type="checkbox"><span>Owner National ID</span></div>
+          <div class="doc-check"><input type="checkbox"><span>KEBS Quality Certification (if applicable)</span></div>
+          <div class="doc-check"><input type="checkbox"><span>Vet Medicines Licence (KVB) — if selling animal drugs</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">AI Linking</span></div>
+        <div class="card-body">
+          <div class="al al-b" style="margin-bottom:8px;font-size:9px">Products from this supplier will appear in AI-driven recommendations when farmers are diagnosed with matching conditions or have matching crops.</div>
+          <div class="field"><label>Priority ranking among suppliers</label><select><option>Standard (auto-ranked by rating + proximity)</option><option>Featured (promoted to farmers in range)</option></select></div>
+        </div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btno" onclick="show('create-step1')" style="flex:1;justify-content:center;padding:10px">← Back</button>
+        <button class="btn" onclick="show('create-success')" style="flex:2;justify-content:center;padding:10px">✅ Create Supplier Account</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- CREATE VET / EXTENSION OFFICER -->
+<div id="page-create-vet" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('create-step1')"><span class="ic">⬅</span>Back: Type</div>
+  <div class="sb-sect">Create Vet / Expert</div>
+  <div class="sb-item done"><span class="ic">✅</span>Step 1: Type Selected</div>
+  <div class="sb-item a"><span class="ic">2️⃣</span>Personal + Professional</div>
+  <div class="sb-item" style="color:var(--muted2)"><span class="ic">3️⃣</span>Review</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('users')">Users</span> › <span onclick="show('create-step1')">Create</span> › Vet / Extension Officer</div>
+  <div class="wizard">
+    <div class="wz-step done"><div class="wz-num">✓</div><div><div class="wz-label">User Type</div><div style="font-size:9px">🩺 Vet / Expert</div></div></div>
+    <div class="wz-step active"><div class="wz-num">2</div><div><div class="wz-label">Personal + Professional</div></div></div>
+    <div class="wz-step"><div class="wz-num">3</div><div><div class="wz-label">Review &amp; Create</div></div></div>
+  </div>
+  <div class="page-hd"><div><div class="page-title">Create Vet / Extension Officer</div></div></div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Personal Details</span></div>
+        <div class="card-body">
+          <div class="fg fg2">
+            <div class="field"><label>Full Name *</label><input placeholder="e.g. Dr. James Kamau"></div>
+            <div class="field"><label>Phone Number *</label><input placeholder="+254700000000"></div>
+          </div>
+          <div class="fg fg2">
+            <div class="field"><label>National ID *</label><input placeholder="12345678"></div>
+            <div class="field"><label>Work Email</label><input placeholder="jkamau@kalro.go.ke"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Professional Details</span></div>
+        <div class="card-body">
+          <div class="fg fg2">
+            <div class="field"><label>Expert Type *</label><select><option>Veterinary Officer (KVB licenced)</option><option>Extension Officer (Ministry)</option><option>Agronomist (private / NGO)</option><option>Animal Health Assistant</option></select></div>
+            <div class="field"><label>Licence / Cert Number *</label><input placeholder="KVB/2019/1234"><div class="field-hint">KVB for vets, Ministry letter for ext. officers</div></div>
+          </div>
+          <div class="fg fg2">
+            <div class="field"><label>Employing Organisation</label><input placeholder="e.g. KALRO, Ministry of Agriculture, CIMMYT"></div>
+            <div class="field"><label>Years of Experience</label><select><option>1–3 years</option><option>4–7 years</option><option>8–15 years</option><option>15+ years</option></select></div>
+          </div>
+          <div class="form-section" style="margin-top:10px">
+            <div class="form-section-title">Crop / Animal Specialisations</div>
+            <div class="chips">
+              <div class="chip a">🌽 Maize</div><div class="chip a">🐔 Poultry</div>
+              <div class="chip">🍅 Tomato / Horticulture</div><div class="chip">🐄 Dairy Cattle</div>
+              <div class="chip">🫘 Legumes</div><div class="chip">🌾 Wheat / Cereals</div>
+              <div class="chip">🐖 Pigs</div><div class="chip">☕ Cash crops</div>
+            </div>
+          </div>
+          <div class="fg fg2" style="margin-top:10px">
+            <div class="field"><label>Assigned County *</label><select><option>Nakuru</option><option>Meru</option><option>Uasin Gishu</option><option>All counties (itinerant)</option></select></div>
+            <div class="field"><label>Max Farmers Assignable</label><input value="50" placeholder="50"><div class="field-hint">Platform caps assignment at this number</div></div>
+          </div>
+          <div class="field"><label>Languages Spoken</label><input value="Kiswahili, English, Kikuyu"></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Expert Badge &amp; Verification</span></div>
+        <div class="card-body">
+          <div class="al al-b" style="margin-bottom:10px;font-size:9px">The Expert Badge lets this user mark community answers as "Expert Verified", review AI diagnoses, and post knowledge articles. Requires licence verification below.</div>
+          <div class="field" style="margin-bottom:9px"><label>Grant Expert Badge?</label><select><option>Yes — after licence verified by admin</option><option>No — standard access only</option></select></div>
+          <div class="doc-check"><input type="checkbox" checked><span>KVB Licence / Ministry Appointment Letter</span></div>
+          <div class="doc-check"><input type="checkbox"><span>Academic Certificate (Degree / Diploma)</span></div>
+          <div class="doc-check"><input type="checkbox"><span>National ID</span></div>
+          <div class="doc-check"><input type="checkbox"><span>Professional Photo (for public profile)</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Workload Settings</span></div>
+        <div class="card-body">
+          <div class="field" style="margin-bottom:9px"><label>AI Diagnosis Review Queue</label><select><option>Auto-assigned (confidence &lt;75%)</option><option>Only manually assigned</option></select></div>
+          <div class="field"><label>Community Q&amp;A Participation</label><select><option>Enabled (answers marked as Expert Verified)</option><option>Disabled</option></select></div>
+        </div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btno" onclick="show('create-step1')" style="flex:1;justify-content:center;padding:10px">← Back</button>
+        <button class="btn" onclick="show('create-success')" style="flex:2;justify-content:center;padding:10px">✅ Create Vet / Expert Account</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- CREATE GOVT OFFICER -->
+<div id="page-create-govt" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('create-step1')"><span class="ic">⬅</span>Back: Type</div>
+  <div class="sb-item a"><span class="ic">2️⃣</span>Govt Officer Form</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('users')">Users</span> › <span onclick="show('create-step1')">Create</span> › Govt Officer</div>
+  <div class="page-hd"><div><div class="page-title">Create Government Officer</div></div></div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Personal Details</span></div>
+        <div class="card-body">
+          <div class="fg fg2">
+            <div class="field"><label>Full Name *</label><input placeholder="e.g. Grace Kamau"></div>
+            <div class="field"><label>Phone Number *</label><input placeholder="+254700000000"></div>
+          </div>
+          <div class="fg fg2">
+            <div class="field"><label>National ID *</label><input placeholder="12345678"></div>
+            <div class="field"><label>Work Email</label><input placeholder="gkamau@agriculture.go.ke"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Government Details</span></div>
+        <div class="card-body">
+          <div class="fg fg2">
+            <div class="field"><label>Ministry / Agency *</label><select><option>Ministry of Agriculture &amp; Livestock</option><option>Nakuru County Agriculture Dept</option><option>KALRO</option><option>KEPHIS</option><option>NCPB</option><option>AFA</option></select></div>
+            <div class="field"><label>Position / Title *</label><input placeholder="e.g. Agricultural Extension Officer"></div>
+          </div>
+          <div class="fg fg2">
+            <div class="field"><label>Staff ID Number *</label><input placeholder="MoA/2019/12345"></div>
+            <div class="field"><label>Assigned County *</label><select><option>Nakuru</option><option>All Counties (National)</option><option>Meru</option><option>Uasin Gishu</option></select></div>
+          </div>
+          <div class="field" style="margin-bottom:9px"><label>Permissions</label><select><option>Approve subsidy applications + farm registrations</option><option>View only</option><option>Create subsidy programs</option><option>Full county admin</option></select></div>
+        </div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btno" onclick="show('create-step1')" style="flex:1;justify-content:center;padding:10px">← Back</button>
+        <button class="btn" onclick="show('create-success')" style="flex:2;justify-content:center;padding:10px">✅ Create Govt Officer Account</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- CREATE BUYER -->
+<div id="page-create-buyer" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('create-step1')"><span class="ic">⬅</span>Back: Type</div>
+  <div class="sb-item a"><span class="ic">2️⃣</span>Buyer Form</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('users')">Users</span> › <span onclick="show('create-step1')">Create</span> › Buyer</div>
+  <div class="page-hd"><div><div class="page-title">Create Buyer Account</div></div></div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Contact Person</span></div>
+        <div class="card-body">
+          <div class="fg fg2">
+            <div class="field"><label>Full Name *</label><input placeholder="e.g. Peter Omondi (Procurement)"></div>
+            <div class="field"><label>Phone Number *</label><input placeholder="+254700000000"></div>
+          </div>
+          <div class="fg fg2">
+            <div class="field"><label>National ID</label><input placeholder="12345678"></div>
+            <div class="field"><label>Email *</label><input placeholder="pomondi@buyerco.co.ke"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Business Information</span></div>
+        <div class="card-body">
+          <div class="field" style="margin-bottom:9px"><label>Company Name *</label><input placeholder="e.g. GoAg Buyers Ltd"></div>
+          <div class="fg fg2">
+            <div class="field"><label>Buyer Type *</label><select><option>Wholesale Trader</option><option>Retail Supermarket</option><option>Food Processor / Exporter</option><option>Hotel / Restaurant / Catering</option><option>Individual Consumer</option></select></div>
+            <div class="field"><label>Business Reg Number</label><input placeholder="BRS/2015/9988"></div>
+          </div>
+          <div class="field" style="margin-bottom:9px"><label>Counties of Interest (buy from)</label><select style="height:60px" multiple><option selected>All Counties</option><option>Nakuru</option><option>Meru</option></select></div>
+          <div class="form-section" style="margin-top:8px">
+            <div class="form-section-title">Produce Interests</div>
+            <div class="chips">
+              <div class="chip a">🌽 Maize</div><div class="chip a">🍅 Tomatoes</div><div class="chip">🫘 Beans</div>
+              <div class="chip">🥔 Potatoes</div><div class="chip a">🥚 Eggs</div><div class="chip">🥛 Milk</div>
+            </div>
+          </div>
+          <div style="margin-top:10px;display:flex;gap:8px">
+            <button class="btno" onclick="show('create-step1')" style="flex:1;justify-content:center;padding:10px">← Back</button>
+            <button class="btn" onclick="show('create-success')" style="flex:2;justify-content:center;padding:10px">✅ Create Buyer Account</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- CREATE FARM WORKER -->
+<div id="page-create-worker" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('create-step1')"><span class="ic">⬅</span>Back: Type</div>
+  <div class="sb-item a"><span class="ic">2️⃣</span>Farm Worker Form</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('users')">Users</span> › <span onclick="show('create-step1')">Create</span> › Farm Worker</div>
+  <div class="page-hd"><div><div class="page-title">Create Farm Worker</div><div class="page-sub">Workers are system users (auth_db) assigned to a specific farm. Roles: manager | field_worker | harvester | sprayer | driver</div></div></div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Worker Details</span></div>
+        <div class="card-body">
+          <div class="fg fg2">
+            <div class="field"><label>Full Name *</label><input placeholder="e.g. John Waweru"></div>
+            <div class="field"><label>Phone Number *</label><input placeholder="+254700000000"></div>
+          </div>
+          <div class="fg fg2">
+            <div class="field"><label>National ID</label><input placeholder="12345678"></div>
+            <div class="field"><label>Gender</label><select><option>Male</option><option>Female</option></select></div>
+          </div>
+          <div class="fg fg2">
+            <div class="field"><label>Worker Role *</label><select><option>field_worker</option><option>manager</option><option>harvester</option><option>sprayer</option><option>driver</option></select></div>
+            <div class="field"><label>Employment Type</label><select><option>Permanent</option><option>Seasonal</option><option>Casual (day rate)</option></select></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Farm Assignment</span></div>
+        <div class="card-body">
+          <div class="field" style="margin-bottom:9px"><label>Assign to Farm *</label><select><option>Nakuru Farm (Jane Wanjiru)</option><option>Eldoret Farm (Peter Kipchoge)</option><option>Meru Livestock (Mary Njeri)</option></select><div class="field-hint">Worker can only be assigned to one farm at a time</div></div>
+          <div class="fg fg2">
+            <div class="field"><label>Start Date</label><input type="date" value="2025-06-01"></div>
+            <div class="field"><label>Daily / Monthly Wage (KES)</label><input placeholder="e.g. 600 per day"></div>
+          </div>
+          <div class="field"><label>Can Complete Activities?</label><select><option>Yes — assigned activities appear on their app</option><option>No — view only</option></select></div>
+          <div class="al al-b" style="margin-top:8px;font-size:9px">Worker receives a PIN via SMS. They log completed activities directly — these count toward the farm health score and the farmer's credit score.</div>
+          <div style="margin-top:10px;display:flex;gap:8px">
+            <button class="btno" onclick="show('create-step1')" style="flex:1;justify-content:center;padding:10px">← Back</button>
+            <button class="btn" onclick="show('create-success')" style="flex:2;justify-content:center;padding:10px">✅ Create Farm Worker</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: ASSIGN LENDER (post-creation modal / standalone)
+═══════════════════════════════════════════════════ -->
+<div id="page-assign-lender" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('user-detail')"><span class="ic">⬅</span>Back to Profile</div>
+  <div class="sb-sect">Jane Wanjiru</div>
+  <div class="sb-item" onclick="show('user-detail')"><span class="ic">👤</span>Profile</div>
+  <div class="sb-item a"><span class="ic">🏦</span>Assign Lender</div>
+  <div class="sb-item" onclick="show('assign-vet')"><span class="ic">🩺</span>Assign Vet</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('users')">Users</span> › <span onclick="show('user-detail')">Jane Wanjiru</span> › Assign Lender</div>
+  <div class="page-hd">
+    <div><div class="page-title">Assign Lending Partner — Jane Wanjiru</div><div class="page-sub">Current lender: Equity Bank Kenya · Loan applications are auto-routed to this lender's pipeline</div></div>
+  </div>
+  <div class="al al-b" style="margin-bottom:16px">ℹ️ Changing a lender does not affect any active loans. Existing loan repayments continue under the original lender. Only new applications are routed to the new lender.</div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Available Lending Partners</span><div class="row" style="gap:6px"><select style="border:1px solid var(--bord);border-radius:5px;padding:4px 6px;font-size:10px"><option>All Counties</option><option>Nakuru</option></select><input placeholder="🔍 Search lender..." style="border:1px solid var(--bord);border-radius:5px;padding:4px 8px;font-size:10px;width:130px"></div></div>
+        <div class="card-body" style="padding:0">
+          <!-- Equity Bank (currently selected) -->
+          <div style="padding:14px;border-bottom:1px solid var(--bord);background:var(--gl);border-left:3px solid var(--g)">
+            <div class="row-sb" style="margin-bottom:8px">
+              <div class="row" style="gap:10px"><div class="lav" style="background:var(--pur)">EQ</div><div><div style="font-size:12px;font-weight:700">Equity Bank Kenya</div><div class="txt-m">Commercial Bank · CBK/BANK/042 · Nairobi</div></div></div>
+              <span class="b bg">✓ Current Lender</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">
+              <div style="text-align:center;background:rgba(255,255,255,.7);border-radius:4px;padding:5px"><div style="font-size:11px;font-weight:700;color:var(--g)">1,840</div><div class="txt-m">Farmers</div></div>
+              <div style="text-align:center;background:rgba(255,255,255,.7);border-radius:4px;padding:5px"><div style="font-size:11px;font-weight:700;color:var(--g)">94%</div><div class="txt-m">Repayment</div></div>
+              <div style="text-align:center;background:rgba(255,255,255,.7);border-radius:4px;padding:5px"><div style="font-size:11px;font-weight:700;color:var(--g)">KES 500K</div><div class="txt-m">Max loan</div></div>
+              <div style="text-align:center;background:rgba(255,255,255,.7);border-radius:4px;padding:5px"><div style="font-size:11px;font-weight:700;color:var(--g)">14%</div><div class="txt-m">Rate p.a.</div></div>
+            </div>
+            <div style="margin-top:8px;display:flex;gap:6px"><button class="btno sm" style="flex:1;justify-content:center">Keep Current</button></div>
+          </div>
+          <!-- KCB -->
+          <div style="padding:14px;border-bottom:1px solid var(--bord);cursor:pointer" onclick="this.style.background='var(--bluel)'">
+            <div class="row-sb" style="margin-bottom:8px">
+              <div class="row" style="gap:10px"><div class="lav" style="background:var(--t)">KC</div><div><div style="font-size:12px;font-weight:700">KCB AgriLoan</div><div class="txt-m">Commercial Bank · CBK/BANK/018 · Nakuru branch active</div></div></div>
+              <button class="btn sm" onclick="show('user-detail')">Select</button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">
+              <div style="text-align:center;background:var(--surf);border-radius:4px;padding:5px"><div style="font-size:11px;font-weight:700">1,240</div><div class="txt-m">Farmers</div></div>
+              <div style="text-align:center;background:var(--surf);border-radius:4px;padding:5px"><div style="font-size:11px;font-weight:700">91%</div><div class="txt-m">Repayment</div></div>
+              <div style="text-align:center;background:var(--surf);border-radius:4px;padding:5px"><div style="font-size:11px;font-weight:700">KES 300K</div><div class="txt-m">Max loan</div></div>
+              <div style="text-align:center;background:var(--surf);border-radius:4px;padding:5px"><div style="font-size:11px;font-weight:700">15%</div><div class="txt-m">Rate p.a.</div></div>
+            </div>
+          </div>
+          <!-- Faulu MFI -->
+          <div style="padding:14px;border-bottom:1px solid var(--bord);cursor:pointer">
+            <div class="row-sb" style="margin-bottom:8px">
+              <div class="row" style="gap:10px"><div class="lav" style="background:var(--gold)">FA</div><div><div style="font-size:12px;font-weight:700">Faulu MFI</div><div class="txt-m">MFI · AMFI Kenya · Focus: smallholder</div></div></div>
+              <button class="btn sm" onclick="show('user-detail')">Select</button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">
+              <div style="text-align:center;background:var(--surf);border-radius:4px;padding:5px"><div style="font-size:11px;font-weight:700">560</div><div class="txt-m">Farmers</div></div>
+              <div style="text-align:center;background:var(--surf);border-radius:4px;padding:5px"><div style="font-size:11px;font-weight:700">89%</div><div class="txt-m">Repayment</div></div>
+              <div style="text-align:center;background:var(--surf);border-radius:4px;padding:5px"><div style="font-size:11px;font-weight:700">KES 100K</div><div class="txt-m">Max loan</div></div>
+              <div style="text-align:center;background:var(--surf);border-radius:4px;padding:5px"><div style="font-size:11px;font-weight:700">18%</div><div class="txt-m">Rate p.a.</div></div>
+            </div>
+          </div>
+          <div style="padding:10px 14px;text-align:center;color:var(--muted);font-size:11px;cursor:pointer">Remove lender assignment (farmer self-selects at loan time)</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Current Farmer Loan Status</span></div>
+        <div class="card-body">
+          <div style="background:var(--gl);border-radius:6px;padding:10px;margin-bottom:10px">
+            <div style="font-size:12px;font-weight:600;margin-bottom:5px">Active Loan — Equity Bank</div>
+            <div class="info-row"><span class="info-label">Amount</span><span class="info-val">KES 80,000</span></div>
+            <div class="info-row"><span class="info-label">Disbursed</span><span class="info-val">Jun 4, 2025</span></div>
+            <div class="info-row"><span class="info-label">Progress</span><span class="info-val">4 of 12 payments made</span></div>
+            <div class="info-row"><span class="info-label">Next due</span><span class="info-val" style="color:var(--g)">Jul 1, 2025</span></div>
+            <div class="info-row"><span class="info-label">Status</span><span class="info-val" style="color:var(--g)">Current</span></div>
+          </div>
+          <div class="al al-a" style="font-size:9px">⚠️ Active loan must be repaid to Equity Bank regardless of lender reassignment. Only new applications route to the new lender.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Farmer Credit Score</span></div>
+        <div class="card-body">
+          <div style="text-align:center;margin-bottom:10px"><div style="font-size:36px;font-weight:800;color:var(--g)">73</div><div class="txt-m">Band B · Max KES 200K with any lender</div></div>
+          <div class="al al-g" style="font-size:9px">Band B farmers are eligible for all standard loan products. All 3 available lenders can serve this farmer. Recommend Equity Bank — active in Nakuru with highest repayment rate.</div>
+        </div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btno" onclick="show('user-detail')" style="flex:1;justify-content:center;padding:10px">Cancel</button>
+        <button class="btn" onclick="show('user-detail')" style="flex:2;justify-content:center;padding:10px">✅ Save Lender Assignment</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: ASSIGN VET / EXTENSION OFFICER
+═══════════════════════════════════════════════════ -->
+<div id="page-assign-vet" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('user-detail')"><span class="ic">⬅</span>Back to Profile</div>
+  <div class="sb-sect">Jane Wanjiru</div>
+  <div class="sb-item" onclick="show('user-detail')"><span class="ic">👤</span>Profile</div>
+  <div class="sb-item" onclick="show('assign-lender')"><span class="ic">🏦</span>Assign Lender</div>
+  <div class="sb-item a"><span class="ic">🩺</span>Assign Vet</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('users')">Users</span> › <span onclick="show('user-detail')">Jane Wanjiru</span> › Assign Extension Officer</div>
+  <div class="page-hd">
+    <div><div class="page-title">Assign Extension Officer / Vet — Jane Wanjiru</div><div class="page-sub">Current: Dr. Ochieng · Nakuru · Maize & Poultry specialist</div></div>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Available Experts</span><div class="row" style="gap:5px"><select style="border:1px solid var(--bord);border-radius:5px;padding:4px 6px;font-size:10px"><option>Nakuru County</option><option>All Counties</option></select><select style="border:1px solid var(--bord);border-radius:5px;padding:4px 6px;font-size:10px"><option>All Specialisations</option><option>Crops</option><option>Livestock</option></select></div></div>
+        <div class="card-body" style="padding:0">
+          <!-- Dr Ochieng (current) -->
+          <div style="padding:14px;border-bottom:1px solid var(--bord);background:var(--ambl);border-left:3px solid var(--amb)">
+            <div class="row-sb" style="margin-bottom:8px">
+              <div class="row" style="gap:10px"><div class="lav" style="background:var(--amb)">DO</div><div><div style="font-size:12px;font-weight:700">Dr. Ochieng</div><div class="txt-m">Extension Officer · Nakuru · Maize, Poultry specialist</div></div></div>
+              <span class="b ba">✓ Current Expert</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">
+              <div style="text-align:center;background:rgba(255,255,255,.7);border-radius:4px;padding:5px"><div style="font-size:11px;font-weight:700;color:var(--amb)">42/50</div><div class="txt-m">Capacity</div></div>
+              <div style="text-align:center;background:rgba(255,255,255,.7);border-radius:4px;padding:5px"><div style="font-size:11px;font-weight:700;color:var(--g)">4.8★</div><div class="txt-m">Rating</div></div>
+              <div style="text-align:center;background:rgba(255,255,255,.7);border-radius:4px;padding:5px"><div style="font-size:11px;font-weight:700;color:var(--g)">128</div><div class="txt-m">Reviews done</div></div>
+              <div style="text-align:center;background:rgba(255,255,255,.7);border-radius:4px;padding:5px"><div style="font-size:11px;font-weight:700;color:var(--g)">78%</div><div class="txt-m">Q&A rate</div></div>
+            </div>
+            <div style="margin-top:8px"><button class="btno sm" style="width:100%;justify-content:center">Keep Current</button></div>
+          </div>
+          <!-- Dr James Kamau -->
+          <div style="padding:14px;border-bottom:1px solid var(--bord);cursor:pointer">
+            <div class="row-sb" style="margin-bottom:8px">
+              <div class="row" style="gap:10px"><div class="lav" style="background:var(--t)">JK</div><div><div style="font-size:12px;font-weight:700">Dr. James Kamau</div><div class="txt-m">Livestock Vet · Nakuru · KVB Verified · Dairy, Poultry</div></div></div>
+              <button class="btn sm teal" onclick="show('user-detail')">Select</button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">
+              <div style="text-align:center;background:var(--surf);border-radius:4px;padding:5px"><div style="font-size:11px;font-weight:700;color:var(--g)">28/50</div><div class="txt-m">Capacity</div></div>
+              <div style="text-align:center;background:var(--surf);border-radius:4px;padding:5px"><div style="font-size:11px;font-weight:700">4.6★</div><div class="txt-m">Rating</div></div>
+              <div style="text-align:center;background:var(--surf);border-radius:4px;padding:5px"><div style="font-size:11px;font-weight:700">84</div><div class="txt-m">Reviews</div></div>
+              <div style="text-align:center;background:var(--surf);border-radius:4px;padding:5px"><div style="font-size:11px;font-weight:700">82%</div><div class="txt-m">Q&A rate</div></div>
+            </div>
+          </div>
+          <!-- Sarah Otieno -->
+          <div style="padding:14px;border-bottom:1px solid var(--bord);cursor:pointer">
+            <div class="row-sb" style="margin-bottom:8px">
+              <div class="row" style="gap:10px"><div class="lav" style="background:var(--pur)">SO</div><div><div style="font-size:12px;font-weight:700">Sarah Otieno</div><div class="txt-m">Agronomist · Nakuru · Crops specialist (Maize, Horticulture)</div></div></div>
+              <button class="btn sm pur" onclick="show('user-detail')">Select</button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">
+              <div style="text-align:center;background:var(--surf);border-radius:4px;padding:5px"><div style="font-size:11px;font-weight:700;color:var(--g)">15/50</div><div class="txt-m">Capacity</div></div>
+              <div style="text-align:center;background:var(--surf);border-radius:4px;padding:5px"><div style="font-size:11px;font-weight:700">4.7★</div><div class="txt-m">Rating</div></div>
+              <div style="text-align:center;background:var(--surf);border-radius:4px;padding:5px"><div style="font-size:11px;font-weight:700">42</div><div class="txt-m">Reviews</div></div>
+              <div style="text-align:center;background:var(--surf);border-radius:4px;padding:5px"><div style="font-size:11px;font-weight:700;color:var(--g)">91%</div><div class="txt-m">Q&A rate</div></div>
+            </div>
+          </div>
+          <div style="padding:10px;text-align:center;color:var(--muted);font-size:11px;cursor:pointer">Remove assignment (farmer unassigned)</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Farmer's Crop & Animal Profile</span></div>
+        <div class="card-body">
+          <div class="al al-b" style="margin-bottom:8px;font-size:9px">Use this to pick the best-matched expert. Jane has Maize, Cabbage, Dairy Cattle — Dr. Ochieng (Maize + Poultry) and Dr. Kamau (Dairy) are both strong matches.</div>
+          <div class="info-row"><span class="info-label">Crops</span><span class="info-val">🌽 Maize H614D, 🥬 Cabbage, 🫘 Beans</span></div>
+          <div class="info-row"><span class="info-label">Livestock</span><span class="info-val">🐄 4 Dairy Cattle, 🐔 50 Layers</span></div>
+          <div class="info-row"><span class="info-label">Active AI Diagnoses</span><span class="info-val">1 pending — Maize Grey Leaf Spot (62%)</span></div>
+          <div class="info-row"><span class="info-label">Overdue activities</span><span class="info-val">2 — Water Cabbage, Newcastle Vaccine</span></div>
+          <div class="info-row"><span class="info-label">County</span><span class="info-val">Nakuru — Bahati</span></div>
+        </div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btno" onclick="show('user-detail')" style="flex:1;justify-content:center;padding:10px">Cancel</button>
+        <button class="btn" onclick="show('user-detail')" style="flex:2;justify-content:center;padding:10px">✅ Save Expert Assignment</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: KYC QUEUE (full page)
+═══════════════════════════════════════════════════ -->
+<div id="page-kyc" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('dashboard')"><span class="ic">📊</span>Dashboard</div>
+  <div class="sb-sect">KYC Queue</div>
+  <div class="sb-item a"><span class="ic">⏳</span>Pending <span class="sb-badge gold">12</span></div>
+  <div class="sb-item"><span class="ic">✅</span>Approved</div>
+  <div class="sb-item"><span class="ic">❌</span>Rejected</div>
+  <div class="sb-item"><span class="ic">⚠️</span>More Info Requested</div>
+  <div class="sb-sect">Filters</div>
+  <div class="sb-item"><span class="ic">🌾</span>Farmers</div>
+  <div class="sb-item"><span class="ic">📦</span>Suppliers</div>
+  <div class="sb-item"><span class="ic">🏦</span>Lenders</div>
+  <div class="sb-item"><span class="ic">🩺</span>Vets / Experts</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('dashboard')">Dashboard</span> › KYC Queue</div>
+  <div class="page-hd">
+    <div><div class="page-title">KYC Verification Queue</div><div class="page-sub">12 pending · 4 more info requested · Sorted by priority (oldest first)</div></div>
+    <div class="row" style="gap:8px"><button class="btn sm" onclick="show('kyc-detail')">Bulk Approve Farmers →</button></div>
+  </div>
+  <div class="kpis">
+    <div class="kpi amb"><div class="kpi-l">Pending Review</div><div class="kpi-v">12</div></div>
+    <div class="kpi"><div class="kpi-l">More Info Requested</div><div class="kpi-v">4</div></div>
+    <div class="kpi"><div class="kpi-l">Approved Today</div><div class="kpi-v">8</div></div>
+    <div class="kpi red"><div class="kpi-l">Rejected (Month)</div><div class="kpi-v">3</div></div>
+    <div class="kpi"><div class="kpi-l">Avg Review Time</div><div class="kpi-v">1.2 days</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hd">
+      <span class="card-title">Pending Applications</span>
+      <div class="row" style="gap:6px">
+        <select style="border:1px solid var(--bord);border-radius:5px;padding:5px 8px;font-size:10px"><option>All Roles</option><option>Farmers</option><option>Suppliers</option><option>Lenders</option><option>Vets</option></select>
+        <select style="border:1px solid var(--bord);border-radius:5px;padding:5px 8px;font-size:10px"><option>All Counties</option><option>Nakuru</option><option>Meru</option></select>
+        <button class="btno sm">📤 Export</button>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th><input type="checkbox"></th><th>User</th><th>Role</th><th>County</th><th>Documents</th><th>Submitted</th><th>Priority</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr class="flag"><td><input type="checkbox"></td><td><div class="row"><div class="lav" style="width:24px;height:24px;font-size:9px">JW</div><div><div style="font-size:11px;font-weight:600">Jane Wanjiru</div><div class="txt-m">+254 712 345 678</div></div></div></td><td><span class="b bg">🌾 Farmer</span></td><td>Nakuru</td><td><span class="b bg">ID ✓</span> <span class="b ba">Selfie pending</span></td><td>2 days ago</td><td><span class="b ba">Medium</span></td><td><button class="btn sm" onclick="show('kyc-detail')">Review →</button></td></tr>
+        <tr class="flag"><td><input type="checkbox"></td><td><div class="row"><div class="lav" style="width:24px;height:24px;font-size:9px;background:var(--t)">NA</div><div><div style="font-size:11px;font-weight:600">Nakuru Agrovets Ltd</div><div class="txt-m">Supplier · BRS/2008/4421</div></div></div></td><td><span class="b bt">📦 Supplier</span></td><td>Nakuru</td><td><span class="b bg">Cert ✓</span> <span class="b bg">ID ✓</span> <span class="b ba">PCPB pending</span></td><td>4h ago</td><td><span class="b br">High</span></td><td><button class="btn sm" onclick="show('kyc-detail')">Review →</button></td></tr>
+        <tr><td><input type="checkbox"></td><td><div class="row"><div class="lav" style="width:24px;height:24px;font-size:9px;background:var(--gold)">MN</div><div><div style="font-size:11px;font-weight:600">Mary Njeri</div><div class="txt-m">+254 733 345 678</div></div></div></td><td><span class="b bg">🌾 Farmer</span></td><td>Meru</td><td><span class="b bg">ID ✓</span></td><td>5 days ago</td><td><span class="b ba">Low</span></td><td><button class="btn sm" onclick="show('kyc-detail')">Review →</button></td></tr>
+        <tr><td><input type="checkbox"></td><td><div class="row"><div class="lav" style="width:24px;height:24px;font-size:9px;background:var(--pur)">KF</div><div><div style="font-size:11px;font-weight:600">KFCB Agro Ltd</div><div class="txt-m">Supplier · Bus Reg uploaded</div></div></div></td><td><span class="b bt">📦 Supplier</span></td><td>Nakuru</td><td><span class="b bg">BRS ✓</span> <span class="b bg">ID ✓</span> <span class="b br">PCPB missing</span></td><td>1 day ago</td><td><span class="b ba">Medium</span></td><td><button class="btn sm" onclick="show('kyc-detail')">Review →</button></td></tr>
+        <tr><td><input type="checkbox"></td><td><div class="row"><div class="lav" style="width:24px;height:24px;font-size:9px;background:var(--amb)">JK</div><div><div style="font-size:11px;font-weight:600">Dr. James Kamau</div><div class="txt-m">Vet · KVB licence uploaded</div></div></div></td><td><span class="b bt">🩺 Vet</span></td><td>Nakuru</td><td><span class="b bg">KVB ✓</span> <span class="b bg">ID ✓</span> <span class="b bg">Cert ✓</span></td><td>3 days ago</td><td><span class="b bg">Ready</span></td><td><button class="btn sm" onclick="show('kyc-detail')">Review →</button></td></tr>
+      </tbody>
+    </table>
+    <div style="padding:10px 16px;border-top:1px solid var(--bord);display:flex;align-items:center;gap:10px">
+      <button class="btn sm" onclick="show('kyc-detail')">✅ Bulk Approve Selected</button>
+      <button class="btn sm red">✗ Bulk Reject Selected</button>
+      <button class="btno sm">📩 Request More Info (all selected)</button>
+      <span class="txt-m" style="margin-left:auto">Showing 5 of 12 pending</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: KYC DETAIL (Document Review)
+═══════════════════════════════════════════════════ -->
+<div id="page-kyc-detail" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('kyc')"><span class="ic">⬅</span>Back to Queue</div>
+  <div class="sb-sect">Nakuru Agrovets Ltd</div>
+  <div class="sb-item a"><span class="ic">📄</span>Documents</div>
+  <div class="sb-item"><span class="ic">🕐</span>KYC History</div>
+  <div class="sb-item"><span class="ic">👤</span>Account Profile</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('kyc')">KYC Queue</span> › Nakuru Agrovets Ltd</div>
+  <div class="row-sb" style="margin-bottom:16px">
+    <div class="row" style="gap:12px">
+      <div class="lav" style="width:48px;height:48px;font-size:16px;background:var(--t)">NA</div>
+      <div><div class="page-title">Nakuru Agrovets Ltd</div><div class="page-sub">📦 Supplier · Nakuru · BRS/2008/4421 · Submitted Jun 2, 2025</div>
+        <div style="margin-top:4px"><span class="b ba">KYC Pending</span> <span class="b bt">Supplier</span></div></div>
+    </div>
+    <div class="row" style="gap:8px">
+      <button class="btn red" onclick="show('kyc')">✗ Reject</button>
+      <button class="btno sm">📩 Request More Info</button>
+      <button class="btn" onclick="show('kyc')">✅ Approve</button>
+    </div>
+  </div>
+  <div class="grid2">
+    <div>
+      <!-- Doc 1: Business Registration -->
+      <div class="doc-card">
+        <div class="doc-card-hd">
+          <span style="font-size:11px;font-weight:600">Certificate of Incorporation (BRS)</span>
+          <span class="b bg">✓ Uploaded</span>
+        </div>
+        <div style="padding:10px 12px">
+          <div class="doc-preview">📄<div style="position:absolute;bottom:6px;right:8px;background:rgba(0,0,0,.5);color:#fff;font-size:8px;padding:2px 5px;border-radius:3px">Click to enlarge</div></div>
+          <div style="font-size:10px;font-weight:600;margin-bottom:6px">Checklist</div>
+          <div class="doc-check"><input type="checkbox" checked><span>Business name matches application (Nakuru Agrovets Ltd)</span></div>
+          <div class="doc-check"><input type="checkbox" checked><span>Registration number visible (BRS/2008/4421)</span></div>
+          <div class="doc-check"><input type="checkbox" checked><span>Document not expired / still valid</span></div>
+          <div class="doc-check"><input type="checkbox" checked><span>Official stamp / signature present</span></div>
+        </div>
+      </div>
+      <!-- Doc 2: Owner ID -->
+      <div class="doc-card">
+        <div class="doc-card-hd">
+          <span style="font-size:11px;font-weight:600">Owner National ID — Front & Back</span>
+          <span class="b bg">✓ Uploaded</span>
+        </div>
+        <div style="padding:10px 12px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+            <div class="doc-preview" style="height:80px">🪪 Front</div>
+            <div class="doc-preview" style="height:80px">🪪 Back</div>
+          </div>
+          <div class="doc-check"><input type="checkbox" checked><span>ID not expired</span></div>
+          <div class="doc-check"><input type="checkbox" checked><span>Name matches owner on application</span></div>
+          <div class="doc-check"><input type="checkbox" checked><span>Photo is clear and matches selfie</span></div>
+          <div class="doc-check"><input type="checkbox"><span>ID number visible on both sides</span></div>
+        </div>
+      </div>
+      <!-- Doc 3: PCPB Licence -->
+      <div class="doc-card" style="border-color:var(--red)">
+        <div class="doc-card-hd" style="background:var(--redl)">
+          <span style="font-size:11px;font-weight:600">PCPB Agrochemical Dealer Licence</span>
+          <span class="b br">⚠️ Missing</span>
+        </div>
+        <div style="padding:10px 12px">
+          <div style="height:80px;background:var(--redl);border-radius:6px;display:flex;align-items:center;justify-content:center;border:2px dashed var(--red);margin-bottom:8px">
+            <div style="text-align:center"><div style="font-size:18px">⚠️</div><div style="font-size:10px;color:var(--red);font-weight:600">Not uploaded by applicant</div></div>
+          </div>
+          <div class="al al-r" style="font-size:9px;margin:0">PCPB licence is mandatory for agrochemical dealers. Cannot approve without this document. Use "Request More Info" to prompt the supplier to upload.</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <!-- Decision Panel -->
+      <div class="card" style="border-color:var(--g)">
+        <div class="card-hd" style="background:var(--gl)"><span class="card-title" style="color:var(--g)">KYC Decision</span></div>
+        <div class="card-body">
+          <div class="al al-a" style="margin-bottom:12px;font-size:9px">⚠️ PCPB Agrochemical Licence is missing. Recommend: Request More Info before approving or rejecting.</div>
+          <div class="field" style="margin-bottom:10px"><label>Decision</label>
+            <select><option>Request More Info — specific document needed</option><option>Approve — all documents verified</option><option>Reject — documents invalid / fraudulent</option></select>
+          </div>
+          <div class="field" style="margin-bottom:10px"><label>Reason / Notes (sent to applicant via SMS)</label>
+            <textarea>Hujuma ya KYC: Tafadhali pakia PCPB Agrochemical Dealer Licence yako ili kukamilisha uthibitisho. Bila hii, hatuwezi kukuidhinisha. Wasiliana: support@agroconnect.app</textarea>
+          </div>
+          <div class="field" style="margin-bottom:10px"><label>Specific Document to Request</label>
+            <select><option>PCPB Agrochemical Dealer Licence</option><option>Clearer ID photo</option><option>Updated business permit</option><option>Other (see notes)</option></select>
+          </div>
+          <div class="row" style="gap:8px">
+            <button class="btno sm red" style="flex:1;justify-content:center;padding:9px" onclick="show('kyc')">✗ Reject</button>
+            <button class="btno sm" style="flex:1;justify-content:center;padding:9px" onclick="show('kyc')">📩 Request Info</button>
+            <button class="btn" style="flex:1;justify-content:center;padding:9px" onclick="show('kyc')">✅ Approve</button>
+          </div>
+          <div class="al al-g" style="margin-top:10px;font-size:9px">On approval: Supplier account is activated, portal access unlocked, product listings go live on marketplace.</div>
+        </div>
+      </div>
+      <!-- KYC History -->
+      <div class="card">
+        <div class="card-hd"><span class="card-title">KYC Status History</span></div>
+        <div class="card-body">
+          <div class="kyc-tl">
+            <div class="kyc-tl-item"><div style="font-size:11px;font-weight:600">Application Submitted</div><div class="txt-m">Jun 2, 2025 · 10:42 AM · Business registration uploaded</div></div>
+            <div class="kyc-tl-item"><div style="font-size:11px;font-weight:600">Owner ID Uploaded</div><div class="txt-m">Jun 2, 2025 · 11:05 AM · Front + Back verified</div></div>
+            <div class="kyc-tl-item pend"><div style="font-size:11px;font-weight:600;color:var(--amb)">Pending Review</div><div class="txt-m">Jun 2, 2025 · 11:05 AM → Now (2 days) · PCPB licence missing</div></div>
+          </div>
+        </div>
+      </div>
+      <!-- Doc requirements reference -->
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Required Documents — Supplier</span></div>
+        <div class="card-body">
+          <div style="font-size:10px;display:flex;flex-direction:column;gap:5px">
+            <div class="row-sb"><span>Certificate of Incorporation (BRS)</span><span class="b bg">✓ Done</span></div>
+            <div class="row-sb"><span>PCPB Agrochemical Dealer Licence</span><span class="b br">⚠️ Missing</span></div>
+            <div class="row-sb"><span>Owner National ID (front + back)</span><span class="b bg">✓ Done</span></div>
+            <div class="row-sb"><span>Business Permit (County)</span><span class="b ba">Optional</span></div>
+            <div class="row-sb"><span>KVB Vet Medicines Licence (if selling)</span><span class="b ba">N/A</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: GOVERNMENT PROGRAMS — ADMIN VIEW
+═══════════════════════════════════════════════════ -->
+<div id="page-programs" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('dashboard')"><span class="ic">📊</span>Dashboard</div>
+  <div class="sb-sect">Programs</div>
+  <div class="sb-item a"><span class="ic">🏛</span>All Programs</div>
+  <div class="sb-item" onclick="show('create-program')"><span class="ic">➕</span>Create Program</div>
+  <div class="sb-item" onclick="show('applications')"><span class="ic">📋</span>All Applications <span class="sb-badge gold">612</span></div>
+  <div class="sb-item"><span class="ic">✅</span>Approved</div>
+  <div class="sb-item"><span class="ic">❌</span>Rejected</div>
+  <div class="sb-sect">Reports</div>
+  <div class="sb-item"><span class="ic">📊</span>Program Analytics</div>
+  <div class="sb-item"><span class="ic">📤</span>Export Data</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('dashboard')">Dashboard</span> › Government Programs</div>
+  <div class="page-hd">
+    <div><div class="page-title">Government Programs</div><div class="page-sub">Admin view — all programs across all ministries and counties · 3 active</div></div>
+    <button class="btn" onclick="show('create-program')">➕ Create Program</button>
+  </div>
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-l">Active Programs</div><div class="kpi-v">3</div></div>
+    <div class="kpi amb"><div class="kpi-l">Pending Applications</div><div class="kpi-v">612</div><div class="kpi-d dn">⚠️ Review needed</div></div>
+    <div class="kpi"><div class="kpi-l">Approved (Month)</div><div class="kpi-v">1,242</div></div>
+    <div class="kpi gold"><div class="kpi-l">Budget Allocated (KES)</div><div class="kpi-v">245M</div></div>
+    <div class="kpi"><div class="kpi-l">Budget Used</div><div class="kpi-v">62%</div><div class="kpi-d">KES 152M of 245M</div></div>
+    <div class="kpi red"><div class="kpi-l">Rejected (Month)</div><div class="kpi-v">87</div><div class="kpi-d">Ineligible / incomplete</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hd">
+      <span class="card-title">All Programs</span>
+      <div class="row" style="gap:6px">
+        <select style="border:1px solid var(--bord);border-radius:5px;padding:5px 8px;font-size:10px"><option>All Status</option><option>Open</option><option>Upcoming</option><option>Closed</option></select>
+        <select style="border:1px solid var(--bord);border-radius:5px;padding:5px 8px;font-size:10px"><option>All Ministries</option><option>MoA HQ</option><option>KALRO</option><option>County Govt</option></select>
+        <button class="btno sm">📤 Export</button>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>Program</th><th>Type</th><th>Ministry</th><th>Budget (KES)</th><th>Allocated</th><th>Pending</th><th>Deadline</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        <tr><td style="font-weight:600">MSAI Fertiliser Subsidy 2025</td><td><span class="b bg">🌾 Fertiliser</span></td><td>MoA HQ</td><td>120M</td><td><div style="display:flex;align-items:center;gap:5px"><div class="prog" style="width:50px;display:inline-block"><div class="progf" style="width:62%"></div></div><span style="font-size:10px">62%</span></div></td><td style="color:var(--gold);font-weight:600">612</td><td>Jun 30</td><td><span class="b bg">Open</span></td><td><div class="row" style="gap:4px"><button class="btn sm" onclick="show('applications')">Applications</button><button class="btno sm">Edit</button><button class="btno sm red">Close</button></div></td></tr>
+        <tr><td style="font-weight:600">KALRO Certified Seeds 2025</td><td><span class="b bt">🌱 Seeds</span></td><td>KALRO</td><td>45M</td><td><div style="display:flex;align-items:center;gap:5px"><div class="prog" style="width:50px;display:inline-block"><div class="progf" style="width:45%"></div></div><span style="font-size:10px">45%</span></div></td><td>235</td><td>Jun 30</td><td><span class="b bg">Open</span></td><td><div class="row" style="gap:4px"><button class="btn sm" onclick="show('applications')">Applications</button><button class="btno sm">Edit</button></div></td></tr>
+        <tr><td style="font-weight:600">Drip Irrigation Equipment 2025</td><td><span class="b bb">💧 Equipment</span></td><td>Nakuru County</td><td>80M</td><td>—</td><td>—</td><td>Jul 31</td><td><span class="b ba">Upcoming</span></td><td><div class="row" style="gap:4px"><button class="btn sm gold">Preview</button><button class="btno sm">Edit</button><button class="btn sm">Publish Now</button></div></td></tr>
+        <tr><td style="font-weight:600">Cash Transfer — Drought Relief</td><td><span class="b pur">💰 Cash</span></td><td>MoA HQ</td><td>50M</td><td>—</td><td>—</td><td>—</td><td><span class="b ba">Draft</span></td><td><div class="row" style="gap:4px"><button class="btn sm">Edit</button><button class="btn sm gold">Publish</button></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: CREATE PROGRAM (Admin)
+═══════════════════════════════════════════════════ -->
+<div id="page-create-program" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('programs')"><span class="ic">⬅</span>Back: Programs</div>
+  <div class="sb-sect">Create Program</div>
+  <div class="sb-item a"><span class="ic">📝</span>Program Details</div>
+  <div class="sb-item"><span class="ic">✅</span>Eligibility Rules</div>
+  <div class="sb-item"><span class="ic">🚚</span>Distribution</div>
+  <div class="sb-item"><span class="ic">📤</span>Publish</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('programs')">Programs</span> › Create New Program</div>
+  <div class="page-hd">
+    <div><div class="page-title">Create Government Program</div><div class="page-sub">Admin can create programs on behalf of any ministry. Programs go live on the farmer app immediately on publish.</div></div>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Program Details</span></div>
+        <div class="card-body">
+          <div class="field" style="margin-bottom:9px"><label>Program Name *</label><input placeholder="e.g. MSAI Fertiliser Subsidy 2026" value="MSAI Fertiliser Subsidy 2025"></div>
+          <div class="fg fg2">
+            <div class="field"><label>Program Type *</label><select><option>Fertiliser Subsidy</option><option>Seed Distribution</option><option>Equipment Grant</option><option>Cash Transfer</option><option>Irrigation Support</option><option>Training / Extension</option><option>Livestock Support</option></select></div>
+            <div class="field"><label>Administering Body *</label><select><option>Ministry of Agriculture HQ (National)</option><option>Nakuru County Government</option><option>KALRO</option><option>KEPHIS</option><option>NCPB</option><option>AFA</option></select></div>
+          </div>
+          <div class="field" style="margin-bottom:9px"><label>Description (shown to farmers on app) *</label><textarea>Smallholder farmers receive one 50kg bag of CAN fertiliser free to support the 2025 long rains planting season. Funded by Ministry of Agriculture under the MSAI programme.</textarea></div>
+          <div class="fg fg2">
+            <div class="field"><label>Application Opens *</label><input type="date" value="2025-06-01"></div>
+            <div class="field"><label>Application Closes *</label><input type="date" value="2025-06-30"></div>
+          </div>
+          <div class="fg fg2">
+            <div class="field"><label>Total Budget (KES) *</label><input value="120000000"><div class="field-hint">e.g. 120000000 = KES 120M</div></div>
+            <div class="field"><label>Max Beneficiaries</label><input placeholder="Leave blank = budget limited" value="2000"><div class="field-hint">First-come first-served up to this limit</div></div>
+          </div>
+          <div class="field" style="margin-bottom:9px"><label>Item / Benefit to be Distributed *</label><input value="50kg CAN Fertiliser (1 bag per eligible farmer)"></div>
+          <div class="field"><label>Linked Supplier / Agrovet (for distribution)</label><select><option>None — govt distributes directly (NCPB depots)</option><option>Nakuru Agrovets Ltd (approved distributor)</option><option>Any verified supplier in eligible county</option></select><div class="field-hint">If set, this supplier's stock is tagged for subsidy redemption in the marketplace</div></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Eligibility Criteria</span></div>
+        <div class="card-body">
+          <div class="fg fg2">
+            <div class="field"><label>Min Farm Size (acres)</label><input value="0.25" placeholder="0"></div>
+            <div class="field"><label>Max Farm Size (acres)</label><input value="5" placeholder="No limit"><div class="field-hint">Farmers above this limit are auto-rejected</div></div>
+          </div>
+          <div class="field" style="margin-bottom:9px"><label>Eligible Counties *</label><select style="height:80px" multiple><option selected>All 47 Counties</option><option>Nakuru</option><option>Meru</option><option>Uasin Gishu</option><option>Nyandarua</option><option>Trans Nzoia</option><option>Bungoma</option></select><div class="field-hint">Hold Ctrl/Cmd to multi-select. Leave "All 47 Counties" for national programme.</div></div>
+          <div class="fg fg2">
+            <div class="field"><label>Farmer Sub-types Eligible</label><div class="chips" style="margin-top:4px"><div class="chip a">🌾 Crops</div><div class="chip a">🌾🐄 Both</div><div class="chip">🐄 Livestock</div></div></div>
+            <div class="field"><label>One Per Farmer Per Year?</label><select><option>Yes — only once per calendar year</option><option>No limit (can apply multiple times)</option></select></div>
+          </div>
+          <div class="fg fg2">
+            <div class="field"><label>KYC Verification Required?</label><select><option>Yes — must be KYC verified to apply</option><option>No (open to all registered farmers)</option></select></div>
+            <div class="field"><label>Active Crop Season Required?</label><select><option>Yes — must have active crop planted</option><option>No</option></select></div>
+          </div>
+          <div class="field"><label>Farm Registration (Govt) Required?</label><select><option>Recommended but not mandatory</option><option>Mandatory — must be registered with county</option></select></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Distribution &amp; Collection</span></div>
+        <div class="card-body">
+          <div class="field" style="margin-bottom:9px"><label>Distribution Method *</label><select><option>Farmer collects at NCPB depot</option><option>County agriculture office pickup</option><option>Home delivery (arranged)</option><option>Voucher system — redeem at any approved supplier</option><option>M-Pesa cash transfer</option></select></div>
+          <div class="field" style="margin-bottom:9px"><label>Collection / Redemption Points (one per line)</label><textarea style="height:55px">Nakuru NCPB Depot — Kenyatta Ave
+Bahati Sub-county Agriculture Office
+Naivasha Agriculture Office
+Molo NCPB Depot</textarea></div>
+          <div class="field" style="margin-bottom:9px"><label>Approval Notification (SMS to farmer)</label><textarea style="height:55px">Hongera! Ombi lako la MSAI Fertiliser 2025 limeidhinishwa. Nenda kukusanya mfuko wako wa CAN 50kg katika: {collection_point}. Nambari ya cheti: {cert_number}. Muda: {collection_date}.</textarea></div>
+          <div class="al al-b" style="font-size:9px">✅ <strong>{cert_number}</strong> auto-generated as: KE/{County}/{Year}/{Sequential} e.g. KE/NAKURU/2025/1843</div>
+        </div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btno" style="flex:1;justify-content:center;padding:10px">Save as Draft</button>
+        <button class="btn gold" onclick="show('programs')" style="flex:2;justify-content:center;padding:10px">🚀 Publish Program</button>
+      </div>
+      <div class="al al-g" style="margin-top:8px;font-size:9px">On publish: Program appears on farmer mobile app within 60 seconds. Push notification sent to all eligible farmers in selected counties. Admin receives confirmation email.</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: PROGRAM APPLICATIONS (All)
+═══════════════════════════════════════════════════ -->
+<div id="page-applications" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('programs')"><span class="ic">⬅</span>Programs</div>
+  <div class="sb-sect">MSAI Fertiliser 2025</div>
+  <div class="sb-item a"><span class="ic">📋</span>All Applications</div>
+  <div class="sb-item"><span class="ic">⏳</span>Pending <span class="sb-badge gold">612</span></div>
+  <div class="sb-item"><span class="ic">✅</span>Approved (1,242)</div>
+  <div class="sb-item"><span class="ic">❌</span>Rejected (87)</div>
+  <div class="sb-item"><span class="ic">⚠️</span>Info Needed (28)</div>
+  <div class="sb-sect">Actions</div>
+  <div class="sb-item"><span class="ic">✅</span>Bulk Approve</div>
+  <div class="sb-item"><span class="ic">📤</span>Export CSV</div>
+  <div class="sb-item"><span class="ic">📊</span>Statistics</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('programs')">Programs</span> › MSAI Fertiliser 2025 › Applications</div>
+  <div class="page-hd">
+    <div><div class="page-title">MSAI Fertiliser 2025 — Applications</div><div class="page-sub">612 pending · 1,242 approved · 87 rejected · KES 74.4M allocated of KES 120M budget</div></div>
+    <div class="row" style="gap:8px">
+      <button class="btno sm">📤 Export CSV</button>
+      <button class="btn sm">✅ Bulk Approve Eligible</button>
+    </div>
+  </div>
+  <div class="kpis">
+    <div class="kpi amb"><div class="kpi-l">Pending</div><div class="kpi-v">612</div></div>
+    <div class="kpi"><div class="kpi-l">Approved</div><div class="kpi-v">1,242</div><div class="kpi-d up">KES 74.4M allocated</div></div>
+    <div class="kpi red"><div class="kpi-l">Rejected</div><div class="kpi-v">87</div></div>
+    <div class="kpi"><div class="kpi-l">Budget Remaining</div><div class="kpi-v">KES 45.6M</div><div class="kpi-d up">38% left</div></div>
+    <div class="kpi teal"><div class="kpi-l">Approval Rate</div><div class="kpi-v">93.5%</div></div>
+    <div class="kpi pur"><div class="kpi-l">Counties Applied</div><div class="kpi-v">34 / 47</div></div>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd">
+          <span class="card-title">Applications</span>
+          <div class="row" style="gap:5px">
+            <select style="border:1px solid var(--bord);border-radius:5px;padding:4px 6px;font-size:10px"><option>All Status</option><option>Pending</option><option>Approved</option><option>Rejected</option><option>Info Needed</option></select>
+            <select style="border:1px solid var(--bord);border-radius:5px;padding:4px 6px;font-size:10px"><option>All Counties</option><option>Nakuru</option><option>Meru</option><option>Uasin Gishu</option></select>
+            <input placeholder="🔍 Search..." style="border:1px solid var(--bord);border-radius:5px;padding:4px 8px;font-size:10px;width:110px">
+          </div>
+        </div>
+        <table>
+          <thead><tr><th><input type="checkbox"></th><th>Farmer</th><th>County</th><th>Farm Size</th><th>ID ✓</th><th>GPS ✓</th><th>Prior</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td><input type="checkbox" checked></td><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px">JW</div>Jane Wanjiru</div></td><td>Nakuru</td><td>2.5 ac</td><td><span class="b bg">✓</span></td><td><span class="b bg">✓</span></td><td><span class="b bg">None</span></td><td><span class="b ba">Pending</span></td><td><button class="btn sm">Approve</button></td></tr>
+            <tr><td><input type="checkbox" checked></td><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px;background:var(--t)">SM</div>Samuel Mwas</div></td><td>Nakuru</td><td>1.0 ac</td><td><span class="b ba">Pending</span></td><td><span class="b bg">✓</span></td><td><span class="b bg">None</span></td><td><span class="b ba">Info Needed</span></td><td><button class="btn sm amb">Get ID</button></td></tr>
+            <tr><td><input type="checkbox" checked></td><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px;background:var(--pur)">GK</div>Grace Kamau</div></td><td>Meru</td><td>2.0 ac</td><td><span class="b bg">✓</span></td><td><span class="b bg">✓</span></td><td><span class="b bg">None</span></td><td><span class="b ba">Pending</span></td><td><button class="btn sm">Approve</button></td></tr>
+            <tr class="flag"><td><input type="checkbox"></td><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px;background:var(--red)">JM</div>John Mwangi</div></td><td>Nakuru</td><td>6.0 ac</td><td><span class="b bg">✓</span></td><td><span class="b bg">✓</span></td><td><span class="b ba">2024 ✓</span></td><td><span class="b br">Auto-Reject</span></td><td><button class="btn sm red">Decline</button></td></tr>
+            <tr><td><input type="checkbox" checked></td><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px;background:var(--gold)">AO</div>Amos Ochieng</div></td><td>Kisumu</td><td>1.2 ac</td><td><span class="b bg">✓</span></td><td><span class="b bg">✓</span></td><td><span class="b bg">None</span></td><td><span class="b ba">Pending</span></td><td><button class="btn sm">Approve</button></td></tr>
+          </tbody>
+        </table>
+        <div style="padding:10px 16px;border-top:1px solid var(--bord);display:flex;gap:8px;align-items:center">
+          <button class="btn sm">✅ Bulk Approve (3 selected)</button>
+          <button class="btn sm red">✗ Bulk Reject</button>
+          <button class="btno sm">📩 Request Info</button>
+          <span class="txt-m" style="margin-left:auto">Showing 5 of 612 pending</span>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Application Detail — Jane Wanjiru</span></div>
+        <div class="card-body">
+          <div class="row" style="gap:10px;margin-bottom:12px">
+            <div class="lav" style="width:36px;height:36px;font-size:13px;flex-shrink:0">JW</div>
+            <div><div style="font-size:12px;font-weight:700">Jane Wanjiru · Nakuru</div><div class="txt-m">🌾🐄 Mixed farmer · 2.5 acres · Maize (active) · KYC verified</div></div>
+          </div>
+          <div class="sh">Eligibility Checklist</div>
+          <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:var(--gl);border-radius:5px;font-size:11px"><span>Farm ≤ 5 acres</span><span class="b bg">✓ Pass (2.5 ac)</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:var(--gl);border-radius:5px;font-size:11px"><span>KYC verified</span><span class="b bg">✓ Pass</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:var(--gl);border-radius:5px;font-size:11px"><span>Not received 2025 subsidy</span><span class="b bg">✓ Pass (first time)</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:var(--gl);border-radius:5px;font-size:11px"><span>Active crop season</span><span class="b bg">✓ Pass (Maize Apr 1)</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:var(--ambl);border-radius:5px;font-size:11px"><span>Farm registration</span><span class="b ba">Partial (pending cert)</span></div>
+          </div>
+          <div class="fg fg2" style="margin-bottom:8px">
+            <div class="field"><label>Approved Item</label><select><option>50kg CAN Fertiliser (standard)</option><option>25kg CAN (reduced)</option></select></div>
+            <div class="field"><label>Collection Date</label><input type="date" value="2025-06-20"></div>
+          </div>
+          <div class="fg fg2" style="margin-bottom:8px">
+            <div class="field"><label>Collection Point</label><select><option>Nakuru NCPB Depot</option><option>Bahati Sub-county Office</option></select></div>
+            <div class="field"><label>Certificate Number</label><input value="KE/NAKURU/2025/1843" readonly style="background:var(--surf);font-weight:600"></div>
+          </div>
+          <div class="field" style="margin-bottom:10px"><label>Officer Notes (internal)</label><textarea style="height:50px" placeholder="Optional notes...">Standard approval. All checks passed. Farm registration pending but not mandatory.</textarea></div>
+          <div class="al al-g" style="margin-bottom:10px;font-size:9px">SMS on approval: "Hongera Jane Wanjiru! Ombi lako limeidhinishwa. Nenda kukusanya CAN 50kg: Nakuru NCPB Depot, Jun 20. Cert: KE/NAKURU/2025/1843."</div>
+          <div class="row" style="gap:8px">
+            <button class="btn" style="flex:2;justify-content:center;padding:10px">✅ Approve &amp; Notify Farmer</button>
+            <button class="btn red" style="flex:1;justify-content:center;padding:10px">✗ Reject</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">County Breakdown — MSAI Fertiliser</span></div>
+        <div class="card-body">
+          <div style="margin-bottom:6px"><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">Nakuru</span><span style="font-weight:600;color:var(--g)">320 approved</span></div><div class="prog"><div class="progf" style="width:100%"></div></div></div>
+          <div style="margin-bottom:6px"><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">Meru</span><span style="font-weight:600">240 approved</span></div><div class="prog"><div class="progf" style="width:75%"></div></div></div>
+          <div style="margin-bottom:6px"><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">Uasin Gishu</span><span style="font-weight:600">180 approved</span></div><div class="prog"><div class="progf" style="width:56%"></div></div></div>
+          <div><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">Other (31 counties)</span><span style="font-weight:600">502 approved</span></div><div class="prog"><div class="progf" style="width:40%;background:var(--t)"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: MODERATION
+═══════════════════════════════════════════════════ -->
+<div id="page-moderation" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('dashboard')"><span class="ic">📊</span>Dashboard</div>
+  <div class="sb-item a"><span class="ic">⚠️</span>Flagged Posts <span class="sb-badge">4</span></div>
+  <div class="sb-item"><span class="ic">🏷️</span>Expert Badges <span class="sb-badge gold">3</span></div>
+  <div class="sb-item"><span class="ic">🔬</span>AI Pre-screened</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('dashboard')">Dashboard</span> › Moderation</div>
+  <div class="page-hd"><div><div class="page-title">Content Moderation</div><div class="page-sub">4 flagged · 3 expert badge requests</div></div></div>
+  <div class="grid2">
+    <div>
+      <div class="card" style="border-color:var(--red)">
+        <div class="card-hd" style="background:var(--redl)"><span class="card-title">Peter K. · Commercial Spam</span><span class="b br">3 user reports</span></div>
+        <div class="card-body">
+          <div style="background:var(--surf);border-radius:5px;padding:10px;font-size:11px;border-left:3px solid var(--red);margin-bottom:10px">"Nununueni dawa hii bila madaktari — bei nafuu kuliko duka. Wasiliana nami nambari hii +254..."</div>
+          <div class="row" style="gap:6px"><button class="btn sm">✅ Approve</button><button class="btn sm red">🗑 Remove</button><button class="btno sm red">Ban User</button></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Expert Badge Requests</span></div>
+        <div class="card-body" style="padding:0 16px">
+          <div class="lr"><div class="lav" style="background:var(--amb)">DO</div><div class="lin"><div class="lit">Dr. Ochieng · KVB Verified</div><div class="lis">Extension Officer · Nakuru · 142 posts</div></div><span class="b bg">Active</span><button class="btno sm red" style="margin-left:6px">Revoke</button></div>
+          <div class="lr"><div class="lav" style="background:var(--t)">JK</div><div class="lin"><div class="lit">Dr. James Kamau · KVB Uploaded</div><div class="lis">Livestock Vet · Nakuru · Pending</div></div><button class="btn sm" style="margin-left:auto">Verify</button></div>
+          <div class="lr"><div class="lav" style="background:var(--pur)">SO</div><div class="lin"><div class="lit">Sarah Otieno · Cert uploaded</div><div class="lis">Agronomist · Meru</div></div><button class="btn sm" style="margin-left:auto">Verify</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: ANALYTICS
+═══════════════════════════════════════════════════ -->
+<div id="page-analytics" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('dashboard')"><span class="ic">📊</span>Dashboard</div>
+  <div class="sb-item a"><span class="ic">📈</span>Platform Analytics</div>
+  <div class="sb-item"><span class="ic">🌾</span>Farm Activity</div>
+  <div class="sb-item"><span class="ic">💰</span>Finance</div>
+  <div class="sb-item"><span class="ic">🗺️</span>County Map</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('dashboard')">Dashboard</span> › Analytics</div>
+  <div class="page-hd"><div><div class="page-title">Platform Analytics</div></div><div class="row" style="gap:8px"><select style="border:1px solid var(--bord);border-radius:5px;padding:6px 10px;font-size:11px"><option>Last 30 days</option><option>Last 90 days</option><option>This year</option></select><button class="btn">📤 Export</button></div></div>
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-l">DAU</div><div class="kpi-v">18,420</div><div class="kpi-d up">73% DAU/MAU</div></div>
+    <div class="kpi teal"><div class="kpi-l">Avg Streak</div><div class="kpi-v">12 days</div></div>
+    <div class="kpi gold"><div class="kpi-l">Avg Loan Repayment</div><div class="kpi-v">94%</div></div>
+    <div class="kpi pur"><div class="kpi-l">Activities/Week</div><div class="kpi-v">4.1 avg</div></div>
+    <div class="kpi"><div class="kpi-l">NPL Ratio</div><div class="kpi-v">2.1%</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-hd"><span class="card-title">Weekly Registrations</span></div>
+      <div class="card-body">
+        <div class="bars"><div class="bar" style="height:40%"></div><div class="bar hi" style="height:55%"></div><div class="bar" style="height:60%"></div><div class="bar hi" style="height:78%"></div><div class="bar" style="height:70%"></div><div class="bar hi" style="height:90%"></div><div class="bar" style="height:52%"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-top:4px"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><span class="card-title">Top Counties</span></div>
+      <div class="card-body">
+        <div style="margin-bottom:7px"><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">Nakuru</span><span style="font-weight:600">8,420</span></div><div class="prog"><div class="progf" style="width:100%"></div></div></div>
+        <div style="margin-bottom:7px"><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">Meru</span><span style="font-weight:600">6,120</span></div><div class="prog"><div class="progf" style="width:73%"></div></div></div>
+        <div style="margin-bottom:7px"><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">Uasin Gishu</span><span style="font-weight:600">4,890</span></div><div class="prog"><div class="progf" style="width:58%"></div></div></div>
+        <div><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">Kiambu</span><span style="font-weight:600">3,780</span></div><div class="prog"><div class="progf" style="width:45%"></div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: SETTINGS
+═══════════════════════════════════════════════════ -->
+<div id="page-settings" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('dashboard')"><span class="ic">📊</span>Dashboard</div>
+  <div class="sb-sect">Settings</div>
+  <div class="sb-item a"><span class="ic">📱</span>SMS / Notifications</div>
+  <div class="sb-item"><span class="ic">💳</span>M-Pesa Config</div>
+  <div class="sb-item"><span class="ic">👥</span>Admin Users</div>
+  <div class="sb-item"><span class="ic">🔐</span>Role Permissions</div>
+  <div class="sb-item"><span class="ic">🔑</span>API Keys</div>
+  <div class="sb-item"><span class="ic">📋</span>Audit Log</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('dashboard')">Dashboard</span> › Settings</div>
+  <div class="page-hd"><div><div class="page-title">Platform Settings</div></div></div>
+  <div class="tab-row">
+    <div class="tab-btn a">📱 SMS Provider</div>
+    <div class="tab-btn">💳 M-Pesa</div>
+    <div class="tab-btn">👥 Admin Users</div>
+    <div class="tab-btn">🔐 Permissions</div>
+    <div class="tab-btn">🔑 API Keys</div>
+    <div class="tab-btn">📋 Audit Log</div>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">SMS Provider — Africa's Talking</span></div>
+        <div class="card-body">
+          <div class="fg fg2">
+            <div class="field"><label>API Username</label><input value="agroconnect_prod" placeholder="AT username"></div>
+            <div class="field"><label>API Key</label><input type="password" value="at_key_prod_xxxxx" placeholder="Africa's Talking API key"></div>
+          </div>
+          <div class="fg fg2">
+            <div class="field"><label>Sender Name</label><input value="AgroConnect" placeholder="e.g. AgroConnect"><div class="field-hint">Appears as sender on SMS (12 chars max)</div></div>
+            <div class="field"><label>Fallback Provider</label><select><option>Twilio (auto-fallback if AT fails)</option><option>None</option></select></div>
+          </div>
+          <div class="al al-g" style="margin-bottom:10px;font-size:9px">✅ SMS provider active. 12,841 SMSes sent this month. Balance: KES 4,820 credit remaining.</div>
+          <div class="fg fg2">
+            <div class="field"><label>Default SMS Language</label><select><option>Kiswahili (default for all farmers)</option><option>English</option><option>Use farmer's preference</option></select></div>
+            <div class="field"><label>SMS Notifications</label><select><option>All events (KYC, loans, activities)</option><option>Critical only</option></select></div>
+          </div>
+          <button class="btn" style="margin-top:8px">💾 Save SMS Settings</button>
+          <button class="btno sm" style="margin-top:8px;margin-left:8px">🧪 Send Test SMS</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Admin User Management</span><button class="btn sm">+ Add Admin</button></div>
+        <div class="card-body" style="padding:0 16px">
+          <div class="lr"><div class="lav" style="background:var(--gd)">AD</div><div class="lin"><div class="lit">Admin KE (You)</div><div class="lis">Super Admin · admin@agroconnect.app</div></div><span class="b bg">Super Admin</span></div>
+          <div class="lr"><div class="lav" style="background:var(--t)">JM</div><div class="lin"><div class="lit">James Mwangi</div><div class="lis">Content Moderator · jmwangi@agroconnect.app</div></div><span class="b bt">Moderator</span><button class="btno sm red" style="margin-left:6px">Remove</button></div>
+          <div class="lr" style="border:none"><div class="lav" style="background:var(--pur)">GN</div><div class="lin"><div class="lit">Grace Ndung'u</div><div class="lis">County Admin · Nakuru · gndungu@agroconnect.app</div></div><span class="b bb">County Admin</span><button class="btno sm red" style="margin-left:6px">Remove</button></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">M-Pesa Integration (Daraja API)</span></div>
+        <div class="card-body">
+          <div class="fg fg2">
+            <div class="field"><label>Consumer Key</label><input type="password" value="mpesa_consumer_xxx"></div>
+            <div class="field"><label>Consumer Secret</label><input type="password" value="mpesa_secret_xxx"></div>
+          </div>
+          <div class="fg fg2">
+            <div class="field"><label>Paybill Number</label><input value="400200"><div class="field-hint">Platform paybill for farmer payments</div></div>
+            <div class="field"><label>Till Number (B2C)</label><input value="1000001"><div class="field-hint">Used for sending money to farmers</div></div>
+          </div>
+          <div class="field" style="margin-bottom:9px"><label>Callback URL (STK Push results)</label><input value="https://api.agroconnect.app/finance/mpesa/callback" readonly style="background:var(--surf);font-size:10px"></div>
+          <div class="al al-g" style="font-size:9px">✅ M-Pesa active. 23 disbursements this month · KES 4.2M sent · 100% success rate.</div>
+          <button class="btn" style="margin-top:10px">💾 Save M-Pesa Settings</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Role Permissions Matrix</span></div>
+        <div class="card-body">
+          <table style="font-size:10px">
+            <thead><tr><th>Action</th><th>Super Admin</th><th>County Admin</th><th>Moderator</th></tr></thead>
+            <tbody>
+              <tr><td>Create any user</td><td style="text-align:center;color:var(--g)">✓</td><td style="text-align:center;color:var(--g)">✓</td><td style="text-align:center;color:var(--red)">✗</td></tr>
+              <tr><td>Approve KYC</td><td style="text-align:center;color:var(--g)">✓</td><td style="text-align:center;color:var(--g)">✓</td><td style="text-align:center;color:var(--red)">✗</td></tr>
+              <tr><td>Create programs</td><td style="text-align:center;color:var(--g)">✓</td><td style="text-align:center;color:var(--g)">County only</td><td style="text-align:center;color:var(--red)">✗</td></tr>
+              <tr><td>Moderate content</td><td style="text-align:center;color:var(--g)">✓</td><td style="text-align:center;color:var(--g)">✓</td><td style="text-align:center;color:var(--g)">✓</td></tr>
+              <tr><td>View analytics</td><td style="text-align:center;color:var(--g)">All</td><td style="text-align:center;color:var(--g)">County only</td><td style="text-align:center;color:var(--red)">✗</td></tr>
+              <tr><td>Add admin users</td><td style="text-align:center;color:var(--g)">✓</td><td style="text-align:center;color:var(--red)">✗</td><td style="text-align:center;color:var(--red)">✗</td></tr>
+              <tr><td>Platform settings</td><td style="text-align:center;color:var(--g)">✓</td><td style="text-align:center;color:var(--red)">✗</td><td style="text-align:center;color:var(--red)">✗</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Audit Log — Recent Actions</span></div>
+        <div class="card-body" style="padding:0 16px">
+          <div class="lr"><div style="font-size:16px">✅</div><div class="lin"><div class="lit">KYC Approved — Dr. James Kamau</div><div class="lis">Admin KE · Jun 6, 14:22 · User #4821</div></div></div>
+          <div class="lr"><div style="font-size:16px">➕</div><div class="lin"><div class="lit">User Created — Jane Wanjiru (Farmer)</div><div class="lis">Admin KE · Jun 6, 11:15 · User #4822</div></div></div>
+          <div class="lr"><div style="font-size:16px">🗑</div><div class="lin"><div class="lit">Post Removed — Spam by Peter K.</div><div class="lis">James Mwangi (Moderator) · Jun 5, 16:40</div></div></div>
+          <div class="lr" style="border:none"><div style="font-size:16px">🏛</div><div class="lin"><div class="lit">Program Published — MSAI Fertiliser 2025</div><div class="lis">Admin KE · Jun 1, 09:00 · Prog #P-012</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: FARMS
+═══════════════════════════════════════════════════ -->
+<div id="page-farms" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('dashboard')"><span class="ic">📊</span>Dashboard</div>
+  <div class="sb-item a"><span class="ic">🌾</span>All Farms</div>
+  <div class="sb-item"><span class="ic">🗺️</span>Map View</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('dashboard')">Dashboard</span> › All Farms</div>
+  <div class="page-hd"><div><div class="page-title">Farm Registry</div><div class="page-sub">52,840 farms · web-created by admin during onboarding (AD-FM-01)</div></div><button class="btno sm">📤 Export CSV</button></div>
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-l">Total Farms</div><div class="kpi-v">52,840</div></div>
+    <div class="kpi teal"><div class="kpi-l">Active This Month</div><div class="kpi-v">38,200</div></div>
+    <div class="kpi"><div class="kpi-l">Total Land (acres)</div><div class="kpi-v">184,320</div></div>
+    <div class="kpi red"><div class="kpi-l">Health &lt; 50%</div><div class="kpi-v">4,120</div><div class="kpi-d dn">Need attention</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><span class="card-title">Farm Registry</span><input placeholder="🔍 Search farms..." style="border:1px solid var(--bord);border-radius:5px;padding:5px 10px;font-size:11px;width:200px"></div>
+    <table>
+      <thead><tr><th>Farm</th><th>Farmer</th><th>County</th><th>Size</th><th>Plots</th><th>Workers</th><th>Health</th><th>Registered</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td style="font-weight:600">Nakuru Farm</td><td>Jane Wanjiru</td><td>Nakuru</td><td>2.5 ac</td><td>2</td><td>2</td><td style="color:var(--amb);font-weight:600">72%</td><td>Jan 2025</td><td><button class="btn sm" onclick="show('user-detail')">View</button></td></tr>
+        <tr><td style="font-weight:600">Eldoret Farm</td><td>Peter Kipchoge</td><td>Uasin Gishu</td><td>3.0 ac</td><td>1</td><td>1</td><td style="color:var(--g);font-weight:600">88%</td><td>Feb 2025</td><td><button class="btn sm">View</button></td></tr>
+        <tr class="flag"><td style="font-weight:600">Meru Livestock</td><td>Mary Njeri</td><td>Meru</td><td>2.0 ac</td><td>0</td><td>0</td><td style="color:var(--red);font-weight:600">43%</td><td>Jun 2025</td><td><button class="btn sm red">Urgent</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<script>
+function show(p){
+  document.querySelectorAll('.layout').forEach(el=>el.style.display='none');
+  var el=document.getElementById('page-'+p);
+  if(el) el.style.display='flex';
+  // Update topnav active state
+  var navMap={
+    'dashboard':'nav-dashboard','users':'nav-users','user-detail':'nav-users',
+    'create-step1':'nav-users','create-step2':'nav-users','create-step3':'nav-users',
+    'create-step4':'nav-users','create-step5':'nav-users','create-step6':'nav-users',
+    'create-success':'nav-users','create-lender':'nav-users','create-supplier':'nav-users',
+    'create-vet':'nav-users','create-govt':'nav-users','create-buyer':'nav-users',
+    'create-worker':'nav-users','assign-lender':'nav-users','assign-vet':'nav-users',
+    'kyc':'nav-kyc','kyc-detail':'nav-kyc',
+    'programs':'nav-programs','create-program':'nav-programs','applications':'nav-programs',
+    'analytics':'nav-analytics','settings':'nav-settings',
+    'moderation':'nav-users','farms':'nav-users'
+  };
+  document.querySelectorAll('.tb-link').forEach(l=>l.classList.remove('a'));
+  if(navMap[p]){var n=document.getElementById(navMap[p]);if(n)n.classList.add('a');}
+}
+</script>
+</body>
+</html>

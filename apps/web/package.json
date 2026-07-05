@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@agroconnect/shared": "workspace:*",
+    "@agroconnect/web-auth": "workspace:*",
+    "@agroconnect/web-ui": "workspace:*",
     "@tanstack/react-query": "^5.45.0",
     "@tanstack/react-table": "^8.21.3",
     "axios": "^1.7.0",

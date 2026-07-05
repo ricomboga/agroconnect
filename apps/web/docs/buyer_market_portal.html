@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AgroConnect — Buyer & Public Market Portal</title>
+<style>
+:root{
+  --g:#1A6B3C;--gd:#0D4A28;--gm:#2E8B57;--gl:#EAF4EE;
+  --gold:#C9A84C;--goldd:#F5E9C8;
+  --t:#0E7490;--tl:#CFFAFE;
+  --pur:#7C3AED;--purl:#F3E8FF;
+  --ink:#111827;--ink2:#374151;--muted:#6B7280;--muted2:#9CA3AF;
+  --surf:#F9FAFB;--surf2:#F3F4F6;--bord:#E5E7EB;
+  --red:#DC2626;--redl:#FEE2E2;--amb:#D97706;--ambl:#FEF3C7;
+  --blue:#1D4ED8;--bluel:#DBEAFE;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#ECEFF4;color:var(--ink)}
+/* Topbar */
+.topbar{background:var(--gd);color:#fff;padding:0 24px;height:48px;display:flex;align-items:center;justify-content:space-between}
+.tb-brand{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+.tb-portal{font-size:10px;background:rgba(255,255,255,.15);padding:2px 8px;border-radius:10px;margin-left:6px}
+.tb-links{display:flex;gap:4px}
+.tb-link{color:rgba(255,255,255,.6);font-size:11px;padding:6px 10px;border-radius:4px;cursor:pointer;transition:.12s}
+.tb-link:hover{color:#fff;background:rgba(255,255,255,.1)}
+.tb-link.a{color:#fff;background:rgba(255,255,255,.15);font-weight:500}
+.tb-right{display:flex;align-items:center;gap:8px}
+.tb-user{color:rgba(255,255,255,.8);font-size:11px;display:flex;align-items:center;gap:5px}
+.tb-avatar{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center}
+/* Layout */
+.layout{display:flex;min-height:calc(100vh - 48px)}
+.sidebar{width:200px;background:#fff;border-right:1px solid var(--bord);padding:12px 8px;flex-shrink:0}
+.sb-sect{font-size:9px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.08em;padding:10px 8px 4px}
+.sb-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;font-size:11px;color:var(--muted);cursor:pointer;margin-bottom:2px;transition:.1s}
+.sb-item:hover:not(.a){background:var(--surf)}
+.sb-item.a{background:var(--gl);color:var(--g);font-weight:600}
+.sb-item .ic{font-size:14px;width:16px;text-align:center}
+.sb-badge{margin-left:auto;background:var(--red);color:#fff;border-radius:8px;font-size:8px;font-weight:700;padding:1px 5px}
+.sb-badge.gold{background:var(--gold)}
+.sb-badge.g{background:var(--g)}
+/* Content */
+.content{flex:1;padding:20px 24px;overflow-y:auto;background:var(--surf2)}
+.page-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.page-title{font-size:17px;font-weight:700;color:var(--ink)}
+.page-sub{font-size:11px;color:var(--muted);margin-top:2px}
+/* Breadcrumb */
+.bc{font-size:11px;color:var(--muted);margin-bottom:14px}
+.bc span{color:var(--g);cursor:pointer}
+/* KPI grid */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px}
+.kpi{background:#fff;border:1px solid var(--bord);border-radius:8px;padding:14px 16px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;left:0;top:0;width:3px;height:100%;background:var(--g)}
+.kpi.red::before{background:var(--red)}.kpi.gold::before{background:var(--gold)}.kpi.teal::before{background:var(--t)}.kpi.pur::before{background:var(--pur)}.kpi.blue::before{background:var(--blue)}.kpi.amb::before{background:var(--amb)}
+.kpi-v{font-size:20px;font-weight:800;color:var(--g);line-height:1}
+.kpi.red .kpi-v{color:var(--red)}.kpi.gold .kpi-v{color:var(--gold)}.kpi.teal .kpi-v{color:var(--t)}.kpi.pur .kpi-v{color:var(--pur)}.kpi.blue .kpi-v{color:var(--blue)}.kpi.amb .kpi-v{color:var(--amb)}
+.kpi-l{font-size:10px;color:var(--muted);margin-bottom:4px}
+.kpi-d{font-size:9px;margin-top:3px;color:var(--muted2)}
+.kpi-d.up{color:var(--g)}.kpi-d.dn{color:var(--red)}
+/* Cards & panels */
+.card{background:#fff;border:1px solid var(--bord);border-radius:8px;margin-bottom:14px}
+.card-hd{padding:12px 16px;border-bottom:1px solid var(--bord);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:12px;font-weight:600;color:var(--ink)}
+.card-body{padding:14px 16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+/* Table */
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:8px 12px;text-align:left;border-bottom:1px solid var(--bord);background:var(--surf);white-space:nowrap}
+td{font-size:11px;padding:9px 12px;border-bottom:1px solid var(--bord);color:var(--ink2);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surf)}
+tr.flag td{background:#FFF5F5}
+/* Badges */
+.b{display:inline-flex;align-items:center;font-size:9px;font-weight:600;padding:2px 7px;border-radius:8px;white-space:nowrap}
+.bg{background:var(--gl);color:var(--gd)}
+.ba{background:var(--ambl);color:#92400E}
+.br{background:var(--redl);color:#991B1B}
+.bb{background:var(--bluel);color:var(--blue)}
+.bt{background:var(--tl);color:var(--t)}
+.bp{background:var(--purl);color:var(--pur)}
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:5px;background:var(--g);color:#fff;border:none;border-radius:5px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer;text-decoration:none}
+.btn.sm{padding:4px 8px;font-size:10px}
+.btn.red{background:var(--red)}.btn.gold{background:var(--gold)}.btn.teal{background:var(--t)}.btn.pur{background:var(--pur)}.btn.blue{background:var(--blue)}.btn.amb{background:var(--amb)}
+.btno{display:inline-flex;align-items:center;gap:5px;background:#fff;color:var(--g);border:1.5px solid var(--g);border-radius:5px;padding:5px 11px;font-size:11px;font-weight:600;cursor:pointer}
+.btno.sm{padding:3px 7px;font-size:10px}.btno.red{color:var(--red);border-color:var(--red)}
+/* Form */
+.form-section{margin-bottom:18px}
+.form-section-title{font-size:11px;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--gl);padding-bottom:5px;margin-bottom:12px}
+.fg{display:grid;gap:10px;margin-bottom:10px}
+.fg2{grid-template-columns:1fr 1fr}
+.fg3{grid-template-columns:1fr 1fr 1fr}
+.fg4{grid-template-columns:1fr 1fr 1fr 1fr}
+.field{display:flex;flex-direction:column;gap:3px}
+.field label{font-size:10px;font-weight:600;color:var(--ink2);text-transform:uppercase;letter-spacing:.04em}
+.field input,.field select,.field textarea{border:1px solid var(--bord);border-radius:5px;padding:7px 10px;font-size:11px;color:var(--ink);background:#fff;transition:.1s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--g);outline:none;box-shadow:0 0 0 3px var(--gl)}
+.field textarea{height:72px;resize:vertical}
+.field-hint{font-size:9px;color:var(--muted);margin-top:2px}
+/* Alerts */
+.al{padding:8px 12px;border-radius:0 5px 5px 0;font-size:10px;line-height:1.6;margin-bottom:10px}
+.al-g{background:var(--gl);border-left:3px solid var(--g);color:var(--gd)}
+.al-a{background:var(--ambl);border-left:3px solid var(--amb);color:#78350F}
+.al-r{background:var(--redl);border-left:3px solid var(--red);color:#7F1D1D}
+.al-b{background:var(--bluel);border-left:3px solid var(--blue);color:var(--blue)}
+/* Progress */
+.prog{height:6px;background:var(--bord);border-radius:3px;overflow:hidden;margin:3px 0}
+.progf{height:100%;border-radius:3px;background:var(--g)}
+/* List row */
+.lr{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bord)}
+.lr:last-child{border:none}
+.lav{width:30px;height:30px;min-width:30px;border-radius:50%;background:var(--g);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.lin{flex:1;min-width:0}
+.lit{font-size:11px;font-weight:600;color:var(--ink)}
+.lis{font-size:9px;color:var(--muted)}
+/* Chips */
+.chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.chip{font-size:10px;padding:4px 10px;border-radius:10px;border:1.5px solid var(--bord);color:var(--muted);cursor:pointer}
+.chip.a{background:var(--g);color:#fff;border-color:var(--g)}
+/* Score bars */
+.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.score-item{background:var(--surf);border-radius:6px;padding:8px 10px}
+.score-l{font-size:9px;color:var(--muted);margin-bottom:3px}
+.score-bar{height:5px;background:var(--bord);border-radius:3px;overflow:hidden;margin-bottom:2px}
+.score-f{height:100%;background:var(--g);border-radius:3px}
+.score-v{font-size:9px;color:var(--muted);text-align:right}
+/* Divider */
+.div{height:1px;background:var(--bord);margin:12px 0}
+/* Util */
+.row{display:flex;align-items:center;gap:8px}
+.row-sb{display:flex;align-items:center;justify-content:space-between}
+.ml{margin-left:auto}
+.mt{margin-top:10px}
+.txt-g{color:var(--g);font-weight:600}
+.txt-r{color:var(--red);font-weight:600}
+.txt-a{color:var(--amb);font-weight:600}
+.txt-m{color:var(--muted);font-size:10px}
+/* Tab row */
+.tab-row{display:flex;gap:2px;border-bottom:2px solid var(--bord);margin-bottom:16px}
+.tab-btn{padding:8px 14px;font-size:11px;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
+.tab-btn.a{color:var(--g);font-weight:600;border-color:var(--g)}
+/* Mini chart */
+.bars{display:flex;align-items:flex-end;gap:3px;height:48px}
+.bar{flex:1;border-radius:2px 2px 0 0;background:var(--gl)}
+.bar.hi{background:var(--g)}.bar.gld{background:var(--gold)}.bar.red{background:var(--red)}.bar.t{background:var(--t)}
+/* Timeline */
+.tl{border-left:2px solid var(--bord);padding-left:16px;margin-left:8px}
+.tl-item{display:flex;gap:8px;margin-bottom:12px;position:relative}
+.tl-item::before{content:'';width:10px;height:10px;border-radius:50%;background:var(--g);border:2px solid #fff;box-shadow:0 0 0 1px var(--g);position:absolute;left:-21px;top:2px}
+.tl-item.done::before{background:var(--g)}
+.tl-item.pend::before{background:var(--bord);box-shadow:0 0 0 1px var(--bord)}
+.tl-title{font-size:11px;font-weight:600;color:var(--ink)}
+.tl-sub{font-size:9px;color:var(--muted)}
+/* Map */
+.map-ph{background:linear-gradient(135deg,#BBF7D0,#6EE7B7);height:80px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:22px;position:relative;margin-bottom:8px}
+.map-badge{position:absolute;bottom:6px;right:8px;background:rgba(0,0,0,.5);color:#fff;font-size:8px;padding:2px 6px;border-radius:3px}
+/* Status pill */
+.status{font-size:9px;font-weight:600;padding:3px 8px;border-radius:10px}
+/* Section header */
+.sh{font-size:10px;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 7px}
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-brand">🌱 AgroConnect <span class="tb-portal">Buyer / Market Portal</span></div>
+  <div class="tb-links">
+    <span class="tb-link a" onclick="show('browse')">Browse Produce</span>
+    <span class="tb-link" onclick="show('prices')">Live Prices</span>
+    <span class="tb-link" onclick="show('orders')">My Orders</span>
+    <span class="tb-link" onclick="show('alerts')">Price Alerts</span>
+    <span class="tb-link" onclick="show('intelligence')">Market Intel</span>
+    <span class="tb-link" onclick="show('dashboard')">Dashboard</span>
+  </div>
+  <div class="tb-right">
+    <button class="btn" style="font-size:11px;padding:5px 12px;background:transparent;border:1px solid rgba(255,255,255,.4)">Sign In</button>
+    <button class="btn" style="font-size:11px;padding:5px 12px;background:var(--gold)">Register Free</button>
+  </div>
+</div>
+
+<!-- BROWSE PRODUCE (PUBLIC) -->
+<div id="page-browse" class="layout">
+<div class="sidebar">
+  <div class="sb-sect">Browse</div>
+  <div class="sb-item a" onclick="show('browse')"><span class="ic">🛒</span>All Listings</div>
+  <div class="sb-item"><span class="ic">🌽</span>Maize & Cereals</div>
+  <div class="sb-item"><span class="ic">🍅</span>Vegetables</div>
+  <div class="sb-item"><span class="ic">🫘</span>Legumes</div>
+  <div class="sb-item"><span class="ic">🐄</span>Livestock Products</div>
+  <div class="sb-item"><span class="ic">🥚</span>Poultry & Eggs</div>
+  <div class="sb-item"><span class="ic">🥛</span>Dairy</div>
+  <div class="sb-sect">Tools</div>
+  <div class="sb-item" onclick="show('prices')"><span class="ic">📈</span>Live Prices</div>
+  <div class="sb-item" onclick="show('alerts')"><span class="ic">🔔</span>Price Alerts</div>
+  <div class="sb-item" onclick="show('intelligence')"><span class="ic">🤖</span>AI Market Intel</div>
+  <div class="sb-item" onclick="show('dashboard')"><span class="ic">📊</span>Buyer Dashboard</div>
+</div>
+<div class="content">
+  <div class="page-hd">
+    <div><div class="page-title">Fresh Produce — Directly from Verified Kenyan Farmers</div><div class="page-sub">No middlemen · Best prices · All farmers AI-verified · 180 active listings</div></div>
+  </div>
+  <div style="background:#fff;border:1px solid var(--bord);border-radius:8px;padding:12px 14px;margin-bottom:16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <input placeholder="🔍 Search produce, county, or farmer..." style="border:1px solid var(--bord);border-radius:5px;padding:7px 12px;font-size:11px;flex:1;min-width:180px">
+    <select style="border:1px solid var(--bord);border-radius:5px;padding:7px 10px;font-size:11px"><option>All Produce</option><option>Maize</option><option>Tomatoes</option><option>Beans</option><option>Eggs</option><option>Milk</option><option>Cabbage</option><option>Potatoes</option></select>
+    <select style="border:1px solid var(--bord);border-radius:5px;padding:7px 10px;font-size:11px"><option>All Counties</option><option>Nakuru</option><option>Meru</option><option>Uasin Gishu</option><option>Kiambu</option><option>Nyandarua</option></select>
+    <select style="border:1px solid var(--bord);border-radius:5px;padding:7px 10px;font-size:11px"><option>All Grades</option><option>Grade A</option><option>Grade B</option></select>
+    <select style="border:1px solid var(--bord);border-radius:5px;padding:7px 10px;font-size:11px"><option>Availability: All</option><option>Available Now</option><option>This Week</option><option>This Month</option></select>
+    <button class="btn" style="padding:7px 16px">Search</button>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Available Listings <span class="txt-m">— 180 total</span></span><div class="row" style="gap:6px"><select style="border:1px solid var(--bord);border-radius:5px;padding:4px 6px;font-size:10px"><option>Sort: Price ↑</option><option>Sort: Newest</option><option>Sort: Quantity</option></select></div></div>
+        <table>
+          <thead><tr><th>Produce</th><th>Farmer</th><th>County</th><th>Qty Available</th><th>Price/kg</th><th>Grade</th><th>Available From</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr style="cursor:pointer" onclick="show('listing-detail')"><td style="font-weight:600">🌽 Maize</td><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px">JW</div>Jane Wanjiru <span class="b bg" style="font-size:8px">✓</span></div></td><td>Nakuru</td><td style="font-weight:600">500 kg</td><td style="color:var(--g);font-weight:700;font-size:13px">KES 48</td><td><span class="b bg">Grade A</span></td><td>Jul 10, 2025</td><td><button class="btn sm" onclick="show('listing-detail')">View →</button></td></tr>
+            <tr><td style="font-weight:600">🍅 Tomatoes</td><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px;background:var(--t)">PK</div>Peter K. <span class="b bg" style="font-size:8px">✓</span></div></td><td>Meru</td><td style="font-weight:600">200 kg</td><td style="color:var(--g);font-weight:700;font-size:13px">KES 89</td><td><span class="b bg">Grade A</span></td><td>Now</td><td><button class="btn sm">View →</button></td></tr>
+            <tr><td style="font-weight:600">🥚 Eggs</td><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px">JW</div>Jane Wanjiru <span class="b bg" style="font-size:8px">✓</span></div></td><td>Nakuru</td><td style="font-weight:600">50 trays/week</td><td style="color:var(--g);font-weight:700;font-size:13px">KES 150</td><td><span class="b bg">Free-range</span></td><td>Daily</td><td><button class="btn sm">View →</button></td></tr>
+            <tr><td style="font-weight:600">🥛 Fresh Milk</td><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px;background:var(--pur)">MN</div>Mary Njeri <span class="b bg" style="font-size:8px">✓</span></div></td><td>Meru</td><td style="font-weight:600">28 litres/day</td><td style="color:var(--g);font-weight:700;font-size:13px">KES 60</td><td><span class="b bg">Fresh daily</span></td><td>Daily</td><td><button class="btn sm">View →</button></td></tr>
+            <tr><td style="font-weight:600">🫘 Beans</td><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px;background:var(--gold)">GK</div>Grace Kamau <span class="b bg" style="font-size:8px">✓</span></div></td><td>Nakuru</td><td style="font-weight:600">100 kg</td><td style="color:var(--g);font-weight:700;font-size:13px">KES 110</td><td><span class="b bg">Grade A</span></td><td>Available</td><td><button class="btn sm">View →</button></td></tr>
+            <tr><td style="font-weight:600">🥔 Potatoes</td><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px;background:var(--amb)">AM</div>Ali Mwas</div></td><td>Nyandarua</td><td style="font-weight:600">800 kg</td><td style="color:var(--g);font-weight:700;font-size:13px">KES 28</td><td><span class="b ba">Grade B</span></td><td>Jul 5</td><td><button class="btn sm">View →</button></td></tr>
+          </tbody>
+        </table>
+        <div style="padding:10px 16px;border-top:1px solid var(--bord);display:flex;justify-content:space-between;align-items:center">
+          <span class="txt-m">Showing 6 of 180 listings</span>
+          <div class="row" style="gap:5px"><button class="btno sm">← Prev</button><button class="btn sm">1</button><button class="btno sm">2</button><button class="btno sm">3</button><span class="txt-m">...</span><button class="btno sm">Next →</button></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-hd"><span class="card-title">Today's Market Snapshot</span></div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px">
+            <div style="background:var(--gl);border-radius:6px;padding:8px;text-align:center"><div style="font-size:14px;font-weight:800;color:var(--g)">KES 48</div><div class="txt-m">Maize/kg ↑15%</div></div>
+            <div style="background:var(--gl);border-radius:6px;padding:8px;text-align:center"><div style="font-size:14px;font-weight:800;color:var(--g)">KES 89</div><div class="txt-m">Tomato/kg →</div></div>
+            <div style="background:var(--gl);border-radius:6px;padding:8px;text-align:center"><div style="font-size:14px;font-weight:800;color:var(--g)">KES 110</div><div class="txt-m">Beans/kg ↑5%</div></div>
+            <div style="background:var(--gl);border-radius:6px;padding:8px;text-align:center"><div style="font-size:14px;font-weight:800;color:var(--g)">KES 150</div><div class="txt-m">Eggs/tray ↑3%</div></div>
+            <div style="background:var(--gl);border-radius:6px;padding:8px;text-align:center"><div style="font-size:14px;font-weight:800;color:var(--g)">KES 60</div><div class="txt-m">Milk/litre ↑5%</div></div>
+            <div style="background:var(--ambl);border-radius:6px;padding:8px;text-align:center"><div style="font-size:14px;font-weight:800;color:var(--amb)">KES 28</div><div class="txt-m">Potato/kg ↓8%</div></div>
+          </div>
+          <div class="al al-b" style="font-size:9px">🤖 AI insight: Maize prices rising due to export demand. Forecast shows 10–15% drop in August as main harvest peaks. <strong>Buy now for storage?</strong></div>
+          <button class="btn" style="width:100%;justify-content:center;margin-top:8px" onclick="show('prices')">View Full Price Board →</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Why Buy on AgroConnect?</span></div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:11px">
+            <div class="row" style="gap:8px"><span style="font-size:16px">✅</span><div><div style="font-weight:600">All farmers are verified</div><div class="txt-m">KYC-verified identities and farm GPS coordinates</div></div></div>
+            <div class="row" style="gap:8px"><span style="font-size:16px">🤖</span><div><div style="font-weight:600">AI-supported farming</div><div class="txt-m">Farmers using AI schedules produce more consistent quality</div></div></div>
+            <div class="row" style="gap:8px"><span style="font-size:16px">💸</span><div><div style="font-weight:600">Direct farm prices</div><div class="txt-m">No middlemen — prices reflect actual farm gate values</div></div></div>
+            <div class="row" style="gap:8px"><span style="font-size:16px">📱</span><div><div style="font-weight:600">Pay via M-Pesa</div><div class="txt-m">Secure payments direct to the farmer</div></div></div>
+            <div class="row" style="gap:8px"><span style="font-size:16px">⭐</span><div><div style="font-weight:600">Farmer ratings & history</div><div class="txt-m">See past transaction records before you buy</div></div></div>
+          </div>
+          <div class="div"></div>
+          <button class="btn gold" style="width:100%;justify-content:center;padding:10px">Register as a Buyer — Free</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- LISTING DETAIL -->
+<div id="page-listing-detail" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('browse')"><span class="ic">⬅</span>Back to Browse</div>
+  <div class="sb-sect">Listing #MKT-2847</div>
+  <div class="sb-item a"><span class="ic">🌽</span>Maize 500kg</div>
+  <div class="sb-item"><span class="ic">🧑‍🌾</span>Farmer Profile</div>
+  <div class="sb-item"><span class="ic">💬</span>Send Inquiry</div>
+  <div class="sb-item"><span class="ic">⭐</span>Reviews</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('browse')">Browse</span> › Maize 500kg · Jane Wanjiru · Nakuru</div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd">
+          <div>
+            <div style="font-size:16px;font-weight:700">🌽 Maize — 500kg · Grade A</div>
+            <div style="font-size:13px;font-weight:700;color:var(--g);margin-top:3px">KES 48/kg · Total: KES 24,000</div>
+          </div>
+          <span class="b bg">Available Jul 10</span>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+            <span class="b bg">Grade A</span>
+            <span class="b bb">Harvest: July 2025</span>
+            <span class="b bg">✓ Aflatoxin screened</span>
+            <span class="b bt">Sun-dried</span>
+            <span style="font-size:10px">📍 Nakuru · Bahati Sub-county</span>
+          </div>
+          <div style="background:var(--surf);border-radius:6px;padding:10px;margin-bottom:12px;font-size:11px;color:var(--ink2)">
+            "H614D variety — high-yield hybrid. Sun-dried and screened for aflatoxin at Nakuru Grain Bureau. Available for bulk collection from farm or I can arrange transport within 30km. Price negotiable for 200kg+."
+          </div>
+          <div class="sh">Price Trend — Last 90 Days (Maize)</div>
+          <div style="background:var(--surf);border-radius:6px;padding:10px;margin-bottom:10px">
+            <div style="display:flex;align-items:flex-end;gap:2px;height:52px;margin-bottom:5px">
+              <div style="flex:1;background:var(--gl);border-radius:2px 2px 0 0;height:52%"></div>
+              <div style="flex:1;background:var(--gl);border-radius:2px 2px 0 0;height:56%"></div>
+              <div style="flex:1;background:var(--gl);border-radius:2px 2px 0 0;height:50%"></div>
+              <div style="flex:1;background:var(--gl);border-radius:2px 2px 0 0;height:62%"></div>
+              <div style="flex:1;background:var(--g);border-radius:2px 2px 0 0;height:75%"></div>
+              <div style="flex:1;background:var(--g);border-radius:2px 2px 0 0;height:85%"></div>
+              <div style="flex:1;background:var(--g);border-radius:2px 2px 0 0;height:95%"></div>
+              <div style="flex:1;background:var(--gd);border-radius:2px 2px 0 0;height:100%"></div>
+              <div style="flex:1;background:rgba(26,107,60,.3);border-radius:2px 2px 0 0;height:92%;border:1px dashed var(--g)"></div>
+              <div style="flex:1;background:rgba(26,107,60,.2);border-radius:2px 2px 0 0;height:80%;border:1px dashed var(--g)"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted)">
+              <span>Apr 1</span><span>May 1</span><span>Jun 1</span><span style="font-weight:600;color:var(--gd)">Today KES 48</span><span style="color:var(--g)">Forecast →</span>
+            </div>
+            <div class="al al-b" style="margin-top:8px;font-size:9px">🤖 <strong>AI Forecast:</strong> Maize price expected to fall 10–15% in Aug–Sep as main harvest peaks. Consider buying now and storing if you have capacity.</div>
+          </div>
+          <div class="sh">Listing Statistics</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+            <div style="background:var(--surf);border-radius:5px;padding:7px;text-align:center"><div style="font-size:14px;font-weight:700;color:var(--g)">234</div><div class="txt-m">Listing views</div></div>
+            <div style="background:var(--surf);border-radius:5px;padding:7px;text-align:center"><div style="font-size:14px;font-weight:700;color:var(--g)">12</div><div class="txt-m">Inquiries</div></div>
+            <div style="background:var(--surf);border-radius:5px;padding:7px;text-align:center"><div style="font-size:14px;font-weight:700;color:var(--gold)">4.8★</div><div class="txt-m">Farmer rating</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-hd"><span class="card-title">Verified Farmer</span></div>
+        <div class="card-body">
+          <div class="row" style="gap:12px;margin-bottom:12px">
+            <div class="lav" style="width:44px;height:44px;font-size:16px;flex-shrink:0">JW</div>
+            <div><div style="font-size:13px;font-weight:700">Jane Wanjiru</div><div class="txt-m">✓ KYC Verified · Nakuru County</div><div style="margin-top:4px"><span class="b bg">🌾🐄 Mixed Farmer</span> <span style="font-size:10px;color:var(--gold);margin-left:4px">★ 4.8 (12 reviews)</span></div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
+            <div style="background:var(--surf);border-radius:5px;padding:7px;text-align:center"><div style="font-size:12px;font-weight:600;color:var(--g)">3 seasons</div><div class="txt-m">On platform</div></div>
+            <div style="background:var(--surf);border-radius:5px;padding:7px;text-align:center"><div style="font-size:12px;font-weight:600;color:var(--g)">12 transactions</div><div class="txt-m">Completed</div></div>
+            <div style="background:var(--surf);border-radius:5px;padding:7px;text-align:center"><div style="font-size:12px;font-weight:600;color:var(--g)">2.5 acres</div><div class="txt-m">Farm size</div></div>
+            <div style="background:var(--surf);border-radius:5px;padding:7px;text-align:center"><div style="font-size:12px;font-weight:600;color:var(--g)">73 / 100</div><div class="txt-m">Credit score</div></div>
+          </div>
+          <div class="al al-g" style="margin-bottom:10px;font-size:9px">🔒 Sign in to view farmer's contact number and send a direct message.</div>
+          <button class="btn" style="width:100%;justify-content:center;padding:10px;margin-bottom:6px">📞 Contact Farmer (Sign In)</button>
+          <button class="btn gold" style="width:100%;justify-content:center;padding:10px">🛒 Place Order (Sign In)</button>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-hd"><span class="card-title">Place Order — Jane Wanjiru Maize</span><span class="b ba">Sign In Required</span></div>
+        <div class="card-body">
+          <div class="al al-b" style="margin-bottom:10px;font-size:9px">Register free to contact this farmer, place orders, and receive price alerts.</div>
+          <div class="fg fg2">
+            <div class="field"><label>Quantity (kg)</label><input value="200" placeholder="Min: 50kg"></div>
+            <div class="field"><label>Price per kg</label><input value="KES 48" readonly></div>
+          </div>
+          <div class="field" style="margin-bottom:9px"><label>Total</label><input value="KES 9,600" readonly style="font-weight:700;color:var(--g);font-size:13px"></div>
+          <div class="field" style="margin-bottom:9px"><label>Collection / Delivery</label><select><option>I will collect from farm (Nakuru)</option><option>Request delivery (negotiated cost)</option></select></div>
+          <div class="field" style="margin-bottom:10px"><label>Message to Farmer (optional)</label><input placeholder="e.g. Can you hold until July 15?"></div>
+          <button class="btn gold" style="width:100%;justify-content:center;padding:10px">Register & Place Order →</button>
+          <div class="txt-m" style="text-align:center;margin-top:5px">Payment via M-Pesa on confirmation</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Farmer Reviews</span></div>
+        <div class="card-body" style="padding:0 16px">
+          <div class="lr"><div class="lav" style="width:26px;height:26px;font-size:9px;background:var(--t)">PK</div><div class="lin"><div class="lit">Peter Kipchoge ★★★★★</div><div class="lis">"200kg maize, Grade A. Delivery within 24h. Excellent." — May 2025</div></div></div>
+          <div class="lr"><div class="lav" style="width:26px;height:26px;font-size:9px;background:var(--pur)">SM</div><div class="lin"><div class="lit">Sarah Mwas ★★★★☆</div><div class="lis">"Good quality, price was slightly negotiated. Honest farmer." — Apr 2025</div></div></div>
+          <div class="lr" style="border:none"><div class="lav" style="width:26px;height:26px;font-size:9px;background:var(--amb)">JO</div><div class="lin"><div class="lit">John Oduya ★★★★★</div><div class="lis">"Regular buyer now. Eggs quality consistent every week." — Mar 2025</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- LIVE PRICES (PUBLIC) -->
+<div id="page-prices" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('browse')"><span class="ic">🛒</span>Browse Produce</div>
+  <div class="sb-item a" onclick="show('prices')"><span class="ic">📈</span>Live Prices</div>
+  <div class="sb-item" onclick="show('alerts')"><span class="ic">🔔</span>Price Alerts</div>
+  <div class="sb-item" onclick="show('intelligence')"><span class="ic">🤖</span>AI Market Intel</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('browse')">Market</span> › Live Prices</div>
+  <div class="page-hd">
+    <div><div class="page-title">Live Market Prices</div><div class="page-sub">Updated every 30 minutes · Source: AgroConnect listings + AMIS Kenya · Nairobi Wakulima Market</div></div>
+    <div class="row" style="gap:8px"><button class="btno sm">📊 Download CSV</button><button class="btno sm">📄 PDF Report</button></div>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Crop Prices — Today</span><span class="txt-m">Last updated: 14:32</span></div>
+        <table>
+          <thead><tr><th>Crop</th><th>Price (KES)</th><th>Unit</th><th>Week Change</th><th>Trend</th><th>AI Forecast (30 days)</th></tr></thead>
+          <tbody>
+            <tr><td style="font-weight:600">🌽 Maize</td><td style="font-size:14px;font-weight:800;color:var(--g)">48</td><td>/kg</td><td><span class="b bg">↑ +15%</span></td><td><div style="display:flex;align-items:flex-end;gap:1px;height:18px;width:50px"><div style="flex:1;background:var(--gl);border-radius:1px;height:50%"></div><div style="flex:1;background:var(--g);height:80%"></div><div style="flex:1;background:var(--g);height:100%"></div></div></td><td><span class="b ba">↓ Drop in Aug</span></td></tr>
+            <tr><td style="font-weight:600">🍅 Tomatoes</td><td style="font-size:14px;font-weight:800;color:var(--ink)">89</td><td>/kg</td><td><span class="b bg">↑ +8%</span></td><td><div style="display:flex;align-items:flex-end;gap:1px;height:18px;width:50px"><div style="flex:1;background:var(--g);height:100%"></div><div style="flex:1;background:var(--g);height:90%"></div><div style="flex:1;background:var(--g);height:80%"></div></div></td><td><span class="b ba">→ Dip next week</span></td></tr>
+            <tr><td style="font-weight:600">🫘 Beans</td><td style="font-size:14px;font-weight:800;color:var(--ink)">110</td><td>/kg</td><td><span class="b bg">↑ +5%</span></td><td><div style="display:flex;align-items:flex-end;gap:1px;height:18px;width:50px"><div style="flex:1;background:var(--gl);height:60%"></div><div style="flex:1;background:var(--g);height:80%"></div><div style="flex:1;background:var(--g);height:100%"></div></div></td><td><span class="b bg">→ Stable</span></td></tr>
+            <tr><td style="font-weight:600">🥬 Cabbage</td><td style="font-size:14px;font-weight:800;color:var(--ink)">35</td><td>/kg</td><td><span class="b bg">→ 0%</span></td><td><div style="display:flex;align-items:flex-end;gap:1px;height:18px;width:50px"><div style="flex:1;background:var(--g);height:90%"></div><div style="flex:1;background:var(--g);height:90%"></div><div style="flex:1;background:var(--g);height:90%"></div></div></td><td><span class="b bg">→ Flat</span></td></tr>
+            <tr><td style="font-weight:600">🥔 Potatoes</td><td style="font-size:14px;font-weight:800;color:var(--ink)">28</td><td>/kg</td><td><span class="b br">↓ -8%</span></td><td><div style="display:flex;align-items:flex-end;gap:1px;height:18px;width:50px"><div style="flex:1;background:var(--g);height:100%"></div><div style="flex:1;background:var(--g);height:80%"></div><div style="flex:1;background:var(--red);height:65%"></div></div></td><td><span class="b br">↓ Further drop</span></td></tr>
+            <tr><td style="font-weight:600">🌾 Wheat</td><td style="font-size:14px;font-weight:800;color:var(--ink)">52</td><td>/kg</td><td><span class="b bg">↑ +3%</span></td><td><div style="display:flex;align-items:flex-end;gap:1px;height:18px;width:50px"><div style="flex:1;background:var(--gl);height:70%"></div><div style="flex:1;background:var(--g);height:85%"></div><div style="flex:1;background:var(--g);height:100%"></div></div></td><td><span class="b bg">↑ Stable-up</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Livestock Products</span></div>
+        <table>
+          <thead><tr><th>Product</th><th>Price (KES)</th><th>Unit</th><th>Week Change</th><th>AI Forecast</th></tr></thead>
+          <tbody>
+            <tr><td style="font-weight:600">🥚 Eggs</td><td style="font-size:14px;font-weight:800;color:var(--g)">150</td><td>/tray</td><td><span class="b bg">↑ +3%</span></td><td><span class="b bg">↑ Stable</span></td></tr>
+            <tr><td style="font-weight:600">🥛 Fresh Milk</td><td style="font-size:14px;font-weight:800;color:var(--g)">60</td><td>/litre</td><td><span class="b bg">↑ +5%</span></td><td><span class="b bg">↑ Stable</span></td></tr>
+            <tr><td style="font-weight:600">🐄 Live Cattle</td><td style="font-size:14px;font-weight:800;color:var(--g)">KES 45K</td><td>/head</td><td><span class="b bg">→ 0%</span></td><td><span class="b bg">→ Stable</span></td></tr>
+            <tr><td style="font-weight:600">🐔 Live Chicken</td><td style="font-size:14px;font-weight:800;color:var(--g)">600</td><td>/bird</td><td><span class="b ba">↑ +12%</span></td><td><span class="b ba">↑ Eid season</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-hd"><span class="card-title">🤖 AI Price Forecast — Next 30 Days</span></div>
+        <div class="card-body">
+          <div class="al al-r" style="margin-bottom:10px;font-size:9px">⚠️ <strong>Maize Alert:</strong> Current KES 48/kg driven by export demand. 10–15% drop expected Aug–Sep as main Rift Valley harvest peaks. 2,840 maize farmers on platform at harvest-ready stage.</div>
+          <div class="al al-g" style="margin-bottom:10px;font-size:9px">✅ <strong>Beans opportunity:</strong> Low supply this month — prices up 5%. New bean plantings (June) mean fresh supply in 75 days (September). Lock in contracts now at KES 110.</div>
+          <div class="al al-a" style="margin-bottom:10px;font-size:9px">⚠️ <strong>Tomatoes:</strong> Current high prices driven by dry-season low supply from Meru. Watch for price correction when irrigation crops come to market (2–3 weeks).</div>
+          <div class="al al-b" style="margin-bottom:0;font-size:9px">🤖 Forecasts use: current platform listings + national planting data + AMIS Kenya prices + satellite crop health data. Accuracy: ±12% over 30 days.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Set Price Alerts (Free)</span></div>
+        <div class="card-body">
+          <div class="al al-b" style="margin-bottom:10px;font-size:9px">Get an SMS or email when prices cross your target. Free with a buyer account.</div>
+          <div class="fg fg2">
+            <div class="field"><label>Crop / Product</label><select><option>Maize</option><option>Tomatoes</option><option>Beans</option><option>Potatoes</option><option>Eggs</option><option>Milk</option></select></div>
+            <div class="field"><label>Alert Type</label><select><option>Price drops below (buy signal)</option><option>Price rises above (sell signal)</option></select></div>
+          </div>
+          <div class="fg fg2">
+            <div class="field"><label>Target Price (KES)</label><input placeholder="e.g. 42" value="42"></div>
+            <div class="field"><label>Notify Via</label><select><option>SMS + Email</option><option>SMS only</option><option>Email only</option></select></div>
+          </div>
+          <button class="btn" style="width:100%;justify-content:center;padding:9px">🔔 Set Alert (Register First)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- BUYER DASHBOARD (LOGGED IN) -->
+<div id="page-dashboard" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('browse')"><span class="ic">🛒</span>Browse Produce</div>
+  <div class="sb-item a" onclick="show('dashboard')"><span class="ic">📊</span>My Dashboard</div>
+  <div class="sb-item" onclick="show('orders')"><span class="ic">📦</span>My Orders (5) <span class="sb-badge gold">2</span></div>
+  <div class="sb-item"><span class="ic">💰</span>Payments</div>
+  <div class="sb-item"><span class="ic">⭐</span>Saved Farmers</div>
+  <div class="sb-item" onclick="show('alerts')"><span class="ic">🔔</span>Price Alerts <span class="sb-badge gold">3</span></div>
+  <div class="sb-item" onclick="show('intelligence')"><span class="ic">🤖</span>Market Intel</div>
+</div>
+<div class="content">
+  <div class="page-hd">
+    <div><div class="page-title">Buyer Dashboard</div><div class="page-sub">Peter Kipchoge · Wholesale Trader · Uasin Gishu</div></div>
+    <button class="btn" onclick="show('browse')">Browse Produce →</button>
+  </div>
+  <div class="kpis">
+    <div class="kpi gold"><div class="kpi-l">Active Orders</div><div class="kpi-v">2</div><div class="kpi-d">KES 13,100 value</div></div>
+    <div class="kpi"><div class="kpi-l">Spent This Month</div><div class="kpi-v">KES 284K</div></div>
+    <div class="kpi teal"><div class="kpi-l">Saved Farmers</div><div class="kpi-v">12</div></div>
+    <div class="kpi"><div class="kpi-l">Price Alerts Active</div><div class="kpi-v">3</div><div class="kpi-d up">1 triggered today</div></div>
+    <div class="kpi"><div class="kpi-l">Maize Price Today</div><div class="kpi-v">KES 48</div><div class="kpi-d up">↑ 15% this week</div></div>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Active Orders</span><button class="btn sm" onclick="show('orders')">View All →</button></div>
+        <table>
+          <thead><tr><th>Farmer</th><th>Produce</th><th>Qty</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px">JW</div>Jane Wanjiru</div></td><td>Maize Grade A</td><td>200kg</td><td style="font-weight:600;color:var(--g)">KES 9,600</td><td><span class="b ba">Pending delivery Jul 10</span></td><td><button class="btn sm">Track</button></td></tr>
+            <tr><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px;background:var(--pur)">MK</div>Mary Kamau</div></td><td>Cabbage</td><td>100kg</td><td style="font-weight:600;color:var(--g)">KES 3,500</td><td><span class="b bg">Delivered ✓</span></td><td><button class="btno sm">Rate Farmer</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Saved Farmers</span></div>
+        <div class="card-body" style="padding:0 16px">
+          <div class="lr"><div class="lav">JW</div><div class="lin"><div class="lit">Jane Wanjiru · Nakuru</div><div class="lis">🌽 Maize 500kg available · Jul 10 · KES 48/kg</div></div><div class="row" style="gap:4px"><button class="btn sm">Order</button><button class="btn sm teal">📱</button></div></div>
+          <div class="lr"><div class="lav" style="background:var(--t)">PK</div><div class="lin"><div class="lit">Peter Kipchoge · Uasin Gishu</div><div class="lis">🌾 Wheat harvest Sep · KES 52/kg est.</div></div><div class="row" style="gap:4px"><button class="btn sm">Pre-order</button><button class="btn sm teal">📱</button></div></div>
+          <div class="lr" style="border:none"><div class="lav" style="background:var(--pur)">MN</div><div class="lin"><div class="lit">Mary Njeri · Meru</div><div class="lis">🥛 Milk 28L/day · KES 60/L · Available daily</div></div><div class="row" style="gap:4px"><button class="btn sm">Subscribe</button></div></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-hd"><span class="card-title">Price Alerts — Triggered</span></div>
+        <div class="card-body">
+          <div class="al al-g" style="margin-bottom:10px;font-size:9px">🌽 <strong>Maize Alert Triggered!</strong> Price is now KES 48/kg — above your watch price of KES 45. Consider buying now before further rise.</div>
+          <div class="al al-b" style="margin-bottom:10px;font-size:9px">🫘 Beans at KES 110/kg — your alert was KES 115. Getting close. Supply expected to tighten.</div>
+          <div class="al al-a" style="font-size:9px">🍅 Tomatoes dropped to KES 89/kg — below your alert of KES 95. Good buying opportunity.</div>
+          <div class="div"></div>
+          <button class="btn" style="width:100%;justify-content:center" onclick="show('alerts')">Manage All Alerts →</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Monthly Spend</span></div>
+        <div class="card-body">
+          <div style="display:flex;align-items:flex-end;gap:3px;height:52px;margin-bottom:5px">
+            <div style="flex:1;background:var(--gl);border-radius:2px 2px 0 0;height:50%"></div>
+            <div style="flex:1;background:var(--gl);border-radius:2px 2px 0 0;height:60%"></div>
+            <div style="flex:1;background:var(--g);border-radius:2px 2px 0 0;height:75%"></div>
+            <div style="flex:1;background:var(--g);border-radius:2px 2px 0 0;height:85%"></div>
+            <div style="flex:1;background:var(--g);border-radius:2px 2px 0 0;height:80%"></div>
+            <div style="flex:1;background:var(--gd);border-radius:2px 2px 0 0;height:100%"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted)"><span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun ★</span></div>
+          <div class="div"></div>
+          <div class="row-sb"><span class="txt-m">Total 2025 spend</span><span style="font-weight:700;color:var(--g)">KES 1.24M</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ORDERS -->
+<div id="page-orders" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('dashboard')"><span class="ic">📊</span>Dashboard</div>
+  <div class="sb-item a" onclick="show('orders')"><span class="ic">📦</span>My Orders</div>
+  <div class="sb-item"><span class="ic">⏳</span>Pending</div>
+  <div class="sb-item"><span class="ic">🚚</span>In Transit</div>
+  <div class="sb-item"><span class="ic">✅</span>Delivered</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('dashboard')">Dashboard</span> › My Orders</div>
+  <div class="page-hd"><div><div class="page-title">My Orders</div></div><button class="btn" onclick="show('browse')">Browse & Order More →</button></div>
+  <div class="kpis">
+    <div class="kpi gold"><div class="kpi-l">Pending</div><div class="kpi-v">2</div></div>
+    <div class="kpi"><div class="kpi-l">Delivered (Month)</div><div class="kpi-v">3</div></div>
+    <div class="kpi"><div class="kpi-l">Total Paid (Month)</div><div class="kpi-v">KES 284K</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><span class="card-title">Order #ORD-1092 — Jane Wanjiru · Maize 200kg</span><span class="b ba">Pending Delivery</span></div>
+    <div class="card-body">
+      <div class="tl" style="margin-bottom:12px">
+        <div class="tl-item done"><div><div class="tl-title">Order Placed & Paid</div><div class="tl-sub">Jun 6, 2025 · KES 9,600 via M-Pesa · Ref: QA4K72XP</div></div></div>
+        <div class="tl-item done"><div><div class="tl-title">Farmer Confirmed</div><div class="tl-sub">Jun 6 · Jane Wanjiru confirmed availability and harvest date</div></div></div>
+        <div class="tl-item pend"><div><div class="tl-title">Awaiting Harvest</div><div class="tl-sub">Expected: July 10, 2025 · 200kg Grade A Maize H614D</div></div></div>
+        <div class="tl-item pend"><div><div class="tl-title">Collection / Delivery</div><div class="tl-sub">Nakuru Farm, Bahati Sub-county · You will collect</div></div></div>
+      </div>
+      <div class="row" style="gap:8px">
+        <button class="btn teal">📱 Message Farmer</button>
+        <button class="btno red">Cancel Order</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- PRICE ALERTS -->
+<div id="page-alerts" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('dashboard')"><span class="ic">📊</span>Dashboard</div>
+  <div class="sb-item a"><span class="ic">🔔</span>Price Alerts</div>
+  <div class="sb-item"><span class="ic">📈</span>Triggered Alerts</div>
+  <div class="sb-item"><span class="ic">⚙️</span>Settings</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('dashboard')">Dashboard</span> › Price Alerts</div>
+  <div class="page-hd"><div><div class="page-title">Price Alerts</div><div class="page-sub">Get SMS/email when prices cross your targets</div></div><button class="btn">+ New Alert</button></div>
+  <div class="card">
+    <div class="card-hd"><span class="card-title">Active Alerts</span></div>
+    <table>
+      <thead><tr><th>Crop</th><th>Alert Type</th><th>Target Price</th><th>Current Price</th><th>Status</th><th>Notify Via</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr class="flag"><td style="font-weight:600">🌽 Maize</td><td>Price rises above</td><td>KES 45/kg</td><td style="font-weight:700;color:var(--g)">KES 48 — ↑ triggered!</td><td><span class="b br">🔔 Triggered</span></td><td>SMS + Email</td><td><div class="row" style="gap:4px"><button class="btn sm">Buy Now</button><button class="btno sm red">Dismiss</button></div></td></tr>
+        <tr><td style="font-weight:600">🫘 Beans</td><td>Price rises above</td><td>KES 115/kg</td><td style="font-weight:700">KES 110</td><td><span class="b bg">Watching</span></td><td>SMS</td><td><button class="btno sm">Edit</button></td></tr>
+        <tr><td style="font-weight:600">🍅 Tomatoes</td><td>Price drops below</td><td>KES 95/kg</td><td style="font-weight:700;color:var(--g)">KES 89 — ↓ triggered!</td><td><span class="b br">🔔 Triggered</span></td><td>Email</td><td><div class="row" style="gap:4px"><button class="btn sm">Buy Now</button><button class="btno sm red">Dismiss</button></div></td></tr>
+        <tr><td style="font-weight:600">🥚 Eggs</td><td>Price drops below</td><td>KES 130/tray</td><td style="font-weight:700">KES 150</td><td><span class="b bg">Watching</span></td><td>SMS + Email</td><td><button class="btno sm">Edit</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <div class="card-hd"><span class="card-title">Add New Price Alert</span></div>
+    <div class="card-body">
+      <div class="fg fg2">
+        <div class="field"><label>Crop / Product *</label><select><option>Maize</option><option>Tomatoes</option><option>Beans</option><option>Potatoes</option><option>Cabbage</option><option>Eggs</option><option>Milk</option><option>Wheat</option></select></div>
+        <div class="field"><label>Alert Trigger *</label><select><option>Price drops BELOW target (buy signal)</option><option>Price rises ABOVE target (sell/hold signal)</option><option>Any change &gt;10% in 24h</option></select></div>
+      </div>
+      <div class="fg fg2">
+        <div class="field"><label>Target Price (KES) *</label><input placeholder="e.g. 42"><div class="field-hint">Current: KES 48/kg for Maize</div></div>
+        <div class="field"><label>Notify Me Via</label><select><option>SMS + Email</option><option>SMS only</option><option>Email only</option><option>In-app only</option></select></div>
+      </div>
+      <div class="fg fg2">
+        <div class="field"><label>Repeat Alert?</label><select><option>Yes — every time threshold crossed</option><option>Once only</option></select></div>
+        <div class="field"><label>Expiry Date</label><input type="date" value="2025-12-31"><div class="field-hint">Alert auto-deactivates on this date</div></div>
+      </div>
+      <button class="btn" style="margin-top:4px">🔔 Activate Alert</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- MARKET INTELLIGENCE -->
+<div id="page-intelligence" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('dashboard')"><span class="ic">📊</span>Dashboard</div>
+  <div class="sb-item a"><span class="ic">🤖</span>Market Intelligence</div>
+  <div class="sb-item"><span class="ic">📈</span>Price Forecasts</div>
+  <div class="sb-item"><span class="ic">🌾</span>Supply Signals</div>
+  <div class="sb-item"><span class="ic">🌍</span>County Breakdown</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('dashboard')">Dashboard</span> › AI Market Intelligence</div>
+  <div class="page-hd"><div><div class="page-title">AI Market Intelligence</div><div class="page-sub">AI forecasts based on farm activity data, planting patterns, and national market data</div></div><select style="border:1px solid var(--bord);border-radius:5px;padding:7px 12px;font-size:11px"><option>Next 30 days</option><option>Next 90 days</option></select></div>
+  <div class="kpis">
+    <div class="kpi gold"><div class="kpi-l">Maize Price Today</div><div class="kpi-v">KES 48</div><div class="kpi-d up">↑ +15% this week</div></div>
+    <div class="kpi teal"><div class="kpi-l">Active Listings (Platform)</div><div class="kpi-v">2,840</div><div class="kpi-d">Maize farmers</div></div>
+    <div class="kpi"><div class="kpi-l">Harvest Season</div><div class="kpi-v">Jul–Sep</div><div class="kpi-d">Main Rift Valley</div></div>
+    <div class="kpi pur"><div class="kpi-l">AI Forecast Accuracy</div><div class="kpi-v">±12%</div><div class="kpi-d">30-day window</div></div>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Maize Price Forecast — 90 Days</span></div>
+        <div class="card-body">
+          <div style="display:flex;align-items:flex-end;gap:2px;height:64px;margin-bottom:6px">
+            <div style="flex:1;background:var(--gl);border-radius:2px 2px 0 0;height:55%"></div>
+            <div style="flex:1;background:var(--gl);border-radius:2px 2px 0 0;height:60%"></div>
+            <div style="flex:1;background:var(--gl);border-radius:2px 2px 0 0;height:55%"></div>
+            <div style="flex:1;background:var(--g);border-radius:2px 2px 0 0;height:70%"></div>
+            <div style="flex:1;background:var(--g);border-radius:2px 2px 0 0;height:80%"></div>
+            <div style="flex:1;background:var(--g);border-radius:2px 2px 0 0;height:90%"></div>
+            <div style="flex:1;background:var(--gd);border-radius:2px 2px 0 0;height:100%"></div>
+            <div style="flex:1;background:rgba(26,107,60,.35);border-radius:2px 2px 0 0;height:90%;border:1px dashed var(--g)"></div>
+            <div style="flex:1;background:rgba(26,107,60,.25);border-radius:2px 2px 0 0;height:78%;border:1px dashed var(--g)"></div>
+            <div style="flex:1;background:rgba(220,38,38,.25);border-radius:2px 2px 0 0;height:62%;border:1px dashed var(--red)"></div>
+            <div style="flex:1;background:rgba(220,38,38,.2);border-radius:2px 2px 0 0;height:50%;border:1px dashed var(--red)"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-bottom:8px">
+            <span>Apr</span><span>May</span><span>Jun</span><span style="color:var(--gd);font-weight:600">↑ Now KES 48</span><span style="color:var(--g)">Jul</span><span style="color:var(--red)">Aug ↓</span><span style="color:var(--red)">Sep ↓</span>
+          </div>
+          <div class="al al-r" style="font-size:9px;margin-bottom:8px">⚠️ <strong>Forecast drop: Aug–Sep.</strong> 2,840 maize farmers at week 10+ (harvest-ready). Supply surge expected Jul 15 – Sep 30. Price may fall to KES 38–42/kg.</div>
+          <div class="al al-g" style="font-size:9px"><strong>AI Recommendation:</strong> If you need maize for Q3–Q4, buy now at KES 48 and store, OR negotiate forward contracts with farmers today at KES 44–46.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Supply Signals from Platform</span></div>
+        <div class="card-body">
+          <div class="al al-b" style="margin-bottom:10px;font-size:9px">🤖 These signals come from real farmer activity on AgroConnect — planting dates, activity logs, and harvest records.</div>
+          <div style="font-size:11px;display:flex;flex-direction:column;gap:8px">
+            <div class="row-sb" style="padding:6px 8px;background:var(--redl);border-radius:5px"><span>🌽 Maize (H614D) expected harvest</span><span style="font-weight:600;color:var(--red)">Jul 10 – Aug 15</span></div>
+            <div class="row-sb" style="padding:6px 8px;background:var(--gl);border-radius:5px"><span>🫘 Beans — next harvest (Jun plantings)</span><span style="font-weight:600;color:var(--g)">Sep 2025</span></div>
+            <div class="row-sb" style="padding:6px 8px;background:var(--ambl);border-radius:5px"><span>🥬 Cabbage — low season supply</span><span style="font-weight:600;color:var(--amb)">Limited Jul–Aug</span></div>
+            <div class="row-sb" style="padding:6px 8px;background:var(--gl);border-radius:5px"><span>🥚 Eggs — stable (50 laying hens avg)</span><span style="font-weight:600;color:var(--g)">Daily supply</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-hd"><span class="card-title">30-Day Price Forecast Summary</span></div>
+        <table>
+          <thead><tr><th>Crop</th><th>Today</th><th>30-Day Forecast</th><th>Signal</th><th>Confidence</th></tr></thead>
+          <tbody>
+            <tr><td>🌽 Maize</td><td style="font-weight:600">KES 48</td><td style="font-weight:600">KES 38–42</td><td><span class="b br">↓ Sell / Wait</span></td><td class="txt-m">High (82%)</td></tr>
+            <tr><td>🍅 Tomatoes</td><td style="font-weight:600">KES 89</td><td style="font-weight:600">KES 70–85</td><td><span class="b ba">↓ Mild drop</span></td><td class="txt-m">Med (68%)</td></tr>
+            <tr><td>🫘 Beans</td><td style="font-weight:600">KES 110</td><td style="font-weight:600">KES 105–115</td><td><span class="b bg">→ Stable</span></td><td class="txt-m">High (79%)</td></tr>
+            <tr><td>🥬 Cabbage</td><td style="font-weight:600">KES 35</td><td style="font-weight:600">KES 40–50</td><td><span class="b bg">↑ Rising</span></td><td class="txt-m">Med (64%)</td></tr>
+            <tr><td>🥚 Eggs</td><td style="font-weight:600">KES 150</td><td style="font-weight:600">KES 145–155</td><td><span class="b bg">→ Stable</span></td><td class="txt-m">High (88%)</td></tr>
+            <tr><td>🥔 Potatoes</td><td style="font-weight:600">KES 28</td><td style="font-weight:600">KES 22–27</td><td><span class="b br">↓ Dropping</span></td><td class="txt-m">High (81%)</td></tr>
+          </tbody>
+        </table>
+        <div style="padding:10px 16px;border-top:1px solid var(--bord)"><div class="txt-m">Forecasts updated daily. Confidence % indicates how often past 30-day forecasts were accurate within ±15%.</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">County Supply Breakdown</span></div>
+        <div class="card-body">
+          <div class="sh">Maize — Available Supply by County</div>
+          <div style="margin-bottom:7px"><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">Nakuru</span><span style="font-weight:600">842 listings · 480 tonnes</span></div><div class="prog"><div class="progf" style="width:100%"></div></div></div>
+          <div style="margin-bottom:7px"><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">Uasin Gishu</span><span style="font-weight:600">614 listings · 310 tonnes</span></div><div class="prog"><div class="progf" style="width:65%"></div></div></div>
+          <div style="margin-bottom:7px"><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">Nyandarua</span><span style="font-weight:600">420 listings · 210 tonnes</span></div><div class="prog"><div class="progf" style="width:44%"></div></div></div>
+          <div><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">Trans Nzoia</span><span style="font-weight:600">384 listings · 180 tonnes</span></div><div class="prog"><div class="progf" style="width:38%"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+function show(p){document.querySelectorAll(".layout").forEach(el=>el.style.display="none");var el=document.getElementById("page-"+p);if(el)el.style.display="flex";}
+</script>
+
+</body>
+</html>

@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ['@agroconnect/shared'],
+  transpilePackages: ['@agroconnect/shared', '@agroconnect/web-auth'],
   eslint: { ignoreDuringBuilds: true },
 }
 

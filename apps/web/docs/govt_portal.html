@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AgroConnect — Government Portal</title>
+<style>
+:root{
+  --g:#1A6B3C;--gd:#0D4A28;--gm:#2E8B57;--gl:#EAF4EE;
+  --gold:#C9A84C;--goldd:#F5E9C8;
+  --t:#0E7490;--tl:#CFFAFE;
+  --pur:#7C3AED;--purl:#F3E8FF;
+  --ink:#111827;--ink2:#374151;--muted:#6B7280;--muted2:#9CA3AF;
+  --surf:#F9FAFB;--surf2:#F3F4F6;--bord:#E5E7EB;
+  --red:#DC2626;--redl:#FEE2E2;--amb:#D97706;--ambl:#FEF3C7;
+  --blue:#1D4ED8;--bluel:#DBEAFE;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#ECEFF4;color:var(--ink)}
+/* Topbar */
+.topbar{background:var(--gd);color:#fff;padding:0 24px;height:48px;display:flex;align-items:center;justify-content:space-between}
+.tb-brand{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+.tb-portal{font-size:10px;background:rgba(255,255,255,.15);padding:2px 8px;border-radius:10px;margin-left:6px}
+.tb-links{display:flex;gap:4px}
+.tb-link{color:rgba(255,255,255,.6);font-size:11px;padding:6px 10px;border-radius:4px;cursor:pointer;transition:.12s}
+.tb-link:hover{color:#fff;background:rgba(255,255,255,.1)}
+.tb-link.a{color:#fff;background:rgba(255,255,255,.15);font-weight:500}
+.tb-right{display:flex;align-items:center;gap:8px}
+.tb-user{color:rgba(255,255,255,.8);font-size:11px;display:flex;align-items:center;gap:5px}
+.tb-avatar{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center}
+/* Layout */
+.layout{display:flex;min-height:calc(100vh - 48px)}
+.sidebar{width:200px;background:#fff;border-right:1px solid var(--bord);padding:12px 8px;flex-shrink:0}
+.sb-sect{font-size:9px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.08em;padding:10px 8px 4px}
+.sb-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;font-size:11px;color:var(--muted);cursor:pointer;margin-bottom:2px;transition:.1s}
+.sb-item:hover:not(.a){background:var(--surf)}
+.sb-item.a{background:var(--gl);color:var(--g);font-weight:600}
+.sb-item .ic{font-size:14px;width:16px;text-align:center}
+.sb-badge{margin-left:auto;background:var(--red);color:#fff;border-radius:8px;font-size:8px;font-weight:700;padding:1px 5px}
+.sb-badge.gold{background:var(--gold)}
+.sb-badge.g{background:var(--g)}
+/* Content */
+.content{flex:1;padding:20px 24px;overflow-y:auto;background:var(--surf2)}
+.page-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.page-title{font-size:17px;font-weight:700;color:var(--ink)}
+.page-sub{font-size:11px;color:var(--muted);margin-top:2px}
+/* Breadcrumb */
+.bc{font-size:11px;color:var(--muted);margin-bottom:14px}
+.bc span{color:var(--g);cursor:pointer}
+/* KPI grid */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px}
+.kpi{background:#fff;border:1px solid var(--bord);border-radius:8px;padding:14px 16px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;left:0;top:0;width:3px;height:100%;background:var(--g)}
+.kpi.red::before{background:var(--red)}.kpi.gold::before{background:var(--gold)}.kpi.teal::before{background:var(--t)}.kpi.pur::before{background:var(--pur)}.kpi.blue::before{background:var(--blue)}.kpi.amb::before{background:var(--amb)}
+.kpi-v{font-size:20px;font-weight:800;color:var(--g);line-height:1}
+.kpi.red .kpi-v{color:var(--red)}.kpi.gold .kpi-v{color:var(--gold)}.kpi.teal .kpi-v{color:var(--t)}.kpi.pur .kpi-v{color:var(--pur)}.kpi.blue .kpi-v{color:var(--blue)}.kpi.amb .kpi-v{color:var(--amb)}
+.kpi-l{font-size:10px;color:var(--muted);margin-bottom:4px}
+.kpi-d{font-size:9px;margin-top:3px;color:var(--muted2)}
+.kpi-d.up{color:var(--g)}.kpi-d.dn{color:var(--red)}
+/* Cards & panels */
+.card{background:#fff;border:1px solid var(--bord);border-radius:8px;margin-bottom:14px}
+.card-hd{padding:12px 16px;border-bottom:1px solid var(--bord);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:12px;font-weight:600;color:var(--ink)}
+.card-body{padding:14px 16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+/* Table */
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:8px 12px;text-align:left;border-bottom:1px solid var(--bord);background:var(--surf);white-space:nowrap}
+td{font-size:11px;padding:9px 12px;border-bottom:1px solid var(--bord);color:var(--ink2);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surf)}
+tr.flag td{background:#FFF5F5}
+/* Badges */
+.b{display:inline-flex;align-items:center;font-size:9px;font-weight:600;padding:2px 7px;border-radius:8px;white-space:nowrap}
+.bg{background:var(--gl);color:var(--gd)}
+.ba{background:var(--ambl);color:#92400E}
+.br{background:var(--redl);color:#991B1B}
+.bb{background:var(--bluel);color:var(--blue)}
+.bt{background:var(--tl);color:var(--t)}
+.bp{background:var(--purl);color:var(--pur)}
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:5px;background:var(--g);color:#fff;border:none;border-radius:5px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer;text-decoration:none}
+.btn.sm{padding:4px 8px;font-size:10px}
+.btn.red{background:var(--red)}.btn.gold{background:var(--gold)}.btn.teal{background:var(--t)}.btn.pur{background:var(--pur)}.btn.blue{background:var(--blue)}.btn.amb{background:var(--amb)}
+.btno{display:inline-flex;align-items:center;gap:5px;background:#fff;color:var(--g);border:1.5px solid var(--g);border-radius:5px;padding:5px 11px;font-size:11px;font-weight:600;cursor:pointer}
+.btno.sm{padding:3px 7px;font-size:10px}.btno.red{color:var(--red);border-color:var(--red)}
+/* Form */
+.form-section{margin-bottom:18px}
+.form-section-title{font-size:11px;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--gl);padding-bottom:5px;margin-bottom:12px}
+.fg{display:grid;gap:10px;margin-bottom:10px}
+.fg2{grid-template-columns:1fr 1fr}
+.fg3{grid-template-columns:1fr 1fr 1fr}
+.fg4{grid-template-columns:1fr 1fr 1fr 1fr}
+.field{display:flex;flex-direction:column;gap:3px}
+.field label{font-size:10px;font-weight:600;color:var(--ink2);text-transform:uppercase;letter-spacing:.04em}
+.field input,.field select,.field textarea{border:1px solid var(--bord);border-radius:5px;padding:7px 10px;font-size:11px;color:var(--ink);background:#fff;transition:.1s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--g);outline:none;box-shadow:0 0 0 3px var(--gl)}
+.field textarea{height:72px;resize:vertical}
+.field-hint{font-size:9px;color:var(--muted);margin-top:2px}
+/* Alerts */
+.al{padding:8px 12px;border-radius:0 5px 5px 0;font-size:10px;line-height:1.6;margin-bottom:10px}
+.al-g{background:var(--gl);border-left:3px solid var(--g);color:var(--gd)}
+.al-a{background:var(--ambl);border-left:3px solid var(--amb);color:#78350F}
+.al-r{background:var(--redl);border-left:3px solid var(--red);color:#7F1D1D}
+.al-b{background:var(--bluel);border-left:3px solid var(--blue);color:var(--blue)}
+/* Progress */
+.prog{height:6px;background:var(--bord);border-radius:3px;overflow:hidden;margin:3px 0}
+.progf{height:100%;border-radius:3px;background:var(--g)}
+/* List row */
+.lr{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bord)}
+.lr:last-child{border:none}
+.lav{width:30px;height:30px;min-width:30px;border-radius:50%;background:var(--g);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.lin{flex:1;min-width:0}
+.lit{font-size:11px;font-weight:600;color:var(--ink)}
+.lis{font-size:9px;color:var(--muted)}
+/* Chips */
+.chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.chip{font-size:10px;padding:4px 10px;border-radius:10px;border:1.5px solid var(--bord);color:var(--muted);cursor:pointer}
+.chip.a{background:var(--g);color:#fff;border-color:var(--g)}
+/* Score bars */
+.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.score-item{background:var(--surf);border-radius:6px;padding:8px 10px}
+.score-l{font-size:9px;color:var(--muted);margin-bottom:3px}
+.score-bar{height:5px;background:var(--bord);border-radius:3px;overflow:hidden;margin-bottom:2px}
+.score-f{height:100%;background:var(--g);border-radius:3px}
+.score-v{font-size:9px;color:var(--muted);text-align:right}
+/* Divider */
+.div{height:1px;background:var(--bord);margin:12px 0}
+/* Util */
+.row{display:flex;align-items:center;gap:8px}
+.row-sb{display:flex;align-items:center;justify-content:space-between}
+.ml{margin-left:auto}
+.mt{margin-top:10px}
+.txt-g{color:var(--g);font-weight:600}
+.txt-r{color:var(--red);font-weight:600}
+.txt-a{color:var(--amb);font-weight:600}
+.txt-m{color:var(--muted);font-size:10px}
+/* Tab row */
+.tab-row{display:flex;gap:2px;border-bottom:2px solid var(--bord);margin-bottom:16px}
+.tab-btn{padding:8px 14px;font-size:11px;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
+.tab-btn.a{color:var(--g);font-weight:600;border-color:var(--g)}
+/* Mini chart */
+.bars{display:flex;align-items:flex-end;gap:3px;height:48px}
+.bar{flex:1;border-radius:2px 2px 0 0;background:var(--gl)}
+.bar.hi{background:var(--g)}.bar.gld{background:var(--gold)}.bar.red{background:var(--red)}.bar.t{background:var(--t)}
+/* Timeline */
+.tl{border-left:2px solid var(--bord);padding-left:16px;margin-left:8px}
+.tl-item{display:flex;gap:8px;margin-bottom:12px;position:relative}
+.tl-item::before{content:'';width:10px;height:10px;border-radius:50%;background:var(--g);border:2px solid #fff;box-shadow:0 0 0 1px var(--g);position:absolute;left:-21px;top:2px}
+.tl-item.done::before{background:var(--g)}
+.tl-item.pend::before{background:var(--bord);box-shadow:0 0 0 1px var(--bord)}
+.tl-title{font-size:11px;font-weight:600;color:var(--ink)}
+.tl-sub{font-size:9px;color:var(--muted)}
+/* Map */
+.map-ph{background:linear-gradient(135deg,#BBF7D0,#6EE7B7);height:80px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:22px;position:relative;margin-bottom:8px}
+.map-badge{position:absolute;bottom:6px;right:8px;background:rgba(0,0,0,.5);color:#fff;font-size:8px;padding:2px 6px;border-radius:3px}
+/* Status pill */
+.status{font-size:9px;font-weight:600;padding:3px 8px;border-radius:10px}
+/* Section header */
+.sh{font-size:10px;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 7px}
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-brand">🌱 AgroConnect <span class="tb-portal">Government Portal</span></div>
+  <div class="tb-links">
+    <span class="tb-link a" onclick="show('dashboard')">Dashboard</span>
+    <span class="tb-link" onclick="show('applications')">Applications</span>
+    <span class="tb-link" onclick="show('new-program')">New Program</span>
+    <span class="tb-link" onclick="show('registrations')">Farm Registry</span>
+    <span class="tb-link" onclick="show('reports')">Reports</span>
+  </div>
+  <div class="tb-right"><div class="tb-user"><div class="tb-avatar">GO</div><span>Nakuru County Office ▾</span></div></div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="page-dashboard" class="layout">
+<div class="sidebar">
+  <div class="sb-item a" onclick="show('dashboard')"><span class="ic">📊</span>County Dashboard</div>
+  <div class="sb-sect">Subsidies</div>
+  <div class="sb-item" onclick="show('applications')"><span class="ic">📋</span>Applications <span class="sb-badge gold">48</span></div>
+  <div class="sb-item"><span class="ic">✅</span>Approved</div>
+  <div class="sb-item"><span class="ic">❌</span>Rejected</div>
+  <div class="sb-sect">Programs</div>
+  <div class="sb-item" onclick="show('new-program')"><span class="ic">➕</span>New Program</div>
+  <div class="sb-item"><span class="ic">📋</span>Active Programs</div>
+  <div class="sb-sect">Registry</div>
+  <div class="sb-item" onclick="show('registrations')"><span class="ic">🗺️</span>Farm Registry</div>
+  <div class="sb-item" onclick="show('reports')"><span class="ic">📤</span>County Reports</div>
+</div>
+<div class="content">
+  <div class="page-hd">
+    <div><div class="page-title">Nakuru County — Agricultural Dashboard</div><div class="page-sub">Ministry of Agriculture — June 2025</div></div>
+    <div class="row" style="gap:8px"><button class="btno sm">📤 Export Data</button><button class="btn sm" onclick="show('new-program')">+ New Program</button></div>
+  </div>
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-l">Registered Farms</div><div class="kpi-v">8,420</div><div class="kpi-d up">↑ 340 this month</div></div>
+    <div class="kpi"><div class="kpi-l">Active Farmers (Platform)</div><div class="kpi-v">6,234</div></div>
+    <div class="kpi gold"><div class="kpi-l">Subsidies Issued (2025)</div><div class="kpi-v">1,242</div><div class="kpi-d">MSAI Fertiliser: 842</div></div>
+    <div class="kpi amb"><div class="kpi-l">Pending Review</div><div class="kpi-v">48</div><div class="kpi-d dn">⚠️ Action needed</div></div>
+    <div class="kpi red"><div class="kpi-l">Unregistered Estimate</div><div class="kpi-v">2,186</div><div class="kpi-d dn">Field data estimate</div></div>
+    <div class="kpi teal"><div class="kpi-l">Counties Covered</div><div class="kpi-v">47</div></div>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Active Programs</span><button class="btn sm" onclick="show('new-program')">+ New Program</button></div>
+        <table>
+          <thead><tr><th>Program</th><th>Budget (KES)</th><th>Allocated</th><th>Pending</th><th>Deadline</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td style="font-weight:600">MSAI Fertiliser 2025</td><td>120M</td><td><div style="display:flex;align-items:center;gap:5px"><div class="prog" style="width:60px;display:inline-block"><div class="progf" style="width:62%"></div></div>62%</div></td><td style="color:var(--gold);font-weight:600">612</td><td>Jun 30</td><td><span class="b bg">Open</span></td></tr>
+            <tr><td style="font-weight:600">KALRO Seeds 2025</td><td>45M</td><td><div style="display:flex;align-items:center;gap:5px"><div class="prog" style="width:60px;display:inline-block"><div class="progf" style="width:45%"></div></div>45%</div></td><td>235</td><td>Jun 30</td><td><span class="b bg">Open</span></td></tr>
+            <tr><td style="font-weight:600">Drip Irrigation Kits</td><td>80M</td><td>—</td><td>—</td><td>Jul 31</td><td><span class="b ba">Upcoming</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Recent Applications Requiring Action</span><button class="btn sm" onclick="show('applications')">View All →</button></div>
+        <table>
+          <thead><tr><th>Farmer</th><th>Program</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px">JW</div>Jane Wanjiru</div></td><td>MSAI Fertiliser</td><td><span class="b ba">Pending</span></td><td><button class="btn sm" onclick="show('applications')">Review →</button></td></tr>
+            <tr><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px;background:var(--t)">SM</div>Samuel Mwas</div></td><td>KALRO Seeds</td><td><span class="b ba">ID needed</span></td><td><button class="btn sm amb">Get ID</button></td></tr>
+            <tr><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px;background:var(--pur)">GK</div>Grace Kamau</div></td><td>MSAI Fertiliser</td><td><span class="b bg">Approved</span></td><td><button class="btno sm">View</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">County Crop Coverage — Nakuru</span></div>
+        <div class="card-body">
+          <div style="margin-bottom:7px"><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">🌽 Maize</span><span style="font-weight:600;color:var(--g)">3,840 farms (62%)</span></div><div class="prog"><div class="progf" style="width:62%"></div></div></div>
+          <div style="margin-bottom:7px"><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">🫘 Beans</span><span style="font-weight:600">2,100 farms (34%)</span></div><div class="prog"><div class="progf" style="width:34%;background:var(--t)"></div></div></div>
+          <div style="margin-bottom:7px"><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">🐄 Dairy Cattle</span><span style="font-weight:600">1,420 farms (23%)</span></div><div class="prog"><div class="progf" style="width:23%;background:var(--gold)"></div></div></div>
+          <div><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">🐔 Poultry</span><span style="font-weight:600">1,080 farms (17%)</span></div><div class="prog"><div class="progf" style="width:17%;background:var(--pur)"></div></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Sub-county Distribution</span></div>
+        <div class="card-body">
+          <div class="row-sb" style="margin-bottom:5px"><span style="font-size:11px">Bahati</span><span style="font-size:11px;font-weight:600">1,842 farms</span></div>
+          <div class="row-sb" style="margin-bottom:5px"><span style="font-size:11px">Naivasha</span><span style="font-size:11px;font-weight:600">1,640 farms</span></div>
+          <div class="row-sb" style="margin-bottom:5px"><span style="font-size:11px">Molo</span><span style="font-size:11px;font-weight:600">1,420 farms</span></div>
+          <div class="row-sb" style="margin-bottom:5px"><span style="font-size:11px">Nakuru Town</span><span style="font-size:11px;font-weight:600">980 farms</span></div>
+          <div class="row-sb"><span style="font-size:11px">Others</span><span style="font-size:11px;font-weight:600">2,538 farms</span></div>
+          <div class="div"></div>
+          <button class="btno" style="width:100%;justify-content:center">📊 View County Map</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- APPLICATIONS -->
+<div id="page-applications" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('dashboard')"><span class="ic">📊</span>Dashboard</div>
+  <div class="sb-item a"><span class="ic">📋</span>All Applications</div>
+  <div class="sb-item"><span class="ic">⏳</span>Pending Review <span class="sb-badge gold">48</span></div>
+  <div class="sb-item"><span class="ic">✅</span>Approved</div>
+  <div class="sb-item"><span class="ic">❌</span>Rejected</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('dashboard')">Dashboard</span> › Subsidy Applications</div>
+  <div class="page-hd"><div><div class="page-title">Subsidy Applications</div><div class="page-sub">All programs — Nakuru County — June 2025</div></div><button class="btno sm">📤 Export CSV</button></div>
+  <div class="kpis">
+    <div class="kpi amb"><div class="kpi-l">Pending Review</div><div class="kpi-v">48</div></div>
+    <div class="kpi"><div class="kpi-l">Approved (Month)</div><div class="kpi-v">1,242</div></div>
+    <div class="kpi red"><div class="kpi-l">Rejected</div><div class="kpi-v">87</div><div class="kpi-d">Ineligible / incomplete</div></div>
+    <div class="kpi teal"><div class="kpi-l">Avg Processing Time</div><div class="kpi-v">2.4 days</div></div>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Pending Applications</span><div class="row" style="gap:6px"><select style="font-size:10px;border:1px solid var(--bord);border-radius:4px;padding:4px 6px"><option>All Programs</option><option>MSAI Fertiliser</option><option>KALRO Seeds</option></select></div></div>
+        <table>
+          <thead><tr><th>Farmer</th><th>Program</th><th>Farm Size</th><th>ID Verified</th><th>GPS</th><th>Prior Receipt</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px">JW</div>Jane Wanjiru</div></td><td>MSAI Fertiliser</td><td>2.5 ac</td><td><span class="b bg">✓ Yes</span></td><td><span class="b bg">✓ Verified</span></td><td><span class="b bg">None</span></td><td><button class="btn sm">Review →</button></td></tr>
+            <tr><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px;background:var(--t)">SM</div>Samuel Mwas</div></td><td>MSAI Fertiliser</td><td>1.0 ac</td><td><span class="b ba">Pending</span></td><td><span class="b bg">✓</span></td><td><span class="b bg">None</span></td><td><button class="btn sm amb">Get ID</button></td></tr>
+            <tr><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px;background:var(--pur)">GK</div>Grace Kamau</div></td><td>Irrigation Kit</td><td>3.5 ac</td><td><span class="b bg">✓ Yes</span></td><td><span class="b bg">✓</span></td><td><span class="b bg">None</span></td><td><button class="btn sm">Review →</button></td></tr>
+            <tr class="flag"><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px;background:var(--red)">JM</div>John Mwangi</div></td><td>MSAI Fertiliser</td><td>6.0 ac</td><td><span class="b bg">✓ Yes</span></td><td><span class="b bg">✓</span></td><td><span class="b ba">2024 received</span></td><td><button class="btn sm red">Decline</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Application Review — Jane Wanjiru</span></div>
+        <div class="card-body">
+          <div class="row" style="gap:10px;margin-bottom:12px">
+            <div class="lav" style="width:38px;height:38px;font-size:14px;flex-shrink:0">JW</div>
+            <div><div style="font-size:13px;font-weight:600">Jane Wanjiru</div><div class="txt-m">Nakuru Farm · 2.5 acres · Maize + Livestock · ID: 12345678</div></div>
+            <span class="b ba">Pending Review</span>
+          </div>
+          <div class="sh">Eligibility Checklist — MSAI Fertiliser</div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">
+            <div class="row-sb" style="padding:5px 8px;background:var(--gl);border-radius:5px"><span style="font-size:11px">Farm size ≤ 5 acres</span><span class="b bg">✓ Pass (2.5 acres)</span></div>
+            <div class="row-sb" style="padding:5px 8px;background:var(--gl);border-radius:5px"><span style="font-size:11px">National ID verified (KYC)</span><span class="b bg">✓ Pass (ID: 12345678)</span></div>
+            <div class="row-sb" style="padding:5px 8px;background:var(--gl);border-radius:5px"><span style="font-size:11px">Not received this subsidy in 2025</span><span class="b bg">✓ Pass (No prior)</span></div>
+            <div class="row-sb" style="padding:5px 8px;background:var(--gl);border-radius:5px"><span style="font-size:11px">Active crop season</span><span class="b bg">✓ Pass (Maize planted Apr 1)</span></div>
+            <div class="row-sb" style="padding:5px 8px;background:var(--ambl);border-radius:5px"><span style="font-size:11px">Farm officially registered</span><span class="b ba">Partial (pending cert.)</span></div>
+          </div>
+          <div class="sh">Approval Details</div>
+          <div class="fg fg2" style="margin-bottom:8px">
+            <div class="field"><label>Approved Items</label><select><option>50kg CAN Fertiliser (standard)</option><option>Reduced allocation (25kg)</option></select></div>
+            <div class="field"><label>Delivery Date</label><input type="date" value="2025-06-20"></div>
+          </div>
+          <div class="fg fg2" style="margin-bottom:8px">
+            <div class="field"><label>Collection Point</label><select><option>Nakuru NCPB Depot</option><option>Bahati Sub-county Office</option></select></div>
+            <div class="field"><label>Transport Provided?</label><select><option>No — farmer collects</option><option>Yes — delivery arranged</option></select></div>
+          </div>
+          <div class="field" style="margin-bottom:10px"><label>Officer Notes</label><textarea placeholder="Internal notes...">Farmer verified. Standard 50kg allocation approved.</textarea></div>
+          <div class="al al-g" style="margin-bottom:10px;font-size:9px">✅ Farmer will receive SMS confirmation immediately. Cert number: KE/NAKURU/2025/1843</div>
+          <div class="row" style="gap:8px">
+            <button class="btn" style="flex:1;justify-content:center;padding:10px">✅ Approve & Notify Farmer</button>
+            <button class="btn red" style="padding:10px 14px;justify-content:center">✗ Reject</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- NEW PROGRAM -->
+<div id="page-new-program" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('dashboard')"><span class="ic">📊</span>Dashboard</div>
+  <div class="sb-item a"><span class="ic">➕</span>New Program</div>
+  <div class="sb-item"><span class="ic">📋</span>Active Programs</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('dashboard')">Dashboard</span> › Create New Program</div>
+  <div class="page-hd"><div><div class="page-title">Create Government Program</div><div class="page-sub">Programs appear on the farmer mobile app immediately on publish</div></div></div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Program Details</span></div>
+        <div class="card-body">
+          <div class="field" style="margin-bottom:10px"><label>Program Name *</label><input placeholder="e.g. MSAI Fertiliser Subsidy 2026" value="MSAI Fertiliser Subsidy 2025"></div>
+          <div class="fg fg2">
+            <div class="field"><label>Program Type *</label><select><option>Fertiliser Subsidy</option><option>Seed Distribution</option><option>Equipment</option><option>Training</option><option>Cash Transfer</option><option>Irrigation</option></select></div>
+            <div class="field"><label>Administering Body *</label><select><option>Ministry of Agriculture HQ</option><option>Nakuru County Government</option><option>KALRO</option></select></div>
+          </div>
+          <div class="field" style="margin-bottom:10px"><label>Description (shown to farmers)</label><textarea>Smallholder farmers receive one 50kg bag of CAN fertiliser free to support the 2025 planting season.</textarea></div>
+          <div class="fg fg2">
+            <div class="field"><label>Application Open Date *</label><input type="date" value="2025-06-01"></div>
+            <div class="field"><label>Application Close Date *</label><input type="date" value="2025-06-30"></div>
+          </div>
+          <div class="fg fg2">
+            <div class="field"><label>Total Budget (KES) *</label><input value="120000000"></div>
+            <div class="field"><label>Max Beneficiaries</label><input placeholder="Leave blank = budget limited" value="2000"></div>
+          </div>
+          <div class="field" style="margin-bottom:10px"><label>Item to be Distributed</label><input value="50kg CAN Fertiliser (1 bag per farmer)"></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Eligibility Criteria</span></div>
+        <div class="card-body">
+          <div class="fg fg2">
+            <div class="field"><label>Max Farm Size (acres)</label><input value="5"><div class="field-hint">Farmers above this size are ineligible</div></div>
+            <div class="field"><label>Min Farm Size (acres)</label><input placeholder="None" value="0.25"></div>
+          </div>
+          <div class="field" style="margin-bottom:10px"><label>Eligible Counties *</label><select style="height:80px" multiple><option selected>All 47 Counties</option><option>Nakuru</option><option>Meru</option><option>Uasin Gishu</option></select><div class="field-hint">Hold Ctrl/Cmd to select multiple</div></div>
+          <div class="fg fg2">
+            <div class="field"><label>Require Active Crop?</label><select><option>Yes — active season required</option><option>No</option></select></div>
+            <div class="field"><label>One Per Farmer</label><select><option>Yes (per program year)</option><option>No limit</option></select></div>
+          </div>
+          <div class="fg fg2">
+            <div class="field"><label>ID Verification Required?</label><select><option>Yes — KYC must be verified</option><option>No</option></select></div>
+            <div class="field"><label>Farm Registration Required?</label><select><option>Recommended (not required)</option><option>Mandatory</option></select></div>
+          </div>
+          <div class="field" style="margin-bottom:10px"><label>Farmer Sub-types Eligible</label><div class="chips" style="margin-top:4px"><div class="chip a">🌾 Crops</div><div class="chip a">🐄 Livestock</div><div class="chip a">🌾🐄 Both</div></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Distribution Settings</span></div>
+        <div class="card-body">
+          <div class="field" style="margin-bottom:10px"><label>Distribution Method</label><select><option>Farmer collects at NCPB depot</option><option>County office pickup</option><option>Home delivery (arranged)</option><option>Voucher system</option></select></div>
+          <div class="field" style="margin-bottom:10px"><label>Collection Points (one per line)</label><textarea style="height:55px">Nakuru NCPB Depot
+Bahati Sub-county Office
+Naivasha Agriculture Office</textarea></div>
+          <div class="row" style="gap:8px;margin-top:8px">
+            <button class="btn" style="flex:1;justify-content:center;padding:10px">🚀 Publish Program</button>
+            <button class="btno" style="justify-content:center;padding:10px 14px">Save Draft</button>
+          </div>
+          <div class="al al-b" style="margin-top:10px;font-size:9px">After publishing, the program appears on the farmer mobile app immediately. Eligible farmers receive a push notification.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- FARM REGISTRY -->
+<div id="page-registrations" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('dashboard')"><span class="ic">📊</span>Dashboard</div>
+  <div class="sb-item a"><span class="ic">🗺️</span>Farm Registry</div>
+  <div class="sb-item"><span class="ic">⏳</span>Pending Approval <span class="sb-badge gold">28</span></div>
+  <div class="sb-item"><span class="ic">✅</span>Certified</div>
+  <div class="sb-item"><span class="ic">❌</span>Incomplete</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('dashboard')">Dashboard</span> › Farm Registry</div>
+  <div class="page-hd"><div><div class="page-title">Farm Registration Management</div></div><div class="row" style="gap:8px"><button class="btno sm">📄 Generate Certificates</button><button class="btn sm">✅ Bulk Approve</button></div></div>
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-l">Total Registered</div><div class="kpi-v">8,420</div></div>
+    <div class="kpi amb"><div class="kpi-l">Pending Approval</div><div class="kpi-v">28</div></div>
+    <div class="kpi"><div class="kpi-l">Certified (Official)</div><div class="kpi-v">6,842</div></div>
+    <div class="kpi red"><div class="kpi-l">Incomplete Applications</div><div class="kpi-v">112</div><div class="kpi-d">Missing GPS or ID</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><span class="card-title">Pending Farm Registrations</span><input placeholder="🔍 Search by name or farm..." style="border:1px solid var(--bord);border-radius:5px;padding:5px 10px;font-size:11px;width:200px"></div>
+    <table>
+      <thead><tr><th><input type="checkbox"> All</th><th>Farmer</th><th>Farm Name</th><th>County</th><th>Sub-county</th><th>Size</th><th>GPS</th><th>ID</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td><input type="checkbox"></td><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px">JW</div>Jane Wanjiru</div></td><td>Nakuru Farm</td><td>Nakuru</td><td>Bahati</td><td>2.5 ac</td><td><span class="b bg">✓ Verified</span></td><td><span class="b bg">✓</span></td><td><span class="b ba">Pending</span></td><td><div class="row" style="gap:4px"><button class="btn sm">Approve</button><button class="btn sm teal">📄 Cert</button></div></td></tr>
+        <tr><td><input type="checkbox"></td><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px;background:var(--t)">JM</div>John Mwangi</div></td><td>Eldoret North</td><td>Uasin Gishu</td><td>Soy</td><td>4.0 ac</td><td><span class="b bg">✓</span></td><td><span class="b bg">✓</span></td><td><span class="b ba">Pending</span></td><td><div class="row" style="gap:4px"><button class="btn sm">Approve</button><button class="btn sm teal">📄 Cert</button></div></td></tr>
+        <tr class="flag"><td><input type="checkbox"></td><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px;background:var(--red)">GK</div>Grace Kamau</div></td><td>Meru Hills</td><td>Meru</td><td>Imenti</td><td>1.2 ac</td><td><span class="b br">No GPS</span></td><td><span class="b bg">✓</span></td><td><span class="b br">Incomplete</span></td><td><button class="btno sm">Request GPS</button></td></tr>
+      </tbody>
+    </table>
+    <div style="padding:10px 16px;border-top:1px solid var(--bord)"><div class="al al-g" style="margin:0;font-size:9px">Certificate format: KE/{County}/{Year}/{Sequential number} e.g. KE/NAKURU/2025/1843 · Farmer receives PDF via SMS link</div></div>
+  </div>
+</div>
+</div>
+
+<!-- REPORTS -->
+<div id="page-reports" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('dashboard')"><span class="ic">📊</span>Dashboard</div>
+  <div class="sb-item a"><span class="ic">📤</span>County Reports</div>
+  <div class="sb-item"><span class="ic">🗺️</span>National Overview</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('dashboard')">Dashboard</span> › County Reports</div>
+  <div class="page-hd"><div><div class="page-title">County Agricultural Reports</div></div></div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-hd"><span class="card-title">Generate Report</span></div>
+      <div class="card-body">
+        <div class="fg fg2">
+          <div class="field"><label>County</label><select><option>Nakuru</option><option>All Counties</option></select></div>
+          <div class="field"><label>Reporting Period</label><select><option>Q2 2025 (Apr–Jun)</option><option>Q1 2025</option><option>Full Year 2025</option></select></div>
+        </div>
+        <div class="field" style="margin-bottom:10px"><label>Report Type</label><select><option>Full Agricultural Report</option><option>Subsidy Distribution Report</option><option>Farm Registration Report</option><option>Crop Production Report</option></select></div>
+        <div class="field" style="margin-bottom:10px"><label>Export Format</label><div class="chips" style="margin-top:4px"><div class="chip a">📊 Excel</div><div class="chip a">📄 PDF</div><div class="chip">📧 Email HQ</div></div></div>
+        <button class="btn" style="width:100%;justify-content:center;padding:10px">Generate Report</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><span class="card-title">Nakuru County Summary — Q2 2025</span></div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+          <div style="background:var(--gl);border-radius:6px;padding:9px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--g)">8,420</div><div class="txt-m">Registered Farms</div></div>
+          <div style="background:var(--gl);border-radius:6px;padding:9px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--g)">4,210</div><div class="txt-m">Active Farmers</div></div>
+          <div style="background:var(--ambl);border-radius:6px;padding:9px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--amb)">1,242</div><div class="txt-m">Subsidies Issued</div></div>
+          <div style="background:var(--bluel);border-radius:6px;padding:9px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--blue)">1,840</div><div class="txt-m">AI Diagnoses</div></div>
+        </div>
+        <div class="sh">Top Crop Challenges (AI Diagnoses)</div>
+        <div style="font-size:11px;display:flex;flex-direction:column;gap:4px">
+          <div class="row-sb"><span>Grey Leaf Spot (Maize)</span><span style="font-weight:600;color:var(--red)">342 cases</span></div>
+          <div class="row-sb"><span>Newcastle Disease (Poultry)</span><span style="font-weight:600;color:var(--amb)">187 cases</span></div>
+          <div class="row-sb"><span>Late Blight (Tomato)</span><span style="font-weight:600;color:var(--amb)">124 cases</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+function show(p){
+  document.querySelectorAll(".layout").forEach(el=>el.style.display="none");
+  var el=document.getElementById("page-"+p);
+  if(el)el.style.display="flex";
+}
+</script>
+
+</body>
+</html>

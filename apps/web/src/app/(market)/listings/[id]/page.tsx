@@ -323,7 +323,7 @@ export default function ListingDetailPage() {
       <div className="py-20 text-center">
         <Package className="mx-auto h-12 w-12 text-gray-300" />
         <p className="mt-3 text-gray-500">Listing not found.</p>
-        <Link href="/" className="mt-4 inline-block text-sm text-green-600 hover:underline">
+        <Link href="/market" className="mt-4 inline-block text-sm text-green-600 hover:underline">
           Back to listings
         </Link>
       </div>
@@ -354,7 +354,7 @@ export default function ListingDetailPage() {
   return (
     <div className="max-w-3xl">
       <Link
-        href="/"
+        href="/market"
         className="mb-6 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-green-700"
       >
         <ChevronLeft className="h-4 w-4" />

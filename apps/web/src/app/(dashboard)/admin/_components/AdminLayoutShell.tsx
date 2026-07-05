@@ -17,7 +17,11 @@ const SIDEBAR_ITEMS_BASE = [
   { label: '🏦 Lenders',       href: '/admin/users?role=lender' },
   { label: '📦 Suppliers',     href: '/admin/users?role=supplier' },
   { label: '🏛 Govt Officers',  href: '/admin/users?role=govt_officer' },
+  { label: '🪪 KYC Queue',      href: '/admin/kyc' },
   { label: '⚠️ Moderation',    href: '/admin/moderation' },
+  { label: '🌾 Farm Registry', href: '/admin/farms' },
+  { label: '🏛 Programs',      href: '/admin/programs' },
+  { label: '📈 Analytics',     href: '/admin/analytics' },
   { label: '⚙️ Settings',      href: '/admin/settings' },
 ] as const
 
@@ -27,7 +31,7 @@ export function AdminLayoutShell({ children }: Props) {
   const { data: flaggedCount = 0 } = useQuery({
     queryKey: ['admin', 'moderation', 'count'],
     queryFn: async () => {
-      const res = await api.get<{ meta: { total: number } }>('/api/v1/admin/moderation/flagged')
+      const res = await api.get<{ meta: { total: number } }>('/api/v1/admin/moderation')
       return res.data.meta?.total ?? 0
     },
     refetchInterval: 30_000,

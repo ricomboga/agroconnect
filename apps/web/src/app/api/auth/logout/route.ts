@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
+import { REFRESH_COOKIE, buildLogoutResponse } from '@agroconnect/web-auth/server'
 
 const AUTH_SERVICE = process.env.AUTH_SERVICE_URL ?? ''
 
 export async function POST(req: NextRequest) {
-  const refreshToken = req.cookies.get('__rt')?.value
+  const refreshToken = req.cookies.get(REFRESH_COOKIE)?.value
 
   if (refreshToken) {
     await fetch(`${AUTH_SERVICE}/api/v1/auth/logout`, {
@@ -13,8 +14,5 @@ export async function POST(req: NextRequest) {
     }).catch(() => {})
   }
 
-  const response = NextResponse.json({ ok: true })
-  response.cookies.delete('__ac')
-  response.cookies.delete('__rt')
-  return response
+  return buildLogoutResponse()
 }

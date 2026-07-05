@@ -6,23 +6,20 @@ import { Flag, CheckCircle, Trash2 } from 'lucide-react'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/button'
 
-interface FlaggedPostAuthor {
-  id: string
-  full_name: string
-}
-
 interface FlaggedPost {
   id: string
-  thread_id: string
-  thread_title: string
-  content_preview: string
-  author: FlaggedPostAuthor
-  flagged_at: string
+  authorId: string
+  authorName?: string
+  category: string
+  title: string
+  body: string
+  status: string
+  createdAt: string
 }
 
 interface FlaggedResponse {
   data: FlaggedPost[]
-  meta: { total: number; page: number; page_size: number; total_pages: number }
+  meta: { total: number; page: number; page_size: number }
 }
 
 function timeAgo(dateStr: string): string {
@@ -40,14 +37,14 @@ export function FlaggedPosts() {
   const { data, isLoading } = useQuery({
     queryKey: ['admin', 'moderation', 'flagged'],
     queryFn: async () => {
-      const res = await api.get<FlaggedResponse>('/api/v1/admin/moderation/flagged')
+      const res = await api.get<FlaggedResponse>('/api/v1/admin/moderation')
       return res.data
     },
   })
 
   const approveMutation = useMutation({
     mutationFn: (postId: string) =>
-      api.post(`/api/v1/admin/moderation/${postId}/approve`),
+      api.patch(`/api/v1/admin/moderation/${postId}`, { status: 'active' }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'moderation'] })
       toast.success('Post approved — flag removed')
@@ -56,7 +53,7 @@ export function FlaggedPosts() {
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (postId: string) => api.delete(`/api/v1/admin/moderation/${postId}`),
+    mutationFn: (postId: string) => api.patch(`/api/v1/admin/moderation/${postId}`, { status: 'deleted' }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'moderation'] })
       toast.success('Post deleted')
@@ -107,16 +104,18 @@ export function FlaggedPosts() {
                 <div className="mb-1 flex items-center gap-2">
                   <Flag className="h-3.5 w-3.5 flex-shrink-0 text-red-400" />
                   <span className="text-xs text-gray-500">
-                    Flagged {timeAgo(post.flagged_at)}
+                    Flagged {timeAgo(post.createdAt)}
                   </span>
                   <span className="text-xs text-gray-400">·</span>
-                  <span className="text-xs text-gray-500">{post.author.full_name}</span>
+                  <span className="text-xs text-gray-500">{post.authorName ?? post.authorId}</span>
+                  <span className="text-xs text-gray-400">·</span>
+                  <span className="text-xs text-gray-500">{post.category}</span>
                 </div>
                 <h3 className="truncate text-sm font-semibold text-gray-900">
-                  {post.thread_title}
+                  {post.title}
                 </h3>
                 <p className="mt-1.5 line-clamp-2 text-sm text-gray-600">
-                  {post.content_preview}
+                  {post.body}
                 </p>
               </div>
               <div className="flex flex-shrink-0 items-center gap-2">

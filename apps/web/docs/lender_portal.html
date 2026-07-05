@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AgroConnect — Lender / MFI Portal</title>
+<style>
+:root{
+  --g:#1A6B3C;--gd:#0D4A28;--gm:#2E8B57;--gl:#EAF4EE;
+  --gold:#C9A84C;--goldd:#F5E9C8;
+  --t:#0E7490;--tl:#CFFAFE;
+  --pur:#7C3AED;--purl:#F3E8FF;
+  --ink:#111827;--ink2:#374151;--muted:#6B7280;--muted2:#9CA3AF;
+  --surf:#F9FAFB;--surf2:#F3F4F6;--bord:#E5E7EB;
+  --red:#DC2626;--redl:#FEE2E2;--amb:#D97706;--ambl:#FEF3C7;
+  --blue:#1D4ED8;--bluel:#DBEAFE;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#ECEFF4;color:var(--ink)}
+/* Topbar */
+.topbar{background:var(--gd);color:#fff;padding:0 24px;height:48px;display:flex;align-items:center;justify-content:space-between}
+.tb-brand{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+.tb-portal{font-size:10px;background:rgba(255,255,255,.15);padding:2px 8px;border-radius:10px;margin-left:6px}
+.tb-links{display:flex;gap:4px}
+.tb-link{color:rgba(255,255,255,.6);font-size:11px;padding:6px 10px;border-radius:4px;cursor:pointer;transition:.12s}
+.tb-link:hover{color:#fff;background:rgba(255,255,255,.1)}
+.tb-link.a{color:#fff;background:rgba(255,255,255,.15);font-weight:500}
+.tb-right{display:flex;align-items:center;gap:8px}
+.tb-user{color:rgba(255,255,255,.8);font-size:11px;display:flex;align-items:center;gap:5px}
+.tb-avatar{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center}
+/* Layout */
+.layout{display:flex;min-height:calc(100vh - 48px)}
+.sidebar{width:200px;background:#fff;border-right:1px solid var(--bord);padding:12px 8px;flex-shrink:0}
+.sb-sect{font-size:9px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.08em;padding:10px 8px 4px}
+.sb-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;font-size:11px;color:var(--muted);cursor:pointer;margin-bottom:2px;transition:.1s}
+.sb-item:hover:not(.a){background:var(--surf)}
+.sb-item.a{background:var(--gl);color:var(--g);font-weight:600}
+.sb-item .ic{font-size:14px;width:16px;text-align:center}
+.sb-badge{margin-left:auto;background:var(--red);color:#fff;border-radius:8px;font-size:8px;font-weight:700;padding:1px 5px}
+.sb-badge.gold{background:var(--gold)}
+.sb-badge.g{background:var(--g)}
+/* Content */
+.content{flex:1;padding:20px 24px;overflow-y:auto;background:var(--surf2)}
+.page-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.page-title{font-size:17px;font-weight:700;color:var(--ink)}
+.page-sub{font-size:11px;color:var(--muted);margin-top:2px}
+/* Breadcrumb */
+.bc{font-size:11px;color:var(--muted);margin-bottom:14px}
+.bc span{color:var(--g);cursor:pointer}
+/* KPI grid */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px}
+.kpi{background:#fff;border:1px solid var(--bord);border-radius:8px;padding:14px 16px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;left:0;top:0;width:3px;height:100%;background:var(--g)}
+.kpi.red::before{background:var(--red)}.kpi.gold::before{background:var(--gold)}.kpi.teal::before{background:var(--t)}.kpi.pur::before{background:var(--pur)}.kpi.blue::before{background:var(--blue)}.kpi.amb::before{background:var(--amb)}
+.kpi-v{font-size:20px;font-weight:800;color:var(--g);line-height:1}
+.kpi.red .kpi-v{color:var(--red)}.kpi.gold .kpi-v{color:var(--gold)}.kpi.teal .kpi-v{color:var(--t)}.kpi.pur .kpi-v{color:var(--pur)}.kpi.blue .kpi-v{color:var(--blue)}.kpi.amb .kpi-v{color:var(--amb)}
+.kpi-l{font-size:10px;color:var(--muted);margin-bottom:4px}
+.kpi-d{font-size:9px;margin-top:3px;color:var(--muted2)}
+.kpi-d.up{color:var(--g)}.kpi-d.dn{color:var(--red)}
+/* Cards & panels */
+.card{background:#fff;border:1px solid var(--bord);border-radius:8px;margin-bottom:14px}
+.card-hd{padding:12px 16px;border-bottom:1px solid var(--bord);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:12px;font-weight:600;color:var(--ink)}
+.card-body{padding:14px 16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+/* Table */
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:8px 12px;text-align:left;border-bottom:1px solid var(--bord);background:var(--surf);white-space:nowrap}
+td{font-size:11px;padding:9px 12px;border-bottom:1px solid var(--bord);color:var(--ink2);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surf)}
+tr.flag td{background:#FFF5F5}
+/* Badges */
+.b{display:inline-flex;align-items:center;font-size:9px;font-weight:600;padding:2px 7px;border-radius:8px;white-space:nowrap}
+.bg{background:var(--gl);color:var(--gd)}
+.ba{background:var(--ambl);color:#92400E}
+.br{background:var(--redl);color:#991B1B}
+.bb{background:var(--bluel);color:var(--blue)}
+.bt{background:var(--tl);color:var(--t)}
+.bp{background:var(--purl);color:var(--pur)}
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:5px;background:var(--g);color:#fff;border:none;border-radius:5px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer;text-decoration:none}
+.btn.sm{padding:4px 8px;font-size:10px}
+.btn.red{background:var(--red)}.btn.gold{background:var(--gold)}.btn.teal{background:var(--t)}.btn.pur{background:var(--pur)}.btn.blue{background:var(--blue)}.btn.amb{background:var(--amb)}
+.btno{display:inline-flex;align-items:center;gap:5px;background:#fff;color:var(--g);border:1.5px solid var(--g);border-radius:5px;padding:5px 11px;font-size:11px;font-weight:600;cursor:pointer}
+.btno.sm{padding:3px 7px;font-size:10px}.btno.red{color:var(--red);border-color:var(--red)}
+/* Form */
+.form-section{margin-bottom:18px}
+.form-section-title{font-size:11px;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--gl);padding-bottom:5px;margin-bottom:12px}
+.fg{display:grid;gap:10px;margin-bottom:10px}
+.fg2{grid-template-columns:1fr 1fr}
+.fg3{grid-template-columns:1fr 1fr 1fr}
+.fg4{grid-template-columns:1fr 1fr 1fr 1fr}
+.field{display:flex;flex-direction:column;gap:3px}
+.field label{font-size:10px;font-weight:600;color:var(--ink2);text-transform:uppercase;letter-spacing:.04em}
+.field input,.field select,.field textarea{border:1px solid var(--bord);border-radius:5px;padding:7px 10px;font-size:11px;color:var(--ink);background:#fff;transition:.1s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--g);outline:none;box-shadow:0 0 0 3px var(--gl)}
+.field textarea{height:72px;resize:vertical}
+.field-hint{font-size:9px;color:var(--muted);margin-top:2px}
+/* Alerts */
+.al{padding:8px 12px;border-radius:0 5px 5px 0;font-size:10px;line-height:1.6;margin-bottom:10px}
+.al-g{background:var(--gl);border-left:3px solid var(--g);color:var(--gd)}
+.al-a{background:var(--ambl);border-left:3px solid var(--amb);color:#78350F}
+.al-r{background:var(--redl);border-left:3px solid var(--red);color:#7F1D1D}
+.al-b{background:var(--bluel);border-left:3px solid var(--blue);color:var(--blue)}
+/* Progress */
+.prog{height:6px;background:var(--bord);border-radius:3px;overflow:hidden;margin:3px 0}
+.progf{height:100%;border-radius:3px;background:var(--g)}
+/* List row */
+.lr{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bord)}
+.lr:last-child{border:none}
+.lav{width:30px;height:30px;min-width:30px;border-radius:50%;background:var(--g);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.lin{flex:1;min-width:0}
+.lit{font-size:11px;font-weight:600;color:var(--ink)}
+.lis{font-size:9px;color:var(--muted)}
+/* Chips */
+.chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.chip{font-size:10px;padding:4px 10px;border-radius:10px;border:1.5px solid var(--bord);color:var(--muted);cursor:pointer}
+.chip.a{background:var(--g);color:#fff;border-color:var(--g)}
+/* Score bars */
+.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.score-item{background:var(--surf);border-radius:6px;padding:8px 10px}
+.score-l{font-size:9px;color:var(--muted);margin-bottom:3px}
+.score-bar{height:5px;background:var(--bord);border-radius:3px;overflow:hidden;margin-bottom:2px}
+.score-f{height:100%;background:var(--g);border-radius:3px}
+.score-v{font-size:9px;color:var(--muted);text-align:right}
+/* Divider */
+.div{height:1px;background:var(--bord);margin:12px 0}
+/* Util */
+.row{display:flex;align-items:center;gap:8px}
+.row-sb{display:flex;align-items:center;justify-content:space-between}
+.ml{margin-left:auto}
+.mt{margin-top:10px}
+.txt-g{color:var(--g);font-weight:600}
+.txt-r{color:var(--red);font-weight:600}
+.txt-a{color:var(--amb);font-weight:600}
+.txt-m{color:var(--muted);font-size:10px}
+/* Tab row */
+.tab-row{display:flex;gap:2px;border-bottom:2px solid var(--bord);margin-bottom:16px}
+.tab-btn{padding:8px 14px;font-size:11px;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
+.tab-btn.a{color:var(--g);font-weight:600;border-color:var(--g)}
+/* Mini chart */
+.bars{display:flex;align-items:flex-end;gap:3px;height:48px}
+.bar{flex:1;border-radius:2px 2px 0 0;background:var(--gl)}
+.bar.hi{background:var(--g)}.bar.gld{background:var(--gold)}.bar.red{background:var(--red)}.bar.t{background:var(--t)}
+/* Timeline */
+.tl{border-left:2px solid var(--bord);padding-left:16px;margin-left:8px}
+.tl-item{display:flex;gap:8px;margin-bottom:12px;position:relative}
+.tl-item::before{content:'';width:10px;height:10px;border-radius:50%;background:var(--g);border:2px solid #fff;box-shadow:0 0 0 1px var(--g);position:absolute;left:-21px;top:2px}
+.tl-item.done::before{background:var(--g)}
+.tl-item.pend::before{background:var(--bord);box-shadow:0 0 0 1px var(--bord)}
+.tl-title{font-size:11px;font-weight:600;color:var(--ink)}
+.tl-sub{font-size:9px;color:var(--muted)}
+/* Map */
+.map-ph{background:linear-gradient(135deg,#BBF7D0,#6EE7B7);height:80px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:22px;position:relative;margin-bottom:8px}
+.map-badge{position:absolute;bottom:6px;right:8px;background:rgba(0,0,0,.5);color:#fff;font-size:8px;padding:2px 6px;border-radius:3px}
+/* Status pill */
+.status{font-size:9px;font-weight:600;padding:3px 8px;border-radius:10px}
+/* Section header */
+.sh{font-size:10px;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 7px}
+
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="tb-brand">🌱 AgroConnect <span class="tb-portal">Lender / MFI Portal</span></div>
+  <div class="tb-links">
+    <span class="tb-link a" onclick="show('pipeline')">Pipeline</span>
+    <span class="tb-link" onclick="show('application')">Application Detail</span>
+    <span class="tb-link" onclick="show('portfolio')">Portfolio</span>
+    <span class="tb-link" onclick="show('risk')">Risk Analytics</span>
+    <span class="tb-link" onclick="show('products')">Products</span>
+    <span class="tb-link" onclick="show('settings')">Settings</span>
+  </div>
+  <div class="tb-right">
+    <div class="tb-user"><div class="tb-avatar">EQ</div><span>Equity Bank KE ▾</span></div>
+  </div>
+</div>
+
+<!-- ====== PIPELINE ====== -->
+<div id="page-pipeline" class="layout">
+<div class="sidebar">
+  <div class="sb-sect">Applications</div>
+  <div class="sb-item a" onclick="show('pipeline')"><span class="ic">📥</span>New <span class="sb-badge gold">12</span></div>
+  <div class="sb-item"><span class="ic">🔍</span>Under Review</div>
+  <div class="sb-item"><span class="ic">✅</span>Approved</div>
+  <div class="sb-item"><span class="ic">💸</span>Disbursed</div>
+  <div class="sb-item"><span class="ic">❌</span>Rejected</div>
+  <div class="sb-sect">Portfolio</div>
+  <div class="sb-item" onclick="show('portfolio')"><span class="ic">📊</span>Active Loans</div>
+  <div class="sb-item"><span class="ic">⚠️</span>Overdue <span class="sb-badge">2</span></div>
+  <div class="sb-item"><span class="ic">✅</span>Repaid</div>
+  <div class="sb-sect">Tools</div>
+  <div class="sb-item" onclick="show('risk')"><span class="ic">📈</span>Risk Analytics</div>
+  <div class="sb-item" onclick="show('products')"><span class="ic">📄</span>Loan Products</div>
+  <div class="sb-item" onclick="show('settings')"><span class="ic">⚙️</span>Settings</div>
+</div>
+<div class="content">
+  <div class="page-hd">
+    <div><div class="page-title">Loan Pipeline</div><div class="page-sub">Equity Bank Kenya — Agricultural lending desk</div></div>
+    <div class="row" style="gap:8px"><button class="btno sm">📤 Export CSV</button><button class="btn sm" onclick="show('application')">View Application →</button></div>
+  </div>
+  <div class="kpis">
+    <div class="kpi gold"><div class="kpi-l">New Applications</div><div class="kpi-v">12</div><div class="kpi-d up">↑ 3 submitted today</div></div>
+    <div class="kpi teal"><div class="kpi-l">Under Review</div><div class="kpi-v">8</div></div>
+    <div class="kpi"><div class="kpi-l">Approved (Month)</div><div class="kpi-v">23</div><div class="kpi-d up">↑ 15% vs last month</div></div>
+    <div class="kpi"><div class="kpi-l">Disbursed (Month)</div><div class="kpi-v">KES 4.2M</div><div class="kpi-d up">↑ 8% vs last month</div></div>
+    <div class="kpi red"><div class="kpi-l">Overdue</div><div class="kpi-v">2</div><div class="kpi-d dn">KES 62K at risk</div></div>
+    <div class="kpi"><div class="kpi-l">Avg Credit Score</div><div class="kpi-v">68</div><div class="kpi-d">Band B avg</div></div>
+  </div>
+  <div class="al al-b" style="margin-bottom:14px">💡 <strong>Key insight:</strong> Farmers logging ≥15 activities/month have 94%+ repayment rate. The "Activities/mo" column is your most important underwriting signal — weight it above collateral.</div>
+  <div class="card">
+    <div class="card-hd">
+      <span class="card-title">New Applications — Pending First Review</span>
+      <div class="row" style="gap:8px">
+        <select style="border:1px solid var(--bord);border-radius:5px;padding:5px 8px;font-size:10px"><option>All Bands</option><option>Band A</option><option>Band B</option><option>Band C</option><option>Band D</option></select>
+        <select style="border:1px solid var(--bord);border-radius:5px;padding:5px 8px;font-size:10px"><option>All Counties</option><option>Nakuru</option><option>Meru</option></select>
+        <select style="border:1px solid var(--bord);border-radius:5px;padding:5px 8px;font-size:10px"><option>All Loan Types</option><option>Farm Inputs</option><option>Equipment</option><option>Livestock</option></select>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>Farmer</th><th>County</th><th>Loan Type</th><th>Amount</th><th>Credit Score</th><th>Band</th><th>Activities/Mo</th><th>Seasons</th><th>Applied</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td><div class="row"><div class="lav" style="width:24px;height:24px;font-size:9px">JW</div><div><div style="font-size:11px;font-weight:600">Jane Wanjiru</div><div class="txt-m">Nakuru · Crops+Animals</div></div></div></td><td>Nakuru</td><td>Farm Inputs</td><td style="font-weight:600">KES 80,000</td><td style="font-weight:700;color:var(--g);font-size:13px">73</td><td><span class="b bb">Band B</span></td><td style="font-weight:700;color:var(--g)">19</td><td>3</td><td>Jun 1</td><td><button class="btn sm" onclick="show('application')">Review →</button></td></tr>
+        <tr><td><div class="row"><div class="lav" style="width:24px;height:24px;font-size:9px;background:var(--t)">PK</div><div><div style="font-size:11px;font-weight:600">Peter Kipchoge</div><div class="txt-m">Uasin Gishu · Crops</div></div></div></td><td>Uasin Gishu</td><td>Equipment</td><td style="font-weight:600">KES 45,000</td><td style="font-weight:700;color:var(--g);font-size:13px">81</td><td><span class="b bg">Band A</span></td><td style="font-weight:700;color:var(--g)">22</td><td>4</td><td>Jun 2</td><td><button class="btn sm" onclick="show('application')">Review →</button></td></tr>
+        <tr><td><div class="row"><div class="lav" style="width:24px;height:24px;font-size:9px;background:var(--pur)">MN</div><div><div style="font-size:11px;font-weight:600">Mary Njeri</div><div class="txt-m">Meru · Livestock</div></div></div></td><td>Meru</td><td>Livestock</td><td style="font-weight:600">KES 180,000</td><td style="font-weight:700;color:var(--amb);font-size:13px">58</td><td><span class="b ba">Band C</span></td><td style="font-weight:700;color:var(--amb)">5</td><td>1</td><td>Jun 3</td><td><button class="btn sm" onclick="show('application')">Review →</button></td></tr>
+        <tr class="flag"><td><div class="row"><div class="lav" style="width:24px;height:24px;font-size:9px;background:var(--red)">AH</div><div><div style="font-size:11px;font-weight:600">Ali Hassan</div><div class="txt-m">Kwale · Crops</div></div></div></td><td>Kwale</td><td>Farm Inputs</td><td style="font-weight:600">KES 25,000</td><td style="font-weight:700;color:var(--red);font-size:13px">31</td><td><span class="b br">Band D</span></td><td style="font-weight:700;color:var(--red)">2</td><td>0</td><td>Jun 4</td><td><button class="btn sm red">Decline</button></td></tr>
+      </tbody>
+    </table>
+    <div style="padding:10px 16px;border-top:1px solid var(--bord)">
+      <div class="al al-r" style="margin:0;font-size:9px">⚠️ Ali Hassan — Band D, 0 completed seasons, 2 activities/month. Auto-decline recommended. Farmer will receive SMS with rejection reason and improvement tips.</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ====== APPLICATION DETAIL ====== -->
+<div id="page-application" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('pipeline')"><span class="ic">⬅</span>Back to Pipeline</div>
+  <div class="sb-sect">Application #LN-2847</div>
+  <div class="sb-item a"><span class="ic">📋</span>Overview</div>
+  <div class="sb-item"><span class="ic">🌾</span>Farm Records</div>
+  <div class="sb-item"><span class="ic">📊</span>Credit Score Detail</div>
+  <div class="sb-item"><span class="ic">📄</span>Documents</div>
+  <div class="sb-item"><span class="ic">📝</span>Notes & History</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('pipeline')">Pipeline</span> › Application #LN-2847 · Jane Wanjiru</div>
+  <div class="row-sb" style="margin-bottom:16px">
+    <div class="row" style="gap:12px">
+      <div class="lav" style="width:44px;height:44px;font-size:15px;flex-shrink:0">JW</div>
+      <div><div class="page-title">Jane Wanjiru</div><div class="page-sub">🌾🐄 Mixed farmer · Nakuru · Member since Jan 2025 · 3 completed seasons</div></div>
+      <span class="b ba" style="padding:5px 12px;font-size:10px">New Application</span>
+    </div>
+    <div class="row" style="gap:8px">
+      <button class="btno sm red">✗ Decline</button>
+      <button class="btn">✅ Approve Loan</button>
+    </div>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Credit Score Breakdown</span><span class="b bb" style="font-size:11px">Band B — Score 73</span></div>
+        <div class="card-body">
+          <div style="text-align:center;margin-bottom:16px">
+            <div style="font-size:42px;font-weight:800;color:var(--g);line-height:1">73</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">out of 100 · Band B · Max KES 200,000</div>
+          </div>
+          <div class="score-grid">
+            <div class="score-item"><div class="score-l">Harvest Yield</div><div class="score-bar"><div class="score-f" style="width:84%"></div></div><div class="score-v">21 / 25</div></div>
+            <div class="score-item"><div class="score-l">Input Usage</div><div class="score-bar"><div class="score-f" style="width:72%"></div></div><div class="score-v">18 / 25</div></div>
+            <div class="score-item"><div class="score-l">Activity Score</div><div class="score-bar"><div class="score-f" style="width:80%"></div></div><div class="score-v">20 / 25</div></div>
+            <div class="score-item"><div class="score-l">Platform Engagement</div><div class="score-bar"><div class="score-f" style="width:56%"></div></div><div class="score-v">14 / 25</div></div>
+          </div>
+          <div class="div"></div>
+          <div style="background:var(--gl);border-radius:6px;padding:10px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:10px">
+              <div><span class="txt-m">Activities/month</span><div class="txt-g" style="font-size:14px;font-weight:700">19</div></div>
+              <div><span class="txt-m">Streak</span><div class="txt-g" style="font-size:14px;font-weight:700">12 days</div></div>
+              <div><span class="txt-m">Net profit (Jun)</span><div class="txt-g">KES 24,300</div></div>
+              <div><span class="txt-m">Seasons on platform</span><div class="txt-g">3</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Farm Records Summary</span><button class="btn sm teal">📄 Download Full PDF</button></div>
+        <div class="card-body" style="padding:0 16px">
+          <table style="margin:0">
+            <thead><tr><th>Season</th><th>Crop</th><th>Yield</th><th>Revenue</th><th>Costs</th><th>Profit</th></tr></thead>
+            <tbody>
+              <tr><td>Sep '24</td><td>Maize H614D</td><td>800kg</td><td style="color:var(--g);font-weight:600">KES 33,600</td><td>KES 12,000</td><td style="color:var(--g);font-weight:600">KES 21,600</td></tr>
+              <tr><td>Jan '25</td><td>Cabbage</td><td>420kg</td><td style="color:var(--g);font-weight:600">KES 14,700</td><td>KES 6,400</td><td style="color:var(--g);font-weight:600">KES 8,300</td></tr>
+              <tr><td>Apr '25</td><td>Maize (ongoing)</td><td>—</td><td>—</td><td>KES 8,200 so far</td><td style="color:var(--amb)">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Loan Application Details</span></div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+            <div class="score-item"><div class="score-l">Loan Amount</div><div style="font-size:18px;font-weight:800;color:var(--g)">KES 80,000</div></div>
+            <div class="score-item"><div class="score-l">Loan Type</div><div style="font-size:13px;font-weight:600">Farm Inputs</div></div>
+            <div class="score-item"><div class="score-l">Duration</div><div style="font-size:13px;font-weight:600">12 months</div></div>
+            <div class="score-item"><div class="score-l">Monthly Payment</div><div style="font-size:13px;font-weight:600">KES 7,200</div></div>
+            <div class="score-item"><div class="score-l">Interest Rate</div><div style="font-size:13px;font-weight:600">14% p.a.</div></div>
+            <div class="score-item"><div class="score-l">Total Repayable</div><div style="font-size:13px;font-weight:600">KES 91,200</div></div>
+          </div>
+          <div class="sh">Farmer's Purpose</div>
+          <div style="background:var(--surf);border-radius:5px;padding:8px;font-size:11px;color:var(--ink2);margin-bottom:10px">"Ninahitaji kununua mbolea ya CAN na dawa za kunyunyizia kwa ajili ya mahindi yangu ya Aprili 2025."</div>
+          <div class="sh">Approval Decision</div>
+          <div class="fg fg2" style="margin-bottom:8px">
+            <div class="field"><label>Approve Amount (KES)</label><input value="80000"></div>
+            <div class="field"><label>Disbursement Method</label><select><option>M-Pesa STK Push</option><option>Bank Transfer</option></select></div>
+          </div>
+          <div class="fg fg2" style="margin-bottom:10px">
+            <div class="field"><label>First Repayment Date</label><input type="date" value="2025-07-01"></div>
+            <div class="field"><label>Loan Officer Notes</label><input placeholder="Optional internal note..."></div>
+          </div>
+          <div class="al al-g" style="margin-bottom:10px">Approval will trigger M-Pesa STK Push to +254 712 345 678. Farmer receives KES 80,000 immediately. SMS notification sent.</div>
+          <div class="row" style="gap:8px">
+            <button class="btn" style="flex:1;justify-content:center;padding:10px">✅ Approve & Disburse</button>
+            <button class="btn red" style="justify-content:center;padding:10px 14px">✗ Decline</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Documents Submitted</span></div>
+        <div class="card-body" style="padding:0 16px">
+          <div class="lr"><div class="lav" style="background:var(--blue)">📄</div><div class="lin"><div class="lit">National ID (Front + Back)</div><div class="lis">Uploaded Jun 1 · ID: 12345678 · Verified</div></div><span class="b bg">✓</span></div>
+          <div class="lr"><div class="lav" style="background:var(--blue)">📄</div><div class="lin"><div class="lit">Farm GPS Photo</div><div class="lis">Uploaded Jun 1 · Location confirmed</div></div><span class="b bg">✓</span></div>
+          <div class="lr"><div class="lav" style="background:var(--amb)">📄</div><div class="lin"><div class="lit">Land Title / Agreement</div><div class="lis">Not uploaded (not required for Farm Inputs &lt;KES 150K)</div></div><span class="b ba">N/A</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ====== PORTFOLIO ====== -->
+<div id="page-portfolio" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('pipeline')"><span class="ic">📥</span>Pipeline</div>
+  <div class="sb-item a"><span class="ic">📊</span>Active Loans</div>
+  <div class="sb-item"><span class="ic">⚠️</span>Overdue <span class="sb-badge">2</span></div>
+  <div class="sb-item"><span class="ic">✅</span>Repaid</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('pipeline')">Pipeline</span> › Portfolio</div>
+  <div class="page-hd"><div><div class="page-title">Active Portfolio</div></div><button class="btno sm">📤 Export Excel</button></div>
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-l">Total Outstanding</div><div class="kpi-v">KES 28.4M</div></div>
+    <div class="kpi"><div class="kpi-l">NPL Ratio</div><div class="kpi-v">2.1%</div><div class="kpi-d up">↓ Below 5% CBK target</div></div>
+    <div class="kpi red"><div class="kpi-l">Overdue Amount</div><div class="kpi-v">KES 596K</div></div>
+    <div class="kpi"><div class="kpi-l">Avg Repayment</div><div class="kpi-v">94%</div></div>
+  </div>
+  <div class="al al-r" style="margin-bottom:14px">⚠️ 2 loans overdue by &gt;30 days. Review required under CBK Prudential Guidelines.</div>
+  <div class="card">
+    <div class="card-hd"><span class="card-title">Active Loans</span></div>
+    <table>
+      <thead><tr><th>Farmer</th><th>Loan Type</th><th>Amount</th><th>Disbursed</th><th>Payments</th><th>Progress</th><th>Next Due</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td><div class="row"><div class="lav" style="width:24px;height:24px;font-size:9px">JW</div>Jane Wanjiru</div></td><td>Farm Inputs</td><td>KES 80K</td><td>Jun 4</td><td>4 / 12</td><td><div class="prog" style="width:80px"><div class="progf" style="width:35%"></div></div></td><td style="color:var(--g)">Jul 1</td><td><span class="b bg">Current</span></td><td><button class="btn sm">View</button></td></tr>
+        <tr class="flag"><td><div class="row"><div class="lav" style="width:24px;height:24px;font-size:9px;background:var(--red)">JM</div>John Mwangi</div></td><td>Equipment</td><td>KES 45K</td><td>Feb 1</td><td>2 / 12</td><td><div class="prog" style="width:80px"><div class="progf" style="width:17%;background:var(--red)"></div></div></td><td style="color:var(--red);font-weight:600">34 days late</td><td><span class="b br">Overdue</span></td><td><div class="row" style="gap:4px"><button class="btn sm red">Call</button><button class="btn sm">View</button></div></td></tr>
+        <tr><td><div class="row"><div class="lav" style="width:24px;height:24px;font-size:9px;background:var(--t)">MK</div>Mary Kamau</div></td><td>Livestock</td><td>KES 120K</td><td>Jan 15</td><td>8 / 12</td><td><div class="prog" style="width:80px"><div class="progf" style="width:67%"></div></div></td><td style="color:var(--g)">Jul 15</td><td><span class="b bg">Current</span></td><td><button class="btn sm">View</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- ====== RISK ANALYTICS ====== -->
+<div id="page-risk" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('pipeline')"><span class="ic">📥</span>Pipeline</div>
+  <div class="sb-item a"><span class="ic">📈</span>Risk Analytics</div>
+  <div class="sb-item"><span class="ic">📄</span>Reports</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('pipeline')">Pipeline</span> › Risk Analytics</div>
+  <div class="page-hd"><div><div class="page-title">Risk & Performance Analytics</div></div><div class="row" style="gap:8px"><select style="border:1px solid var(--bord);border-radius:5px;padding:6px 10px;font-size:11px"><option>Last 30 days</option><option>Last 90 days</option></select><button class="btn">📊 Export</button></div></div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-hd"><span class="card-title">Repayment Rate by Credit Band</span></div>
+      <div class="card-body">
+        <div style="margin-bottom:9px"><div class="row-sb" style="margin-bottom:3px"><span style="font-size:11px">Band A (80–100)</span><span style="font-size:12px;font-weight:700;color:var(--g)">98.2%</span></div><div class="prog"><div class="progf" style="width:98%"></div></div><div class="txt-m">34 farmers · All loans current</div></div>
+        <div style="margin-bottom:9px"><div class="row-sb" style="margin-bottom:3px"><span style="font-size:11px">Band B (60–79)</span><span style="font-size:12px;font-weight:700;color:var(--g)">94.1%</span></div><div class="prog"><div class="progf" style="width:94%"></div></div><div class="txt-m">41 farmers · 2 late</div></div>
+        <div style="margin-bottom:9px"><div class="row-sb" style="margin-bottom:3px"><span style="font-size:11px">Band C (40–59)</span><span style="font-size:12px;font-weight:700;color:var(--amb)">81.3%</span></div><div class="prog"><div class="progf" style="width:81%;background:var(--amb)"></div></div><div class="txt-m">18 farmers · 3 overdue</div></div>
+        <div><div class="row-sb" style="margin-bottom:3px"><span style="font-size:11px">Band D (below 40)</span><span style="font-size:12px;font-weight:700;color:var(--red)">63.0%</span></div><div class="prog"><div class="progf" style="width:63%;background:var(--red)"></div></div><div class="txt-m">5 farmers · High risk</div></div>
+        <div class="al al-g" style="margin-top:12px;font-size:9px">🤖 Recommendation: Farmers with &gt;15 logged activities/month show 94%+ repayment regardless of band. Prioritise activity score in final underwriting decision.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><span class="card-title">Monthly Disbursements (KES)</span></div>
+      <div class="card-body">
+        <div class="bars" style="margin-bottom:5px">
+          <div class="bar" style="height:40%"></div><div class="bar" style="height:55%"></div><div class="bar hi" style="height:70%"></div>
+          <div class="bar hi" style="height:85%"></div><div class="bar hi" style="height:80%"></div><div class="bar gld" style="height:100%"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted)"><span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span></div>
+        <div class="al al-a" style="margin-top:10px;font-size:9px">⚠️ Peak disbursement in Jun aligns with planting season (Apr–Jun). Expect elevated applications July–Aug for input season loans. Recommend pre-approving Band A/B farmers in advance.</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ====== PRODUCTS ====== -->
+<div id="page-products" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('pipeline')"><span class="ic">📥</span>Pipeline</div>
+  <div class="sb-item a"><span class="ic">📄</span>Loan Products</div>
+  <div class="sb-item"><span class="ic">⚙️</span>Notifications</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('pipeline')">Pipeline</span> › Loan Products</div>
+  <div class="page-hd"><div><div class="page-title">Loan Products Configuration</div></div><button class="btn">+ Add Product</button></div>
+  <div class="card">
+    <div class="card-hd"><span class="card-title">Active Loan Products</span></div>
+    <table>
+      <thead><tr><th>Product Name</th><th>Loan Type</th><th>Min Band</th><th>Max Amount</th><th>Rate</th><th>Max Term</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td style="font-weight:600">Kilimo Input Loan</td><td>Farm Inputs</td><td><span class="b ba">Band C</span></td><td>KES 200,000</td><td>14% p.a.</td><td>12 months</td><td><span class="b bg">Active</span></td><td><button class="btno sm">Edit</button></td></tr>
+        <tr><td style="font-weight:600">Zana Equipment Loan</td><td>Equipment</td><td><span class="b bb">Band B</span></td><td>KES 500,000</td><td>16% p.a.</td><td>24 months</td><td><span class="b bg">Active</span></td><td><button class="btno sm">Edit</button></td></tr>
+        <tr><td style="font-weight:600">Mifugo Livestock Loan</td><td>Livestock</td><td><span class="b bb">Band B</span></td><td>KES 300,000</td><td>15% p.a.</td><td>18 months</td><td><span class="b bg">Active</span></td><td><button class="btno sm">Edit</button></td></tr>
+        <tr><td style="font-weight:600">Kidogo Micro-credit</td><td>General</td><td><span class="b br">Band D</span></td><td>KES 25,000</td><td>18% p.a.</td><td>6 months</td><td><span class="b ba">Draft</span></td><td><div class="row" style="gap:4px"><button class="btn sm gold">Publish</button><button class="btno sm">Edit</button></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <div class="card-hd"><span class="card-title">Add / Edit Loan Product</span></div>
+    <div class="card-body">
+      <div class="fg fg3">
+        <div class="field"><label>Product Name *</label><input placeholder="e.g. Kilimo Input Loan"></div>
+        <div class="field"><label>Loan Type *</label><select><option>Farm Inputs</option><option>Equipment</option><option>Livestock</option><option>General</option></select></div>
+        <div class="field"><label>Minimum Credit Band *</label><select><option>Band A (80+)</option><option>Band B (60–79)</option><option>Band C (40–59)</option><option>Band D (any)</option></select></div>
+      </div>
+      <div class="fg fg4">
+        <div class="field"><label>Max Amount (KES) *</label><input value="200000"></div>
+        <div class="field"><label>Interest Rate (% p.a.) *</label><input value="14"></div>
+        <div class="field"><label>Max Term (months) *</label><input value="12"></div>
+        <div class="field"><label>Grace Period (days)</label><input value="30"></div>
+      </div>
+      <div class="fg fg2">
+        <div class="field"><label>Collateral Required?</label><select><option>No (unsecured below KES 150K)</option><option>Yes (land title required)</option></select></div>
+        <div class="field"><label>Auto-approve Band A?</label><select><option>Yes (score ≥80 + ≥15 activities/mo)</option><option>No (always manual review)</option></select></div>
+      </div>
+      <div class="row" style="gap:8px"><button class="btn">Save Product</button><button class="btno">Save as Draft</button><button class="btno red">Delete</button></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ====== SETTINGS ====== -->
+<div id="page-settings" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('pipeline')"><span class="ic">📥</span>Pipeline</div>
+  <div class="sb-item a"><span class="ic">⚙️</span>Settings</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('pipeline')">Pipeline</span> › Settings</div>
+  <div class="page-hd"><div><div class="page-title">Portal Settings</div></div></div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-hd"><span class="card-title">Notification Preferences</span></div>
+      <div class="card-body">
+        <div style="font-size:11px;display:flex;flex-direction:column;gap:8px">
+          <div class="row-sb"><span>New application received</span><select style="font-size:10px;border:1px solid var(--bord);border-radius:4px;padding:3px 6px"><option>Email + In-app</option></select></div>
+          <div class="div"></div>
+          <div class="row-sb"><span>Application approved (M-Pesa sent)</span><select style="font-size:10px;border:1px solid var(--bord);border-radius:4px;padding:3px 6px"><option>Email + SMS</option></select></div>
+          <div class="div"></div>
+          <div class="row-sb"><span>Overdue payment alert</span><select style="font-size:10px;border:1px solid var(--bord);border-radius:4px;padding:3px 6px"><option>Email + SMS (daily)</option></select></div>
+          <div class="div"></div>
+          <div class="row-sb"><span>Weekly portfolio summary</span><select style="font-size:10px;border:1px solid var(--bord);border-radius:4px;padding:3px 6px"><option>Email every Monday</option></select></div>
+        </div>
+        <button class="btn mt" style="margin-top:12px">Save Preferences</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><span class="card-title">Institution Profile</span></div>
+      <div class="card-body">
+        <div class="field" style="margin-bottom:8px"><label>Institution Name</label><input value="Equity Bank Kenya Limited"></div>
+        <div class="field" style="margin-bottom:8px"><label>CBK Licence Number</label><input value="CBK/BANK/042"></div>
+        <div class="field" style="margin-bottom:8px"><label>Primary Contact Email</label><input value="agriloan@equitybank.co.ke"></div>
+        <div class="field" style="margin-bottom:8px"><label>M-Pesa Paybill (Disbursements)</label><input value="247247"></div>
+        <button class="btn" style="margin-top:8px">Update Profile</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+function show(p){
+  document.querySelectorAll('.layout').forEach(el=>el.style.display='none');
+  var el=document.getElementById('page-'+p);
+  if(el)el.style.display='flex';
+}
+</script>
+</body>
+</html>

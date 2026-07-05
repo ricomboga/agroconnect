@@ -52,7 +52,7 @@ export function DashboardContent() {
   const { data: flaggedCount = 0 } = useQuery({
     queryKey: ['admin', 'moderation', 'count'],
     queryFn: async () => {
-      const res = await api.get<{ meta: { total: number } }>('/api/v1/admin/moderation/flagged')
+      const res = await api.get<{ meta: { total: number } }>('/api/v1/admin/moderation')
       return res.data.meta?.total ?? 0
     },
     refetchInterval: 30_000,

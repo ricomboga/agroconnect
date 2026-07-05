@@ -4,14 +4,7 @@ import { useState, FormEvent, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Leaf, Loader2 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
-
-const ROLE_HOME: Record<string, string> = {
-  admin: '/admin',
-  lender: '/lender',
-  farmer: '/farmer/farms',
-  extension_officer: '/provider/profile',
-  vet_officer: '/provider/profile',
-}
+import { ROLE_HOME, type UserRole } from '@agroconnect/web-auth'
 
 function LoginForm() {
   const router = useRouter()
@@ -34,7 +27,7 @@ function LoginForm() {
       const destination =
         returnUrl && returnUrl.startsWith('/') && !returnUrl.startsWith('/login')
           ? returnUrl
-          : (user?.role && ROLE_HOME[user.role]) ?? '/'
+          : (user?.role && ROLE_HOME[user.role as UserRole]) ?? '/'
       router.push(destination)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed. Check your credentials.')

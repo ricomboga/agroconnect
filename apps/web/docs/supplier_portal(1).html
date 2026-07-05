@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AgroConnect — Supplier / Agrovet Portal</title>
+<style>
+:root{
+  --g:#1A6B3C;--gd:#0D4A28;--gm:#2E8B57;--gl:#EAF4EE;
+  --gold:#C9A84C;--goldd:#F5E9C8;
+  --t:#0E7490;--tl:#CFFAFE;
+  --pur:#7C3AED;--purl:#F3E8FF;
+  --ink:#111827;--ink2:#374151;--muted:#6B7280;--muted2:#9CA3AF;
+  --surf:#F9FAFB;--surf2:#F3F4F6;--bord:#E5E7EB;
+  --red:#DC2626;--redl:#FEE2E2;--amb:#D97706;--ambl:#FEF3C7;
+  --blue:#1D4ED8;--bluel:#DBEAFE;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#ECEFF4;color:var(--ink)}
+/* Topbar */
+.topbar{background:var(--gd);color:#fff;padding:0 24px;height:48px;display:flex;align-items:center;justify-content:space-between}
+.tb-brand{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+.tb-portal{font-size:10px;background:rgba(255,255,255,.15);padding:2px 8px;border-radius:10px;margin-left:6px}
+.tb-links{display:flex;gap:4px}
+.tb-link{color:rgba(255,255,255,.6);font-size:11px;padding:6px 10px;border-radius:4px;cursor:pointer;transition:.12s}
+.tb-link:hover{color:#fff;background:rgba(255,255,255,.1)}
+.tb-link.a{color:#fff;background:rgba(255,255,255,.15);font-weight:500}
+.tb-right{display:flex;align-items:center;gap:8px}
+.tb-user{color:rgba(255,255,255,.8);font-size:11px;display:flex;align-items:center;gap:5px}
+.tb-avatar{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center}
+/* Layout */
+.layout{display:flex;min-height:calc(100vh - 48px)}
+.sidebar{width:200px;background:#fff;border-right:1px solid var(--bord);padding:12px 8px;flex-shrink:0}
+.sb-sect{font-size:9px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.08em;padding:10px 8px 4px}
+.sb-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;font-size:11px;color:var(--muted);cursor:pointer;margin-bottom:2px;transition:.1s}
+.sb-item:hover:not(.a){background:var(--surf)}
+.sb-item.a{background:var(--gl);color:var(--g);font-weight:600}
+.sb-item .ic{font-size:14px;width:16px;text-align:center}
+.sb-badge{margin-left:auto;background:var(--red);color:#fff;border-radius:8px;font-size:8px;font-weight:700;padding:1px 5px}
+.sb-badge.gold{background:var(--gold)}
+.sb-badge.g{background:var(--g)}
+/* Content */
+.content{flex:1;padding:20px 24px;overflow-y:auto;background:var(--surf2)}
+.page-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.page-title{font-size:17px;font-weight:700;color:var(--ink)}
+.page-sub{font-size:11px;color:var(--muted);margin-top:2px}
+/* Breadcrumb */
+.bc{font-size:11px;color:var(--muted);margin-bottom:14px}
+.bc span{color:var(--g);cursor:pointer}
+/* KPI grid */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px}
+.kpi{background:#fff;border:1px solid var(--bord);border-radius:8px;padding:14px 16px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;left:0;top:0;width:3px;height:100%;background:var(--g)}
+.kpi.red::before{background:var(--red)}.kpi.gold::before{background:var(--gold)}.kpi.teal::before{background:var(--t)}.kpi.pur::before{background:var(--pur)}.kpi.blue::before{background:var(--blue)}.kpi.amb::before{background:var(--amb)}
+.kpi-v{font-size:20px;font-weight:800;color:var(--g);line-height:1}
+.kpi.red .kpi-v{color:var(--red)}.kpi.gold .kpi-v{color:var(--gold)}.kpi.teal .kpi-v{color:var(--t)}.kpi.pur .kpi-v{color:var(--pur)}.kpi.blue .kpi-v{color:var(--blue)}.kpi.amb .kpi-v{color:var(--amb)}
+.kpi-l{font-size:10px;color:var(--muted);margin-bottom:4px}
+.kpi-d{font-size:9px;margin-top:3px;color:var(--muted2)}
+.kpi-d.up{color:var(--g)}.kpi-d.dn{color:var(--red)}
+/* Cards & panels */
+.card{background:#fff;border:1px solid var(--bord);border-radius:8px;margin-bottom:14px}
+.card-hd{padding:12px 16px;border-bottom:1px solid var(--bord);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:12px;font-weight:600;color:var(--ink)}
+.card-body{padding:14px 16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+/* Table */
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:8px 12px;text-align:left;border-bottom:1px solid var(--bord);background:var(--surf);white-space:nowrap}
+td{font-size:11px;padding:9px 12px;border-bottom:1px solid var(--bord);color:var(--ink2);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surf)}
+tr.flag td{background:#FFF5F5}
+/* Badges */
+.b{display:inline-flex;align-items:center;font-size:9px;font-weight:600;padding:2px 7px;border-radius:8px;white-space:nowrap}
+.bg{background:var(--gl);color:var(--gd)}
+.ba{background:var(--ambl);color:#92400E}
+.br{background:var(--redl);color:#991B1B}
+.bb{background:var(--bluel);color:var(--blue)}
+.bt{background:var(--tl);color:var(--t)}
+.bp{background:var(--purl);color:var(--pur)}
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:5px;background:var(--g);color:#fff;border:none;border-radius:5px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer;text-decoration:none}
+.btn.sm{padding:4px 8px;font-size:10px}
+.btn.red{background:var(--red)}.btn.gold{background:var(--gold)}.btn.teal{background:var(--t)}.btn.pur{background:var(--pur)}.btn.blue{background:var(--blue)}.btn.amb{background:var(--amb)}
+.btno{display:inline-flex;align-items:center;gap:5px;background:#fff;color:var(--g);border:1.5px solid var(--g);border-radius:5px;padding:5px 11px;font-size:11px;font-weight:600;cursor:pointer}
+.btno.sm{padding:3px 7px;font-size:10px}.btno.red{color:var(--red);border-color:var(--red)}
+/* Form */
+.form-section{margin-bottom:18px}
+.form-section-title{font-size:11px;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--gl);padding-bottom:5px;margin-bottom:12px}
+.fg{display:grid;gap:10px;margin-bottom:10px}
+.fg2{grid-template-columns:1fr 1fr}
+.fg3{grid-template-columns:1fr 1fr 1fr}
+.fg4{grid-template-columns:1fr 1fr 1fr 1fr}
+.field{display:flex;flex-direction:column;gap:3px}
+.field label{font-size:10px;font-weight:600;color:var(--ink2);text-transform:uppercase;letter-spacing:.04em}
+.field input,.field select,.field textarea{border:1px solid var(--bord);border-radius:5px;padding:7px 10px;font-size:11px;color:var(--ink);background:#fff;transition:.1s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--g);outline:none;box-shadow:0 0 0 3px var(--gl)}
+.field textarea{height:72px;resize:vertical}
+.field-hint{font-size:9px;color:var(--muted);margin-top:2px}
+/* Alerts */
+.al{padding:8px 12px;border-radius:0 5px 5px 0;font-size:10px;line-height:1.6;margin-bottom:10px}
+.al-g{background:var(--gl);border-left:3px solid var(--g);color:var(--gd)}
+.al-a{background:var(--ambl);border-left:3px solid var(--amb);color:#78350F}
+.al-r{background:var(--redl);border-left:3px solid var(--red);color:#7F1D1D}
+.al-b{background:var(--bluel);border-left:3px solid var(--blue);color:var(--blue)}
+/* Progress */
+.prog{height:6px;background:var(--bord);border-radius:3px;overflow:hidden;margin:3px 0}
+.progf{height:100%;border-radius:3px;background:var(--g)}
+/* List row */
+.lr{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bord)}
+.lr:last-child{border:none}
+.lav{width:30px;height:30px;min-width:30px;border-radius:50%;background:var(--g);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.lin{flex:1;min-width:0}
+.lit{font-size:11px;font-weight:600;color:var(--ink)}
+.lis{font-size:9px;color:var(--muted)}
+/* Chips */
+.chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.chip{font-size:10px;padding:4px 10px;border-radius:10px;border:1.5px solid var(--bord);color:var(--muted);cursor:pointer}
+.chip.a{background:var(--g);color:#fff;border-color:var(--g)}
+/* Score bars */
+.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.score-item{background:var(--surf);border-radius:6px;padding:8px 10px}
+.score-l{font-size:9px;color:var(--muted);margin-bottom:3px}
+.score-bar{height:5px;background:var(--bord);border-radius:3px;overflow:hidden;margin-bottom:2px}
+.score-f{height:100%;background:var(--g);border-radius:3px}
+.score-v{font-size:9px;color:var(--muted);text-align:right}
+/* Divider */
+.div{height:1px;background:var(--bord);margin:12px 0}
+/* Util */
+.row{display:flex;align-items:center;gap:8px}
+.row-sb{display:flex;align-items:center;justify-content:space-between}
+.ml{margin-left:auto}
+.mt{margin-top:10px}
+.txt-g{color:var(--g);font-weight:600}
+.txt-r{color:var(--red);font-weight:600}
+.txt-a{color:var(--amb);font-weight:600}
+.txt-m{color:var(--muted);font-size:10px}
+/* Tab row */
+.tab-row{display:flex;gap:2px;border-bottom:2px solid var(--bord);margin-bottom:16px}
+.tab-btn{padding:8px 14px;font-size:11px;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
+.tab-btn.a{color:var(--g);font-weight:600;border-color:var(--g)}
+/* Mini chart */
+.bars{display:flex;align-items:flex-end;gap:3px;height:48px}
+.bar{flex:1;border-radius:2px 2px 0 0;background:var(--gl)}
+.bar.hi{background:var(--g)}.bar.gld{background:var(--gold)}.bar.red{background:var(--red)}.bar.t{background:var(--t)}
+/* Timeline */
+.tl{border-left:2px solid var(--bord);padding-left:16px;margin-left:8px}
+.tl-item{display:flex;gap:8px;margin-bottom:12px;position:relative}
+.tl-item::before{content:'';width:10px;height:10px;border-radius:50%;background:var(--g);border:2px solid #fff;box-shadow:0 0 0 1px var(--g);position:absolute;left:-21px;top:2px}
+.tl-item.done::before{background:var(--g)}
+.tl-item.pend::before{background:var(--bord);box-shadow:0 0 0 1px var(--bord)}
+.tl-title{font-size:11px;font-weight:600;color:var(--ink)}
+.tl-sub{font-size:9px;color:var(--muted)}
+/* Map */
+.map-ph{background:linear-gradient(135deg,#BBF7D0,#6EE7B7);height:80px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:22px;position:relative;margin-bottom:8px}
+.map-badge{position:absolute;bottom:6px;right:8px;background:rgba(0,0,0,.5);color:#fff;font-size:8px;padding:2px 6px;border-radius:3px}
+/* Status pill */
+.status{font-size:9px;font-weight:600;padding:3px 8px;border-radius:10px}
+/* Section header */
+.sh{font-size:10px;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 7px}
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-brand">🌱 AgroConnect <span class="tb-portal">Supplier / Agrovet Portal</span></div>
+  <div class="tb-links">
+    <span class="tb-link a" onclick="show('dashboard')">Dashboard</span>
+    <span class="tb-link" onclick="show('catalogue')">Catalogue</span>
+    <span class="tb-link" onclick="show('add-product')">Add Product</span>
+    <span class="tb-link" onclick="show('orders')">Orders</span>
+    <span class="tb-link" onclick="show('customers')">Customers</span>
+    <span class="tb-link" onclick="show('profile')">Profile & Reviews</span>
+  </div>
+  <div class="tb-right"><div class="tb-user"><div class="tb-avatar">NA</div><span>Nakuru Agrovets ▾</span></div></div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="page-dashboard" class="layout">
+<div class="sidebar">
+  <div class="sb-item a" onclick="show('dashboard')"><span class="ic">📊</span>Dashboard</div>
+  <div class="sb-sect">Catalogue</div>
+  <div class="sb-item" onclick="show('catalogue')"><span class="ic">📦</span>All Products</div>
+  <div class="sb-item" onclick="show('add-product')"><span class="ic">➕</span>Add Product</div>
+  <div class="sb-item"><span class="ic">🌾</span>Fertilisers</div>
+  <div class="sb-item"><span class="ic">🌿</span>Pesticides</div>
+  <div class="sb-item"><span class="ic">🌱</span>Seeds</div>
+  <div class="sb-item"><span class="ic">💊</span>Animal Drugs</div>
+  <div class="sb-item"><span class="ic">🔧</span>Equipment</div>
+  <div class="sb-sect">Sales</div>
+  <div class="sb-item" onclick="show('orders')"><span class="ic">🛒</span>Orders <span class="sb-badge gold">7</span></div>
+  <div class="sb-item" onclick="show('customers')"><span class="ic">👥</span>Customers</div>
+  <div class="sb-item" onclick="show('profile')"><span class="ic">⭐</span>Reviews</div>
+  <div class="sb-item"><span class="ic">📈</span>Analytics</div>
+</div>
+<div class="content">
+  <div class="page-hd">
+    <div><div class="page-title">Nakuru Agrovets — Sales Dashboard</div><div class="page-sub">Today, June 6 2025</div></div>
+    <div class="row" style="gap:8px"><button class="btno sm">📤 Export</button><button class="btn sm" onclick="show('add-product')">+ Add Product</button></div>
+  </div>
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-l">Revenue (Month)</div><div class="kpi-v">KES 142K</div><div class="kpi-d up">↑ 12% vs last month</div></div>
+    <div class="kpi gold"><div class="kpi-l">Pending Orders</div><div class="kpi-v">7</div><div class="kpi-d">KES 34,200 value</div></div>
+    <div class="kpi"><div class="kpi-l">Active Products</div><div class="kpi-v">86</div></div>
+    <div class="kpi red"><div class="kpi-l">Low Stock Alerts</div><div class="kpi-v">5</div><div class="kpi-d dn">⚠️ Reorder needed</div></div>
+    <div class="kpi teal"><div class="kpi-l">Customer Rating</div><div class="kpi-v">4.8 ★</div><div class="kpi-d">142 reviews</div></div>
+    <div class="kpi pur"><div class="kpi-l">AI Sales Leads</div><div class="kpi-v">18</div><div class="kpi-d up">From diagnosis data</div></div>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="al al-r" style="margin-bottom:12px">⚠️ 5 products low/out of stock: Mancozeb 80WP (2kg left), Newcastle Vaccine (0 vials), Tomato F1 Seeds (3 packs), Ridomil Gold (1kg), Layer Vaccine (0 vials)</div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Pending Orders — Action Needed</span><button class="btn sm gold">Confirm All</button></div>
+        <table>
+          <thead><tr><th>Customer</th><th>Product</th><th>Qty</th><th>Amount</th><th>Payment</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px">JW</div>Jane Wanjiru</div></td><td>Mancozeb 80WP</td><td>2kg</td><td>KES 960</td><td><span class="b bg">M-Pesa ✓</span></td><td><div class="row" style="gap:4px"><button class="btn sm">Confirm</button><button class="btn sm teal">Dispatch</button></div></td></tr>
+            <tr><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px;background:var(--t)">PK</div>Peter K.</div></td><td>CAN Fertiliser 50kg × 5</td><td>5 bags</td><td>KES 16,000</td><td><span class="b ba">Pending</span></td><td><div class="row" style="gap:4px"><button class="btn sm">Confirm</button></div></td></tr>
+            <tr><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px;background:var(--pur)">MK</div>Mary Kamau</div></td><td>Maize Seed H614D</td><td>1 bag</td><td>KES 4,250</td><td><span class="b bg">M-Pesa ✓</span></td><td><div class="row" style="gap:4px"><button class="btn sm">Confirm</button><button class="btn sm teal">Dispatch</button></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">🤖 AI Sales Opportunities</span><span class="b bb">From farm activity data</span></div>
+        <div class="card-body">
+          <div class="al al-b" style="margin-bottom:10px;font-size:9px">These farmers have upcoming activities or AI-flagged inventory gaps. Contact them proactively.</div>
+          <div class="lr"><div class="lav">JW</div><div class="lin"><div class="lit">Jane Wanjiru</div><div class="lis">Spray Maize due today — Mancozeb 80WP out of stock on her inventory</div></div><button class="btn sm">📱 SMS</button></div>
+          <div class="lr"><div class="lav" style="background:var(--t)">SM</div><div class="lin"><div class="lit">Samuel Mwas</div><div class="lis">2nd Fertiliser (CAN 50kg) due Jun 10 — not yet purchased</div></div><button class="btn sm">📱 SMS</button></div>
+          <div class="lr"><div class="lav" style="background:var(--pur)">GK</div><div class="lin"><div class="lit">Grace Kamau</div><div class="lis">Newcastle Vaccine overdue 7 days — 50 birds at risk</div></div><button class="btn sm red">Urgent</button></div>
+          <div class="lr" style="border:none"><div class="lav" style="background:var(--gold)">AH</div><div class="lin"><div class="lit">147 farmers (Grey Leaf Spot)</div><div class="lis">AI diagnosed Grey Leaf Spot this month — Mancozeb 80WP opportunity</div></div><button class="btn sm">📢 Bulk SMS</button></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Top Selling Products</span></div>
+        <div class="card-body">
+          <div style="margin-bottom:7px"><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">CAN Fertiliser 50kg</span><span style="font-weight:600;color:var(--g)">284 units · KES 908K</span></div><div class="prog"><div class="progf" style="width:100%"></div></div></div>
+          <div style="margin-bottom:7px"><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">Mancozeb 80WP 1kg</span><span style="font-weight:600;color:var(--g)">167 units · KES 80K</span></div><div class="prog"><div class="progf" style="width:59%"></div></div></div>
+          <div style="margin-bottom:7px"><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">Maize Seed H614D</span><span style="font-weight:600">98 units · KES 417K</span></div><div class="prog"><div class="progf" style="width:35%"></div></div></div>
+          <div><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">Newcastle Vaccine</span><span style="font-weight:600">61 units · KES 27K</span></div><div class="prog"><div class="progf" style="width:22%;background:var(--t)"></div></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Revenue Trend (6 months)</span></div>
+        <div class="card-body">
+          <div class="bars" style="margin-bottom:5px">
+            <div class="bar" style="height:45%"></div><div class="bar" style="height:55%"></div><div class="bar hi" style="height:65%"></div>
+            <div class="bar hi" style="height:75%"></div><div class="bar hi" style="height:85%"></div><div class="bar gld" style="height:100%"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted)"><span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun ★</span></div>
+          <div class="al al-g" style="margin-top:10px;font-size:9px">📈 June is best month. Peak aligns with planting season. Prepare stock for Jul–Aug maintenance season (pesticides, fertilisers).</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- CATALOGUE -->
+<div id="page-catalogue" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('dashboard')"><span class="ic">📊</span>Dashboard</div>
+  <div class="sb-item a"><span class="ic">📦</span>All Products</div>
+  <div class="sb-item" onclick="show('add-product')"><span class="ic">➕</span>Add Product</div>
+  <div class="sb-item"><span class="ic">🌾</span>Fertilisers</div>
+  <div class="sb-item"><span class="ic">🌿</span>Pesticides</div>
+  <div class="sb-item"><span class="ic">🌱</span>Seeds</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('dashboard')">Dashboard</span> › Product Catalogue</div>
+  <div class="page-hd"><div><div class="page-title">Product Catalogue</div><div class="page-sub">86 active products across 5 categories</div></div><button class="btn" onclick="show('add-product')">+ Add Product</button></div>
+  <div class="row" style="gap:8px;margin-bottom:14px">
+    <input placeholder="🔍 Search products..." style="border:1px solid var(--bord);border-radius:5px;padding:6px 10px;font-size:11px;flex:1">
+    <select style="border:1px solid var(--bord);border-radius:5px;padding:6px 10px;font-size:11px"><option>All Categories</option><option>Fertiliser</option><option>Pesticide</option><option>Seed</option><option>Animal Drug</option><option>Equipment</option></select>
+    <select style="border:1px solid var(--bord);border-radius:5px;padding:6px 10px;font-size:11px"><option>All Status</option><option>In Stock</option><option>Low Stock</option><option>Out of Stock</option></select>
+  </div>
+  <div class="card">
+    <table>
+      <thead><tr><th>Product</th><th>Category</th><th>Unit Price</th><th>Stock</th><th>Sales/Mo</th><th>AI Linked</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        <tr><td style="font-weight:600">CAN Fertiliser 50kg</td><td><span class="b bg">🌾 Fertiliser</span></td><td>KES 3,200</td><td style="color:var(--g);font-weight:600">48 bags</td><td>284</td><td><span class="b bb">Maize, Cabbage</span></td><td><span class="b bg">In Stock</span></td><td><div class="row" style="gap:4px"><button class="btn sm" onclick="show('add-product')">Edit</button><button class="btno sm">View</button></div></td></tr>
+        <tr class="flag"><td style="font-weight:600">Mancozeb 80WP 1kg</td><td><span class="b ba">🌿 Pesticide</span></td><td>KES 480</td><td style="color:var(--red);font-weight:600">2kg left</td><td>167</td><td><span class="b bb">Grey Leaf Spot</span></td><td><span class="b br">Low Stock</span></td><td><div class="row" style="gap:4px"><button class="btn sm red">Restock</button><button class="btn sm" onclick="show('add-product')">Edit</button></div></td></tr>
+        <tr><td style="font-weight:600">Maize Seed H614D 5kg</td><td><span class="b bg">🌱 Seeds</span></td><td>KES 4,250</td><td style="color:var(--amb);font-weight:600">12 bags</td><td>98</td><td><span class="b bb">Maize Planting</span></td><td><span class="b ba">Running Low</span></td><td><div class="row" style="gap:4px"><button class="btn sm">Edit</button><button class="btno sm">View</button></div></td></tr>
+        <tr class="flag"><td style="font-weight:600">Newcastle Vaccine 100-dose</td><td><span class="b bt">💉 Animal Drug</span></td><td>KES 450</td><td style="color:var(--red);font-weight:600">0 vials</td><td>61</td><td><span class="b bt">Newcastle Disease</span></td><td><span class="b br">Out of Stock</span></td><td><div class="row" style="gap:4px"><button class="btn sm red">Order Now</button></div></td></tr>
+        <tr><td style="font-weight:600">Knapsack Sprayer 20L</td><td><span class="b bp">🔧 Equipment</span></td><td>KES 4,500</td><td style="color:var(--g);font-weight:600">8 units</td><td>12</td><td>—</td><td><span class="b bg">In Stock</span></td><td><div class="row" style="gap:4px"><button class="btn sm">Edit</button></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- ADD PRODUCT -->
+<div id="page-add-product" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('dashboard')"><span class="ic">📊</span>Dashboard</div>
+  <div class="sb-item" onclick="show('catalogue')"><span class="ic">📦</span>Catalogue</div>
+  <div class="sb-item a"><span class="ic">➕</span>Add / Edit Product</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('dashboard')">Dashboard</span> › <span onclick="show('catalogue')">Catalogue</span> › Add Product</div>
+  <div class="page-hd"><div><div class="page-title">Add / Edit Product</div><div class="page-sub">Products appear in the public marketplace and AI-linked recommendations</div></div></div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Product Details</span></div>
+        <div class="card-body">
+          <div class="form-section">
+            <div class="form-section-title">Category & Type</div>
+            <div class="chips">
+              <div class="chip a">🌾 Fertiliser</div><div class="chip">🌿 Pesticide</div><div class="chip">🌱 Seeds</div>
+              <div class="chip">💊 Animal Medicine</div><div class="chip">💉 Vaccine</div><div class="chip">🔧 Tools & Equipment</div><div class="chip">📦 Other</div>
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="form-section-title">Basic Information</div>
+            <div class="field" style="margin-bottom:9px"><label>Product Name *</label><input placeholder="e.g. CAN Fertiliser 50kg" value="CAN Fertiliser 50kg"></div>
+            <div class="field" style="margin-bottom:9px"><label>Brand / Manufacturer</label><input placeholder="e.g. Yara, NCPB, Pioneer" value="NCPB Kenya"></div>
+            <div class="field" style="margin-bottom:9px"><label>Description</label><textarea>Calcium Ammonium Nitrate — 26% nitrogen content. Ideal for top-dressing maize, cabbage, and wheat. Apply 50kg per acre at 6 weeks after planting.</textarea></div>
+            <div class="fg fg2">
+              <div class="field"><label>Unit *</label><select><option>bag (50kg)</option><option>kg</option><option>litre</option><option>vial</option><option>piece</option><option>pack</option></select></div>
+              <div class="field"><label>Price per Unit (KES) *</label><input value="3200"></div>
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="form-section-title">AI Linking (Recommended)</div>
+            <div class="field" style="margin-bottom:9px"><label>Compatible Crops</label><input value="Maize, Cabbage, Wheat, Beans"><div class="field-hint">When farmers have these crops, this product appears in AI recommendations</div></div>
+            <div class="field"><label>Linked Diseases / Conditions</label><input placeholder="e.g. Nitrogen deficiency, stunted growth"><div class="field-hint">If AI diagnoses this condition, this product is suggested</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Inventory & Availability</span></div>
+        <div class="card-body">
+          <div class="form-section">
+            <div class="form-section-title">Stock Management</div>
+            <div class="fg fg2">
+              <div class="field"><label>Current Stock Quantity *</label><input value="48"></div>
+              <div class="field"><label>Unit</label><input value="bags" readonly></div>
+            </div>
+            <div class="fg fg2">
+              <div class="field"><label>Low Stock Alert Threshold</label><input value="10"><div class="field-hint">Alert when stock drops below this</div></div>
+              <div class="field"><label>Auto-reorder Quantity</label><input value="50"><div class="field-hint">Suggested order qty when restocking</div></div>
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="form-section-title">Delivery & Availability</div>
+            <div class="fg fg2">
+              <div class="field"><label>Delivery Available?</label><select><option>Yes — within 30km</option><option>Yes — within 50km</option><option>No — collection only</option></select></div>
+              <div class="field"><label>Delivery Time</label><select><option>Same day</option><option>Next day</option><option>2–3 days</option></select></div>
+            </div>
+            <div class="field"><label>Minimum Order Quantity</label><input value="1"><div class="field-hint">Leave 1 for no minimum</div></div>
+          </div>
+          <div class="form-section">
+            <div class="form-section-title">Government Program Eligibility</div>
+            <div class="al al-b" style="font-size:9px">If this product is part of a government subsidy programme, it will automatically appear in the relevant government program listings.</div>
+            <div class="field" style="margin-top:8px"><label>Included in Gov't Program?</label><select><option>MSAI Fertiliser Subsidy 2025</option><option>Not part of any program</option></select></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Product Images</span></div>
+        <div class="card-body">
+          <div style="border:2px dashed var(--bord);border-radius:6px;padding:20px;text-align:center;margin-bottom:10px;background:var(--surf)">
+            <div style="font-size:24px;margin-bottom:5px">📷</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Drag & drop product photos or click to upload</div>
+            <button class="btn sm">Upload Images</button>
+          </div>
+          <div class="al al-g" style="font-size:9px">Tip: Clear product photos increase conversion by 40%. Show the bag/packaging clearly. Max 4 images, 5MB each.</div>
+        </div>
+      </div>
+      <div class="row" style="gap:8px;margin-top:4px">
+        <button class="btn" style="flex:1;justify-content:center;padding:10px">💾 Save Product</button>
+        <button class="btno" style="justify-content:center;padding:10px">Preview</button>
+        <button class="btno red" style="padding:10px">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ORDERS -->
+<div id="page-orders" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('dashboard')"><span class="ic">📊</span>Dashboard</div>
+  <div class="sb-item a"><span class="ic">🛒</span>All Orders</div>
+  <div class="sb-item"><span class="ic">📥</span>New <span class="sb-badge gold">7</span></div>
+  <div class="sb-item"><span class="ic">📦</span>Packing</div>
+  <div class="sb-item"><span class="ic">🚚</span>Dispatched</div>
+  <div class="sb-item"><span class="ic">✅</span>Delivered</div>
+  <div class="sb-item"><span class="ic">↩️</span>Returns</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('dashboard')">Dashboard</span> › Orders</div>
+  <div class="page-hd"><div><div class="page-title">Order Management</div></div></div>
+  <div class="card" style="border-color:var(--gold)">
+    <div class="card-hd" style="background:var(--goldd)"><span class="card-title">Order #AG-2847 — Jane Wanjiru <span class="b ba">New</span></span><span class="txt-m">Jun 6 · 10:30 AM · +254 712 345 678</span></div>
+    <div class="card-body">
+      <table style="margin-bottom:10px">
+        <thead><tr><th>Product</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
+        <tbody>
+          <tr><td>Mancozeb 80WP 1kg</td><td>2</td><td>KES 480</td><td style="font-weight:600;color:var(--g)">KES 960</td></tr>
+        </tbody>
+      </table>
+      <div class="row-sb" style="margin-bottom:10px">
+        <div class="row" style="gap:10px"><span style="font-size:11px">Payment: <span class="txt-g">M-Pesa ✓ Confirmed</span></span><span style="font-size:11px">Ref: QA4K72XP</span></div>
+        <span style="font-size:14px;font-weight:700">Order Total: KES 960</span>
+      </div>
+      <div class="fg fg2" style="margin-bottom:10px">
+        <div class="field"><label>Delivery Method</label><select><option>Rider delivery</option><option>Customer collects</option></select></div>
+        <div class="field"><label>Tracking / Notes</label><input placeholder="e.g. Rider dispatched 2pm, call before delivery"></div>
+      </div>
+      <div class="tl" style="margin-bottom:10px">
+        <div class="tl-item done"><div><div class="tl-title">Order Received</div><div class="tl-sub">Jun 6 · 10:30 AM — M-Pesa payment confirmed</div></div></div>
+        <div class="tl-item pend"><div><div class="tl-title">Confirm & Pack</div><div class="tl-sub">Confirm availability and prepare for dispatch</div></div></div>
+        <div class="tl-item pend"><div><div class="tl-title">Dispatch</div><div class="tl-sub">Mark as dispatched and enter tracking info</div></div></div>
+        <div class="tl-item pend"><div><div class="tl-title">Delivered</div><div class="tl-sub">Confirm delivery and prompt customer for review</div></div></div>
+      </div>
+      <div class="row" style="gap:8px">
+        <button class="btn" style="flex:1;justify-content:center;padding:9px">✅ Confirm & Pack</button>
+        <button class="btn teal" style="flex:1;justify-content:center;padding:9px">🚚 Mark Dispatched</button>
+        <button class="btn" style="flex:1;justify-content:center;padding:9px;background:var(--g)">✓ Mark Delivered</button>
+      </div>
+      <div class="al al-g" style="margin-top:10px;font-size:9px">Farmer (Jane Wanjiru) will receive SMS at each stage automatically. Final SMS asks for a 5-star rating.</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- CUSTOMERS -->
+<div id="page-customers" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('dashboard')"><span class="ic">📊</span>Dashboard</div>
+  <div class="sb-item a"><span class="ic">👥</span>Customers</div>
+  <div class="sb-item"><span class="ic">💰</span>Outstanding</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('dashboard')">Dashboard</span> › Customers</div>
+  <div class="page-hd"><div><div class="page-title">Customer Accounts</div><div class="page-sub">284 customers · KES 82K outstanding credit</div></div><button class="btn">📢 Send SMS Campaign</button></div>
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-l">Total Customers</div><div class="kpi-v">284</div></div>
+    <div class="kpi gold"><div class="kpi-l">Outstanding (Credit)</div><div class="kpi-v">KES 82K</div><div class="kpi-d dn">14 accounts owing</div></div>
+    <div class="kpi"><div class="kpi-l">Repeat Customers</div><div class="kpi-v">73%</div><div class="kpi-d up">↑ Good loyalty</div></div>
+    <div class="kpi teal"><div class="kpi-l">Avg Order Value</div><div class="kpi-v">KES 4,200</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><span class="card-title">Customer List</span><input placeholder="🔍 Search customers..." style="border:1px solid var(--bord);border-radius:5px;padding:5px 10px;font-size:11px;width:200px"></div>
+    <table>
+      <thead><tr><th>Customer</th><th>Phone</th><th>Orders</th><th>Total Spent</th><th>Last Order</th><th>Outstanding</th><th>AI Opportunity</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px">JW</div>Jane Wanjiru</div></td><td>+254 712 *** 678</td><td>14</td><td style="color:var(--g);font-weight:600">KES 28,400</td><td>Jun 6</td><td style="color:var(--g);font-weight:600">KES 0</td><td><span class="b bb">Spray due today</span></td><td><button class="btn sm">View</button></td></tr>
+        <tr><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px;background:var(--t)">PK</div>Peter Kipchoge</div></td><td>+254 722 *** 678</td><td>8</td><td style="font-weight:600">KES 64,200</td><td>May 20</td><td style="color:var(--red);font-weight:600">KES 16,000</td><td>—</td><td><div class="row" style="gap:4px"><button class="btn sm">View</button><button class="btn sm red">Chase</button></div></td></tr>
+        <tr><td><div class="row"><div class="lav" style="width:22px;height:22px;font-size:9px;background:var(--pur)">MK</div>Mary Kamau</div></td><td>+254 733 *** 789</td><td>22</td><td style="color:var(--g);font-weight:600">KES 112,800</td><td>Jun 3</td><td style="color:var(--g);font-weight:600">KES 0</td><td><span class="b bb">Fertiliser due Jun 10</span></td><td><button class="btn sm">View</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- PROFILE & REVIEWS -->
+<div id="page-profile" class="layout" style="display:none">
+<div class="sidebar">
+  <div class="sb-item" onclick="show('dashboard')"><span class="ic">📊</span>Dashboard</div>
+  <div class="sb-item a"><span class="ic">⭐</span>Profile & Reviews</div>
+</div>
+<div class="content">
+  <div class="bc"><span onclick="show('dashboard')">Dashboard</span> › Profile & Reviews</div>
+  <div class="page-hd"><div><div class="page-title">Public Profile</div></div><button class="btn teal">👁 Preview Public Page</button></div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-hd"><span class="card-title">Business Profile</span></div>
+      <div class="card-body">
+        <div class="row" style="gap:12px;margin-bottom:12px">
+          <div style="width:52px;height:52px;border-radius:8px;background:var(--gl);display:flex;align-items:center;justify-content:center;font-size:24px;border:1px solid var(--bord)">🏪</div>
+          <div><div style="font-size:14px;font-weight:700">Nakuru Agrovets Ltd</div><div class="txt-m">Nakuru Town · +254 722 100 200</div><div style="margin-top:3px"><span class="b bg">✓ Verified Supplier</span></div></div>
+        </div>
+        <div class="fg fg2">
+          <div class="field"><label>Business Name</label><input value="Nakuru Agrovets Ltd"></div>
+          <div class="field"><label>Business Registration No.</label><input value="BRS/2008/4421"></div>
+        </div>
+        <div class="field" style="margin-bottom:9px"><label>Business Description</label><textarea>Nakuru's leading agrovet since 2008. We stock fertilisers, pesticides, seeds, animal medicine, and equipment. Free delivery within 30km.</textarea></div>
+        <div class="fg fg2">
+          <div class="field"><label>Operating Hours</label><input value="Mon–Sat 7AM–7PM, Sun 9AM–2PM"></div>
+          <div class="field"><label>Delivery Range (km)</label><input value="30"></div>
+        </div>
+        <div class="fg fg2">
+          <div class="field"><label>Physical Address</label><input value="Kenyatta Ave, Nakuru Town"></div>
+          <div class="field"><label>County</label><select><option>Nakuru</option></select></div>
+        </div>
+        <button class="btn" style="margin-top:8px">💾 Save Profile</button>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-hd"><span class="card-title">Customer Reviews <span class="b bg">4.8 ★ · 142 reviews</span></span></div>
+        <div class="card-body" style="padding:0 16px">
+          <div class="lr"><div class="lav" style="width:26px;height:26px;font-size:9px">JW</div><div class="lin"><div class="lit">Jane Wanjiru ★★★★★</div><div class="lis">"Fast delivery. Mancozeb worked well on my maize. Will order again." — Jun 5</div></div></div>
+          <div class="lr"><div class="lav" style="width:26px;height:26px;font-size:9px;background:var(--t)">PK</div><div class="lin"><div class="lit">Peter K. ★★★★☆</div><div class="lis">"Good products but delivery was 1 day late due to traffic." — Jun 3</div></div></div>
+          <div class="lr"><div class="lav" style="width:26px;height:26px;font-size:9px;background:var(--pur)">MK</div><div class="lin"><div class="lit">Mary Kamau ★★★★★</div><div class="lis">"Best prices in Nakuru. CAN fertiliser 50kg, best value." — May 28</div></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Review Summary</span></div>
+        <div class="card-body">
+          <div style="margin-bottom:6px"><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">★★★★★ 5 stars</span><span style="font-size:11px;font-weight:600">108</span></div><div class="prog"><div class="progf" style="width:76%"></div></div></div>
+          <div style="margin-bottom:6px"><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">★★★★ 4 stars</span><span style="font-size:11px;font-weight:600">28</span></div><div class="prog"><div class="progf" style="width:20%"></div></div></div>
+          <div><div class="row-sb" style="margin-bottom:2px"><span style="font-size:11px">★★★ 3 stars or below</span><span style="font-size:11px;font-weight:600">6</span></div><div class="prog"><div class="progf" style="width:4%;background:var(--red)"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+function show(p){document.querySelectorAll(".layout").forEach(el=>el.style.display="none");var el=document.getElementById("page-"+p);if(el)el.style.display="flex";}
+</script>
+
+</body>
+</html>
