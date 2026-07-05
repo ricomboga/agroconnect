@@ -101,3 +101,87 @@ enum LoanDocType {
   payslip
   other
 }
+
+enum PartnerType {
+  bank
+  microfinance
+  sacco
+  mobile_lender
+  ngo_grant
+}
+
+enum LoanCategory {
+  back_to_school
+  farm_input
+  asset_finance
+  emergency
+  general
+}
+
+enum TxType {
+  income
+  expense
+}
+
+model LoanPartner {
+  id                 String        @id
+  name               String
+  type               PartnerType
+  description        String?
+  logoUrl            String?
+  minLoanKes         Decimal       @db.Decimal(12, 2)
+  maxLoanKes         Decimal       @db.Decimal(12, 2)
+  processingDays     Int
+  activeFarmers      Int           @default(0)
+  repaymentRatePct   Decimal       @default(0) @db.Decimal(5, 2)
+  interestRateAnnual Decimal       @default(0) @db.Decimal(5, 2)
+  active             Boolean       @default(true)
+  createdAt          DateTime      @default(now())
+  products           LoanProduct[]
+
+  @@map("loan_partners")
+}
+
+model FarmerLenderAssignment {
+  id         String   @id @default(uuid())
+  farmerId   String   @unique
+  lenderId   String
+  assignedAt DateTime @default(now())
+
+  @@map("farmer_lender_assignments")
+}
+
+model LoanProduct {
+  id              String       @id
+  partnerId       String
+  partner         LoanPartner  @relation(fields: [partnerId], references: [id])
+  name            String
+  category        LoanCategory
+  description     String?
+  interestRate    Decimal      @db.Decimal(5, 2)
+  minAmountKes    Decimal      @db.Decimal(12, 2)
+  maxAmountKes    Decimal      @db.Decimal(12, 2)
+  repaymentMonths Int
+  eligibilityBand CreditBand
+  active          Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+
+  @@index([partnerId])
+  @@map("loan_products")
+}
+
+model Transaction {
+  id            String   @id @default(uuid())
+  farmerId      String
+  type          TxType
+  amountKes     Decimal  @db.Decimal(12, 2)
+  category      String
+  linkedTo      String?
+  buyerSupplier String?
+  date          String
+  notes         String?
+  createdAt     DateTime @default(now())
+
+  @@index([farmerId])
+  @@map("transactions")
+}

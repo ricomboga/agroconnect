@@ -28,6 +28,9 @@ model Farm {
   animalGroups AnimalGroup[]
   inputs      Input[]
   harvests    Harvest[]
+  inventoryItems        InventoryItem[]
+  animalProductRecords  AnimalProductRecord[]
+  customerCollections   CustomerCollection[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   deletedAt   DateTime?
@@ -208,4 +211,64 @@ enum QualityGrade {
   B
   C
   reject
+}
+
+model InventoryItem {
+  id                String      @id @default(uuid())
+  farmId            String
+  farm              Farm        @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  name              String
+  category          String
+  emoji             String
+  unit              String
+  purchasedQty      Decimal     @db.Decimal(10, 3)
+  usedQty           Decimal     @default(0) @db.Decimal(10, 3)
+  totalPurchasedQty Decimal     @db.Decimal(10, 3)
+  costPerUnit       Decimal     @db.Decimal(10, 2)
+  supplier          String
+  lastUsedDate      DateTime?   @db.Date
+  scheduledUseDate  DateTime?   @db.Date
+  notes             String?
+  createdAt         DateTime    @default(now())
+
+  @@index([farmId])
+  @@map("inventory_items")
+}
+
+model AnimalProductRecord {
+  id            String   @id @default(uuid())
+  farmId        String
+  farm          Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  animalGroupId String
+  date          DateTime @db.Date
+  productType   String
+  quantity      Decimal  @db.Decimal(10, 2)
+  unit          String
+  soldQty       Decimal  @default(0) @db.Decimal(10, 2)
+  pricePerUnit  Decimal  @db.Decimal(10, 2)
+  createdAt     DateTime @default(now())
+
+  @@index([farmId])
+  @@map("animal_product_records")
+}
+
+model CustomerCollection {
+  id            String    @id @default(uuid())
+  farmId        String
+  farm          Farm      @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  customerName  String
+  customerPhone String?
+  productType   String
+  quantity      Decimal   @db.Decimal(10, 2)
+  unit          String
+  pricePerUnit  Decimal   @db.Decimal(10, 2)
+  totalAmount   Decimal   @db.Decimal(12, 2)
+  takenDate     DateTime  @db.Date
+  paidDate      DateTime? @db.Date
+  isPaid        Boolean   @default(false)
+  notes         String?
+  createdAt     DateTime  @default(now())
+
+  @@index([farmId])
+  @@map("customer_collections")
 }

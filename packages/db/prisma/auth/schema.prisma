@@ -16,6 +16,7 @@ model User {
   passwordHash String
   fullName     String
   role         UserRole
+  partnerBankId String?
   county       String?
   language     Language   @default(sw)
   isVerified   Boolean    @default(false)
@@ -44,6 +45,103 @@ model Session {
   @@map("sessions")
 }
 
+model ServiceProvider {
+  id                 String             @id @default(uuid())
+  userId             String             @unique
+  type               ProviderType
+  registrationNumber String
+  issuingBody        String
+  specialisations    Json
+  countiesServed     Json
+  bio                String
+  profilePhotoUrl    String?
+  verificationStatus VerificationStatus @default(pending)
+  verificationDocs   Json?
+  maxFarmers         Int                @default(50)
+  ratingAvg          Decimal            @default(0) @db.Decimal(3, 2)
+  ratingCount        Int                @default(0)
+  isActive           Boolean            @default(true)
+  createdAt          DateTime           @default(now())
+
+  @@map("service_providers")
+}
+
+model FarmerExpertAssignment {
+  id           String   @id @default(uuid())
+  farmerId     String   @unique
+  expertId     String
+  assignedAt   DateTime @default(now())
+
+  @@index([expertId])
+  @@map("farmer_expert_assignments")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  actor     String
+  action    String
+  category  String
+  refId     String?
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model KycDocument {
+  id         String        @id @default(uuid())
+  userId     String
+  type       KycDocType
+  url        String
+  status     KycDocStatus  @default(pending)
+  uploadedAt DateTime      @default(now())
+
+  @@index([userId])
+  @@map("kyc_documents")
+}
+
+model KycHistoryEntry {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String
+  actor     String
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("kyc_history_entries")
+}
+
+enum KycDocType {
+  national_id
+  business_cert
+  kvb_licence
+  pcpb_licence
+  other
+}
+
+enum KycDocStatus {
+  pending
+  approved
+  rejected
+}
+
+enum ProviderType {
+  extension_officer
+  vet_officer
+  agronomist
+  soil_lab
+  equipment_dealer
+}
+
+enum VerificationStatus {
+  pending
+  verified
+  rejected
+  suspended
+}
+
 enum UserRole {
   farmer
   extension_officer
@@ -53,6 +151,7 @@ enum UserRole {
   govt_officer
   admin
   lender
+  farm_worker
 }
 
 enum Language {

@@ -31,6 +31,16 @@ model FarmRegistration {
   @@map("farm_registrations")
 }
 
+model CertificateSequence {
+  id       String @id @default(uuid())
+  county   String
+  year     Int
+  lastSeq  Int    @default(0)
+
+  @@unique([county, year])
+  @@map("certificate_sequences")
+}
+
 model SubsidyProgram {
   id             String               @id @default(uuid())
   name           String
@@ -45,6 +55,22 @@ model SubsidyProgram {
   createdAt      DateTime             @default(now())
   applications   SubsidyApplication[]
 
+  // Officer "New Program" form fields — added for govt-officer portal (all nullable/defaulted).
+  type                     SubsidyProgramType?
+  applicationOpenDate      DateTime?           @db.Date
+  totalBudgetKes           Decimal?            @db.Decimal(14, 2)
+  maxBeneficiaries         Int?
+  itemDistributed          String?
+  maxFarmSizeAcres         Decimal?            @db.Decimal(8, 2)
+  minFarmSizeAcres         Decimal?            @db.Decimal(8, 2)
+  requireActiveCrop        Boolean             @default(false)
+  onePerFarmer             Boolean             @default(true)
+  idVerificationRequired   Boolean             @default(false)
+  farmRegistrationRequired Boolean             @default(false)
+  eligibleFarmerSubtypes   Json?
+  distributionMethod       String?
+  collectionPoints         Json?
+
   @@map("subsidy_programs")
 }
 
@@ -58,6 +84,16 @@ model SubsidyApplication {
   notes       String?
   submittedAt DateTime                 @default(now())
   updatedAt   DateTime                 @updatedAt
+
+  // Officer approval fields — added for the subsidy application approve/reject flow (all nullable).
+  officerId          String?
+  county             String?
+  approvedItems      String?
+  deliveryDate       DateTime? @db.Date
+  collectionPoint    String?
+  transportProvided  Boolean?
+  officerNotes       String?
+  certNumber         String?
 
   @@unique([farmerId, programId])
   @@index([farmerId])
@@ -76,6 +112,10 @@ model LicenseApplication {
   expiresAt     DateTime?     @db.Date
   submittedAt   DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+
+  // Officer review fields — added for license approve/reject flow (all nullable).
+  officerId String?
+  notes     String?
 
   @@index([farmerId])
   @@map("license_applications")
@@ -132,4 +172,13 @@ enum DocumentType {
   kra_pin
   business_permit
   other
+}
+
+enum SubsidyProgramType {
+  fertiliser_subsidy
+  seed_distribution
+  equipment
+  training
+  cash_transfer
+  irrigation
 }

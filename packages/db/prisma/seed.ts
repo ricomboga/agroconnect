@@ -24,10 +24,10 @@ function addDays(base: Date, n: number): Date {
 
 // ─── users ─────────────────────────────────────────────────────────────────────
 
-type UserRole = 'farmer' | 'extension_officer' | 'supplier' | 'buyer';
+type UserRole = 'farmer' | 'extension_officer' | 'supplier' | 'buyer' | 'lender' | 'admin' | 'govt_officer';
 interface UserSeed {
-  phone: string; fullName: string; role: UserRole;
-  county: string; language: 'sw' | 'en'; email?: string;
+  id?: string; phone: string; fullName: string; role: UserRole;
+  county: string; language: 'sw' | 'en'; email?: string; partnerBankId?: string;
 }
 
 const USERS: UserSeed[] = [
@@ -57,6 +57,12 @@ const USERS: UserSeed[] = [
   { phone: '+254742001020', fullName: 'Beatrice Njoki',    role: 'buyer',             county: 'Nairobi',      language: 'en', email: 'b.njoki@nairobigreens.co.ke' },
   // dev test user — phone: +254700001000 / password: TestPass123!
   { phone: '+254700001000', fullName: 'Jane Wanjiru',      role: 'farmer',            county: 'Kiambu',       language: 'sw', email: 'test@agroconnect.ke' },
+  // 2 lender portal users — password: TestPass123! (see auth section below)
+  { id: 'usr_equity_010', phone: '+254700010010', fullName: 'Equity Bank Relationship Manager', role: 'lender', county: 'Nairobi', language: 'en', email: 'lending@equitybank.co.ke', partnerBankId: 'partner-eq-001' },
+  { id: 'usr_ngo_011',    phone: '+254700010011', fullName: 'AGRA Kenya Programme Officer',      role: 'lender', county: 'Nairobi', language: 'en', email: 'programmes@agra.org',     partnerBankId: 'partner-agra-011' },
+  // 1 admin + 1 govt officer — password: TestPass123!
+  { id: 'usr_admin_012', phone: '+254700010012', fullName: 'AgroConnect Platform Admin', role: 'admin',        county: 'Nairobi', language: 'en', email: 'admin@agroconnect.ke' },
+  { id: 'usr_govt_013',  phone: '+254700010013', fullName: 'Wambui Karanja',             role: 'govt_officer', county: 'Nakuru',  language: 'en', email: 'w.karanja@agriculture.go.ke' },
 ];
 
 // ─── farms ─────────────────────────────────────────────────────────────────────
@@ -298,6 +304,14 @@ async function main(): Promise<void> {
   await financeDb.loanDocument.deleteMany({});
   await financeDb.loanApplication.deleteMany({});
   await financeDb.creditScore.deleteMany({});
+  await financeDb.transaction.deleteMany({});
+  await financeDb.loanProduct.deleteMany({});
+  await financeDb.loanPartner.deleteMany({});
+  await financeDb.farmerLenderAssignment.deleteMany({});
+  // farm-service inventory
+  await farmDb.customerCollection.deleteMany({});
+  await farmDb.animalProductRecord.deleteMany({});
+  await farmDb.inventoryItem.deleteMany({});
   // govt
   await govtDb.licenseApplication.deleteMany({});
   await govtDb.subsidyApplication.deleteMany({});
@@ -316,21 +330,27 @@ async function main(): Promise<void> {
   await farmDb.farmPlot.deleteMany({});
   await farmDb.farm.deleteMany({});
   // auth — sessions cascade-delete when user is deleted
+  await authDb.kycHistoryEntry.deleteMany({});
+  await authDb.kycDocument.deleteMany({});
+  await authDb.farmerExpertAssignment.deleteMany({});
+  await authDb.serviceProvider.deleteMany({});
   await authDb.user.deleteMany({});
 
   // ── users ─────────────────────────────────────────────────────────────────────
-  console.log('  Creating 21 users...');
+  console.log('  Creating 25 users...');
   const userMap = new Map<string, string>(); // phone → id
 
   for (const u of USERS) {
     const user = await authDb.user.create({
       data: {
+        ...(u.id ? { id: u.id } : {}),
         phone:        u.phone,
         fullName:     u.fullName,
         role:         u.role,
         county:       u.county,
         language:     u.language,
         email:        u.email ?? null,
+        partnerBankId: u.partnerBankId ?? null,
         passwordHash,
         isVerified:   true,
         isActive:     true,
@@ -348,6 +368,36 @@ async function main(): Promise<void> {
   const officer2Id  = userMap.get('+254742001016')!; // Agnes
   const supplierId  = userMap.get('+254722001018')!; // Nganga
   const supplier2Id = userMap.get('+254733001019')!; // Vincent
+  const officer3Id  = userMap.get('+254712001017')!; // James Oduya
+
+  // ── expert / extension officer service providers ───────────────────────────────
+  console.log('  Creating service provider profiles for extension officers...');
+  await authDb.serviceProvider.createMany({
+    data: [
+      { userId: officerId,  type: 'extension_officer', registrationNumber: 'MOA-EXT-1015', issuingBody: 'Ministry of Agriculture', specialisations: ['maize', 'poultry'],      countiesServed: ['Nairobi', 'Kiambu'], bio: 'Extension officer covering Nairobi metro farms.',  maxFarmers: 50, ratingAvg: 4.8, ratingCount: 128 },
+      { userId: officer2Id, type: 'extension_officer', registrationNumber: 'MOA-EXT-1016', issuingBody: 'Ministry of Agriculture', specialisations: ['dairy', 'legumes'],      countiesServed: ['Kiambu', 'Nyandarua'], bio: 'Extension officer specialising in dairy and legume farming.', maxFarmers: 50, ratingAvg: 4.6, ratingCount: 84 },
+      { userId: officer3Id, type: 'extension_officer', registrationNumber: 'MOA-EXT-1017', issuingBody: 'Ministry of Agriculture', specialisations: ['maize', 'horticulture'], countiesServed: ['Kisumu', 'Siaya'], bio: 'Extension officer for the Kisumu region.', maxFarmers: 50, ratingAvg: 4.7, ratingCount: 42 },
+    ],
+  });
+
+  // ── KYC queue demo data (a farmer and a supplier awaiting review) ──────────────
+  console.log('  Creating KYC documents/history for pending review...');
+  await authDb.user.update({ where: { id: farmer2Id }, data: { kycStatus: 'submitted' } });
+  await authDb.user.update({ where: { id: supplierId }, data: { kycStatus: 'submitted' } });
+  await authDb.kycDocument.createMany({
+    data: [
+      { userId: farmer2Id, type: 'national_id', url: 'https://placehold.co/kyc/national_id.jpg', status: 'pending' },
+      { userId: supplierId, type: 'business_cert', url: 'https://placehold.co/kyc/business_cert.jpg', status: 'pending' },
+      { userId: supplierId, type: 'national_id', url: 'https://placehold.co/kyc/national_id.jpg', status: 'pending' },
+    ],
+  });
+  await authDb.kycHistoryEntry.createMany({
+    data: [
+      { userId: farmer2Id, action: 'Application Submitted', actor: 'system', note: 'Farmer submitted ID for verification.' },
+      { userId: supplierId, action: 'Application Submitted', actor: 'system', note: 'Supplier submitted business documents for verification.' },
+      { userId: supplierId, action: 'Owner ID Uploaded', actor: 'system', note: null },
+    ],
+  });
 
   // ── farms + activities + inputs + harvests ─────────────────────────────────────
   console.log('  Creating 30 farms with activities, inputs and harvests...');
@@ -616,16 +666,40 @@ async function main(): Promise<void> {
     submittedAt: new Date('2026-04-22'),
   }});
 
+  // ── finance: loan partners & products ────────────────────────────────────────
+  console.log('  Seeding loan partners and products...');
+  await financeDb.loanPartner.createMany({
+    data: [
+      { id: 'partner-eq-001',  name: 'Equity Bank Kenya', type: 'bank',         description: 'Kenya\'s largest bank by customer base, offering tailored agri-finance solutions.', minLoanKes: 5000,  maxLoanKes: 500000,  processingDays: 3, activeFarmers: 1840, repaymentRatePct: 94.0, interestRateAnnual: 14.0 },
+      { id: 'partner-kcb-002', name: 'KCB Bank',          type: 'bank',         description: 'Kenya Commercial Bank providing affordable agricultural credit nationwide.',           minLoanKes: 10000, maxLoanKes: 500000,  processingDays: 5, activeFarmers: 1240, repaymentRatePct: 91.0, interestRateAnnual: 15.0 },
+      { id: 'partner-fa-003',  name: 'Faulu Kenya',       type: 'microfinance', description: 'Microfinance institution specialising in smallholder and group-based lending.',       minLoanKes: 2000,  maxLoanKes: 200000,  processingDays: 2, activeFarmers: 560,  repaymentRatePct: 89.0, interestRateAnnual: 18.0 },
+      { id: 'partner-agra-011', name: 'AGRA Kenya',      type: 'ngo_grant',    description: 'Alliance for a Green Revolution in Africa — smallholder grant programmes for improved yield, input access and market linkage.', minLoanKes: 0, maxLoanKes: 300000, processingDays: 14, activeFarmers: 320, repaymentRatePct: 0, interestRateAnnual: 0 },
+    ],
+  });
+  await financeDb.loanProduct.createMany({
+    data: [
+      { id: 'prod-eq-wc-001',     partnerId: 'partner-eq-001',  name: 'Equity Kilimo Loan',                category: 'farm_input',    description: 'Working capital for farm inputs, seeds, and labour during planting season.', interestRate: 13.0, minAmountKes: 10000, maxAmountKes: 500000,  repaymentMonths: 12, eligibilityBand: 'B' },
+      { id: 'prod-eq-af-002',     partnerId: 'partner-eq-001',  name: 'Equity Asset Finance',              category: 'asset_finance', description: 'Finance irrigation kits, tractors, greenhouses and other farm equipment.',    interestRate: 14.5, minAmountKes: 50000, maxAmountKes: 1000000, repaymentMonths: 36, eligibilityBand: 'A' },
+      { id: 'prod-kcb-ag-003',    partnerId: 'partner-kcb-002', name: 'KCB Agri-Loan',                    category: 'farm_input',    description: 'Multi-purpose agricultural loan for crop production and livestock.',           interestRate: 12.5, minAmountKes: 20000, maxAmountKes: 500000,  repaymentMonths: 18, eligibilityBand: 'B' },
+      { id: 'prod-kcb-em-004',    partnerId: 'partner-kcb-002', name: 'KCB Emergency Farm Loan',          category: 'emergency',     description: 'Fast-disbursed emergency loan for crop failure recovery or urgent inputs.',    interestRate: 15.0, minAmountKes: 5000,  maxAmountKes: 200000,  repaymentMonths: 6,  eligibilityBand: 'C' },
+      { id: 'prod-fa-micro-005',  partnerId: 'partner-fa-003',  name: 'Faulu Biashara ya Kilimo',          category: 'general',       description: 'Microfinance loan for smallholder farmers. Group guarantee accepted.',         interestRate: 18.0, minAmountKes: 2000,  maxAmountKes: 150000,  repaymentMonths: 12, eligibilityBand: 'C' },
+      { id: 'prod-fa-school-006', partnerId: 'partner-fa-003',  name: 'Faulu Back-to-School Harvest Loan', category: 'back_to_school', description: 'Short-term loan bridging school fees against anticipated harvest income.',  interestRate: 16.0, minAmountKes: 5000,  maxAmountKes: 50000,   repaymentMonths: 3,  eligibilityBand: 'C' },
+    ],
+  });
+
   // ── finance: credit scores + loan applications ─────────────────────────────────
   console.log('  Seeding finance data (credit scores + loans)...');
 
-  // Credit scores for test user and 5 other farmers
+  // Credit scores for test user and 5 other farmers.
+  // Each sub-score is 0-25 and score = sum of the four, matching the invariant enforced by
+  // apps/finance-service/src/scoring/computeScore.ts (computeScoreFromData/scoreToBand); maxLoan
+  // mirrors BAND_MAX_LOAN_KES for the declared band. Jane's numbers match docs/ui-design-reference.md.
   const creditSeeds = [
-    { farmerId: testUserId,  score: 72, band: 'B' as const, maxLoan: 120000, yield_: 78, inputs: 70, activities: 68, platform: 80 },
-    { farmerId: farmer1Id,   score: 85, band: 'A' as const, maxLoan: 250000, yield_: 88, inputs: 85, activities: 82, platform: 90 },
-    { farmerId: farmer2Id,   score: 60, band: 'C' as const, maxLoan: 60000,  yield_: 62, inputs: 58, activities: 55, platform: 70 },
-    { farmerId: farmer3Id,   score: 91, band: 'A' as const, maxLoan: 350000, yield_: 93, inputs: 90, activities: 88, platform: 95 },
-    { farmerId: officer2Id,  score: 40, band: 'D' as const, maxLoan: 0,      yield_: 35, inputs: 40, activities: 45, platform: 50 },
+    { farmerId: testUserId,  score: 73, band: 'B' as const, maxLoan: 200000, yield_: 21, inputs: 18, activities: 20, platform: 14 },
+    { farmerId: farmer1Id,   score: 85, band: 'A' as const, maxLoan: 500000, yield_: 22, inputs: 21, activities: 20, platform: 22 },
+    { farmerId: farmer2Id,   score: 58, band: 'C' as const, maxLoan: 75000,  yield_: 15, inputs: 14, activities: 13, platform: 16 },
+    { farmerId: farmer3Id,   score: 91, band: 'A' as const, maxLoan: 500000, yield_: 23, inputs: 22, activities: 22, platform: 24 },
+    { farmerId: officer2Id,  score: 35, band: 'D' as const, maxLoan: 25000, yield_: 7,   inputs: 8,  activities: 9,  platform: 11 },
   ];
 
   for (const cs of creditSeeds) {
@@ -652,7 +726,7 @@ async function main(): Promise<void> {
     purpose:           'Purchase maize seeds, fertiliser and pesticides for the long rains 2026 season',
     repaymentMonths:   12,
     partnerBankId:     'partner-eq-001',
-    creditScore:       72,
+    creditScore:       73,
     creditBand:        'B',
     status:            'disbursed',
     approvedAmountKes: 75000,
@@ -669,7 +743,7 @@ async function main(): Promise<void> {
     purpose:           'Drip irrigation kit for the kitchen garden and poultry water system',
     repaymentMonths:   18,
     partnerBankId:     'partner-fa-003',
-    creditScore:       72,
+    creditScore:       73,
     creditBand:        'B',
     status:            'under_review',
     submittedAt:       new Date('2026-05-20'),
@@ -686,9 +760,51 @@ async function main(): Promise<void> {
     creditScore:       65,
     creditBand:        'C',
     status:            'rejected',
-    rejectionReason:   'Requested amount exceeds Band B limit of KES 120,000. Improve credit score to Band A.',
+    rejectionReason:   'Requested amount exceeds Band C limit of KES 75,000. Improve credit score to Band B or above.',
     submittedAt:       new Date('2025-11-08'),
   }});
+
+  // Transactions for test user — income and expense history
+  await financeDb.transaction.createMany({
+    data: [
+      { farmerId: testUserId, type: 'income',  amountKes: 159600, category: 'harvest_sale',    linkedTo: testFarm.id, buyerSupplier: 'On-farm grain store',       date: '2025-10-05', notes: 'Sale of short-rains 2025 maize harvest' },
+      { farmerId: testUserId, type: 'expense', amountKes: 7600,   category: 'fertiliser',       linkedTo: testFarm.id, buyerSupplier: 'Kiambu Agrovet',             date: '2026-04-26', notes: 'CAN fertiliser 50kg — top dressing' },
+      { farmerId: testUserId, type: 'expense', amountKes: 2900,   category: 'pesticide',         linkedTo: testFarm.id, buyerSupplier: 'FMC Kenya distributor',      date: '2026-05-10', notes: 'Coragen 200SC for armyworm control' },
+      { farmerId: testUserId, type: 'income',  amountKes: 75000,  category: 'loan_disbursement', linkedTo: testFarm.id, buyerSupplier: 'Equity Bank Kenya',          date: '2026-03-01', notes: 'Equity Kilimo Loan disbursement — QJF8KH3X22' },
+      { farmerId: testUserId, type: 'expense', amountKes: 3600,   category: 'seed',              linkedTo: testFarm.id, buyerSupplier: 'Kiambu Agrovet',             date: '2026-01-20', notes: 'Rosecoco bean seed, 50kg' },
+      { farmerId: testUserId, type: 'expense', amountKes: 4500,   category: 'labour',            linkedTo: testFarm.id, buyerSupplier: null,                        date: '2026-05-22', notes: 'Casual labour — second weeding round' },
+      { farmerId: testUserId, type: 'income',  amountKes: 12500,  category: 'egg_sales',         linkedTo: testFarm.id, buyerSupplier: 'Kiambu Town market',         date: '2026-06-18', notes: 'Poultry egg tray sales — Banda ya Kuku' },
+    ],
+  });
+
+  // ── farm-service: inventory items, animal products, customer collections ──────
+  console.log('  Seeding inventory data for Jane Wanjiru (+254700001000)...');
+
+  await farmDb.inventoryItem.createMany({
+    data: [
+      { farmId: testFarm.id, name: 'CAN Fertiliser 50kg',   category: 'fertiliser', emoji: '🧪', unit: 'bag',    purchasedQty: 4,   usedQty: 3.5, totalPurchasedQty: 4,   costPerUnit: 3800, supplier: 'Kiambu Agrovet',        lastUsedDate: new Date('2026-05-15'), scheduledUseDate: new Date('2026-07-10'), notes: 'Top-dressing stock' },
+      { farmId: testFarm.id, name: 'Coragen 200SC 150ml',    category: 'pesticide',  emoji: '🐛', unit: 'bottle', purchasedQty: 2,   usedQty: 2,   totalPurchasedQty: 2,   costPerUnit: 1450, supplier: 'FMC Kenya distributor',  lastUsedDate: new Date('2026-05-10'), scheduledUseDate: null, notes: 'Fall armyworm control — used up' },
+      { farmId: testFarm.id, name: 'DH04 Hybrid Maize Seed', category: 'seed',       emoji: '🌽', unit: 'kg',     purchasedQty: 25,  usedQty: 25,  totalPurchasedQty: 25,  costPerUnit: 320,  supplier: 'Kenya Seed Company',     lastUsedDate: new Date('2026-04-15'), scheduledUseDate: null, notes: 'Long rains 2026 planting' },
+      { farmId: testFarm.id, name: 'Rosecoco Bean Seed',     category: 'seed',       emoji: '🫘', unit: 'kg',     purchasedQty: 50,  usedQty: 10,  totalPurchasedQty: 50,  costPerUnit: 90,   supplier: 'Kiambu Agrovet',         lastUsedDate: new Date('2026-01-20'), scheduledUseDate: null, notes: null },
+      { farmId: testFarm.id, name: 'Layers Mash 70kg',       category: 'animal_feed', emoji: '🐔', unit: 'bag',   purchasedQty: 6,   usedQty: 5,   totalPurchasedQty: 6,   costPerUnit: 3200, supplier: 'Kiambu Agrovet',         lastUsedDate: new Date('2026-06-20'), scheduledUseDate: new Date('2026-07-05'), notes: 'Feed for layers in Banda ya Kuku' },
+    ],
+  });
+
+  await farmDb.animalProductRecord.createMany({
+    data: [
+      { farmId: testFarm.id, animalGroupId: 'poultry-banda-a', date: new Date('2026-06-30'), productType: 'eggs', quantity: 8,  unit: 'trays', soldQty: 6, pricePerUnit: 450 },
+      { farmId: testFarm.id, animalGroupId: 'poultry-banda-a', date: new Date('2026-07-01'), productType: 'eggs', quantity: 9,  unit: 'trays', soldQty: 4, pricePerUnit: 450 },
+      { farmId: testFarm.id, animalGroupId: 'poultry-banda-a', date: new Date('2026-07-02'), productType: 'eggs', quantity: 10, unit: 'trays', soldQty: 0, pricePerUnit: 450 },
+    ],
+  });
+
+  await farmDb.customerCollection.createMany({
+    data: [
+      { farmId: testFarm.id, customerName: 'Mama Chege Groceries', customerPhone: '+254711223344', productType: 'eggs',  quantity: 4,  unit: 'trays', pricePerUnit: 450, totalAmount: 1800, takenDate: new Date('2026-06-28'), paidDate: new Date('2026-06-29'), isPaid: true,  notes: null },
+      { farmId: testFarm.id, customerName: 'Kiambu Town Hotel',     customerPhone: '+254722556677', productType: 'eggs',  quantity: 6,  unit: 'trays', pricePerUnit: 450, totalAmount: 2700, takenDate: new Date('2026-07-01'), paidDate: null,                     isPaid: false, notes: 'To be paid end of week' },
+      { farmId: testFarm.id, customerName: 'John Kariuki',          customerPhone: '+254733889900', productType: 'maize', quantity: 200, unit: 'kg',   pricePerUnit: 42,  totalAmount: 8400, takenDate: new Date('2026-06-15'), paidDate: null,                     isPaid: false, notes: 'Neighbour, promised payment after his harvest' },
+    ],
+  });
 
   // ── market: commodity prices + produce listings + supplier products ────────────
   console.log('  Seeding market data (prices, listings, supplier products)...');
@@ -864,6 +980,8 @@ async function main(): Promise<void> {
   const threads = await Promise.all([
     communityDb.thread.create({ data: {
       authorId:  farmer1Id,
+      authorName: 'Wanjiku Kamau',
+      authorCounty: 'Kiambu',
       category:  'crop_advice',
       title:     'Armyworm outbreak in Kiambu — best control now?',
       body:      'Nimeona armyworm kwenye shamba yangu la mahindi. Imekula majani mengi. Ninatumia nini haraka kabla halichanganyiki zaidi? Nimeskia Coragen inafanya kazi lakini ni ghali kidogo.',
@@ -875,6 +993,8 @@ async function main(): Promise<void> {
     }}),
     communityDb.thread.create({ data: {
       authorId:  farmer2Id,
+      authorName: 'Otieno Ochieng',
+      authorCounty: 'Kisumu',
       category:  'livestock_health',
       title:     'Newcastle disease kuku wangu — dalili na dawa',
       body:      'Kuku wangu wa layer wanapoteza nguvu, hawali, na wengine wanakufa. Nimekuta baadhi wana kikohozi. Je, hii ni Newcastle? Nifanye nini haraka kabla simu wote hawajasababiwa?',
@@ -886,6 +1006,8 @@ async function main(): Promise<void> {
     }}),
     communityDb.thread.create({ data: {
       authorId:  farmer3Id,
+      authorName: 'Kipchoge Mutai',
+      authorCounty: 'Uasin Gishu',
       category:  'market_talk',
       title:     'Bei ya mahindi Eldoret — Juni 2026',
       body:      'Ninavyoona Eldoret juzi bei ya mahindi ilikuwa KES 38-40/kg. Mkulima mmoja alisema ameuzwa KES 35. Je, mnasema bei ipo wapi kweli? Niko na tani 3 nataka kuuza.',
@@ -897,6 +1019,8 @@ async function main(): Promise<void> {
     }}),
     communityDb.thread.create({ data: {
       authorId:  officerId,
+      authorName: "Dr. Peter Ndung'u",
+      authorCounty: 'Nairobi',
       category:  'weather_climate',
       title:     'Mvua ya Julai/Agosti — matarajio na jinsi ya kujiandaa',
       body:      'Kulingana na KMD, mvua za masika 2026 zitakuwa kali zaidi kuliko wastani katika maeneo ya Highlands (Kiambu, Nyeri, Meru). Wakulima wa mahindi wajitayarishe kwa hatari ya kuoza kwa mizizi na Grey Leaf Spot. Tenganisheni mazao yaliyovunwa mapema.',
@@ -908,6 +1032,8 @@ async function main(): Promise<void> {
     }}),
     communityDb.thread.create({ data: {
       authorId:  testUserId,
+      authorName: 'Jane Wanjiru',
+      authorCounty: 'Kiambu',
       category:  'finance_business',
       title:     'Mkopo wa Equity Bank kwa wakulima — mtu ameshapata?',
       body:      'Nimetuma application ya mkopo wa KES 80,000 Equity Bank kupitia AgroConnect. Nimekuwa nasubiri siku 14. Je, mtu mwingine amefanikiwa kupata mkopo hapa? Ni muda gani kawaida?',
@@ -919,6 +1045,8 @@ async function main(): Promise<void> {
     }}),
     communityDb.thread.create({ data: {
       authorId:  farmer1Id,
+      authorName: 'Wanjiku Kamau',
+      authorCounty: 'Kiambu',
       category:  'government_programs',
       title:     'Ruzuku ya mbolea MSAI 2026 — jinsi ya kuomba',
       body:      'Nimesikia serikali inagawa ruzuku ya mbolea tena. MSAI inasema 50% discount kwa CAN na NPKS. Niliomba mwaka jana lakini sikupata. Mwaka huu naomba kupitia AgroConnect — ni rahisi zaidi. Je, nyinyi mmeomba?',
@@ -930,6 +1058,8 @@ async function main(): Promise<void> {
     }}),
     communityDb.thread.create({ data: {
       authorId:  farmer2Id,
+      authorName: 'Otieno Ochieng',
+      authorCounty: 'Kisumu',
       category:  'success_stories',
       title:     'Nilipata tani 12 ya mahindi — DH04 na umwagiliaji wa tone',
       body:      'Mwaka huu nimevuna tani 12 kwa ekari 2 ya mahindi DH04. Niliweka umwagiliaji wa tone, nilitumia CAN vizuri, na nilifuata ratiba ya shughulli. Mapato: KES 504,000. Naweza kushare ratiba yangu yote kwa mtu anayehitaji.',
@@ -941,6 +1071,8 @@ async function main(): Promise<void> {
     }}),
     communityDb.thread.create({ data: {
       authorId:  officer2Id,
+      authorName: 'Agnes Muthoni',
+      authorCounty: 'Kiambu',
       category:  'equipment_tools',
       title:     'Mashine ya kupiga dawa kwa drone — bei na faida',
       body:      'Kampuni moja Nairobi sasa inatoa huduma ya drone spraying kwa bei ya KES 800 kwa ekari. Kwa shamba la zaidi ya ekari 10 ni nafuu kuliko kulipa wafanyikazi 3 siku nzima. Je, mtu ametumia? Ni nzuri kwa blight control?',
@@ -953,32 +1085,51 @@ async function main(): Promise<void> {
   ]);
 
   // Replies
+  const AUTHOR_NAMES: Record<string, string> = {
+    [officerId]: "Dr. Peter Ndung'u",
+    [officer2Id]: 'Agnes Muthoni',
+    [farmer1Id]: 'Wanjiku Kamau',
+    [farmer2Id]: 'Otieno Ochieng',
+    [farmer3Id]: 'Kipchoge Mutai',
+    [testUserId]: 'Jane Wanjiru',
+  };
+  const AUTHOR_ROLES: Record<string, string> = {
+    [officerId]: 'extension_officer',
+    [officer2Id]: 'extension_officer',
+  };
+
+  const replies = [
+    // Thread 0: armyworm
+    { threadId: threads[0].id, authorId: officerId,  body: 'Coragen (chlorantraniliprole) ndio dawa bora zaidi sasa hivi dhidi ya armyworm. Nyunyizia asubuhi au jioni wakati halijapanda. Dozi: 150ml kwa ekari. Rudia baada ya siku 10 ukiona bado wako.', upvotes: 28, isExpertVerified: true,  status: 'active', createdAt: new Date('2026-06-08T08:45:00Z') },
+    { threadId: threads[0].id, authorId: farmer3Id,  body: 'Mimi nilitumia Emamectin Benzoate (Escort) na ilifanya kazi vizuri. Ni bei nafuu zaidi kuliko Coragen — KES 350 kwa 100ml.', upvotes: 12, isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-08T10:10:00Z') },
+    { threadId: threads[0].id, authorId: testUserId, body: 'Ninakushukuru! Nilienda kuomba Coragen Farmers Choice leo. Nitarudi na ripoti baada ya nyunyizio.', upvotes: 3,  isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-08T14:30:00Z') },
+    // Thread 1: Newcastle
+    { threadId: threads[1].id, authorId: officerId,  body: 'Dalili unazosema zinaonyesha Newcastle Disease (NCD). Chanjo ya Hitchner B1 au LaSota haraka. Toa kuku wote waliokufa na achilia umbali. Mwambie daktari wa mifugo aribe haraka.', upvotes: 41, isExpertVerified: true,  status: 'active', createdAt: new Date('2026-06-05T10:20:00Z') },
+    { threadId: threads[1].id, authorId: farmer1Id,  body: 'Nilipitia hali kama hii 2024. Nimepoteza kuku 80. Chanjo ya mara kwa mara kila miezi 2 ndiyo suluhisho la muda mrefu.', upvotes: 19, isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-05T12:05:00Z') },
+    // Thread 2: maize price
+    { threadId: threads[2].id, authorId: testUserId, body: 'Kiambu juzi niliona KES 42/kg kwa grade A. Nadhani inategemea ubora na mahali unapouza. Supermarket inanunua vizuri zaidi kuliko wholesale.', upvotes: 8,  isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-09T15:00:00Z') },
+    { threadId: threads[2].id, authorId: farmer1Id,  body: 'Nijaribu Nairobi (Wakulima market) — mara nyingi KES 44-46 kwa grade A ukiuza moja kwa moja bila dalali.', upvotes: 15, isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-09T16:45:00Z') },
+    // Thread 3: weather
+    { threadId: threads[3].id, authorId: farmer1Id,  body: 'Ninashukuru taarifa hii daktari. Nitaanza kukata mahindi yangu ya tea mapema wiki hii ili kukimbia mvua za mara kwa mara.', upvotes: 22, isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-02T07:30:00Z') },
+    { threadId: threads[3].id, authorId: officer2Id, body: 'KMD pia imesema mvua itaendelea hadi Agosti katika Rift Valley. Wakulima wa viazi Nakuru wajikingue dhidi ya late blight — nyunyizo ya kuzuia ni muhimu.', upvotes: 35, isExpertVerified: true,  status: 'active', createdAt: new Date('2026-06-02T09:15:00Z') },
+    // Thread 4: Equity loan
+    { threadId: threads[4].id, authorId: farmer3Id,  body: 'Mimi nilipata mkopo kupitia Faulu Kenya wiki mbili baada ya kutuma. Lakini KCB ilichukua siku 21. Inategemea benki na band yako ya credit.', upvotes: 11, isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-03T13:40:00Z') },
+    { threadId: threads[4].id, authorId: testUserId, body: 'Nimepokea ujumbe leo — mkopo umeidhinishwa! KES 75,000 itatumwa M-Pesa. Asante kwa msaada.', upvotes: 18, isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-10T08:00:00Z') },
+    // Thread 5: MSAI subsidy
+    { threadId: threads[5].id, authorId: officer2Id, body: 'Ombi la MSAI linafanywa kupitia eCitizen au kaunti yako ya kilimo. Utahitaji: nambari ya AFA, picha ya kadi ya ID, na cheti cha usajili wa shamba. AgroConnect inaweza kukusaidia kujaza fomu.', upvotes: 43, isExpertVerified: true,  status: 'active', createdAt: new Date('2026-05-29T09:00:00Z') },
+    // Thread 6: success story
+    { threadId: threads[6].id, authorId: farmer3Id,  body: 'Hongera sana! DH04 na umwagiliaji wa tone ni mchanganyiko unaofanya kazi. Mimi pia nimetumia hii Uasin Gishu. Unaweza kushare ratiba yako? Ningependa kuona jinsi ulivyopanga mbolea na dawa.', upvotes: 28, isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-07T09:10:00Z') },
+    { threadId: threads[6].id, authorId: officerId,  body: 'Mfano mzuri sana! Hii inaonyesha wakulima wanaweza kufikia tani 6 kwa ekari na teknolojia sahihi. Tunataka kufanya semina kuhusu drip irrigation — jiandikishe kupitia extension office yako.', upvotes: 55, isExpertVerified: true,  status: 'active', createdAt: new Date('2026-06-07T11:00:00Z') },
+    // Thread 7: drone spraying
+    { threadId: threads[7].id, authorId: farmer2Id,  body: 'Nilitumia drone service Kisumu msimu uliopita kwa blight ya nyanya. Inafanya kazi vizuri — coverage ni bora kuliko knapsack. Lakini uangalifu: uchunguzi wa dawa na muda wa kunyunyizia ni muhimu.', upvotes: 22, isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-06T14:20:00Z') },
+  ];
+
   await communityDb.reply.createMany({
-    data: [
-      // Thread 0: armyworm
-      { threadId: threads[0].id, authorId: officerId,  body: 'Coragen (chlorantraniliprole) ndio dawa bora zaidi sasa hivi dhidi ya armyworm. Nyunyizia asubuhi au jioni wakati halijapanda. Dozi: 150ml kwa ekari. Rudia baada ya siku 10 ukiona bado wako.', upvotes: 28, isExpertVerified: true,  status: 'active', createdAt: new Date('2026-06-08T08:45:00Z') },
-      { threadId: threads[0].id, authorId: farmer3Id,  body: 'Mimi nilitumia Emamectin Benzoate (Escort) na ilifanya kazi vizuri. Ni bei nafuu zaidi kuliko Coragen — KES 350 kwa 100ml.', upvotes: 12, isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-08T10:10:00Z') },
-      { threadId: threads[0].id, authorId: testUserId, body: 'Ninakushukuru! Nilienda kuomba Coragen Farmers Choice leo. Nitarudi na ripoti baada ya nyunyizio.', upvotes: 3,  isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-08T14:30:00Z') },
-      // Thread 1: Newcastle
-      { threadId: threads[1].id, authorId: officerId,  body: 'Dalili unazosema zinaonyesha Newcastle Disease (NCD). Chanjo ya Hitchner B1 au LaSota haraka. Toa kuku wote waliokufa na achilia umbali. Mwambie daktari wa mifugo aribe haraka.', upvotes: 41, isExpertVerified: true,  status: 'active', createdAt: new Date('2026-06-05T10:20:00Z') },
-      { threadId: threads[1].id, authorId: farmer1Id,  body: 'Nilipitia hali kama hii 2024. Nimepoteza kuku 80. Chanjo ya mara kwa mara kila miezi 2 ndiyo suluhisho la muda mrefu.', upvotes: 19, isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-05T12:05:00Z') },
-      // Thread 2: maize price
-      { threadId: threads[2].id, authorId: testUserId, body: 'Kiambu juzi niliona KES 42/kg kwa grade A. Nadhani inategemea ubora na mahali unapouza. Supermarket inanunua vizuri zaidi kuliko wholesale.', upvotes: 8,  isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-09T15:00:00Z') },
-      { threadId: threads[2].id, authorId: farmer1Id,  body: 'Nijaribu Nairobi (Wakulima market) — mara nyingi KES 44-46 kwa grade A ukiuza moja kwa moja bila dalali.', upvotes: 15, isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-09T16:45:00Z') },
-      // Thread 3: weather
-      { threadId: threads[3].id, authorId: farmer1Id,  body: 'Ninashukuru taarifa hii daktari. Nitaanza kukata mahindi yangu ya tea mapema wiki hii ili kukimbia mvua za mara kwa mara.', upvotes: 22, isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-02T07:30:00Z') },
-      { threadId: threads[3].id, authorId: officer2Id, body: 'KMD pia imesema mvua itaendelea hadi Agosti katika Rift Valley. Wakulima wa viazi Nakuru wajikingue dhidi ya late blight — nyunyizo ya kuzuia ni muhimu.', upvotes: 35, isExpertVerified: true,  status: 'active', createdAt: new Date('2026-06-02T09:15:00Z') },
-      // Thread 4: Equity loan
-      { threadId: threads[4].id, authorId: farmer3Id,  body: 'Mimi nilipata mkopo kupitia Faulu Kenya wiki mbili baada ya kutuma. Lakini KCB ilichukua siku 21. Inategemea benki na band yako ya credit.', upvotes: 11, isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-03T13:40:00Z') },
-      { threadId: threads[4].id, authorId: testUserId, body: 'Nimepokea ujumbe leo — mkopo umeidhinishwa! KES 75,000 itatumwa M-Pesa. Asante kwa msaada.', upvotes: 18, isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-10T08:00:00Z') },
-      // Thread 5: MSAI subsidy
-      { threadId: threads[5].id, authorId: officer2Id, body: 'Ombi la MSAI linafanywa kupitia eCitizen au kaunti yako ya kilimo. Utahitaji: nambari ya AFA, picha ya kadi ya ID, na cheti cha usajili wa shamba. AgroConnect inaweza kukusaidia kujaza fomu.', upvotes: 43, isExpertVerified: true,  status: 'active', createdAt: new Date('2026-05-29T09:00:00Z') },
-      // Thread 6: success story
-      { threadId: threads[6].id, authorId: farmer3Id,  body: 'Hongera sana! DH04 na umwagiliaji wa tone ni mchanganyiko unaofanya kazi. Mimi pia nimetumia hii Uasin Gishu. Unaweza kushare ratiba yako? Ningependa kuona jinsi ulivyopanga mbolea na dawa.', upvotes: 28, isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-07T09:10:00Z') },
-      { threadId: threads[6].id, authorId: officerId,  body: 'Mfano mzuri sana! Hii inaonyesha wakulima wanaweza kufikia tani 6 kwa ekari na teknolojia sahihi. Tunataka kufanya semina kuhusu drip irrigation — jiandikishe kupitia extension office yako.', upvotes: 55, isExpertVerified: true,  status: 'active', createdAt: new Date('2026-06-07T11:00:00Z') },
-      // Thread 7: drone spraying
-      { threadId: threads[7].id, authorId: farmer2Id,  body: 'Nilitumia drone service Kisumu msimu uliopita kwa blight ya nyanya. Inafanya kazi vizuri — coverage ni bora kuliko knapsack. Lakini uangalifu: uchunguzi wa dawa na muda wa kunyunyizia ni muhimu.', upvotes: 22, isExpertVerified: false, status: 'active', createdAt: new Date('2026-06-06T14:20:00Z') },
-    ],
+    data: replies.map((r) => ({
+      ...r,
+      authorName: AUTHOR_NAMES[r.authorId],
+      authorRole: AUTHOR_ROLES[r.authorId] ?? null,
+    })),
   });
 
   // ── summary ───────────────────────────────────────────────────────────────────
