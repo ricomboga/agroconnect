@@ -3,6 +3,7 @@ import { AuthenticatedRequest } from '../types/index.js';
 import * as loanRepo from '../repositories/loanRepository.js';
 import * as docRepo from '../repositories/loanDocumentRepository.js';
 import * as creditScoreRepo from '../repositories/creditScoreRepository.js';
+import * as productRepo from '../repositories/loanProductRepository.js';
 import { publishLoanApplied } from '../events/producers/loanAppliedProducer.js';
 import { createError } from '../middleware/errorHandler.js';
 import type { CreateLoanDto } from '../schemas/createLoan.schema.js';
@@ -10,35 +11,9 @@ import type { AddDocumentDto } from '../schemas/addDocument.schema.js';
 
 // ── Loan response mapper ──────────────────────────────────────────────────────
 
-const PARTNER_NAMES: Record<string, string> = {
-  'partner-eq-001':  'Equity Bank Kenya',
-  'partner-kcb-002': 'KCB Bank',
-  'partner-fa-003':  'Faulu Kenya',
-};
-
-const PRODUCT_NAMES: Record<string, Record<string, string>> = {
-  'partner-eq-001': {
-    agricultural_working_capital: 'Equity Kilimo Loan',
-    asset_finance:                'Equity Asset Finance',
-  },
-  'partner-kcb-002': {
-    agricultural_working_capital: 'KCB Agri-Loan',
-    emergency:                    'KCB Emergency Farm Loan',
-  },
-  'partner-fa-003': {
-    back_to_school: 'Faulu Back-to-School Harvest Loan',
-  },
-};
-
 type RawLoan = NonNullable<Awaited<ReturnType<typeof loanRepo.findLoanById>>>;
 
-function mapLoan(loan: RawLoan) {
-  const pid = loan.partnerBankId ?? null;
-  const partnerName = pid ? (PARTNER_NAMES[pid] ?? pid) : 'Partner Bank';
-  const productName = pid
-    ? (PRODUCT_NAMES[pid]?.[loan.type] ?? 'Agricultural Loan')
-    : 'Agricultural Loan';
-
+function mapLoan(loan: RawLoan, partnerName = 'Partner Bank', productName = 'Agricultural Loan') {
   const timeline: Array<{ status: string; timestamp: string }> = [];
   if (loan.submittedAt) {
     timeline.push({ status: 'submitted', timestamp: loan.submittedAt.toISOString() });
@@ -49,7 +24,7 @@ function mapLoan(loan: RawLoan) {
 
   return {
     id:                  loan.id,
-    productId:           pid ?? '',
+    productId:           loan.partnerBankId ?? '',
     productName,
     partnerName,
     amountRequestedKes:  Number(loan.amountRequestedKes),
@@ -65,16 +40,46 @@ function mapLoan(loan: RawLoan) {
   };
 }
 
-type LoanType = 'agricultural_working_capital' | 'back_to_school' | 'asset_finance' | 'emergency';
+async function resolveProductInfo(productId: string | undefined, dto: CreateLoanDto) {
+  if (productId) {
+    const product = await productRepo.findProductById(productId);
+    if (product) {
+      return {
+        type:          product.category === 'back_to_school' ? ('back_to_school' as const)
+                     : product.category === 'asset_finance'  ? ('asset_finance' as const)
+                     : product.category === 'emergency'       ? ('emergency' as const)
+                     : ('agricultural_working_capital' as const),
+        partnerBankId: product.partnerId,
+        partnerName:   product.partner.name,
+        productName:   product.name,
+      };
+    }
+  }
+  return {
+    type:          (dto.type ?? 'agricultural_working_capital') as 'agricultural_working_capital' | 'back_to_school' | 'asset_finance' | 'emergency',
+    partnerBankId: dto.partnerBankId,
+    partnerName:   'Partner Bank',
+    productName:   'Agricultural Loan',
+  };
+}
 
-const PRODUCT_LOOKUP: Record<string, { type: LoanType; partnerBankId: string }> = {
-  'prod-eq-wc-001':     { type: 'agricultural_working_capital', partnerBankId: 'partner-eq-001' },
-  'prod-eq-af-002':     { type: 'asset_finance',                partnerBankId: 'partner-eq-001' },
-  'prod-kcb-ag-003':    { type: 'agricultural_working_capital', partnerBankId: 'partner-kcb-002' },
-  'prod-kcb-em-004':    { type: 'emergency',                    partnerBankId: 'partner-kcb-002' },
-  'prod-fa-micro-005':  { type: 'agricultural_working_capital', partnerBankId: 'partner-fa-003' },
-  'prod-fa-school-006': { type: 'back_to_school',               partnerBankId: 'partner-fa-003' },
-};
+async function resolveMapNames(loan: RawLoan) {
+  if (loan.partnerBankId) {
+    const products = await productRepo.findAllProducts();
+    const match = products.find(
+      (p: { partnerId: string; category: string }) => p.partnerId === loan.partnerBankId &&
+             (p.category === 'back_to_school' ? loan.type === 'back_to_school'
+              : p.category === 'asset_finance' ? loan.type === 'asset_finance'
+              : p.category === 'emergency'      ? loan.type === 'emergency'
+              : loan.type === 'agricultural_working_capital'),
+    );
+    return {
+      partnerName: match?.partner.name ?? loan.partnerBankId,
+      productName: match?.name ?? 'Agricultural Loan',
+    };
+  }
+  return { partnerName: 'Partner Bank', productName: 'Agricultural Loan' };
+}
 
 export async function submitLoan(
   req: AuthenticatedRequest,
@@ -85,9 +90,8 @@ export async function submitLoan(
     const dto = req.body as CreateLoanDto;
     const farmerId = req.user.id;
 
-    const productInfo = dto.productId ? PRODUCT_LOOKUP[dto.productId] : null;
-    const resolvedType: LoanType = productInfo?.type ?? dto.type ?? 'agricultural_working_capital';
-    const resolvedPartnerBankId = productInfo?.partnerBankId ?? dto.partnerBankId;
+    const { type: resolvedType, partnerBankId: resolvedPartnerBankId, partnerName, productName } =
+      await resolveProductInfo(dto.productId, dto);
 
     const creditScore = await creditScoreRepo.findCreditScore(farmerId);
     if (!creditScore) {
@@ -114,8 +118,8 @@ export async function submitLoan(
       creditScore.band as 'A' | 'B' | 'C' | 'D' | 'ineligible',
       {
         ...dto,
-        farmId:       dto.farmId ?? '',
-        type:         resolvedType,
+        farmId:        dto.farmId ?? '',
+        type:          resolvedType,
         partnerBankId: resolvedPartnerBankId,
       },
     );
@@ -128,7 +132,7 @@ export async function submitLoan(
       dto.amountRequestedKes,
     );
 
-    res.status(201).json({ data: mapLoan(loan) });
+    res.status(201).json({ data: mapLoan(loan, partnerName, productName) });
   } catch (err) {
     next(err);
   }
@@ -141,7 +145,13 @@ export async function listLoans(
 ): Promise<void> {
   try {
     const loans = await loanRepo.findLoansByFarmer(req.user.id);
-    res.json({ data: loans.map(mapLoan) });
+    const data = await Promise.all(
+      loans.map(async (loan: RawLoan) => {
+        const { partnerName, productName } = await resolveMapNames(loan);
+        return mapLoan(loan, partnerName, productName);
+      }),
+    );
+    res.json({ data });
   } catch (err) {
     next(err);
   }
@@ -157,8 +167,11 @@ export async function getLoan(
     if (!loan || loan.farmerId !== req.user.id) {
       throw createError('Loan not found', 404, 'LOAN_NOT_FOUND', 'error.finance.loan_not_found');
     }
-    const documents = await docRepo.findDocumentsByLoan(loan.id);
-    res.json({ data: { ...mapLoan(loan), documents } });
+    const [{ partnerName, productName }, documents] = await Promise.all([
+      resolveMapNames(loan),
+      docRepo.findDocumentsByLoan(loan.id),
+    ]);
+    res.json({ data: { ...mapLoan(loan, partnerName, productName), documents } });
   } catch (err) {
     next(err);
   }

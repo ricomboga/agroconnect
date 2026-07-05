@@ -1,80 +1,42 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
+import * as productRepo from '../repositories/loanProductRepository.js';
+import { createError } from '../middleware/errorHandler.js';
 
-const LOAN_PRODUCTS = [
-  {
-    id: 'prod-eq-wc-001',
-    name: 'Equity Kilimo Loan',
-    partnerId: 'partner-eq-001',
-    partnerName: 'Equity Bank Kenya',
-    interestRate: 13.0,
-    maxAmountKes: 500_000,
-    minAmountKes: 10_000,
-    repaymentMonths: 12,
-    eligibilityBand: 'B',
-    description: 'Working capital for farm inputs, seeds, and labour during planting season.',
-  },
-  {
-    id: 'prod-eq-af-002',
-    name: 'Equity Asset Finance',
-    partnerId: 'partner-eq-001',
-    partnerName: 'Equity Bank Kenya',
-    interestRate: 14.5,
-    maxAmountKes: 1_000_000,
-    minAmountKes: 50_000,
-    repaymentMonths: 36,
-    eligibilityBand: 'A',
-    description: 'Finance irrigation kits, tractors, greenhouses and other farm equipment.',
-  },
-  {
-    id: 'prod-kcb-ag-003',
-    name: 'KCB Agri-Loan',
-    partnerId: 'partner-kcb-002',
-    partnerName: 'KCB Bank',
-    interestRate: 12.5,
-    maxAmountKes: 500_000,
-    minAmountKes: 20_000,
-    repaymentMonths: 18,
-    eligibilityBand: 'B',
-    description: 'Multi-purpose agricultural loan for crop production and livestock.',
-  },
-  {
-    id: 'prod-kcb-em-004',
-    name: 'KCB Emergency Farm Loan',
-    partnerId: 'partner-kcb-002',
-    partnerName: 'KCB Bank',
-    interestRate: 15.0,
-    maxAmountKes: 200_000,
-    minAmountKes: 5_000,
-    repaymentMonths: 6,
-    eligibilityBand: 'C',
-    description: 'Fast-disbursed emergency loan for crop failure recovery or urgent inputs.',
-  },
-  {
-    id: 'prod-fa-micro-005',
-    name: 'Faulu Biashara ya Kilimo',
-    partnerId: 'partner-fa-003',
-    partnerName: 'Faulu Kenya',
-    interestRate: 18.0,
-    maxAmountKes: 150_000,
-    minAmountKes: 2_000,
-    repaymentMonths: 12,
-    eligibilityBand: 'C',
-    description: 'Microfinance loan for smallholder farmers. Group guarantee accepted.',
-  },
-  {
-    id: 'prod-fa-school-006',
-    name: 'Faulu Back-to-School Harvest Loan',
-    partnerId: 'partner-fa-003',
-    partnerName: 'Faulu Kenya',
-    interestRate: 16.0,
-    maxAmountKes: 50_000,
-    minAmountKes: 5_000,
-    repaymentMonths: 3,
-    eligibilityBand: 'C',
-    description: 'Short-term loan bridging school fees against anticipated harvest income.',
-  },
-];
+function mapProduct(p: Awaited<ReturnType<typeof productRepo.findProductById>>) {
+  if (!p) return null;
+  return {
+    id:              p.id,
+    partnerId:       p.partnerId,
+    partnerName:     p.partner.name,
+    partnerType:     p.partner.type,
+    name:            p.name,
+    category:        p.category,
+    description:     p.description ?? null,
+    interestRate:    Number(p.interestRate),
+    minAmountKes:    Number(p.minAmountKes),
+    maxAmountKes:    Number(p.maxAmountKes),
+    repaymentMonths: p.repaymentMonths,
+    eligibilityBand: p.eligibilityBand,
+  };
+}
 
-export function listProducts(_req: Request, res: Response): void {
-  res.json({ data: LOAN_PRODUCTS });
+export async function listProducts(_req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const products = await productRepo.findAllProducts();
+    res.json({ data: products.map(mapProduct) });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getProduct(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const product = await productRepo.findProductById(req.params['productId'] as string);
+    if (!product) {
+      throw createError('Product not found', 404, 'PRODUCT_NOT_FOUND', 'error.finance.product_not_found');
+    }
+    res.json({ data: mapProduct(product) });
+  } catch (err) {
+    next(err);
+  }
 }

@@ -1,35 +1,24 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
+import * as partnerRepo from '../repositories/loanPartnerRepository.js';
 
-const MOCK_PARTNERS = [
-  {
-    id: 'partner-eq-001',
-    name: 'Equity Bank Kenya',
-    type: 'bank',
-    minLoanKes: 5_000,
-    maxLoanKes: 500_000,
-    interestRatePct: 13.0,
-    processingDays: 3,
-  },
-  {
-    id: 'partner-kcb-002',
-    name: 'KCB Bank',
-    type: 'bank',
-    minLoanKes: 10_000,
-    maxLoanKes: 500_000,
-    interestRatePct: 12.5,
-    processingDays: 5,
-  },
-  {
-    id: 'partner-fa-003',
-    name: 'Faulu Kenya',
-    type: 'microfinance',
-    minLoanKes: 2_000,
-    maxLoanKes: 200_000,
-    interestRatePct: 18.0,
-    processingDays: 2,
-  },
-];
-
-export function listPartners(_req: Request, res: Response): void {
-  res.json({ data: MOCK_PARTNERS });
+export async function listPartners(_req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const partners = await partnerRepo.findAllPartners();
+    res.json({
+      data: partners.map((p) => ({
+        id:                 p.id,
+        name:               p.name,
+        type:               p.type,
+        description:        p.description ?? null,
+        minLoanKes:         Number(p.minLoanKes),
+        maxLoanKes:         Number(p.maxLoanKes),
+        processingDays:     p.processingDays,
+        activeFarmers:      p.activeFarmers,
+        repaymentRatePct:   Number(p.repaymentRatePct),
+        interestRateAnnual: Number(p.interestRateAnnual),
+      })),
+    });
+  } catch (err) {
+    next(err);
+  }
 }

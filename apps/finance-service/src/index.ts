@@ -7,8 +7,10 @@ import { mpesaRouter } from './routes/mpesaRoutes.js';
 import { partnerRouter } from './routes/partnerRoutes.js';
 import { productsRouter } from './routes/productsRoutes.js';
 import { transactionRouter } from './routes/transactionRoutes.js';
+import { reportRouter } from './routes/reportRoutes.js';
 import { internalStatsRouter } from './routes/internalStatsRoutes.js';
 import { lenderRouter } from './routes/lenderRoutes.js';
+import { farmerLenderRouter } from './routes/farmerLenderRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -25,7 +27,9 @@ app.use('/api/v1/finance/mpesa', mpesaRouter);
 app.use('/api/v1/finance/partners', partnerRouter);
 app.use('/api/v1/finance/products', productsRouter);
 app.use('/api/v1/finance/transactions', transactionRouter);
+app.use('/api/v1/finance/reports', reportRouter);
 app.use('/api/v1/finance/lender', lenderRouter);
+app.use('/api/v1/finance/farmers', farmerLenderRouter);
 app.use('/internal/admin', internalStatsRouter);
 
 app.use(errorHandler);

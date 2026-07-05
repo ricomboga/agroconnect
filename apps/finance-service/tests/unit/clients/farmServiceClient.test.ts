@@ -91,6 +91,55 @@ describe('farmServiceClient.getFarmerInputs', () => {
   });
 });
 
+describe('farmServiceClient.getFarmerProductionSummary', () => {
+  const fakeSummary = {
+    cropHarvests: { totalHarvestedKg: 100, totalSoldKg: 80, totalRevenueKes: 8000, byCrop: [] },
+    animalProducts: { byType: [] },
+    collections: { totalSalesKes: 0, paidKes: 0, pendingKes: 0, byProductType: [] },
+  };
+
+  it('calls the internal production endpoint with the service token header', async () => {
+    const instance = getMockAxiosInstance();
+    instance.get.mockResolvedValueOnce({ data: { data: fakeSummary } });
+
+    const result = await farmServiceClient.getFarmerProductionSummary('farmer-1');
+
+    expect(instance.get).toHaveBeenCalledWith(
+      '/internal/production/farmer-1',
+      expect.objectContaining({
+        params: { from_date: undefined, to_date: undefined },
+        headers: expect.objectContaining({ 'x-service-token': expect.anything() }),
+      }),
+    );
+    expect(result).toEqual(fakeSummary);
+  });
+
+  it('forwards from_date/to_date as query params', async () => {
+    const instance = getMockAxiosInstance();
+    instance.get.mockResolvedValueOnce({ data: { data: fakeSummary } });
+
+    await farmServiceClient.getFarmerProductionSummary('farmer-1', {
+      fromDate: '2026-01-01',
+      toDate: '2026-06-30',
+    });
+
+    expect(instance.get).toHaveBeenCalledWith(
+      '/internal/production/farmer-1',
+      expect.objectContaining({ params: { from_date: '2026-01-01', to_date: '2026-06-30' } }),
+    );
+  });
+
+  it('throws CreditScoringError on 5xx error from farm-service', async () => {
+    const instance = getMockAxiosInstance();
+    const axiosErr = new AxiosError('Server error', undefined, { status: 503 } as never);
+    instance.get.mockRejectedValueOnce(axiosErr);
+
+    await expect(
+      farmServiceClient.getFarmerProductionSummary('farmer-1'),
+    ).rejects.toBeInstanceOf(farmServiceClient.CreditScoringError);
+  });
+});
+
 describe('farmServiceClient.getFarmerActivities', () => {
   it('fetches farms then activities for each farm', async () => {
     const instance = getMockAxiosInstance();

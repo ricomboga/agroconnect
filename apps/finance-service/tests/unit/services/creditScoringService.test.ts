@@ -32,6 +32,8 @@ const mockGetFarmerActivities = jest.mocked(farmClient.getFarmerActivities);
 const mockUpsertCreditScore = jest.mocked(creditScoreRepo.upsertCreditScore);
 const mockFindCreditScore = jest.mocked(creditScoreRepo.findCreditScore);
 
+const fakeComputedAt = new Date('2026-06-01T00:00:00.000Z');
+
 const fakeScoreRow = {
   farmerId: 'farmer-1',
   score: '72',
@@ -42,6 +44,7 @@ const fakeScoreRow = {
   inputManagementScore: '75',
   activityComplianceScore: '68',
   platformEngagementScore: '80',
+  computedAt: fakeComputedAt,
   createdAt: new Date(),
   updatedAt: new Date(),
 };
@@ -63,6 +66,7 @@ describe('creditScoringService.computeScore', () => {
     expect(mockUpsertCreditScore).toHaveBeenCalledTimes(1);
     expect(result.score).toBe(72);
     expect(result.band).toBe('B');
+    expect(result.computedAt).toEqual(fakeComputedAt);
   });
 });
 
@@ -74,6 +78,7 @@ describe('creditScoringService.getOrComputeScore', () => {
 
     expect(result.score).toBe(72);
     expect(result.band).toBe('B');
+    expect(result.computedAt).toEqual(fakeComputedAt);
     expect(mockGetFarmerHarvests).not.toHaveBeenCalled();
     expect(mockUpsertCreditScore).not.toHaveBeenCalled();
   });

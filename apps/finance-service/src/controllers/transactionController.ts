@@ -1,15 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from '../types/index.js';
 import type { CreateTransactionDto } from '../schemas/createTransaction.schema.js';
-import { randomUUID } from 'crypto';
-
-// In-memory store per process — persists for the session; good enough for Phase 1
-const store = new Map<string, Record<string, unknown>[]>();
-
-function getUserTransactions(userId: string): Record<string, unknown>[] {
-  if (!store.has(userId)) store.set(userId, []);
-  return store.get(userId)!;
-}
+import * as txRepo from '../repositories/transactionRepository.js';
 
 export async function listTransactions(
   req: AuthenticatedRequest,
@@ -17,8 +9,20 @@ export async function listTransactions(
   next: NextFunction,
 ): Promise<void> {
   try {
-    const transactions = getUserTransactions(req.user.id);
-    res.json({ data: [...transactions].reverse() });
+    const rows = await txRepo.findTransactionsByFarmer(req.user.id);
+    const data = rows.map((r) => ({
+      id:            r.id,
+      farmerId:      r.farmerId,
+      type:          r.type,
+      amountKes:     Number(r.amountKes),
+      category:      r.category,
+      linkedTo:      r.linkedTo,
+      buyerSupplier: r.buyerSupplier,
+      date:          r.date,
+      notes:         r.notes,
+      createdAt:     r.createdAt.toISOString(),
+    }));
+    res.json({ data });
   } catch (err) {
     next(err);
   }
@@ -31,21 +35,21 @@ export async function createTransaction(
 ): Promise<void> {
   try {
     const dto = req.body as CreateTransactionDto;
-    const tx = {
-      id:            randomUUID(),
-      farmerId:      req.user.id,
-      type:          dto.type,
-      amountKes:     dto.amountKes,
-      category:      dto.category,
-      linkedTo:      dto.linkedTo ?? null,
-      buyerSupplier: dto.buyerSupplier ?? null,
-      date:          dto.date,
-      notes:         dto.notes ?? null,
-      createdAt:     new Date().toISOString(),
-    };
-
-    getUserTransactions(req.user.id).push(tx);
-    res.status(201).json({ data: tx });
+    const r = await txRepo.createTransaction(req.user.id, dto);
+    res.status(201).json({
+      data: {
+        id:            r.id,
+        farmerId:      r.farmerId,
+        type:          r.type,
+        amountKes:     Number(r.amountKes),
+        category:      r.category,
+        linkedTo:      r.linkedTo,
+        buyerSupplier: r.buyerSupplier,
+        date:          r.date,
+        notes:         r.notes,
+        createdAt:     r.createdAt.toISOString(),
+      },
+    });
   } catch (err) {
     next(err);
   }

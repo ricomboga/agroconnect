@@ -15,10 +15,24 @@ const fakeScore = {
   band: 'B' as const,
   maxLoanKes: 50000,
   seasonsOfData: 3,
-  avgYieldScore: 70,
-  inputManagementScore: 75,
-  activityComplianceScore: 68,
-  platformEngagementScore: 80,
+  avgYieldScore: 17.5,
+  inputManagementScore: 18.75,
+  activityComplianceScore: 17,
+  platformEngagementScore: 20,
+  computedAt: new Date('2026-06-01T00:00:00.000Z'),
+};
+
+const expectedApiScore = {
+  score: 72,
+  band: 'B',
+  maxLoanKes: 50000,
+  lastComputedAt: '2026-06-01T00:00:00.000Z',
+  components: {
+    yield: { score: 70, weight: 25 },
+    inputs: { score: 75, weight: 25 },
+    activities: { score: 68, weight: 25 },
+    platform: { score: 80, weight: 25 },
+  },
 };
 
 function makeReq(overrides: Record<string, unknown> = {}): Request {
@@ -51,7 +65,7 @@ describe('creditController.getCreditScore', () => {
     await creditController.getCreditScore(req as never, res, next);
 
     expect(mockGetOrComputeScore).toHaveBeenCalledWith('farmer-1', 'test-token-abc');
-    expect(res.json).toHaveBeenCalledWith({ data: fakeScore });
+    expect(res.json).toHaveBeenCalledWith({ data: expectedApiScore });
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -89,7 +103,7 @@ describe('creditController.recomputeCreditScore', () => {
     await creditController.recomputeCreditScore(req as never, res, next);
 
     expect(mockComputeScore).toHaveBeenCalledWith('farmer-1', 'test-token-abc');
-    expect(res.json).toHaveBeenCalledWith({ data: fakeScore });
+    expect(res.json).toHaveBeenCalledWith({ data: expectedApiScore });
   });
 
   it('forwards errors to next', async () => {

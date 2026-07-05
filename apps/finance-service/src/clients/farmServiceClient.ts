@@ -112,6 +112,73 @@ export async function getFarmerInputs(
   return pages.flat();
 }
 
+export interface CropHarvestTotal {
+  cropName: string;
+  harvestedKg: number;
+  soldKg: number;
+  revenueKes: number;
+}
+
+export interface AnimalProductTotal {
+  productType: string;
+  unit: string;
+  totalQty: number;
+  soldQty: number;
+  revenueKes: number;
+}
+
+export interface CollectionTotal {
+  productType: string;
+  totalAmountKes: number;
+  totalQty: number;
+  unit: string;
+}
+
+export interface ProductionSummary {
+  cropHarvests: {
+    totalHarvestedKg: number;
+    totalSoldKg: number;
+    totalRevenueKes: number;
+    byCrop: CropHarvestTotal[];
+  };
+  animalProducts: {
+    byType: AnimalProductTotal[];
+  };
+  collections: {
+    totalSalesKes: number;
+    paidKes: number;
+    pendingKes: number;
+    byProductType: CollectionTotal[];
+  };
+}
+
+const SERVICE_TOKEN = process.env['INTERNAL_SERVICE_SECRET'] ?? '';
+
+/**
+ * Fetches aggregated crop/animal-product/collection totals for a farmer from
+ * farm-service's internal, service-to-service endpoint. Keyed by farmerId
+ * directly (not the caller's own JWT) so it works both for a farmer viewing
+ * their own report and a lender viewing a report for a farmer on their loan
+ * pipeline — see apps/farm-service/src/routes/internalProductionRoutes.ts.
+ */
+export async function getFarmerProductionSummary(
+  farmerId: string,
+  range: { fromDate?: string; toDate?: string } = {},
+): Promise<ProductionSummary> {
+  try {
+    const res = await client.get<{ data: ProductionSummary }>(
+      `/internal/production/${farmerId}`,
+      {
+        params: { from_date: range.fromDate, to_date: range.toDate },
+        headers: { 'x-service-token': SERVICE_TOKEN },
+      },
+    );
+    return res.data.data;
+  } catch (err) {
+    throw toScoringError(err, 'production summary');
+  }
+}
+
 export async function getFarmerActivities(
   farmerId: string,
   accessToken: string,

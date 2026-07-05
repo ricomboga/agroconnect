@@ -3,7 +3,14 @@ import * as creditScoreRepo from '../repositories/creditScoreRepository.js';
 import { computeScoreFromData, type ScoreResult } from '../scoring/computeScore.js';
 import { logger } from '../logger.js';
 
-export async function computeScore(farmerId: string, accessToken: string): Promise<ScoreResult> {
+export interface CreditScoreView extends ScoreResult {
+  computedAt: Date;
+}
+
+export async function computeScore(
+  farmerId: string,
+  accessToken: string,
+): Promise<CreditScoreView> {
   logger.info({ farmerId }, 'Computing credit score');
 
   const [harvests, inputs, activities] = await Promise.all([
@@ -14,20 +21,20 @@ export async function computeScore(farmerId: string, accessToken: string): Promi
 
   const result = computeScoreFromData(harvests, inputs, activities);
 
-  await creditScoreRepo.upsertCreditScore(farmerId, result);
+  const saved = await creditScoreRepo.upsertCreditScore(farmerId, result);
 
   logger.info(
     { farmerId, score: result.score, band: result.band },
     'Credit score computed and saved',
   );
 
-  return result;
+  return { ...result, computedAt: saved.computedAt };
 }
 
 export async function getOrComputeScore(
   farmerId: string,
   accessToken: string,
-): Promise<ScoreResult> {
+): Promise<CreditScoreView> {
   const existing = await creditScoreRepo.findCreditScore(farmerId);
 
   if (existing) {
@@ -40,6 +47,7 @@ export async function getOrComputeScore(
       inputManagementScore: Number(existing.inputManagementScore),
       activityComplianceScore: Number(existing.activityComplianceScore),
       platformEngagementScore: Number(existing.platformEngagementScore),
+      computedAt: existing.computedAt,
     };
   }
 
