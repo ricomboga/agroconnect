@@ -126,6 +126,8 @@ All endpoints require JWT. Farmers access their own farms only; admin can access
 | GET | /finance/loans/:loanId/repayments | JWT (farmer) | Repayment schedule |
 | POST | /finance/mpesa/callback | None (IP whitelist) | M-Pesa STK push result |
 | GET | /finance/products | JWT | All loan products from all partners |
+| GET | /finance/reports/me?from_date&to_date | JWT (farmer) | Comprehensive financial report: transaction income/expense totals + farm production (harvests, eggs/milk/honey, customer collections) + cached credit score. Query dates optional, `YYYY-MM-DD`. |
+| GET | /finance/lender/loans/:loanId/report?from_date&to_date | JWT (lender, own pipeline only) | Same comprehensive report as above, scoped to the farmer who applied for `loanId`. Used by financial institutions to score loan applicants. |
 
 ---
 

@@ -30,6 +30,14 @@ MPESA_SHORTCODE
 MPESA_PASSKEY
 MPESA_CALLBACK_URL  https://api.agroconnect.africa/api/v1/finance/mpesa/callback
 MPESA_ENV           sandbox|production
+FARM_SERVICE_URL    http://localhost:3001  (used for credit scoring + farmer reports)
+INTERNAL_SERVICE_SECRET  shared secret sent as x-service-token on internal, service-to-service calls (e.g. GET farm-service /internal/production/:farmerId)
+```
+
+## farm-service
+```
+INTERNAL_SERVICE_SECRET  shared secret checked on /internal/* routes (admin stats, production summary) — must match finance-service's value
+MEDIA_SERVICE_URL   http://localhost:3010  (used for async farm PDF report generation)
 ```
 
 ## notification-service + ussd-service

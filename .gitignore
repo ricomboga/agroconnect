@@ -23,6 +23,7 @@ turbo_coverage_out.txt
 
 # Expo
 apps/mobile/.expo/
+.expo/
 
 # Environment
 .env

@@ -26,6 +26,8 @@ apps/ussd-service/node_modules
 packages/db/node_modules
 packages/shared/node_modules
 packages/kafka/node_modules
+packages/web-ui/node_modules
+packages/web-auth/node_modules
 packages/packages/node_modules
 
 # Prisma generated clients — rebuilt inside Docker for Linux target
