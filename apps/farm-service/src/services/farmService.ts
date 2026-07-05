@@ -13,7 +13,7 @@ function ownerFilter(ownerId: string, role: string): string | undefined {
 }
 
 export async function createFarm(ownerId: string, dto: CreateFarmDto) {
-  const { firstCrop, firstCropVariety, plantingDate, ...farmFields } = dto;
+  const { ownerId: _ignoredOwnerId, firstCrop, firstCropVariety, plantingDate, ...farmFields } = dto;
 
   const farm = await farmRepo.createFarm(ownerId, farmFields);
 
@@ -49,20 +49,36 @@ export async function createFarm(ownerId: string, dto: CreateFarmDto) {
   return farmRepo.findFarmById(farm.id);
 }
 
-export async function listFarms(ownerId: string, role: string, pagination: PaginationParams) {
+export interface ListFarmsFilters {
+  search?: string;
+  county?: string;
+}
+
+export async function listFarms(
+  ownerId: string,
+  role: string,
+  pagination: PaginationParams,
+  filters: ListFarmsFilters = {},
+) {
+  let farms: Awaited<ReturnType<typeof farmRepo.findFarmsByOwner>>;
+  let total: number;
+
   if (role === 'farm_worker') {
-    const [farms, total] = await Promise.all([
+    [farms, total] = await Promise.all([
       farmRepo.findFarmsByWorker(ownerId, pagination),
       farmRepo.countFarmsByWorker(ownerId),
     ]);
-    return { farms, total };
+  } else {
+    const filter = ownerFilter(ownerId, role);
+    [farms, total] = await Promise.all([
+      farmRepo.findFarmsByOwner(filter, pagination, filters),
+      farmRepo.countFarmsByOwner(filter, filters),
+    ]);
   }
-  const filter = ownerFilter(ownerId, role);
-  const [farms, total] = await Promise.all([
-    farmRepo.findFarmsByOwner(filter, pagination),
-    farmRepo.countFarmsByOwner(filter),
-  ]);
-  return { farms, total };
+
+  const statsMap = await farmRepo.getFarmStats(farms.map((f) => f.id));
+  const farmsWithStats = farms.map((f) => ({ ...f, ...statsMap[f.id] }));
+  return { farms: farmsWithStats, total };
 }
 
 export async function getFarm(farmId: string, ownerId: string, role: string) {

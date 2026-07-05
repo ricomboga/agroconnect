@@ -75,7 +75,7 @@ describe('farmController.listFarms', () => {
 
     await farmController.listFarms(req as never, res, next);
 
-    expect(mockListFarms).toHaveBeenCalledWith('owner-1', 'farmer', { take: 20, skip: 0 });
+    expect(mockListFarms).toHaveBeenCalledWith('owner-1', 'farmer', { take: 20, skip: 0 }, { search: undefined, county: undefined });
     expect(res.json).toHaveBeenCalledWith({
       data: [fakeFarm],
       meta: { total: 1, page: 1, page_size: 20 },

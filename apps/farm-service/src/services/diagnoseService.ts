@@ -72,6 +72,23 @@ async function diagnosisRequest<T>(path: string, options?: RequestInit): Promise
   return res.json() as Promise<T>;
 }
 
+// Internal routes (diagnosis-service's createInternalRouter) are mounted at
+// `/internal`, not under `/api/v1` — they use a separate prefix from the public API.
+async function diagnosisInternalRequest<T>(path: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(`${DIAGNOSIS_URL}/internal${path}`, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', ...(options?.headers ?? {}) },
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw Object.assign(new Error(`diagnosis-service ${options?.method ?? 'GET'} ${path} → ${res.status}`), {
+      statusCode: res.status,
+      body: text,
+    });
+  }
+  return res.json() as Promise<T>;
+}
+
 async function marketRequest<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${MARKET_URL}${path}`, options);
   if (!res.ok) {
@@ -112,14 +129,14 @@ export async function uploadImageToMedia(
 }
 
 export async function submitDiagnosis(payload: DiagnosisSubmitPayload): Promise<{ id: string; status: string }> {
-  return diagnosisRequest<{ id: string; status: string }>('/internal/diagnoses/submit', {
+  return diagnosisInternalRequest<{ id: string; status: string }>('/diagnoses/submit', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
 }
 
 export async function getDiagnosisResult(diagnosisId: string): Promise<DiagnosisResultFull> {
-  const raw = await diagnosisRequest<DiagnosisResultFull>(`/diagnoses/${diagnosisId}`);
+  const raw = await diagnosisRequest<DiagnosisResultFull>(`/${diagnosisId}`);
 
   // Enrich with supplier availability for any prescription that names a product
   const productNames = (raw.prescriptions ?? [])
@@ -139,7 +156,7 @@ export async function listDiagnosesByFarm(
   limit: number,
 ): Promise<{ data: DiagnosisResultFull[]; total: number }> {
   return diagnosisRequest<{ data: DiagnosisResultFull[]; total: number }>(
-    `/diagnoses/farm/${farmId}?skip=${skip}&limit=${limit}`,
+    `/farm/${farmId}?skip=${skip}&limit=${limit}`,
   );
 }
 
@@ -147,7 +164,7 @@ export async function submitFeedback(
   diagnosisId: string,
   body: { rating: number; outcome: string; notes?: string },
 ): Promise<void> {
-  await diagnosisRequest<void>(`/diagnoses/${diagnosisId}/feedback`, {
+  await diagnosisRequest<void>(`/${diagnosisId}/feedback`, {
     method: 'POST',
     body: JSON.stringify(body),
   });

@@ -72,9 +72,39 @@ export async function addWorker(
   return worker;
 }
 
+async function fetchWorkerProfiles(userIds: string[]): Promise<Record<string, { fullName: string; phone: string }>> {
+  if (userIds.length === 0) return {};
+  const authUrl = process.env['AUTH_SERVICE_URL'];
+  const serviceSecret = process.env['INTERNAL_SERVICE_SECRET'];
+  if (!authUrl || !serviceSecret) return {};
+  try {
+    const res = await fetch(
+      `${authUrl}/internal/admin/users/batch?ids=${userIds.join(',')}`,
+      { headers: { 'x-service-token': serviceSecret } },
+    );
+    if (!res.ok) return {};
+    const body = await res.json() as { data: Record<string, { fullName: string; phone: string }> };
+    return body.data ?? {};
+  } catch (err) {
+    logger.error({ err, context: 'fetchWorkerProfiles' }, 'Failed to fetch worker profiles from auth-service');
+    return {};
+  }
+}
+
 export async function listWorkers(farmId: string, requesterId: string, requesterRole: string) {
   await assertFarmAccess(farmId, requesterId, requesterRole);
-  return workerRepo.findWorkersByFarm(farmId);
+  const workers = await workerRepo.findWorkersByFarm(farmId);
+  const profiles = await fetchWorkerProfiles(workers.map((w) => w.userId));
+  return workers.map((w) => ({
+    id: w.id,
+    userId: w.userId,
+    role: w.role,
+    isActive: w.isActive,
+    addedAt: w.addedAt,
+    assignedTaskCount: w.assignedTaskCount,
+    fullName: profiles[w.userId]?.fullName ?? `Worker ${w.userId.slice(0, 8)}`,
+    phone: profiles[w.userId]?.phone ?? null,
+  }));
 }
 
 export async function removeWorker(

@@ -11,7 +11,7 @@ import { saveCropDetailsSchema } from '../schemas/saveCropDetails.schema.js';
 import { addCropSchema } from '../schemas/addCrop.schema.js';
 import { addAnimalSchema } from '../schemas/addAnimal.schema.js';
 import { scheduleQuerySchema } from '../schemas/scheduleQuery.schema.js';
-import { paginationQuerySchema } from '@agroconnect/shared';
+import { listFarmsQuerySchema } from '../schemas/listFarms.query.schema.js';
 import * as farmController from '../controllers/farmController.js';
 import * as summaryController from '../controllers/summaryController.js';
 import * as reportController from '../controllers/reportController.js';
@@ -27,7 +27,7 @@ const auth = requireAuth as (req: Request, res: Response, next: NextFunction) =>
 router.post('/', auth, validateBody(createFarmSchema), (req, res, next) =>
   farmController.createFarm(req as AuthenticatedRequest, res, next),
 );
-router.get('/', auth, validateQuery(paginationQuerySchema), (req, res, next) =>
+router.get('/', auth, validateQuery(listFarmsQuerySchema), (req, res, next) =>
   farmController.listFarms(req as AuthenticatedRequest, res, next),
 );
 router.get('/:farmId', auth, (req, res, next) =>

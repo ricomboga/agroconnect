@@ -1,5 +1,6 @@
 // PHASE_3: replace with trained crop-specific ML model
 import { prisma } from '@agroconnect/db/farm';
+import { logger } from '../logger.js';
 
 type ActivityTypeValue =
   | 'planting'
@@ -15,6 +16,19 @@ interface ScheduleEntry {
   title: string;
   offsetDays: number;
 }
+
+const ACTIVITY_EMOJI: Record<string, string> = {
+  irrigation:  '💧',
+  pesticide:   '🌿',
+  fertilising: '🌾',
+  weeding:     '✂️',
+  planting:    '🌱',
+  harvesting:  '🌽',
+  vaccination: '💉',
+  deworming:   '💊',
+  feeding:     '🐾',
+  other:       '📋',
+};
 
 function addDays(base: Date, days: number): Date {
   const d = new Date(base);
@@ -139,6 +153,62 @@ export interface ScheduleFilter {
   plotId?: string;
 }
 
+export interface ScheduledActivityDto {
+  id: string;
+  title: string;
+  activityType: string;
+  activityEmoji: string;
+  status: 'overdue' | 'today' | 'this_week' | 'upcoming' | 'completed' | 'skipped';
+  scheduledDate: string;
+  completedDate: string | null;
+  plotName: string | null;
+  cropName: string | null;
+  animalName: string | null;
+  aiReason: string | null;
+  assignedToWorkerId: string | null;
+  assignedToWorkerName: string | null;
+  daysLate: number | null;
+  daysUntil: number | null;
+}
+
+async function batchFetchWorkerNames(userIds: string[]): Promise<Record<string, { fullName: string; phone: string }>> {
+  if (userIds.length === 0) return {};
+  const authUrl = process.env['AUTH_SERVICE_URL'];
+  const serviceSecret = process.env['INTERNAL_SERVICE_SECRET'];
+  if (!authUrl || !serviceSecret) return {};
+  try {
+    const res = await fetch(
+      `${authUrl}/internal/admin/users/batch?ids=${userIds.join(',')}`,
+      { headers: { 'x-service-token': serviceSecret } },
+    );
+    if (!res.ok) return {};
+    const body = await res.json() as { data: Record<string, { fullName: string; phone: string }> };
+    return body.data ?? {};
+  } catch (err) {
+    logger.warn({ err, context: 'batchFetchWorkerNames' }, 'Failed to fetch worker names from auth-service');
+    return {};
+  }
+}
+
+function computeActivityStatus(
+  dbStatus: string,
+  scheduledDate: Date,
+  today: Date,
+): { status: ScheduledActivityDto['status']; daysLate: number | null; daysUntil: number | null } {
+  if (dbStatus === 'completed') return { status: 'completed', daysLate: null, daysUntil: null };
+  if (dbStatus === 'skipped') return { status: 'skipped', daysLate: null, daysUntil: null };
+
+  const sched = new Date(scheduledDate);
+  sched.setHours(0, 0, 0, 0);
+  const diffMs = sched.getTime() - today.getTime();
+  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) return { status: 'overdue', daysLate: Math.abs(diffDays), daysUntil: null };
+  if (diffDays === 0) return { status: 'today', daysLate: null, daysUntil: 0 };
+  if (diffDays <= 7) return { status: 'this_week', daysLate: null, daysUntil: diffDays };
+  return { status: 'upcoming', daysLate: null, daysUntil: diffDays };
+}
+
 export async function getFarmSchedule(farmId: string, filter: ScheduleFilter) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -165,30 +235,59 @@ export async function getFarmSchedule(farmId: string, filter: ScheduleFilter) {
     orderBy: { scheduledDate: 'asc' },
   });
 
+  // Batch-fetch plots
+  const plotIds = [...new Set(activities.map((a) => a.plotId).filter((id): id is string => id != null))];
+  const plots = plotIds.length > 0
+    ? await prisma.farmPlot.findMany({ where: { id: { in: plotIds } } })
+    : [];
+  const plotMap = new Map(plots.map((p) => [p.id, p]));
+
+  // Batch-fetch worker names from auth-service
+  const workerIds = [...new Set(activities.map((a) => a.assignedToWorkerId).filter((id): id is string => id != null))];
+  const workerProfiles = await batchFetchWorkerNames(workerIds);
+
+  // Transform activities to ScheduledActivityDto
+  const transformed: ScheduledActivityDto[] = activities.map((a) => {
+    const plot = a.plotId ? plotMap.get(a.plotId) : null;
+    const { status, daysLate, daysUntil } = computeActivityStatus(a.status, a.scheduledDate, today);
+
+    // For non-plot activities (e.g. livestock vaccination), derive animalName from description
+    const animalName = !a.plotId && a.description
+      ? a.description.split('.')[0]?.trim() ?? null
+      : null;
+
+    return {
+      id: a.id,
+      title: a.title,
+      activityType: a.type,
+      activityEmoji: ACTIVITY_EMOJI[a.type] ?? '📋',
+      status,
+      scheduledDate: a.scheduledDate.toISOString(),
+      completedDate: a.completedDate ? a.completedDate.toISOString() : null,
+      plotName: plot?.name ?? null,
+      cropName: plot?.currentCrop ?? null,
+      animalName,
+      aiReason: a.description ?? null,
+      assignedToWorkerId: a.assignedToWorkerId ?? null,
+      assignedToWorkerName: a.assignedToWorkerId
+        ? (workerProfiles[a.assignedToWorkerId]?.fullName ?? null)
+        : null,
+      daysLate,
+      daysUntil,
+    };
+  });
+
   if (filter.status) {
-    return { data: activities, grouped: null };
+    return { data: transformed, grouped: null };
   }
 
-  const overdue: typeof activities = [];
-  const todayItems: typeof activities = [];
-  const upcoming: typeof activities = [];
-  const done: typeof activities = [];
-
-  for (const a of activities) {
-    if (a.status === 'completed' || a.status === 'skipped') {
-      done.push(a);
-    } else {
-      const scheduled = new Date(a.scheduledDate);
-      scheduled.setHours(0, 0, 0, 0);
-      const diff = scheduled.getTime() - today.getTime();
-      if (diff < 0) overdue.push(a);
-      else if (diff === 0) todayItems.push(a);
-      else upcoming.push(a);
-    }
-  }
+  const overdue = transformed.filter((a) => a.status === 'overdue');
+  const todayItems = transformed.filter((a) => a.status === 'today');
+  const upcoming = transformed.filter((a) => a.status === 'this_week' || a.status === 'upcoming');
+  const done = transformed.filter((a) => a.status === 'completed' || a.status === 'skipped');
 
   return {
-    data: activities,
+    data: transformed,
     grouped: { overdue, today: todayItems, upcoming, done },
   };
 }

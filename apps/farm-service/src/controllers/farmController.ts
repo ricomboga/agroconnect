@@ -9,7 +9,9 @@ export async function createFarm(
   next: NextFunction,
 ): Promise<void> {
   try {
-    const farm = await farmService.createFarm(req.user.id, req.body);
+    const targetOwnerId =
+      req.user.role === 'admin' && req.body.ownerId ? (req.body.ownerId as string) : req.user.id;
+    const farm = await farmService.createFarm(targetOwnerId, req.body);
     res.status(201).json({ data: farm });
   } catch (err) {
     next(err);
@@ -23,7 +25,11 @@ export async function listFarms(
 ): Promise<void> {
   try {
     const pagination = parsePaginationParams(req.query);
-    const { farms, total } = await farmService.listFarms(req.user.id, req.user.role, pagination);
+    const filters = {
+      search: req.query['search'] as string | undefined,
+      county: req.query['county'] as string | undefined,
+    };
+    const { farms, total } = await farmService.listFarms(req.user.id, req.user.role, pagination, filters);
     const page = Number(req.query['page'] ?? 1);
     const pageSize = pagination.take;
     res.json({

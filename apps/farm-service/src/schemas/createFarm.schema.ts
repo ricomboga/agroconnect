@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const createFarmSchema = z.object({
+  ownerId: z.string().uuid().optional(),
   name: z.string().min(1).max(200),
   locationLat: z.number().min(-90).max(90),
   locationLng: z.number().min(-180).max(180),

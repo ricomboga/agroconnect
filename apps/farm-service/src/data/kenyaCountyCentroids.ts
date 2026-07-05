@@ -1,0 +1,57 @@
+export interface CountyCentroid {
+  county: string;
+  lat: number;
+  lng: number;
+}
+
+// Approximate centroid coordinates for Kenya's 47 counties, used for GPS sanity-checking
+// a farm's declared location against its declared county at admin-onboarding time.
+export const KENYA_COUNTY_CENTROIDS: CountyCentroid[] = [
+  { county: 'Mombasa', lat: -4.0435, lng: 39.6682 },
+  { county: 'Kwale', lat: -4.1747, lng: 39.452 },
+  { county: 'Kilifi', lat: -3.5107, lng: 39.9093 },
+  { county: 'Tana River', lat: -1.5, lng: 40.0 },
+  { county: 'Lamu', lat: -2.2717, lng: 40.902 },
+  { county: 'Taita-Taveta', lat: -3.3167, lng: 38.35 },
+  { county: 'Garissa', lat: -0.4569, lng: 39.6583 },
+  { county: 'Wajir', lat: 1.7471, lng: 40.0573 },
+  { county: 'Mandera', lat: 3.9366, lng: 41.8669 },
+  { county: 'Marsabit', lat: 2.3284, lng: 37.9899 },
+  { county: 'Isiolo', lat: 0.3556, lng: 37.5833 },
+  { county: 'Meru', lat: 0.0489, lng: 37.6497 },
+  { county: 'Tharaka-Nithi', lat: -0.2971, lng: 37.7686 },
+  { county: 'Embu', lat: -0.5389, lng: 37.4506 },
+  { county: 'Kitui', lat: -1.375, lng: 38.0106 },
+  { county: 'Machakos', lat: -1.5177, lng: 37.2634 },
+  { county: 'Makueni', lat: -1.8038, lng: 37.6242 },
+  { county: 'Nyandarua', lat: -0.185, lng: 36.5228 },
+  { county: 'Nyeri', lat: -0.4201, lng: 36.9476 },
+  { county: 'Kirinyaga', lat: -0.6591, lng: 37.3827 },
+  { county: "Murang'a", lat: -0.7839, lng: 37.0402 },
+  { county: 'Kiambu', lat: -1.0333, lng: 36.8683 },
+  { county: 'Turkana', lat: 3.1167, lng: 35.6 },
+  { county: 'West Pokot', lat: 1.6167, lng: 35.1167 },
+  { county: 'Samburu', lat: 1.2, lng: 36.95 },
+  { county: 'Trans Nzoia', lat: 1.0167, lng: 34.95 },
+  { county: 'Uasin Gishu', lat: 0.5167, lng: 35.2833 },
+  { county: 'Elgeyo-Marakwet', lat: 0.8, lng: 35.5 },
+  { county: 'Nandi', lat: 0.1833, lng: 35.1167 },
+  { county: 'Baringo', lat: 0.4667, lng: 35.9667 },
+  { county: 'Laikipia', lat: 0.3667, lng: 36.7833 },
+  { county: 'Nakuru', lat: -0.3031, lng: 36.08 },
+  { county: 'Narok', lat: -1.0833, lng: 35.8667 },
+  { county: 'Kajiado', lat: -2.0982, lng: 36.7822 },
+  { county: 'Kericho', lat: -0.3667, lng: 35.2833 },
+  { county: 'Bomet', lat: -0.7833, lng: 35.35 },
+  { county: 'Kakamega', lat: 0.2827, lng: 34.7519 },
+  { county: 'Vihiga', lat: 0.0833, lng: 34.7167 },
+  { county: 'Bungoma', lat: 0.5667, lng: 34.5667 },
+  { county: 'Busia', lat: 0.4608, lng: 34.1115 },
+  { county: 'Siaya', lat: 0.0607, lng: 34.2881 },
+  { county: 'Kisumu', lat: -0.0917, lng: 34.7679 },
+  { county: 'Homa Bay', lat: -0.5273, lng: 34.4571 },
+  { county: 'Migori', lat: -1.0634, lng: 34.4731 },
+  { county: 'Kisii', lat: -0.6773, lng: 34.7796 },
+  { county: 'Nyamira', lat: -0.5633, lng: 34.9358 },
+  { county: 'Nairobi', lat: -1.2921, lng: 36.8219 },
+];
