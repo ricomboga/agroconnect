@@ -9,12 +9,26 @@ import { app } from '../../src/index';
 import { prisma } from '@agroconnect/db/market';
 
 jest.mock('../../src/middleware/auth', () => ({
-  requireAuth: (req: any, _res: any, next: any) => {
-    req.user = req.headers['x-test-role'] === 'farmer'
-      ? { id: 'farmer-001', role: 'farmer', isVerified: true, phone: '+254712000001' }
-      : req.headers['x-test-role'] === 'buyer'
-      ? { id: 'buyer-001', role: 'buyer', isVerified: true, phone: '+254712000002' }
-      : { id: 'user-001', role: 'extension_officer', isVerified: true, phone: '+254712000003' };
+  requireAuth: (req: any, res: any, next: any) => {
+    const role = req.headers['x-test-role'];
+    const userId = req.headers['x-test-user'];
+    if (role === 'farmer') {
+      req.user = { id: userId ?? 'farmer-001', role: 'farmer', isVerified: true, phone: '+254712000001' };
+    } else if (role === 'buyer') {
+      req.user = { id: userId ?? 'buyer-001', role: 'buyer', isVerified: true, phone: '+254712000002' };
+    } else if (role === 'extension_officer') {
+      req.user = { id: userId ?? 'user-001', role: 'extension_officer', isVerified: true, phone: '+254712000003' };
+    } else {
+      res.status(401).json({ error: { code: 'UNAUTHORIZED' } });
+      return;
+    }
+    next();
+  },
+  authorize: (...roles: string[]) => (req: any, res: any, next: any) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      res.status(403).json({ error: { code: 'FORBIDDEN' } });
+      return;
+    }
     next();
   },
 }));

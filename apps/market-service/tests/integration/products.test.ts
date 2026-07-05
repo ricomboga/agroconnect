@@ -9,10 +9,21 @@ import { app } from '../../src/index';
 import { prisma } from '@agroconnect/db/market';
 
 jest.mock('../../src/middleware/auth', () => ({
-  requireAuth: (req: any, _res: any, next: any) => {
-    const role = req.headers['x-test-role'] ?? 'supplier';
+  requireAuth: (req: any, res: any, next: any) => {
+    const role = req.headers['x-test-role'];
+    if (!role) {
+      res.status(401).json({ error: { code: 'UNAUTHORIZED' } });
+      return;
+    }
     const id = role === 'supplier' ? 'supplier-001' : 'buyer-001';
     req.user = { id, role, isVerified: true, phone: '+254712000001' };
+    next();
+  },
+  authorize: (...roles: string[]) => (req: any, res: any, next: any) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      res.status(403).json({ error: { code: 'FORBIDDEN' } });
+      return;
+    }
     next();
   },
 }));

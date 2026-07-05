@@ -7,6 +7,7 @@ import { parsePaginationParams, buildMeta } from '../utils/pagination.js';
 import { CreateOrderDto } from '../schemas/createOrder.schema.js';
 import { UpdateOrderStatusDto } from '../schemas/updateOrderStatus.schema.js';
 import { ListOrdersQuery } from '../schemas/listOrders.query.schema.js';
+import { ListCustomersQuery } from '../schemas/listCustomers.query.schema.js';
 
 const VALID_TRANSITIONS: Record<string, string> = {
   pending: 'confirmed',
@@ -81,4 +82,49 @@ export async function updateOrderStatus(
   const updated = await orderRepo.updateOrderStatus(orderId, dto.status);
   await publishOrderUpdated(orderId, dto.status, userId);
   return updated;
+}
+
+/**
+ * Orders scoped to the authenticated supplier's own products.
+ *
+ * NOTE: `Order` in this schema carries a single `supplierId` per order (no
+ * multi-supplier line items — see packages/db/prisma/market/schema.prisma),
+ * so "orders containing at least one line item for a product owned by the
+ * supplier" reduces to a direct `supplierId` match. This reuses the same
+ * `findOrders`/`countOrders` repo functions the generic `/orders` list uses,
+ * forcing role to 'supplier' regardless of the caller's actual role so an
+ * admin hitting this "me"-scoped endpoint still only sees their own id's
+ * orders (there is no supplier identity for admin callers here).
+ */
+export async function listSupplierOrders(supplierId: string, query: ListOrdersQuery) {
+  const pagination = parsePaginationParams(query as Record<string, unknown>);
+  const [orders, total] = await Promise.all([
+    orderRepo.findOrders(supplierId, 'supplier', query, pagination),
+    orderRepo.countOrders(supplierId, 'supplier', query),
+  ]);
+  return { orders, meta: buildMeta(query as Record<string, unknown>, pagination, total) };
+}
+
+export interface SupplierCustomerSummary {
+  buyerId: string;
+  orderCount: number;
+  totalSpentKes: number;
+  lastOrderAt: Date;
+}
+
+/**
+ * Per-customer aggregate for the authenticated supplier: order count, total
+ * spent, and last order date, grouped by buyer. Because every `Order` row
+ * already belongs to exactly one supplier (see note above), `totalSpentKes`
+ * is the exact amount attributable to this supplier — there is no
+ * multi-supplier order total to apportion. Computed via `prisma.groupBy`
+ * (no raw SQL), bounded/paginated via take+skip.
+ */
+export async function getSupplierCustomers(supplierId: string, query: ListCustomersQuery) {
+  const pagination = parsePaginationParams(query as Record<string, unknown>);
+  const [customers, total] = await Promise.all([
+    orderRepo.groupCustomersBySupplier(supplierId, pagination),
+    orderRepo.countDistinctCustomersForSupplier(supplierId),
+  ]);
+  return { customers, meta: buildMeta(query as Record<string, unknown>, pagination, total) };
 }

@@ -54,3 +54,21 @@ export async function updateProduct(productId: string, dto: UpdateProductDto) {
     data: dto,
   });
 }
+
+export async function countActiveProductsBySupplier(supplierId: string): Promise<number> {
+  return prisma.supplierProduct.count({ where: { supplierId, isActive: true } });
+}
+
+export async function countLowStockProductsBySupplier(supplierId: string, threshold: number): Promise<number> {
+  return prisma.supplierProduct.count({
+    where: { supplierId, isActive: true, stockQuantity: { lte: threshold } },
+  });
+}
+
+export async function findLowStockProductsBySupplier(supplierId: string, threshold: number, limit: number) {
+  return prisma.supplierProduct.findMany({
+    where: { supplierId, isActive: true, stockQuantity: { lte: threshold } },
+    orderBy: { stockQuantity: 'asc' },
+    take: limit,
+  });
+}

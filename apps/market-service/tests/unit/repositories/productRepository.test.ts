@@ -103,3 +103,36 @@ describe('productRepository.updateProduct', () => {
     });
   });
 });
+
+describe('productRepository.countActiveProductsBySupplier', () => {
+  it('counts active products for the supplier', async () => {
+    mockCount.mockResolvedValue(4);
+    const result = await repo.countActiveProductsBySupplier('supplier-001');
+    expect(result).toBe(4);
+    expect(mockCount).toHaveBeenCalledWith({ where: { supplierId: 'supplier-001', isActive: true } });
+  });
+});
+
+describe('productRepository.countLowStockProductsBySupplier', () => {
+  it('counts products at or below the threshold', async () => {
+    mockCount.mockResolvedValue(2);
+    const result = await repo.countLowStockProductsBySupplier('supplier-001', 10);
+    expect(result).toBe(2);
+    expect(mockCount).toHaveBeenCalledWith({
+      where: { supplierId: 'supplier-001', isActive: true, stockQuantity: { lte: 10 } },
+    });
+  });
+});
+
+describe('productRepository.findLowStockProductsBySupplier', () => {
+  it('returns low-stock products ordered ascending and bounded by limit', async () => {
+    mockFindMany.mockResolvedValue([BASE_PRODUCT]);
+    const result = await repo.findLowStockProductsBySupplier('supplier-001', 10, 50);
+    expect(result).toEqual([BASE_PRODUCT]);
+    expect(mockFindMany).toHaveBeenCalledWith({
+      where: { supplierId: 'supplier-001', isActive: true, stockQuantity: { lte: 10 } },
+      orderBy: { stockQuantity: 'asc' },
+      take: 50,
+    });
+  });
+});

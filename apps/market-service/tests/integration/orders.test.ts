@@ -19,6 +19,13 @@ jest.mock('../../src/middleware/auth', () => ({
     else { res.status(401).json({ error: { code: 'UNAUTHORIZED' } }); return; }
     next();
   },
+  authorize: (...roles: string[]) => (req: any, res: any, next: any) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      res.status(403).json({ error: { code: 'FORBIDDEN' } });
+      return;
+    }
+    next();
+  },
 }));
 
 jest.mock('../../src/events/producers/orderPlacedProducer', () => ({

@@ -3,6 +3,7 @@ const mockFindMany = jest.fn();
 const mockCount = jest.fn();
 const mockFindUnique = jest.fn();
 const mockUpdate = jest.fn();
+const mockGroupBy = jest.fn();
 
 jest.mock('@agroconnect/db/market', () => ({
   prisma: {
@@ -12,6 +13,7 @@ jest.mock('@agroconnect/db/market', () => ({
       count: mockCount,
       findUnique: mockFindUnique,
       update: mockUpdate,
+      groupBy: mockGroupBy,
     },
   },
 }));
@@ -108,5 +110,66 @@ describe('orderRepository.updateOrderStatus', () => {
       where: { id: 'order-001' },
       data: { status: 'confirmed' },
     });
+  });
+});
+
+describe('orderRepository.countDistinctCustomersForSupplier', () => {
+  it('counts distinct buyers scoped to the supplier, bounded by a scan cap', async () => {
+    mockFindMany.mockResolvedValue([{ buyerId: 'buyer-001' }, { buyerId: 'buyer-002' }]);
+    const result = await repo.countDistinctCustomersForSupplier('supplier-001');
+    expect(result).toBe(2);
+    expect(mockFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { supplierId: 'supplier-001' },
+        distinct: ['buyerId'],
+        take: 5000,
+      }),
+    );
+  });
+});
+
+describe('orderRepository.groupCustomersBySupplier', () => {
+  it('groups orders by buyer and maps aggregate fields', async () => {
+    mockGroupBy.mockResolvedValue([
+      {
+        buyerId: 'buyer-001',
+        _count: { _all: 3 },
+        _sum: { totalPriceKes: '11400' },
+        _max: { createdAt: new Date('2026-06-01') },
+      },
+    ]);
+
+    const result = await repo.groupCustomersBySupplier('supplier-001', { take: 20, skip: 0 });
+
+    expect(mockGroupBy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        by: ['buyerId'],
+        where: { supplierId: 'supplier-001' },
+        take: 20,
+        skip: 0,
+      }),
+    );
+    expect(result).toEqual([
+      {
+        buyerId: 'buyer-001',
+        orderCount: 3,
+        totalSpentKes: 11400,
+        lastOrderAt: new Date('2026-06-01'),
+      },
+    ]);
+  });
+
+  it('defaults totalSpentKes to 0 when the sum is null', async () => {
+    mockGroupBy.mockResolvedValue([
+      {
+        buyerId: 'buyer-002',
+        _count: { _all: 0 },
+        _sum: { totalPriceKes: null },
+        _max: { createdAt: new Date('2026-06-01') },
+      },
+    ]);
+
+    const result = await repo.groupCustomersBySupplier('supplier-001', { take: 20, skip: 0 });
+    expect(result[0]?.totalSpentKes).toBe(0);
   });
 });

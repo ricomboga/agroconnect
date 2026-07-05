@@ -27,7 +27,19 @@ export async function searchProductsByNames(
     where['countyAvailability'] = { array_contains: [county] };
   }
 
-  const rows = await prisma.supplierProduct.findMany({
+  interface RawProductSearchRow {
+    id: string;
+    supplierId: string;
+    name: string;
+    category: string;
+    brand: string | null;
+    unit: string;
+    pricePerUnitKes: unknown;
+    stockQuantity: unknown;
+    countyAvailability: unknown;
+  }
+
+  const rawRows = await prisma.supplierProduct.findMany({
     where,
     orderBy: [{ stockQuantity: 'desc' }, { pricePerUnitKes: 'asc' }],
     take: 20,
@@ -43,6 +55,7 @@ export async function searchProductsByNames(
       countyAvailability: true,
     },
   });
+  const rows = rawRows as unknown as RawProductSearchRow[];
 
   return rows.map((r) => ({
     id: r.id,

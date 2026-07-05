@@ -5,6 +5,7 @@ import { listingRouter } from './routes/listingRoutes.js';
 import { productRouter } from './routes/productRoutes.js';
 import { orderRouter } from './routes/orderRoutes.js';
 import { priceRouter } from './routes/priceRoutes.js';
+import { supplierRouter } from './routes/supplierRoutes.js';
 import { internalStatsRouter } from './routes/internalStatsRoutes.js';
 import { internalProductSearchRouter } from './routes/internalProductSearchRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -22,6 +23,7 @@ app.use('/api/v1/market/listings', listingRouter);
 app.use('/api/v1/market/products', productRouter);
 app.use('/api/v1/market/orders', orderRouter);
 app.use('/api/v1/market/prices', priceRouter);
+app.use('/api/v1/market/suppliers', supplierRouter);
 app.use('/internal/admin', internalStatsRouter);
 app.use('/internal/products', internalProductSearchRouter);
 

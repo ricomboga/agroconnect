@@ -1,1 +1,1 @@
-export { authenticate as requireAuth } from '@agroconnect/shared';
+export { authenticate as requireAuth, authorize } from '@agroconnect/shared';
