@@ -17,6 +17,7 @@ function serviceToken(): string {
 export interface FarmStats {
   total_farms: number;
   diagnoses_this_month: number;
+  farms_health_below_50: number;
 }
 
 export async function getStats(): Promise<FarmStats> {
@@ -27,6 +28,44 @@ export async function getStats(): Promise<FarmStats> {
     return res.data;
   } catch (err) {
     logger.warn({ err }, 'farm-service stats unavailable');
-    return { total_farms: 0, diagnoses_this_month: 0 };
+    return { total_farms: 0, diagnoses_this_month: 0, farms_health_below_50: 0 };
   }
+}
+
+export interface FarmRow {
+  id: string;
+  name: string;
+  ownerId: string;
+  county: string;
+  areaAcres: string;
+  createdAt: string;
+  plots: unknown[];
+  overdueCount: number;
+  workerCount: number;
+  activitiesThisMonth: number;
+  healthScore: number;
+}
+
+export interface FarmsPage {
+  data: FarmRow[];
+  meta: { total: number; page: number; pageSize: number; totalPages: number };
+}
+
+export async function listFarms(params: {
+  search?: string;
+  county?: string;
+  page: number;
+  page_size: number;
+  token: string;
+}): Promise<FarmsPage> {
+  const query = new URLSearchParams();
+  if (params.search) query.set('search', params.search);
+  if (params.county) query.set('county', params.county);
+  query.set('page', String(params.page));
+  query.set('page_size', String(params.page_size));
+
+  const res = await client.get<FarmsPage>(`/api/v1/farms?${query.toString()}`, {
+    headers: { Authorization: `Bearer ${params.token}` },
+  });
+  return res.data;
 }

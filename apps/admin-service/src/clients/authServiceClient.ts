@@ -97,6 +97,7 @@ export async function verifyUser(id: string): Promise<void> {
 
 export interface AuthStats {
   total_farmers: number;
+  pending_kyc: number;
 }
 
 export async function getStats(): Promise<AuthStats> {
@@ -107,6 +108,121 @@ export async function getStats(): Promise<AuthStats> {
     return res.data;
   } catch (err) {
     logger.warn({ err }, 'auth-service stats unavailable');
-    return { total_farmers: 0 };
+    return { total_farmers: 0, pending_kyc: 0 };
+  }
+}
+
+export interface BatchUserRow {
+  fullName: string;
+  phone: string;
+}
+
+export async function batchGetUsers(ids: string[]): Promise<Record<string, BatchUserRow>> {
+  if (ids.length === 0) return {};
+  try {
+    const res = await client.get<{ data: Record<string, BatchUserRow> }>(
+      `/internal/admin/users/batch?ids=${ids.join(',')}`,
+      { headers: { 'x-service-token': serviceToken() } },
+    );
+    return res.data.data;
+  } catch (err) {
+    logger.warn({ err }, 'auth-service batchGetUsers unavailable');
+    return {};
+  }
+}
+
+export interface KycQueueRow {
+  id: string;
+  full_name: string;
+  phone: string;
+  role: string;
+  county: string;
+  kyc_status: string;
+  submitted_at: string;
+}
+
+export async function getKycQueue(filter: { role?: string; county?: string }): Promise<KycQueueRow[]> {
+  try {
+    const params = new URLSearchParams();
+    if (filter.role) params.set('role', filter.role);
+    if (filter.county) params.set('county', filter.county);
+    const res = await client.get<{ data: KycQueueRow[] }>(`/internal/admin/kyc?${params.toString()}`, {
+      headers: { 'x-service-token': serviceToken() },
+    });
+    return res.data.data;
+  } catch (err) {
+    handleError(err, 'getKycQueue');
+  }
+}
+
+export async function getKyc(userId: string) {
+  try {
+    const res = await client.get(`/internal/admin/users/${userId}/kyc`, {
+      headers: { 'x-service-token': serviceToken() },
+    });
+    return res.data.data;
+  } catch (err) {
+    handleError(err, 'getKyc');
+  }
+}
+
+export interface KycDecisionPayload {
+  decision: 'approved' | 'rejected' | 'more_info';
+  reason: string;
+  documentRequested?: string;
+  actor: string;
+}
+
+export async function decideKyc(userId: string, payload: KycDecisionPayload) {
+  try {
+    const res = await client.patch(`/internal/admin/users/${userId}/kyc`, payload, {
+      headers: { 'x-service-token': serviceToken() },
+    });
+    return res.data.data;
+  } catch (err) {
+    handleError(err, 'decideKyc');
+  }
+}
+
+export interface CreateAuditLogPayload {
+  actor: string;
+  action: string;
+  category: string;
+  refId?: string;
+  note?: string;
+}
+
+export async function createAuditLog(payload: CreateAuditLogPayload): Promise<void> {
+  try {
+    await client.post('/internal/admin/audit-log', payload, {
+      headers: { 'x-service-token': serviceToken() },
+    });
+  } catch (err) {
+    logger.warn({ err }, 'auth-service createAuditLog failed — action still applied, log entry lost');
+  }
+}
+
+export interface AuditLogRow {
+  id: string;
+  actor: string;
+  action: string;
+  category: string;
+  refId: string | null;
+  note: string | null;
+  createdAt: string;
+}
+
+export async function listAuditLogs(page: number, pageSize: number): Promise<{
+  data: AuditLogRow[];
+  meta: { total: number; page: number; page_size: number };
+}> {
+  try {
+    const res = await client.get(`/internal/admin/audit-log?page=${page}&page_size=${pageSize}`, {
+      headers: { 'x-service-token': serviceToken() },
+    });
+    return res.data;
+  } catch (err) {
+    logger.warn({ err }, 'auth-service listAuditLogs unavailable');
+    return { data: [], meta: { total: 0, page, page_size: pageSize } };
   }
 }

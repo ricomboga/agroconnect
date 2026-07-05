@@ -18,7 +18,7 @@ export const moderatePost = async (req: AdminRequest, res: Response, next: NextF
   try {
     const { postId } = req.params as { postId: string };
     const { status } = req.body as UpdateModerationDto;
-    await moderationService.moderatePost(postId, status);
+    await moderationService.moderatePost(postId, status, req.user.phone);
     res.json({ success: true });
   } catch (err) {
     next(err);

@@ -1,4 +1,5 @@
 import * as communityClient from '../../src/clients/communityServiceClient';
+import * as auditService from '../../src/services/auditService';
 import * as moderationService from '../../src/services/moderationService';
 
 jest.mock('../../src/clients/communityServiceClient', () => ({
@@ -6,8 +7,13 @@ jest.mock('../../src/clients/communityServiceClient', () => ({
   setPostStatus: jest.fn(),
 }));
 
+jest.mock('../../src/services/auditService', () => ({
+  record: jest.fn(),
+}));
+
 const mockListFlaggedPosts = jest.mocked(communityClient.listFlaggedPosts);
 const mockSetPostStatus = jest.mocked(communityClient.setPostStatus);
+const mockRecord = jest.mocked(auditService.record);
 
 const fakePosts = {
   data: [
@@ -52,17 +58,23 @@ describe('moderationService.moderatePost', () => {
   it('approves a flagged post', async () => {
     mockSetPostStatus.mockResolvedValue(undefined);
 
-    await moderationService.moderatePost('thread-001', 'active');
+    await moderationService.moderatePost('thread-001', 'active', '+254700000001');
 
     expect(mockSetPostStatus).toHaveBeenCalledWith('thread-001', 'active');
+    expect(mockRecord).toHaveBeenCalledWith(
+      expect.objectContaining({ actor: '+254700000001', action: 'moderation.approved', refId: 'thread-001' }),
+    );
   });
 
   it('deletes a flagged post', async () => {
     mockSetPostStatus.mockResolvedValue(undefined);
 
-    await moderationService.moderatePost('thread-001', 'deleted');
+    await moderationService.moderatePost('thread-001', 'deleted', '+254700000001');
 
     expect(mockSetPostStatus).toHaveBeenCalledWith('thread-001', 'deleted');
+    expect(mockRecord).toHaveBeenCalledWith(
+      expect.objectContaining({ actor: '+254700000001', action: 'moderation.removed', refId: 'thread-001' }),
+    );
   });
 
   it('propagates 404 errors', async () => {
@@ -70,7 +82,9 @@ describe('moderationService.moderatePost', () => {
     err.statusCode = 404;
     mockSetPostStatus.mockRejectedValue(err);
 
-    await expect(moderationService.moderatePost('nonexistent', 'active')).rejects.toMatchObject({
+    await expect(
+      moderationService.moderatePost('nonexistent', 'active', '+254700000001'),
+    ).rejects.toMatchObject({
       statusCode: 404,
     });
   });

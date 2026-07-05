@@ -34,8 +34,8 @@ beforeEach(() => {
 
 describe('analyticsService.getSummary', () => {
   it('aggregates stats from all services', async () => {
-    mockAuthStats.mockResolvedValue({ total_farmers: 120 });
-    mockFarmStats.mockResolvedValue({ total_farms: 85, diagnoses_this_month: 12 });
+    mockAuthStats.mockResolvedValue({ total_farmers: 120, pending_kyc: 7 });
+    mockFarmStats.mockResolvedValue({ total_farms: 85, diagnoses_this_month: 12, farms_health_below_50: 3 });
     mockFinanceStats.mockResolvedValue({ loans_disbursed_kes: 500000 });
     mockMarketStats.mockResolvedValue({ active_listings: 34 });
 
@@ -47,12 +47,14 @@ describe('analyticsService.getSummary', () => {
       diagnoses_this_month: 12,
       loans_disbursed_kes: 500000,
       active_listings: 34,
+      pending_kyc: 7,
+      farms_health_below_50: 3,
     });
   });
 
   it('returns zeros for a failing service and succeeds overall', async () => {
     mockAuthStats.mockRejectedValue(new Error('auth-service down'));
-    mockFarmStats.mockResolvedValue({ total_farms: 85, diagnoses_this_month: 5 });
+    mockFarmStats.mockResolvedValue({ total_farms: 85, diagnoses_this_month: 5, farms_health_below_50: 1 });
     mockFinanceStats.mockResolvedValue({ loans_disbursed_kes: 250000 });
     mockMarketStats.mockResolvedValue({ active_listings: 20 });
 
@@ -78,6 +80,8 @@ describe('analyticsService.getSummary', () => {
       diagnoses_this_month: 0,
       loans_disbursed_kes: 0,
       active_listings: 0,
+      pending_kyc: 0,
+      farms_health_below_50: 0,
     });
   });
 });
