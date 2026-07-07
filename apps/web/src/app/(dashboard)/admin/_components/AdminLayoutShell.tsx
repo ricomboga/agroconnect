@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import api from '@/lib/api'
 import { WebLayout } from '@/components/layout/WebLayout'
+import { useAuthStore } from '@/stores/authStore'
 
 interface Props {
   children: React.ReactNode
@@ -27,6 +28,9 @@ const SIDEBAR_ITEMS_BASE = [
 
 export function AdminLayoutShell({ children }: Props) {
   const pathname = usePathname()
+  const isSuperAdmin = useAuthStore((s) => s.user?.isSuperAdmin ?? false)
+  const staffRole = useAuthStore((s) => s.user?.staffRole ?? 'admin')
+  const canModerate = isSuperAdmin || staffRole === 'admin' || staffRole === 'moderator'
 
   const { data: flaggedCount = 0 } = useQuery({
     queryKey: ['admin', 'moderation', 'count'],
@@ -35,9 +39,17 @@ export function AdminLayoutShell({ children }: Props) {
       return res.data.meta?.total ?? 0
     },
     refetchInterval: 30_000,
+    enabled: canModerate,
   })
 
-  const sidebarItems = SIDEBAR_ITEMS_BASE.map((item) =>
+  const visibleItems =
+    !isSuperAdmin && staffRole === 'moderator'
+      ? SIDEBAR_ITEMS_BASE.filter((item) => item.href === '/admin' || item.href === '/admin/moderation')
+      : !isSuperAdmin && staffRole === 'county_admin'
+        ? SIDEBAR_ITEMS_BASE.filter((item) => item.href !== '/admin/moderation')
+        : SIDEBAR_ITEMS_BASE
+
+  const sidebarItems = visibleItems.map((item) =>
     item.href === '/admin/moderation' ? { ...item, badge: flaggedCount } : item,
   )
 

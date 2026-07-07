@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import api from '@/lib/api'
 import { AlertBox, StatusBadge } from '@agroconnect/web-ui'
+import { useAuthStore } from '@/stores/authStore'
 
 interface AdminUserRow {
   id: string
@@ -12,6 +13,14 @@ interface AdminUserRow {
   phone: string
   role: string
   is_active: boolean
+  is_super_admin?: boolean
+  staff_role?: 'admin' | 'county_admin' | 'moderator'
+}
+
+const STAFF_ROLE_LABEL: Record<string, string> = {
+  admin: 'Admin',
+  county_admin: 'County Admin',
+  moderator: 'Moderator',
 }
 
 interface AuditLogRow {
@@ -36,8 +45,12 @@ const PERMISSIONS_MATRIX: { action: string; superAdmin: string; countyAdmin: str
 
 export default function SettingsPage() {
   const queryClient = useQueryClient()
+  const isSuperAdmin = useAuthStore((s) => s.user?.isSuperAdmin ?? false)
   const [newAdminPhone, setNewAdminPhone] = useState('')
   const [newAdminName, setNewAdminName] = useState('')
+  const [grantSuperAdmin, setGrantSuperAdmin] = useState(false)
+  const [newAdminStaffRole, setNewAdminStaffRole] = useState<'admin' | 'county_admin' | 'moderator'>('admin')
+  const [newAdminCounty, setNewAdminCounty] = useState('')
 
   const { data: adminsData } = useQuery({
     queryKey: ['admin', 'settings', 'admins'],
@@ -62,12 +75,18 @@ export default function SettingsPage() {
         password: 'Agro1234',
         fullName: newAdminName,
         role: 'admin',
+        isSuperAdmin: grantSuperAdmin,
+        staffRole: grantSuperAdmin ? 'admin' : newAdminStaffRole,
+        county: newAdminStaffRole === 'county_admin' ? newAdminCounty : undefined,
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'settings', 'admins'] })
       toast.success('Admin account created')
       setNewAdminPhone('')
       setNewAdminName('')
+      setGrantSuperAdmin(false)
+      setNewAdminStaffRole('admin')
+      setNewAdminCounty('')
     },
     onError: () => toast.error('Failed to create admin'),
   })
@@ -86,9 +105,9 @@ export default function SettingsPage() {
       <p className="mb-4 text-lg font-bold text-ink">Platform Settings</p>
 
       <div className="mb-4 rounded-base border border-border bg-white px-4 py-3">
-        <p className="mb-2 text-md font-semibold text-ink">SMS Provider — Africa&apos;s Talking</p>
+        <p className="mb-2 text-md font-semibold text-ink">SMS Provider, Africa&apos;s Talking</p>
         <AlertBox variant="blue">
-          Configured via environment variables (AT_API_KEY, AT_USERNAME) on notification-service — not
+          Configured via environment variables (AT_API_KEY, AT_USERNAME) on notification-service. Not
           editable here per the platform&apos;s secrets policy. Contact infra to rotate credentials.
         </AlertBox>
       </div>
@@ -97,7 +116,7 @@ export default function SettingsPage() {
         <p className="mb-2 text-md font-semibold text-ink">M-Pesa Integration (Daraja API)</p>
         <AlertBox variant="blue">
           Configured via environment variables (MPESA_CONSUMER_KEY, MPESA_SHORTCODE, etc.) on
-          finance-service — not editable here per the platform&apos;s secrets policy.
+          finance-service. Not editable here per the platform&apos;s secrets policy.
         </AlertBox>
       </div>
 
@@ -105,37 +124,80 @@ export default function SettingsPage() {
         <div className="mb-2 flex items-center justify-between">
           <p className="text-md font-semibold text-ink">Admin User Management</p>
         </div>
-        <div className="mb-3 flex gap-2">
-          <input
-            value={newAdminName}
-            onChange={(e) => setNewAdminName(e.target.value)}
-            placeholder="Full name"
-            className="rounded-sm border border-border bg-surface px-2.5 py-1.5 text-base"
-          />
-          <input
-            value={newAdminPhone}
-            onChange={(e) => setNewAdminPhone(e.target.value)}
-            placeholder="+254712345678"
-            className="rounded-sm border border-border bg-surface px-2.5 py-1.5 text-base"
-          />
-          <button
-            type="button"
-            disabled={!newAdminName || !newAdminPhone || addAdminMutation.isPending}
-            onClick={() => addAdminMutation.mutate()}
-            className="rounded-md bg-ac-green px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50"
-          >
-            + Add Admin
-          </button>
-        </div>
-        <div className="flex flex-col gap-2">
+        {!isSuperAdmin && (
+          <AlertBox variant="blue">
+            Only a super admin can create or remove staff accounts. You can view existing staff below.
+          </AlertBox>
+        )}
+        {isSuperAdmin && (
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <input
+              value={newAdminName}
+              onChange={(e) => setNewAdminName(e.target.value)}
+              placeholder="Full name"
+              className="rounded-sm border border-border bg-surface px-2.5 py-1.5 text-base"
+            />
+            <input
+              value={newAdminPhone}
+              onChange={(e) => setNewAdminPhone(e.target.value)}
+              placeholder="+254712345678"
+              className="rounded-sm border border-border bg-surface px-2.5 py-1.5 text-base"
+            />
+            <select
+              value={newAdminStaffRole}
+              onChange={(e) => setNewAdminStaffRole(e.target.value as 'admin' | 'county_admin' | 'moderator')}
+              disabled={grantSuperAdmin}
+              className="rounded-sm border border-border bg-surface px-2.5 py-1.5 text-base disabled:opacity-50"
+            >
+              <option value="admin">Admin</option>
+              <option value="county_admin">County Admin</option>
+              <option value="moderator">Moderator</option>
+            </select>
+            {newAdminStaffRole === 'county_admin' && !grantSuperAdmin && (
+              <input
+                value={newAdminCounty}
+                onChange={(e) => setNewAdminCounty(e.target.value)}
+                placeholder="County"
+                className="rounded-sm border border-border bg-surface px-2.5 py-1.5 text-base"
+              />
+            )}
+            <label className="flex items-center gap-1.5 text-sm text-ink2">
+              <input
+                type="checkbox"
+                checked={grantSuperAdmin}
+                onChange={(e) => setGrantSuperAdmin(e.target.checked)}
+              />
+              Grant super admin
+            </label>
+            <button
+              type="button"
+              disabled={!newAdminName || !newAdminPhone || addAdminMutation.isPending}
+              onClick={() => addAdminMutation.mutate()}
+              className="rounded-md bg-ac-green px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50"
+            >
+              + Add Admin
+            </button>
+          </div>
+        )}
+        <div className="mt-3 flex flex-col gap-2">
           {(adminsData ?? []).map((a) => (
             <div key={a.id} className="flex items-center justify-between border-b border-border py-1.5 text-sm last:border-none">
               <span className="text-ink">
                 {a.full_name} <span className="text-muted">({a.phone})</span>
+                {a.is_super_admin && (
+                  <span className="ml-1.5 rounded-sm bg-ac-amber-light px-1.5 py-0.5 text-xs font-semibold text-ac-amber">
+                    Super Admin
+                  </span>
+                )}
+                {!a.is_super_admin && a.staff_role && a.staff_role !== 'admin' && (
+                  <span className="ml-1.5 rounded-sm bg-ac-blue-light px-1.5 py-0.5 text-xs font-semibold text-ac-blue">
+                    {STAFF_ROLE_LABEL[a.staff_role]}
+                  </span>
+                )}
               </span>
               <div className="flex items-center gap-2">
                 <StatusBadge variant={a.is_active ? 'green' : 'red'}>{a.is_active ? 'Active' : 'Inactive'}</StatusBadge>
-                {a.is_active && (
+                {isSuperAdmin && a.is_active && (
                   <button
                     type="button"
                     onClick={() => removeMutation.mutate(a.id)}
@@ -175,7 +237,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="rounded-base border border-border bg-white px-4 py-3">
-        <p className="mb-2 text-md font-semibold text-ink">Audit Log — Recent Actions</p>
+        <p className="mb-2 text-md font-semibold text-ink">Audit Log, Recent Actions</p>
         <div className="flex flex-col gap-2">
           {(auditData ?? []).map((entry) => (
             <div key={entry.id} className="border-b border-border py-1.5 text-sm last:border-none">

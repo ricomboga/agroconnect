@@ -32,10 +32,17 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!(await requireAdmin())) {
+  const session = await requireAdmin()
+  if (!session) {
+    return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
+  }
+  if (session.staff_role === 'moderator') {
     return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
   }
   const body = await req.json().catch(() => ({}))
+  if (session.staff_role === 'county_admin' && !session.is_super_admin) {
+    body.county = session.county
+  }
   const upstream = await fetch(`${AUTH}/internal/admin/users`, {
     method: 'POST',
     headers: serviceHeaders(),
