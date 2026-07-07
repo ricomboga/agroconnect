@@ -1,9 +1,10 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { SuccessScreen } from '@agroconnect/web-ui'
 
-export default function RoleCreateSuccessPage() {
+function RoleCreateSuccessContent() {
   const searchParams = useSearchParams()
   const role = searchParams.get('role') ?? 'User'
   const userId = searchParams.get('userId')
@@ -18,5 +19,13 @@ export default function RoleCreateSuccessPage() {
         { label: '➕ Create Another User', href: '/admin/users/new' },
       ]}
     />
+  )
+}
+
+export default function RoleCreateSuccessPage() {
+  return (
+    <Suspense fallback={null}>
+      <RoleCreateSuccessContent />
+    </Suspense>
   )
 }
