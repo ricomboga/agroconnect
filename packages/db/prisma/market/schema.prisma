@@ -86,6 +86,24 @@ model CommodityPrice {
   @@map("commodity_prices")
 }
 
+model SupplierProfile {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  businessName String
+  description  String?
+  county       String
+  subCounty    String?
+  categories   Json
+  phone        String
+  address      String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([county])
+  @@map("supplier_profiles")
+}
+
 enum QualityGrade {
   A
   B

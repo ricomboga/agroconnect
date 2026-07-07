@@ -104,3 +104,59 @@ describe('getMySummary', () => {
     expect(next).toHaveBeenCalled();
   });
 });
+
+describe('getOrdersForAdmin', () => {
+  it('scopes to the supplierId path param, not the caller', async () => {
+    const meta = { page: 1, page_size: 20, total: 0, total_pages: 1 };
+    mockOrderService.listSupplierOrders.mockResolvedValue({ orders: [], meta });
+    const { res, json } = makeRes();
+    await supplierController.getOrdersForAdmin(
+      authReq({ user: { id: 'admin-001', role: 'admin', isVerified: true, phone: '+254700000002' } as never, params: { supplierId: 'supplier-999' } }),
+      res,
+      next,
+    );
+    expect(mockOrderService.listSupplierOrders).toHaveBeenCalledWith('supplier-999', {});
+    expect(json).toHaveBeenCalledWith({ data: [], meta });
+  });
+});
+
+describe('getCustomersForAdmin', () => {
+  it('scopes to the supplierId path param, not the caller', async () => {
+    const meta = { page: 1, page_size: 20, total: 0, total_pages: 1 };
+    mockOrderService.getSupplierCustomers.mockResolvedValue({ customers: [], meta });
+    const { res, json } = makeRes();
+    await supplierController.getCustomersForAdmin(
+      authReq({ user: { id: 'admin-001', role: 'admin', isVerified: true, phone: '+254700000002' } as never, params: { supplierId: 'supplier-999' } }),
+      res,
+      next,
+    );
+    expect(mockOrderService.getSupplierCustomers).toHaveBeenCalledWith('supplier-999', {});
+    expect(json).toHaveBeenCalledWith({ data: [], meta });
+  });
+});
+
+describe('getSummaryForAdmin', () => {
+  it('scopes to the supplierId path param, not the caller', async () => {
+    const summary = { activeProductCount: 3, lowStockCount: 1, lowStockItems: [] };
+    mockProductService.getSupplierSummary.mockResolvedValue(summary);
+    const { res, json } = makeRes();
+    await supplierController.getSummaryForAdmin(
+      authReq({ user: { id: 'admin-001', role: 'admin', isVerified: true, phone: '+254700000002' } as never, params: { supplierId: 'supplier-999' } }),
+      res,
+      next,
+    );
+    expect(mockProductService.getSupplierSummary).toHaveBeenCalledWith('supplier-999', {});
+    expect(json).toHaveBeenCalledWith({ data: summary });
+  });
+
+  it('calls next on error', async () => {
+    mockProductService.getSupplierSummary.mockRejectedValue(new Error('fail'));
+    const { res } = makeRes();
+    await supplierController.getSummaryForAdmin(
+      authReq({ params: { supplierId: 'supplier-999' } }),
+      res,
+      next,
+    );
+    expect(next).toHaveBeenCalled();
+  });
+});

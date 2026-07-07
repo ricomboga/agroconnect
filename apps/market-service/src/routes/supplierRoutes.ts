@@ -10,6 +10,7 @@ import { AuthenticatedRequest } from '../types/index.js';
 const router = Router();
 const auth = requireAuth as (req: Request, res: Response, next: NextFunction) => void;
 const supplierOnly = authorize('supplier', 'admin') as (req: Request, res: Response, next: NextFunction) => void;
+const adminOnly = authorize('admin') as (req: Request, res: Response, next: NextFunction) => void;
 
 router.get(
   '/me/orders',
@@ -33,6 +34,30 @@ router.get(
   supplierOnly,
   validateQuery(supplierSummaryQuerySchema),
   (req, res, next) => supplierController.getMySummary(req as AuthenticatedRequest, res, next),
+);
+
+router.get(
+  '/:supplierId/orders',
+  auth,
+  adminOnly,
+  validateQuery(listOrdersQuerySchema),
+  (req, res, next) => supplierController.getOrdersForAdmin(req as AuthenticatedRequest, res, next),
+);
+
+router.get(
+  '/:supplierId/customers',
+  auth,
+  adminOnly,
+  validateQuery(listCustomersQuerySchema),
+  (req, res, next) => supplierController.getCustomersForAdmin(req as AuthenticatedRequest, res, next),
+);
+
+router.get(
+  '/:supplierId/summary',
+  auth,
+  adminOnly,
+  validateQuery(supplierSummaryQuerySchema),
+  (req, res, next) => supplierController.getSummaryForAdmin(req as AuthenticatedRequest, res, next),
 );
 
 export { router as supplierRouter };

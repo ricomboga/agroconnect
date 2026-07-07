@@ -90,3 +90,79 @@ export async function getMySummary(req: AuthenticatedRequest, res: Response, nex
     next(err);
   }
 }
+
+/**
+ * @openapi
+ * /api/v1/market/suppliers/{supplierId}/orders:
+ *   get:
+ *     summary: Admin view of orders for an arbitrary supplier
+ *     tags: [Admin, Suppliers]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Paginated list of orders
+ *       403:
+ *         description: Caller is not an admin
+ */
+export async function getOrdersForAdmin(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const supplierId = req.params['supplierId'] as string;
+    const result = await orderService.listSupplierOrders(supplierId, req.query as unknown as ListOrdersQuery);
+    res.json({ data: result.orders, meta: result.meta });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * @openapi
+ * /api/v1/market/suppliers/{supplierId}/customers:
+ *   get:
+ *     summary: Admin view of per-customer order aggregates for an arbitrary supplier
+ *     tags: [Admin, Suppliers]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Paginated list of customer aggregates
+ *       403:
+ *         description: Caller is not an admin
+ */
+export async function getCustomersForAdmin(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const supplierId = req.params['supplierId'] as string;
+    const result = await orderService.getSupplierCustomers(supplierId, req.query as unknown as ListCustomersQuery);
+    res.json({ data: result.customers, meta: result.meta });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * @openapi
+ * /api/v1/market/suppliers/{supplierId}/summary:
+ *   get:
+ *     summary: Admin view of KPI summary for an arbitrary supplier
+ *     tags: [Admin, Suppliers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: low_stock_threshold
+ *         schema: { type: integer, default: 10 }
+ *     responses:
+ *       200:
+ *         description: Supplier KPI summary
+ *       403:
+ *         description: Caller is not an admin
+ */
+export async function getSummaryForAdmin(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const supplierId = req.params['supplierId'] as string;
+    const result = await productService.getSupplierSummary(supplierId, req.query as unknown as SupplierSummaryQuery);
+    res.json({ data: result });
+  } catch (err) {
+    next(err);
+  }
+}
