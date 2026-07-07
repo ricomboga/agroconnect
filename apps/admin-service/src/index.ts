@@ -8,6 +8,7 @@ import { kycRouter } from './routes/kycRoutes.js';
 import { farmsRouter } from './routes/farmsRoutes.js';
 import { auditRouter } from './routes/auditRoutes.js';
 import { programsRouter } from './routes/programsRoutes.js';
+import { reportsRouter } from './routes/reportsRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { startConsumers } from './events/consumers/index.js';
 
@@ -28,6 +29,7 @@ app.use('/api/v1/admin', kycRouter);
 app.use('/api/v1/admin', farmsRouter);
 app.use('/api/v1/admin', auditRouter);
 app.use('/api/v1/admin', programsRouter);
+app.use('/api/v1/admin', reportsRouter);
 
 app.use(errorHandler);
 
