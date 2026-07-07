@@ -7,3 +7,7 @@ export async function upsertFarmerLenderAssignment(farmerId: string, lenderId: s
     update: { lenderId, assignedAt: new Date() },
   });
 }
+
+export async function countFarmersByLender(lenderId: string) {
+  return prisma.farmerLenderAssignment.count({ where: { lenderId } });
+}

@@ -1,8 +1,9 @@
-import type { Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import type { AuthenticatedRequest } from '../types/index.js';
 import * as loanRepo from '../repositories/loanRepository.js';
 import * as creditScoreRepo from '../repositories/creditScoreRepository.js';
 import * as loanPartnerRepo from '../repositories/loanPartnerRepository.js';
+import * as farmerLenderAssignmentRepo from '../repositories/farmerLenderAssignmentRepository.js';
 import * as farmerReportService from '../services/farmerReportService.js';
 import { createError } from '../middleware/errorHandler.js';
 import type { LenderStatusUpdateDto } from '../schemas/lenderStatusUpdate.schema.js';
@@ -61,7 +62,10 @@ export async function getLenderPipeline(
 ): Promise<void> {
   try {
     const partnerBankId = requirePartnerBankId(req);
-    const loans = await loanRepo.findLoansByPartnerBank(partnerBankId);
+    const [loans, farmersCount] = await Promise.all([
+      loanRepo.findLoansByPartnerBank(partnerBankId),
+      farmerLenderAssignmentRepo.countFarmersByLender(partnerBankId),
+    ]);
 
     const counts = {
       submitted: loans.filter((l: { status: string }) => l.status === 'submitted').length,
@@ -71,7 +75,79 @@ export async function getLenderPipeline(
       defaulted: loans.filter((l: { status: string }) => l.status === 'defaulted').length,
     };
 
-    res.json({ data: { loans, counts } });
+    res.json({ data: { loans, counts, farmersCount } });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * @openapi
+ * /api/v1/finance/admin/lenders/{partnerBankId}/summary:
+ *   get:
+ *     summary: Admin view of a lending institution's loan pipeline and farmer count
+ *     tags: [Admin, Lender]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: partnerBankId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Institution summary
+ *       403:
+ *         description: Caller is not an admin
+ *       404:
+ *         description: Institution not found
+ */
+export async function getLenderSummaryForAdmin(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const partnerBankId = req.params['partnerBankId'] as string;
+
+    const partner = await loanPartnerRepo.findPartnerById(partnerBankId);
+    if (!partner) {
+      throw createError('Institution not found', 404, 'PARTNER_NOT_FOUND', 'error.finance.partner_not_found');
+    }
+
+    const [loans, farmersCount] = await Promise.all([
+      loanRepo.findLoansByPartnerBank(partnerBankId),
+      farmerLenderAssignmentRepo.countFarmersByLender(partnerBankId),
+    ]);
+
+    const counts = {
+      submitted: loans.filter((l: { status: string }) => l.status === 'submitted').length,
+      under_review: loans.filter((l: { status: string }) => l.status === 'under_review').length,
+      approved: loans.filter((l: { status: string }) => l.status === 'approved').length,
+      disbursed: loans.filter((l: { status: string }) => l.status === 'disbursed').length,
+      rejected: loans.filter((l: { status: string }) => l.status === 'rejected').length,
+      repaid: loans.filter((l: { status: string }) => l.status === 'repaid').length,
+      defaulted: loans.filter((l: { status: string }) => l.status === 'defaulted').length,
+      cancelled: loans.filter((l: { status: string }) => l.status === 'cancelled').length,
+    };
+
+    const totalDisbursedKes = loans
+      .filter((l: { status: string }) => l.status === 'disbursed' || l.status === 'repaid')
+      .reduce((sum: number, l: { approvedAmountKes: unknown }) => sum + Number(l.approvedAmountKes ?? 0), 0);
+
+    res.json({
+      data: {
+        institution: {
+          id: partner.id,
+          name: partner.name,
+          type: partner.type,
+          repaymentRatePct: Number(partner.repaymentRatePct),
+        },
+        farmersCount,
+        counts,
+        totalDisbursedKes,
+      },
+    });
   } catch (err) {
     next(err);
   }

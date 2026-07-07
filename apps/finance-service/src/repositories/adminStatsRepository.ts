@@ -16,18 +16,25 @@ export interface InstitutionLoanTotal {
   totalDisbursedKes: number;
 }
 
+interface DisbursedLoanGroup {
+  partnerBankId: string | null;
+  _sum: { approvedAmountKes: unknown };
+}
+
 export async function sumDisbursedLoansByInstitution(): Promise<InstitutionLoanTotal[]> {
-  const groups = await prisma.loanApplication.groupBy({
+  const rawGroups = await prisma.loanApplication.groupBy({
     by: ['partnerBankId'],
     where: { status: 'disbursed', partnerBankId: { not: null } },
     _sum: { approvedAmountKes: true },
   });
+  const groups = rawGroups as unknown as DisbursedLoanGroup[];
 
   const partnerIds = groups.map((g) => g.partnerBankId).filter((id): id is string => id !== null);
-  const partners = await prisma.loanPartner.findMany({
+  const rawPartners = await prisma.loanPartner.findMany({
     where: { id: { in: partnerIds } },
     select: { id: true, name: true },
   });
+  const partners = rawPartners as unknown as { id: string; name: string }[];
   const nameById = new Map(partners.map((p) => [p.id, p.name]));
 
   return groups
@@ -37,7 +44,7 @@ export async function sumDisbursedLoansByInstitution(): Promise<InstitutionLoanT
       const totalDisbursedKes = raw === null || raw === undefined ? 0 : Number(raw);
       return {
         institutionId: g.partnerBankId as string,
-        institutionName: nameById.get(g.partnerBankId as string) ?? 'Unknown',
+        institutionName: nameById.get(g.partnerBankId as string) ?? (g.partnerBankId as string),
         totalDisbursedKes,
       };
     });

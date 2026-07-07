@@ -11,6 +11,8 @@ import { reportRouter } from './routes/reportRoutes.js';
 import { internalStatsRouter } from './routes/internalStatsRoutes.js';
 import { lenderRouter } from './routes/lenderRoutes.js';
 import { farmerLenderRouter } from './routes/farmerLenderRoutes.js';
+import { adminLenderRouter } from './routes/adminLenderRoutes.js';
+import { adminFarmerRouter } from './routes/adminFarmerRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -30,6 +32,8 @@ app.use('/api/v1/finance/transactions', transactionRouter);
 app.use('/api/v1/finance/reports', reportRouter);
 app.use('/api/v1/finance/lender', lenderRouter);
 app.use('/api/v1/finance/farmers', farmerLenderRouter);
+app.use('/api/v1/finance/admin', adminLenderRouter);
+app.use('/api/v1/finance/admin', adminFarmerRouter);
 app.use('/internal/admin', internalStatsRouter);
 
 app.use(errorHandler);

@@ -19,6 +19,7 @@ const mockFindCreditScore = jest.mocked(creditScoreRepo.findCreditScore);
 
 const fakeProduction = {
   cropHarvests: { totalHarvestedKg: 100, totalSoldKg: 80, totalRevenueKes: 8000, byCrop: [] },
+  monthlyYieldKg: [],
   animalProducts: { byType: [] },
   collections: { totalSalesKes: 0, paidKes: 0, pendingKes: 0, byProductType: [] },
 };

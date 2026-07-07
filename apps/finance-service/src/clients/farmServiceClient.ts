@@ -134,6 +134,11 @@ export interface CollectionTotal {
   unit: string;
 }
 
+export interface MonthlyYield {
+  month: string; // YYYY-MM
+  harvestedKg: number;
+}
+
 export interface ProductionSummary {
   cropHarvests: {
     totalHarvestedKg: number;
@@ -141,6 +146,7 @@ export interface ProductionSummary {
     totalRevenueKes: number;
     byCrop: CropHarvestTotal[];
   };
+  monthlyYieldKg: MonthlyYield[];
   animalProducts: {
     byType: AnimalProductTotal[];
   };

@@ -14,6 +14,7 @@ const fakeReport = {
   transactions: { totalIncomeKes: 0, totalExpenseKes: 0, netKes: 0, recordCount: 0, byCategory: [], byMonth: [] },
   production: {
     cropHarvests: { totalHarvestedKg: 0, totalSoldKg: 0, totalRevenueKes: 0, byCrop: [] },
+    monthlyYieldKg: [],
     animalProducts: { byType: [] },
     collections: { totalSalesKes: 0, paidKes: 0, pendingKes: 0, byProductType: [] },
   },
@@ -69,6 +70,68 @@ describe('reportController.getMyReport', () => {
     const req = makeReq();
     const res = makeRes();
     await reportController.getMyReport(req as never, res, next);
+
+    expect(next).toHaveBeenCalledWith(err);
+  });
+});
+
+describe('reportController.getFarmerReportForAdmin', () => {
+  function makeAdminReq(overrides: Record<string, unknown> = {}) {
+    return {
+      params: { farmerId: 'farmer-1' },
+      query: {},
+      ...overrides,
+    };
+  }
+
+  it('generates a report for the given farmerId, not the caller', async () => {
+    mockGenerateFarmerReport.mockResolvedValue(fakeReport);
+
+    const req = makeAdminReq();
+    const res = makeRes();
+    await reportController.getFarmerReportForAdmin(req as never, res, next);
+
+    expect(mockGenerateFarmerReport).toHaveBeenCalledWith('farmer-1', expect.objectContaining({
+      fromDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+      toDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+    }));
+    expect(res.json).toHaveBeenCalledWith({ data: fakeReport });
+  });
+
+  it('defaults to a trailing 12-month range when no query params are given', async () => {
+    mockGenerateFarmerReport.mockResolvedValue(fakeReport);
+
+    const req = makeAdminReq();
+    const res = makeRes();
+    await reportController.getFarmerReportForAdmin(req as never, res, next);
+
+    const [, range] = mockGenerateFarmerReport.mock.calls[0] as [string, { fromDate: string; toDate: string }];
+    const from = new Date(range.fromDate);
+    const to = new Date(range.toDate);
+    const approxOneYearMs = 365 * 24 * 60 * 60 * 1000;
+    expect(to.getTime() - from.getTime()).toBeGreaterThan(approxOneYearMs - 2 * 24 * 60 * 60 * 1000);
+    expect(to.getTime() - from.getTime()).toBeLessThan(approxOneYearMs + 2 * 24 * 60 * 60 * 1000);
+  });
+
+  it('forwards explicit from_date/to_date query params instead of defaulting', async () => {
+    mockGenerateFarmerReport.mockResolvedValue(fakeReport);
+
+    const req = makeAdminReq({ query: { from_date: '2026-01-01', to_date: '2026-06-30' } });
+    const res = makeRes();
+    await reportController.getFarmerReportForAdmin(req as never, res, next);
+
+    expect(mockGenerateFarmerReport).toHaveBeenCalledWith('farmer-1', {
+      fromDate: '2026-01-01', toDate: '2026-06-30',
+    });
+  });
+
+  it('forwards errors to next', async () => {
+    const err = new Error('report generation failed');
+    mockGenerateFarmerReport.mockRejectedValue(err);
+
+    const req = makeAdminReq();
+    const res = makeRes();
+    await reportController.getFarmerReportForAdmin(req as never, res, next);
 
     expect(next).toHaveBeenCalledWith(err);
   });
