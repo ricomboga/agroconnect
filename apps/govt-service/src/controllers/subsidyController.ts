@@ -4,6 +4,7 @@ import * as subsidyService from '../services/subsidyService.js';
 import { parsePaginationParams } from '../utils/pagination.js';
 import { ListSubsidyApplicationsQuery } from '../schemas/listSubsidyApplications.schema.js';
 import { BulkApproveApplicationsDto } from '../schemas/bulkApproveApplications.schema.js';
+import { createError } from '../middleware/errorHandler.js';
 
 /**
  * @openapi
@@ -163,6 +164,25 @@ export async function createProgram(
   next: NextFunction,
 ): Promise<void> {
   try {
+    if (!req.user.isSuperAdmin) {
+      if (req.user.staffRole === 'moderator') {
+        throw createError('Moderators cannot create subsidy programs', 403, 'FORBIDDEN', 'error.auth.forbidden');
+      }
+      if (req.user.staffRole === 'county_admin') {
+        const eligibleCounties = (req.body as { eligible_counties?: string[] }).eligible_counties ?? [];
+        const ownCountyOnly =
+          eligibleCounties.length === 1 && eligibleCounties[0] === req.user.county;
+        if (!ownCountyOnly) {
+          throw createError(
+            'County admins may only create programs restricted to their own county',
+            403,
+            'FORBIDDEN',
+            'error.auth.forbidden',
+          );
+        }
+      }
+    }
+
     const program = await subsidyService.createProgram(req.body);
     res.status(201).json({ data: program });
   } catch (err) {

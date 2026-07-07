@@ -18,6 +18,7 @@ jest.mock('../../../src/services/subsidyService', () => ({
   listPrograms: jest.fn(),
   applyForSubsidy: jest.fn(),
   listApplications: jest.fn(),
+  createProgram: jest.fn(),
 }));
 
 jest.mock('../../../src/services/registrationService', () => ({
@@ -37,6 +38,7 @@ const mockListLicenses = jest.mocked(licenseService.listLicenses);
 const mockListPrograms = jest.mocked(subsidyService.listPrograms);
 const mockApplyForSubsidy = jest.mocked(subsidyService.applyForSubsidy);
 const mockListApplications = jest.mocked(subsidyService.listApplications);
+const mockCreateProgram = jest.mocked(subsidyService.createProgram);
 const mockSubmitRegistration = jest.mocked(registrationService.submitRegistration);
 const mockListRegistrations = jest.mocked(registrationService.listRegistrations);
 const mockGetRegistration = jest.mocked(registrationService.getRegistration);
@@ -183,6 +185,82 @@ describe('subsidyController.listApplications', () => {
     mockListApplications.mockRejectedValue(new Error('DB error'));
     await subsidyController.listApplications(makeAuthReq() as never, makeRes(), next);
     expect(next).toHaveBeenCalledWith(expect.any(Error));
+  });
+});
+
+describe('subsidyController.createProgram', () => {
+  const fakeProgram = { id: 'prog-1', name: 'Fertiliser Subsidy' };
+
+  it('allows a standard admin to create a program for any counties', async () => {
+    mockCreateProgram.mockResolvedValue(fakeProgram as never);
+
+    const req = makeAuthReq({
+      user: { id: 'admin-1', role: 'admin', phone: '+254700000002' },
+      body: { eligible_counties: ['Kitui', 'Machakos'] },
+    });
+    const res = makeRes();
+
+    await subsidyController.createProgram(req as never, res, next);
+
+    expect(mockCreateProgram).toHaveBeenCalledWith(req.body);
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith({ data: fakeProgram });
+  });
+
+  it('allows a super admin unrestricted, regardless of county scope', async () => {
+    mockCreateProgram.mockResolvedValue(fakeProgram as never);
+
+    const req = makeAuthReq({
+      user: { id: 'super-1', role: 'admin', phone: '+254700000003', isSuperAdmin: true, staffRole: 'county_admin', county: 'Kitui' },
+      body: { eligible_counties: ['Nairobi', 'Mombasa'] },
+    });
+    const res = makeRes();
+
+    await subsidyController.createProgram(req as never, res, next);
+
+    expect(mockCreateProgram).toHaveBeenCalledWith(req.body);
+    expect(res.status).toHaveBeenCalledWith(201);
+  });
+
+  it('rejects a moderator outright', async () => {
+    const req = makeAuthReq({
+      user: { id: 'mod-1', role: 'admin', phone: '+254700000004', staffRole: 'moderator' },
+      body: { eligible_counties: ['Kitui'] },
+    });
+    const res = makeRes();
+
+    await subsidyController.createProgram(req as never, res, next);
+
+    expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403 }));
+    expect(mockCreateProgram).not.toHaveBeenCalled();
+  });
+
+  it('rejects a county admin whose eligible_counties is not exactly their own county', async () => {
+    const req = makeAuthReq({
+      user: { id: 'county-1', role: 'admin', phone: '+254700000005', staffRole: 'county_admin', county: 'Kitui' },
+      body: { eligible_counties: ['Kitui', 'Machakos'] },
+    });
+    const res = makeRes();
+
+    await subsidyController.createProgram(req as never, res, next);
+
+    expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403 }));
+    expect(mockCreateProgram).not.toHaveBeenCalled();
+  });
+
+  it('allows a county admin to create a program restricted to their own county', async () => {
+    mockCreateProgram.mockResolvedValue(fakeProgram as never);
+
+    const req = makeAuthReq({
+      user: { id: 'county-1', role: 'admin', phone: '+254700000005', staffRole: 'county_admin', county: 'Kitui' },
+      body: { eligible_counties: ['Kitui'] },
+    });
+    const res = makeRes();
+
+    await subsidyController.createProgram(req as never, res, next);
+
+    expect(mockCreateProgram).toHaveBeenCalledWith(req.body);
+    expect(res.status).toHaveBeenCalledWith(201);
   });
 });
 
