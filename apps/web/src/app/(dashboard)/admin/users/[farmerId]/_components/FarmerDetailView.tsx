@@ -1,8 +1,11 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { WebStatCard } from '@/components/ui/WebStatCard'
 import { WebDataTable } from '@/components/ui/WebDataTable'
+import { AlertBox } from '@agroconnect/web-ui'
+import { exportFarmerReportCsv } from '../_lib/exportFarmerReport'
 
 interface Farm {
   id: string
@@ -14,10 +17,38 @@ interface Farm {
   last_activity_date: string | null
 }
 
-interface CreditScore {
-  score: number
-  band: 'A' | 'B' | 'C' | 'D'
-  max_loan_kes: number
+interface MonthlyTotal {
+  month: string
+  incomeKes: number
+  expenseKes: number
+  netKes: number
+}
+
+interface MonthlyYield {
+  month: string
+  harvestedKg: number
+}
+
+interface FarmerReport {
+  transactions: {
+    netKes: number
+    byMonth: MonthlyTotal[]
+  }
+  production: {
+    monthlyYieldKg: MonthlyYield[]
+  }
+  creditScore: {
+    score: number
+    band: string
+    maxLoanKes: number
+    breakdown: {
+      harvestYieldScore: number
+      inputManagementScore: number
+      activityComplianceScore: number
+      platformEngagementScore: number
+    }
+    computedAt: string
+  } | null
 }
 
 const ACTIVITY_COLS = [
@@ -55,12 +86,12 @@ const LIVESTOCK_ITEMS = [
   { label: '🥛 Milk Today', value: '28L' },
 ]
 
-const SCORE_COMPONENTS = [
-  { label: 'Harvest Yield',  score: 21, max: 25 },
-  { label: 'Input Use',      score: 18, max: 25 },
-  { label: 'Activity Score', score: 20, max: 25 },
-  { label: 'Platform Use',   score: 14, max: 25 },
-]
+const SCORE_LABELS: Record<string, string> = {
+  harvestYieldScore: 'Harvest Yield',
+  inputManagementScore: 'Input Use',
+  activityComplianceScore: 'Activity Score',
+  platformEngagementScore: 'Platform Use',
+}
 
 export function farmTypeInfo(role: string): { emojis: string; label: string; hasAnimals: boolean } {
   const hasAnimal = role.includes('animal')
@@ -68,6 +99,10 @@ export function farmTypeInfo(role: string): { emojis: string; label: string; has
   if (hasAnimal && !hasCrop) return { emojis: '🐄',    label: 'Animals',        hasAnimals: true  }
   if (hasCrop   && !hasAnimal) return { emojis: '🌾',  label: 'Crops',          hasAnimals: false }
   return                               { emojis: '🌾🐄', label: 'Crops + Animals', hasAnimals: true  }
+}
+
+function formatKes(amount: number): string {
+  return `KES ${Math.round(amount).toLocaleString()}`
 }
 
 interface Props {
@@ -86,18 +121,19 @@ export function FarmerDetailView({ farmerId, role }: Props) {
     },
   })
 
-  const scoreQuery = useQuery({
-    queryKey: ['admin', 'credit-score', farmerId],
+  const reportQuery = useQuery({
+    queryKey: ['admin', 'farmer-report', farmerId],
     queryFn: async () => {
-      const res = await fetch(`/api/finance/finance/credit-score?user_id=${farmerId}`)
+      const res = await fetch(`/api/finance/admin/farmers/${farmerId}/report`)
       if (!res.ok) return null
-      const body = await res.json() as { data: CreditScore }
+      const body = await res.json() as { data: FarmerReport }
       return body.data
     },
   })
 
   const farms = farmsQuery.data ?? []
-  const score = scoreQuery.data
+  const report = reportQuery.data
+  const creditScore = report?.creditScore ?? null
   const ft = farmTypeInfo(role)
 
   return (
@@ -107,12 +143,16 @@ export function FarmerDetailView({ farmerId, role }: Props) {
         <WebStatCard value={farms.length} label="Farms" />
         <WebStatCard value={19} label="Activities (Month)" />
         <WebStatCard
-          value={score ? score.score : '—'}
+          value={creditScore ? creditScore.score : '—'}
           label="Credit Score"
           color="#C9A84C"
           borderColor="#C9A84C"
         />
-        <WebStatCard value="KES 24,300" label="Net Profit (June)" color="#0E7490" />
+        <WebStatCard
+          value={report ? formatKes(report.transactions.netKes) : '—'}
+          label="Net Profit (12mo)"
+          color="#0E7490"
+        />
       </div>
 
       {/* Details Grid */}
@@ -172,34 +212,106 @@ export function FarmerDetailView({ farmerId, role }: Props) {
           border: '1px solid #E5E7EB',
           borderRadius: 6,
           padding: 10,
+          marginBottom: 12,
         }}
       >
         <div style={{ fontSize: 10, fontWeight: 600, color: '#111827', marginBottom: 8 }}>
           Credit Score Breakdown
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {SCORE_COMPONENTS.map((comp) => (
-            <div key={comp.label}>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  fontSize: 9,
-                  color: '#374151',
-                  marginBottom: 3,
-                }}
-              >
-                <span>{comp.label}</span>
-                <span style={{ fontWeight: 600 }}>{comp.score} / {comp.max}</span>
-              </div>
-              <div className="w-score-bar">
+        {!creditScore ? (
+          <AlertBox variant="blue">Credit score not yet computed for this farmer.</AlertBox>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {Object.entries(creditScore.breakdown).map(([key, value]) => (
+              <div key={key}>
                 <div
-                  className="w-score-fill"
-                  style={{ width: `${(comp.score / comp.max) * 100}%` }}
-                />
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    fontSize: 9,
+                    color: '#374151',
+                    marginBottom: 3,
+                  }}
+                >
+                  <span>{SCORE_LABELS[key] ?? key}</span>
+                  <span style={{ fontWeight: 600 }}>{value} / 25</span>
+                </div>
+                <div className="w-score-bar">
+                  <div
+                    className="w-score-fill"
+                    style={{ width: `${(value / 25) * 100}%` }}
+                  />
+                </div>
               </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Financial & Yield Trends */}
+      <div
+        style={{
+          backgroundColor: '#fff',
+          border: '1px solid #E5E7EB',
+          borderRadius: 6,
+          padding: 10,
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <div style={{ fontSize: 10, fontWeight: 600, color: '#111827' }}>
+            Financial &amp; Yield Trends (Last 12 Months)
+          </div>
+          {report && (
+            <button
+              type="button"
+              className="rounded-md border border-border px-2.5 py-1 text-xs font-semibold text-ink2"
+              onClick={() => exportFarmerReportCsv(farmerId, report)}
+            >
+              Download Raw Data (CSV)
+            </button>
+          )}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <div>
+            <div style={{ fontSize: 9, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
+              Income vs Expenses
             </div>
-          ))}
+            {!report || report.transactions.byMonth.length === 0 ? (
+              <p style={{ fontSize: 9, color: '#6B7280' }}>No data for this period</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={report.transactions.byMonth}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" tick={{ fontSize: 9 }} />
+                  <YAxis tick={{ fontSize: 9 }} />
+                  <Tooltip />
+                  <Legend wrapperStyle={{ fontSize: 9 }} />
+                  <Bar dataKey="incomeKes" name="Income (KES)" fill="#1A6B3C" />
+                  <Bar dataKey="expenseKes" name="Expense (KES)" fill="#DC2626" />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+
+          <div>
+            <div style={{ fontSize: 9, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
+              Harvest Yield
+            </div>
+            {!report || report.production.monthlyYieldKg.length === 0 ? (
+              <p style={{ fontSize: 9, color: '#6B7280' }}>No data for this period</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={report.production.monthlyYieldKg}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" tick={{ fontSize: 9 }} />
+                  <YAxis tick={{ fontSize: 9 }} />
+                  <Tooltip />
+                  <Bar dataKey="harvestedKg" name="Harvested (kg)" fill="#C9A84C" />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
         </div>
       </div>
     </div>
