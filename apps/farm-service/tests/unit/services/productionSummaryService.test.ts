@@ -31,9 +31,9 @@ describe('productionSummaryService.getProductionSummary', () => {
   it('aggregates harvested/sold kg and revenue per crop across multiple farms', async () => {
     mockFarmFindMany.mockResolvedValue([{ id: 'farm-1' }, { id: 'farm-2' }]);
     mockHarvestFindMany.mockResolvedValue([
-      { crop: 'maize', quantityKg: '100.00', soldQuantityKg: '80.00', totalRevenueKes: '8000.00' },
-      { crop: 'maize', quantityKg: '50.00', soldQuantityKg: '50.00', totalRevenueKes: '5000.00' },
-      { crop: 'beans', quantityKg: '30.00', soldQuantityKg: '10.00', totalRevenueKes: '1000.00' },
+      { crop: 'maize', quantityKg: '100.00', soldQuantityKg: '80.00', totalRevenueKes: '8000.00', harvestDate: new Date('2026-01-15') },
+      { crop: 'maize', quantityKg: '50.00', soldQuantityKg: '50.00', totalRevenueKes: '5000.00', harvestDate: new Date('2026-01-20') },
+      { crop: 'beans', quantityKg: '30.00', soldQuantityKg: '10.00', totalRevenueKes: '1000.00', harvestDate: new Date('2026-02-05') },
     ]);
     mockAnimalProductFindMany.mockResolvedValue([]);
     mockCollectionFindMany.mockResolvedValue([]);
@@ -49,6 +49,24 @@ describe('productionSummaryService.getProductionSummary', () => {
         { cropName: 'beans', harvestedKg: 30, soldKg: 10, revenueKes: 1000 },
       ]),
     );
+  });
+
+  it('buckets harvested kg by month, sorted ascending', async () => {
+    mockFarmFindMany.mockResolvedValue([{ id: 'farm-1' }]);
+    mockHarvestFindMany.mockResolvedValue([
+      { crop: 'maize', quantityKg: '100.00', soldQuantityKg: '0', totalRevenueKes: '0', harvestDate: new Date('2026-03-10') },
+      { crop: 'beans', quantityKg: '20.00', soldQuantityKg: '0', totalRevenueKes: '0', harvestDate: new Date('2026-01-05') },
+      { crop: 'maize', quantityKg: '40.00', soldQuantityKg: '0', totalRevenueKes: '0', harvestDate: new Date('2026-01-25') },
+    ]);
+    mockAnimalProductFindMany.mockResolvedValue([]);
+    mockCollectionFindMany.mockResolvedValue([]);
+
+    const result = await productionSummaryService.getProductionSummary('farmer-1');
+
+    expect(result.monthlyYieldKg).toEqual([
+      { month: '2026-01', harvestedKg: 60 },
+      { month: '2026-03', harvestedKg: 100 },
+    ]);
   });
 
   it('computes animal product revenue as soldQty * pricePerUnit, not full quantity', async () => {

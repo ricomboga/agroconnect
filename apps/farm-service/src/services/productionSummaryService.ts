@@ -27,6 +27,11 @@ export interface CollectionTotal {
   unit: string;
 }
 
+export interface MonthlyYield {
+  month: string; // YYYY-MM
+  harvestedKg: number;
+}
+
 export interface ProductionSummary {
   cropHarvests: {
     totalHarvestedKg: number;
@@ -34,6 +39,7 @@ export interface ProductionSummary {
     totalRevenueKes: number;
     byCrop: CropHarvestTotal[];
   };
+  monthlyYieldKg: MonthlyYield[];
   animalProducts: {
     byType: AnimalProductTotal[];
   };
@@ -71,6 +77,7 @@ function dateFilter(range: DateRange): { gte?: Date; lte?: Date } | undefined {
 
 const EMPTY_SUMMARY: ProductionSummary = {
   cropHarvests: { totalHarvestedKg: 0, totalSoldKg: 0, totalRevenueKes: 0, byCrop: [] },
+  monthlyYieldKg: [],
   animalProducts: { byType: [] },
   collections: { totalSalesKes: 0, paidKes: 0, pendingKes: 0, byProductType: [] },
 };
@@ -97,6 +104,7 @@ export async function getProductionSummary(
   ]);
 
   const byCropMap = new Map<string, CropHarvestTotal>();
+  const byMonthMap = new Map<string, number>();
   let totalHarvestedKg = 0;
   let totalSoldKg = 0;
   let totalRevenueKes = 0;
@@ -113,7 +121,14 @@ export async function getProductionSummary(
     entry.soldKg += soldKg;
     entry.revenueKes += revenueKes;
     byCropMap.set(h.crop, entry);
+
+    const month = new Date(h.harvestDate).toISOString().slice(0, 7);
+    byMonthMap.set(month, (byMonthMap.get(month) ?? 0) + harvestedKg);
   }
+
+  const monthlyYieldKg: MonthlyYield[] = [...byMonthMap.entries()]
+    .map(([month, harvestedKg]) => ({ month, harvestedKg: round2(harvestedKg) }))
+    .sort((a, b) => a.month.localeCompare(b.month));
 
   const byTypeMap = new Map<string, AnimalProductTotal>();
   for (const p of animalProducts) {
@@ -153,6 +168,7 @@ export async function getProductionSummary(
       totalRevenueKes: Math.round(totalRevenueKes),
       byCrop: [...byCropMap.values()].map((e) => ({ ...e, harvestedKg: round2(e.harvestedKg), soldKg: round2(e.soldKg), revenueKes: Math.round(e.revenueKes) })),
     },
+    monthlyYieldKg,
     animalProducts: {
       byType: [...byTypeMap.values()].map((e) => ({ ...e, totalQty: round2(e.totalQty), soldQty: round2(e.soldQty), revenueKes: Math.round(e.revenueKes) })),
     },
