@@ -10,6 +10,7 @@ export const createUserSchema = z.object({
   county: z.enum(KENYA_COUNTIES).optional(),
   language: z.enum(['sw', 'en']).optional(),
   isSuperAdmin: z.boolean().optional(),
+  staffRole: z.enum(['admin', 'county_admin', 'moderator']).optional(),
 });
 
 export type CreateUserDto = z.infer<typeof createUserSchema>;

@@ -1,10 +1,12 @@
-import type { Response, NextFunction, RequestHandler } from 'express';
+import type { Response, NextFunction } from 'express';
 import type { AdminRequest } from '../types/index.js';
 import * as kycService from '../services/kycService.js';
+import { assertCapability } from '../middleware/staffAccess.js';
 import type { KycDecisionDto } from '../schemas/kycDecision.schema.js';
 
-export const listQueue: RequestHandler = async (req, res, next): Promise<void> => {
+export const listQueue = async (req: AdminRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
+    assertCapability(req.user, 'kyc');
     const data = await kycService.listQueue({
       role: req.query['role'] as string | undefined,
       county: req.query['county'] as string | undefined,
@@ -17,6 +19,7 @@ export const listQueue: RequestHandler = async (req, res, next): Promise<void> =
 
 export const getKyc = async (req: AdminRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
+    assertCapability(req.user, 'kyc');
     const { userId } = req.params as { userId: string };
     const data = await kycService.getKyc(userId);
     res.json({ data });
@@ -27,6 +30,7 @@ export const getKyc = async (req: AdminRequest, res: Response, next: NextFunctio
 
 export const decideKyc = async (req: AdminRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
+    assertCapability(req.user, 'kyc');
     const { userId } = req.params as { userId: string };
     const dto = req.body as KycDecisionDto;
     const actor = req.user.phone;

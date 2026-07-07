@@ -22,6 +22,9 @@ function handleError(err: unknown, context: string): never {
     if (status === 404) {
       throw createError('User not found', 404, 'USER_NOT_FOUND', 'error.user_not_found');
     }
+    if (status === 409) {
+      throw createError('Phone already registered', 409, 'PHONE_TAKEN', 'error.phone_taken');
+    }
   }
   logger.warn({ err, context }, 'auth-service call failed');
   throw createError(
@@ -45,6 +48,23 @@ export interface UserRow {
   kycStatus: string;
   lastLoginAt: string | null;
   createdAt: string;
+  is_super_admin?: boolean;
+  staff_role?: string;
+  partner_bank_id?: string | null;
+}
+
+export type UserDetail = UserRow;
+
+export interface CreateUserPayload {
+  phone: string;
+  email?: string;
+  password: string;
+  fullName: string;
+  role: string;
+  county?: string;
+  language?: string;
+  isSuperAdmin?: boolean;
+  staffRole?: string;
 }
 
 export interface UsersPage {
@@ -68,6 +88,28 @@ export async function listUsers(query: ListUsersQuery): Promise<UsersPage> {
     return res.data;
   } catch (err) {
     handleError(err, 'listUsers');
+  }
+}
+
+export async function getUser(id: string): Promise<UserDetail> {
+  try {
+    const res = await client.get<{ data: UserDetail }>(`/internal/admin/users/${id}`, {
+      headers: { 'x-service-token': serviceToken() },
+    });
+    return res.data.data;
+  } catch (err) {
+    handleError(err, 'getUser');
+  }
+}
+
+export async function createUser(payload: CreateUserPayload): Promise<UserDetail> {
+  try {
+    const res = await client.post<{ data: UserDetail }>('/internal/admin/users', payload, {
+      headers: { 'x-service-token': serviceToken() },
+    });
+    return res.data.data;
+  } catch (err) {
+    handleError(err, 'createUser');
   }
 }
 

@@ -11,7 +11,9 @@ const router = Router();
 const auth = requireAuth as (req: Request, res: Response, next: NextFunction) => void;
 const adminOnly = authorize('admin') as (req: Request, res: Response, next: NextFunction) => void;
 
-router.get('/kyc', auth, adminOnly, kycController.listQueue);
+router.get('/kyc', auth, adminOnly, (req, res, next) =>
+  kycController.listQueue(req as AdminRequest, res, next),
+);
 router.get('/kyc/:userId', auth, adminOnly, (req, res, next) =>
   kycController.getKyc(req as AdminRequest, res, next),
 );

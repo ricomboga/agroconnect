@@ -1,10 +1,12 @@
-import type { Response, NextFunction, RequestHandler } from 'express';
+import type { Response, NextFunction } from 'express';
 import type { AdminRequest } from '../types/index.js';
 import * as moderationService from '../services/moderationService.js';
+import { assertCapability } from '../middleware/staffAccess.js';
 import type { UpdateModerationDto } from '../schemas/updateModeration.schema.js';
 
-export const listFlagged: RequestHandler = async (req, res, next): Promise<void> => {
+export const listFlagged = async (req: AdminRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
+    assertCapability(req.user, 'moderate');
     const page = Math.max(1, parseInt(String(req.query['page'] ?? '1'), 10) || 1);
     const pageSize = Math.min(100, Math.max(1, parseInt(String(req.query['page_size'] ?? '20'), 10) || 20));
     const result = await moderationService.listFlagged(page, pageSize);
@@ -16,6 +18,7 @@ export const listFlagged: RequestHandler = async (req, res, next): Promise<void>
 
 export const moderatePost = async (req: AdminRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
+    assertCapability(req.user, 'moderate');
     const { postId } = req.params as { postId: string };
     const { status } = req.body as UpdateModerationDto;
     await moderationService.moderatePost(postId, status, req.user.phone);

@@ -6,6 +6,7 @@ module.exports = {
   testMatch: ['**/tests/unit/**/*.test.ts'],
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^@agroconnect/shared/constants/counties$': '<rootDir>/../../packages/shared/src/constants/counties.ts',
     '^@agroconnect/shared$': '<rootDir>/../../packages/shared/src/index.ts',
   },
   transform: {
@@ -16,6 +17,9 @@ module.exports = {
         declaration: false,
         declarationMap: false,
         strict: true,
+        paths: {
+          '@agroconnect/shared/constants/counties': ['../../packages/shared/src/constants/counties.ts'],
+        },
       },
     }],
   },

@@ -29,3 +29,21 @@ export async function getStats(): Promise<FinanceStats> {
     return { loans_disbursed_kes: 0 };
   }
 }
+
+export interface InstitutionLoanTotal {
+  institutionId: string;
+  institutionName: string;
+  totalDisbursedKes: number;
+}
+
+export async function getLoansByInstitution(): Promise<InstitutionLoanTotal[]> {
+  try {
+    const res = await client.get<{ data: InstitutionLoanTotal[] }>('/internal/admin/stats/loans-by-institution', {
+      headers: { 'x-service-token': serviceToken() },
+    });
+    return res.data.data;
+  } catch (err) {
+    logger.warn({ err }, 'finance-service loans-by-institution unavailable');
+    return [];
+  }
+}

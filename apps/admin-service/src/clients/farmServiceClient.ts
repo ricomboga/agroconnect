@@ -51,6 +51,45 @@ export interface FarmsPage {
   meta: { total: number; page: number; pageSize: number; totalPages: number };
 }
 
+export interface CountyFarmerCount {
+  county: string;
+  farmerCount: number;
+}
+
+export async function getFarmersByCounty(): Promise<CountyFarmerCount[]> {
+  try {
+    const res = await client.get<{ data: CountyFarmerCount[] }>('/internal/admin/stats/farmers-by-county', {
+      headers: { 'x-service-token': serviceToken() },
+    });
+    return res.data.data;
+  } catch (err) {
+    logger.warn({ err }, 'farm-service farmers-by-county unavailable');
+    return [];
+  }
+}
+
+export interface CountyLivestockTotal {
+  county: string;
+  animalType: string;
+  totalCount: number;
+}
+
+export async function getLivestockStats(filters: {
+  county?: string;
+  animalType?: string;
+}): Promise<CountyLivestockTotal[]> {
+  try {
+    const res = await client.get<{ data: CountyLivestockTotal[] }>('/internal/admin/stats/livestock', {
+      params: { county: filters.county, animal_type: filters.animalType },
+      headers: { 'x-service-token': serviceToken() },
+    });
+    return res.data.data;
+  } catch (err) {
+    logger.warn({ err }, 'farm-service livestock-stats unavailable');
+    return [];
+  }
+}
+
 export async function listFarms(params: {
   search?: string;
   county?: string;

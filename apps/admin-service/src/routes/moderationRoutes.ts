@@ -11,7 +11,9 @@ const router = Router();
 const auth = requireAuth as (req: Request, res: Response, next: NextFunction) => void;
 const adminOnly = authorize('admin') as (req: Request, res: Response, next: NextFunction) => void;
 
-router.get('/moderation', auth, adminOnly, moderationController.listFlagged);
+router.get('/moderation', auth, adminOnly, (req, res, next) =>
+  moderationController.listFlagged(req as AdminRequest, res, next),
+);
 router.patch('/moderation/:postId', auth, adminOnly, validateBody(updateModerationSchema) as RequestHandler, (req, res, next) =>
   moderationController.moderatePost(req as AdminRequest, res, next),
 );
