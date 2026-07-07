@@ -56,7 +56,15 @@ export async function register(dto: RegisterDto, ipAddress: string, userAgent?: 
   const user = await createUser({ ...userFields, passwordHash });
 
   const accessToken = signJwt(
-    { sub: user.id, role: user.role, phone: user.phone, partner_bank_id: user.partnerBankId ?? undefined },
+    {
+      sub: user.id,
+      role: user.role,
+      phone: user.phone,
+      partner_bank_id: user.partnerBankId ?? undefined,
+      is_super_admin: user.isSuperAdmin,
+      staff_role: user.staffRole,
+      county: user.county ?? undefined,
+    },
     ACCESS_TTL,
   );
   const refreshToken = crypto.randomBytes(48).toString('hex');
@@ -71,7 +79,18 @@ export async function register(dto: RegisterDto, ipAddress: string, userAgent?: 
     expiresAt: new Date(Date.now() + REFRESH_TTL * 1000),
   });
 
-  return { accessToken, refreshToken, user: { id: user.id, phone: user.phone, role: user.role, fullName: user.fullName } };
+  return {
+    accessToken,
+    refreshToken,
+    user: {
+      id: user.id,
+      phone: user.phone,
+      role: user.role,
+      fullName: user.fullName,
+      isSuperAdmin: user.isSuperAdmin,
+      staffRole: user.staffRole,
+    },
+  };
 }
 
 export async function login(dto: LoginDto, ipAddress: string, userAgent?: string) {
@@ -88,7 +107,15 @@ export async function login(dto: LoginDto, ipAddress: string, userAgent?: string
   await updateUserLastLogin(user.id);
 
   const accessToken = signJwt(
-    { sub: user.id, role: user.role, phone: user.phone, partner_bank_id: user.partnerBankId ?? undefined },
+    {
+      sub: user.id,
+      role: user.role,
+      phone: user.phone,
+      partner_bank_id: user.partnerBankId ?? undefined,
+      is_super_admin: user.isSuperAdmin,
+      staff_role: user.staffRole,
+      county: user.county ?? undefined,
+    },
     ACCESS_TTL,
   );
   const refreshToken = crypto.randomBytes(48).toString('hex');
@@ -103,7 +130,18 @@ export async function login(dto: LoginDto, ipAddress: string, userAgent?: string
     expiresAt: new Date(Date.now() + REFRESH_TTL * 1000),
   });
 
-  return { accessToken, refreshToken, user: { id: user.id, phone: user.phone, role: user.role, fullName: user.fullName } };
+  return {
+    accessToken,
+    refreshToken,
+    user: {
+      id: user.id,
+      phone: user.phone,
+      role: user.role,
+      fullName: user.fullName,
+      isSuperAdmin: user.isSuperAdmin,
+      staffRole: user.staffRole,
+    },
+  };
 }
 
 export async function refresh(refreshToken: string, ipAddress: string, userAgent?: string) {
@@ -117,7 +155,15 @@ export async function refresh(refreshToken: string, ipAddress: string, userAgent
 
   const { user } = session;
   const newAccessToken = signJwt(
-    { sub: user.id, role: user.role, phone: user.phone, partner_bank_id: user.partnerBankId ?? undefined },
+    {
+      sub: user.id,
+      role: user.role,
+      phone: user.phone,
+      partner_bank_id: user.partnerBankId ?? undefined,
+      is_super_admin: user.isSuperAdmin,
+      staff_role: user.staffRole,
+      county: user.county ?? undefined,
+    },
     ACCESS_TTL,
   );
   const newRefreshToken = crypto.randomBytes(48).toString('hex');

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { requireServiceToken } from '../middleware/requireServiceToken.js';
 import {
   listUsersHandler,
+  getUserHandler,
   setUserStatusHandler,
   verifyUserHandler,
   getStatsHandler,
@@ -24,6 +25,7 @@ router.use(requireServiceToken);
 router.get('/users', listUsersHandler);
 router.get('/users/batch', batchGetUsersHandler);
 router.post('/users', createUserHandler);
+router.get('/users/:id', getUserHandler);
 router.patch('/users/:id/status', setUserStatusHandler);
 router.patch('/users/:id/verify', verifyUserHandler);
 router.delete('/users/:id', deleteUserHandler);

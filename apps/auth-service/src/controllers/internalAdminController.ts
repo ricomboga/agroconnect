@@ -13,6 +13,8 @@ const createUserSchema = z.object({
   role: z.enum(['farmer', 'extension_officer', 'vet_officer', 'supplier', 'buyer', 'govt_officer', 'admin', 'lender', 'farm_worker']),
   county: z.string().optional(),
   language: z.enum(['sw', 'en']).optional(),
+  isSuperAdmin: z.boolean().optional(),
+  staffRole: z.enum(['admin', 'county_admin', 'moderator']).optional(),
 });
 
 export async function listUsersHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -32,6 +34,16 @@ export async function listUsersHandler(req: Request, res: Response, next: NextFu
       page_size: pageSize,
     });
     res.json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getUserHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { id } = req.params as { id: string };
+    const data = await adminUserService.getUser(id);
+    res.json({ data });
   } catch (err) {
     next(err);
   }

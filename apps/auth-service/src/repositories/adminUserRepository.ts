@@ -8,6 +8,24 @@ export interface AdminUserFilter {
   isActive?: boolean;
 }
 
+const ADMIN_USER_SELECT = {
+  id: true,
+  phone: true,
+  email: true,
+  fullName: true,
+  role: true,
+  county: true,
+  language: true,
+  isVerified: true,
+  isActive: true,
+  isSuperAdmin: true,
+  staffRole: true,
+  partnerBankId: true,
+  kycStatus: true,
+  lastLoginAt: true,
+  createdAt: true,
+} as const;
+
 export interface AdminPagination {
   take: number;
   skip: number;
@@ -21,23 +39,17 @@ export async function adminListUsers(filter: AdminUserFilter, pagination: AdminP
       ...(filter.kycStatus !== undefined ? { kycStatus: filter.kycStatus } : {}),
       ...(filter.isActive !== undefined ? { isActive: filter.isActive } : {}),
     },
-    select: {
-      id: true,
-      phone: true,
-      email: true,
-      fullName: true,
-      role: true,
-      county: true,
-      language: true,
-      isVerified: true,
-      isActive: true,
-      kycStatus: true,
-      lastLoginAt: true,
-      createdAt: true,
-    },
+    select: ADMIN_USER_SELECT,
     orderBy: { createdAt: 'desc' },
     take: pagination.take,
     skip: pagination.skip,
+  });
+}
+
+export async function adminGetUserById(id: string) {
+  return prisma.user.findUnique({
+    where: { id },
+    select: ADMIN_USER_SELECT,
   });
 }
 
@@ -79,21 +91,19 @@ export interface AdminCreateUserParams {
   role: UserRole;
   county?: string;
   language?: Language;
+  isVerified: boolean;
+  kycStatus: KycStatus;
+  isSuperAdmin?: boolean;
+  staffRole?: 'admin' | 'county_admin' | 'moderator';
 }
 
 export async function adminCreateUser(params: AdminCreateUserParams) {
   return prisma.user.create({
     data: {
       ...params,
-      isVerified: true,
       isActive: true,
-      kycStatus: 'verified',
     },
-    select: {
-      id: true, phone: true, email: true, fullName: true, role: true,
-      county: true, language: true, isVerified: true, isActive: true,
-      kycStatus: true, createdAt: true,
-    },
+    select: ADMIN_USER_SELECT,
   });
 }
 
