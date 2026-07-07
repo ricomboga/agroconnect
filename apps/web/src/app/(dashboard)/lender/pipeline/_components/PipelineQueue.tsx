@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { KpiCard, DataTable, StatusBadge, Avatar, Select } from '@agroconnect/web-ui'
 import type { DataTableColumn, KpiCardVariant } from '@agroconnect/web-ui'
+import { exportPipelineCsv, exportPipelineExcel, exportPipelinePdf } from '../_lib/exportPipeline'
 
 type LoanStatus = 'draft' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'disbursed' | 'cancelled' | 'repaid' | 'defaulted'
 type CreditBand = 'A' | 'B' | 'C' | 'D' | 'ineligible'
@@ -16,6 +17,7 @@ interface LoanRow {
   farmerId: string
   type: LoanType
   amountRequestedKes: string
+  approvedAmountKes: string | null
   creditScore: string | null
   creditBand: CreditBand | null
   status: LoanStatus
@@ -68,16 +70,19 @@ export function PipelineQueue() {
 
   const isNgo = institution?.type === 'ngo_grant'
 
-  const { data: loans = [], isLoading } = useQuery({
+  const { data: pipeline, isLoading } = useQuery({
     queryKey: ['lender', 'pipeline', isNgo],
     queryFn: async () => {
       const res = await fetch(isNgo ? '/api/lender/grants' : '/api/finance/lender/loans')
       if (!res.ok) throw new Error('Failed to load pipeline')
-      const body = (await res.json()) as { data: { loans: LoanRow[] } }
-      return body.data.loans
+      const body = (await res.json()) as { data: { loans: LoanRow[]; farmersCount?: number } }
+      return body.data
     },
     enabled: institution !== undefined,
   })
+
+  const loans = pipeline?.loans ?? []
+  const farmersCount = pipeline?.farmersCount ?? 0
 
   const filtered = useMemo(
     () =>
@@ -88,12 +93,20 @@ export function PipelineQueue() {
   )
 
   const counts = useMemo(() => {
-    const c = { submitted: 0, under_review: 0, approved: 0, disbursed: 0 }
+    const c = { submitted: 0, under_review: 0, approved: 0, disbursed: 0, rejected: 0, repaid: 0, cancelled: 0, defaulted: 0 }
     for (const l of loans) {
       if (l.status in c) c[l.status as keyof typeof c] += 1
     }
     return c
   }, [loans])
+
+  const totalDisbursedKes = useMemo(
+    () =>
+      loans
+        .filter((l) => l.status === 'disbursed' || l.status === 'repaid')
+        .reduce((sum, l) => sum + Number(l.approvedAmountKes ?? 0), 0),
+    [loans],
+  )
 
   const avgScore = useMemo(() => {
     const scored = loans.filter((l) => l.creditScore !== null)
@@ -110,6 +123,14 @@ export function PipelineQueue() {
     // pipeline payload — see /lender/portfolio.
     { value: '—', label: 'Overdue', variant: 'red' },
     { value: avgScore ?? '—', label: 'Avg Credit Score', variant: 'teal' },
+    ...(isNgo
+      ? []
+      : [
+          { value: farmersCount, label: 'Farmers Registered', variant: 'purple' as KpiCardVariant },
+          { value: counts.rejected, label: 'Rejected', variant: 'red' as KpiCardVariant },
+          { value: counts.repaid, label: 'Repaid', variant: 'green' as KpiCardVariant },
+          { value: formatKes(totalDisbursedKes), label: 'Total Disbursed', variant: 'gold' as KpiCardVariant },
+        ]),
   ]
 
   const columns: DataTableColumn<LoanRow>[] = [
@@ -178,11 +199,38 @@ export function PipelineQueue() {
 
   return (
     <div>
-      <div className="mb-4">
-        <p className="text-lg font-bold text-ink">{isNgo ? 'Grant Pipeline' : 'Loan Pipeline'}</p>
-        <p className="mt-0.5 text-sm text-muted">
-          {isNgo ? 'Grant applications assigned to your organisation' : 'Applications assigned to your institution'}
-        </p>
+      <div className="mb-4 flex items-start justify-between">
+        <div>
+          <p className="text-lg font-bold text-ink">{isNgo ? 'Grant Pipeline' : 'Loan Pipeline'}</p>
+          <p className="mt-0.5 text-sm text-muted">
+            {isNgo ? 'Grant applications assigned to your organisation' : 'Applications assigned to your institution'}
+          </p>
+        </div>
+        {!isNgo && (
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className="rounded-md border border-border px-3 py-1.5 text-xs font-semibold text-ink2"
+              onClick={() => exportPipelineCsv(institution?.name ?? 'Institution', kpis, filtered)}
+            >
+              Export CSV
+            </button>
+            <button
+              type="button"
+              className="rounded-md border border-border px-3 py-1.5 text-xs font-semibold text-ink2"
+              onClick={() => void exportPipelineExcel(institution?.name ?? 'Institution', kpis, filtered)}
+            >
+              Export Excel
+            </button>
+            <button
+              type="button"
+              className="rounded-md border border-border px-3 py-1.5 text-xs font-semibold text-ink2"
+              onClick={() => exportPipelinePdf(institution?.name ?? 'Institution', kpis, filtered)}
+            >
+              Export PDF
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="mb-4 grid grid-cols-3 gap-2.5 sm:grid-cols-6">
