@@ -36,6 +36,9 @@ export function authenticate(req: Request, res: Response, next: NextFunction): v
       role: payload.role,
       isVerified: false, // isVerified is not encoded in the JWT — resolved by the service if needed
       partner_bank_id: payload.partner_bank_id,
+      isSuperAdmin: payload.is_super_admin,
+      staffRole: payload.staff_role,
+      county: payload.county,
     };
     next();
   } catch (err) {

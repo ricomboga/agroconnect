@@ -5,6 +5,9 @@ export interface JwtPayload {
   role: string;
   phone: string;
   partner_bank_id?: string;
+  is_super_admin?: boolean;
+  staff_role?: string;
+  county?: string;
   iat: number;
   exp: number;
 }

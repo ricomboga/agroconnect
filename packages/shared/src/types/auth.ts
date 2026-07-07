@@ -5,4 +5,7 @@ export interface AuthUser {
   fullName?: string;
   isVerified: boolean;
   partner_bank_id?: string;
+  isSuperAdmin?: boolean;
+  staffRole?: string;
+  county?: string;
 }

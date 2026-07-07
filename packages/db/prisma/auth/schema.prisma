@@ -21,6 +21,8 @@ model User {
   language     Language   @default(sw)
   isVerified   Boolean    @default(false)
   isActive     Boolean    @default(true)
+  isSuperAdmin Boolean    @default(false)
+  staffRole    StaffRole  @default(admin)
   kycStatus    KycStatus  @default(pending)
   lastLoginAt  DateTime?
   createdAt    DateTime   @default(now())
@@ -164,4 +166,10 @@ enum KycStatus {
   submitted
   verified
   rejected
+}
+
+enum StaffRole {
+  admin
+  county_admin
+  moderator
 }
