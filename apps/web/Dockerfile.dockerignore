@@ -1,0 +1,42 @@
+# Dockerfile-specific override for apps/web/Dockerfile — BuildKit applies this
+# instead of the root .dockerignore, which excludes apps/web entirely (that
+# exclusion is correct for the backend service Dockerfiles, but breaks web's
+# own build since it needs its own source).
+
+# Root node_modules (pnpm virtual store)
+node_modules
+apps/web/node_modules
+
+# Build outputs
+apps/*/dist
+packages/*/dist
+apps/*/.next
+apps/*/.turbo
+packages/*/.turbo
+
+# Prisma generated clients — rebuilt inside Docker for Linux target
+packages/db/generated
+
+# Not needed for the web build
+apps/mobile
+apps/diagnosis-service
+apps/auth-service/node_modules
+apps/farm-service/node_modules
+apps/api-gateway/node_modules
+apps/finance-service/node_modules
+apps/market-service/node_modules
+apps/community-service/node_modules
+apps/govt-service/node_modules
+apps/soil-service/node_modules
+apps/weather-service/node_modules
+apps/notification-service/node_modules
+apps/media-service/node_modules
+apps/admin-service/node_modules
+apps/ussd-service/node_modules
+
+# Repo meta
+.git
+docs
+skills
+infra
+*.md
