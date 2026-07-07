@@ -69,7 +69,7 @@ describe('listingService.createListing', () => {
       qualityGrade: 'A' as const,
       availableFrom: '2026-07-01',
       availableUntil: '2026-07-31',
-      locationCounty: 'Nakuru',
+      locationCounty: 'Nakuru' as const,
     };
     const result = await listingService.createListing(FARMER_ID, dto);
     expect(result).toEqual(BASE_LISTING);

@@ -42,7 +42,7 @@ describe('listingRepository.createListing', () => {
       qualityGrade: 'A' as const,
       availableFrom: '2026-07-01',
       availableUntil: '2026-07-31',
-      locationCounty: 'Nakuru',
+      locationCounty: 'Nakuru' as const,
     };
     const result = await repo.createListing('farmer-001', dto);
     expect(result).toEqual(BASE);

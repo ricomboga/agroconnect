@@ -48,7 +48,7 @@ const createDto = {
   name: 'Wanjiru Farm',
   locationLat: -0.02,
   locationLng: 37.9,
-  county: 'Meru',
+  county: 'Meru' as const,
   areaAcres: 5.5,
 };
 

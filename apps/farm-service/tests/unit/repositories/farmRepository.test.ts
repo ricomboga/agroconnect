@@ -145,7 +145,7 @@ describe('farmRepository.createFarm', () => {
       name: 'New Farm',
       locationLat: -0.5,
       locationLng: 36.8,
-      county: 'Nakuru',
+      county: 'Nakuru' as const,
       areaAcres: 3,
     };
 

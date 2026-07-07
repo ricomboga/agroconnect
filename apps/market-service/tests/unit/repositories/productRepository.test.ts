@@ -37,7 +37,7 @@ describe('productRepository.createProduct', () => {
       unit: 'bag',
       pricePerUnitKes: 3800,
       stockQuantity: 100,
-      countyAvailability: ['Nakuru'],
+      countyAvailability: ['Nakuru' as const],
     };
     const result = await repo.createProduct('supplier-001', dto);
     expect(result).toEqual(BASE_PRODUCT);

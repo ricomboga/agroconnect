@@ -48,7 +48,7 @@ describe('productService.createProduct', () => {
       unit: 'bag',
       pricePerUnitKes: 3800,
       stockQuantity: 100,
-      countyAvailability: ['Nakuru'],
+      countyAvailability: ['Nakuru' as const],
     };
     const result = await productService.createProduct(SUPPLIER_ID, dto);
     expect(result).toEqual(BASE_PRODUCT);

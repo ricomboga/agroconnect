@@ -1,0 +1,625 @@
+services:
+
+  # ── Infrastructure ──────────────────────────────────────────────────────────
+  # NOTE: every internal service/infra port below is bound to 127.0.0.1 only —
+  # not reachable from the public internet even though the container exposes
+  # it. Only api-gateway (3000) and web (8081) are bound to 0.0.0.0. This is a
+  # public demo/staging box, so the firewall (ufw) mirrors this same allowlist.
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: agroconnect-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: agroconnect
+      POSTGRES_PASSWORD: agroconnect_dev
+      POSTGRES_DB: farm_db
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agroconnect"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: agroconnect-redis
+    restart: unless-stopped
+    command: redis-server --requirepass redis_dev_password
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redis_dev_password", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  mongodb:
+    image: mongo:7
+    container_name: agroconnect-mongodb
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval \"db.adminCommand('ping').ok\" | grep -q 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 30s
+
+  minio:
+    image: minio/minio:latest
+    container_name: agroconnect-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: "minioadmin"
+      MINIO_ROOT_PASSWORD: "minioadmin"
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9000/minio/health/live || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: agroconnect-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      sh -c "
+        mc alias set local http://minio:9000 minioadmin minioadmin &&
+        mc mb --ignore-existing local/agroconnect-media-dev &&
+        mc anonymous set download local/agroconnect-media-dev
+      "
+
+  kafka:
+    image: apache/kafka:3.7.1
+    container_name: agroconnect-kafka
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9094:9094"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      CLUSTER_ID: "agroconnect-dev-cluster-01"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: agroconnect-kafka-ui
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: agroconnect-local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  kafka-init:
+    image: apache/kafka:3.7.1
+    container_name: agroconnect-kafka-init
+    restart: "no"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        K=/opt/kafka/bin/kafka-topics.sh
+        B=kafka:9092
+        t() { $$K --bootstrap-server $$B --create --if-not-exists --topic $$1 --partitions 3 --replication-factor 1 --config retention.ms=$$2 && echo "created: $$1"; }
+        t farm.created               604800000
+        t farm.worker.assigned       604800000
+        t farm.activity.completed    604800000
+        t farm.harvest.recorded      2592000000
+        t diagnosis.submitted        604800000
+        t diagnosis.completed        2592000000
+        t finance.loan.applied       31536000000
+        t finance.loan.disbursed     31536000000
+        t finance.payment.confirmed  31536000000
+        t finance.payment.failed     2592000000
+        t market.listing.created     1209600000
+        t market.order.placed        31536000000
+        t market.order.updated       31536000000
+        t govt.registration.submitted 2592000000
+        t weather.alert.issued       604800000
+        t community.post.created     604800000
+        t community.reply.created    604800000
+        t community.article.created  604800000
+        t user.registered            2592000000
+        t notification.send          259200000
+        t dead_letter                7776000000
+        echo "All Kafka topics ready."
+
+  # ── Node.js backend services ─────────────────────────────────────────────────
+
+  api-gateway:
+    build:
+      context: ..
+      dockerfile: apps/api-gateway/Dockerfile.dev
+    container_name: agroconnect-api-gateway
+    restart: unless-stopped
+    environment:
+      PORT: "3000"
+      AUTH_UPSTREAM:         "http://auth-service:3008"
+      FARM_UPSTREAM:         "http://farm-service:3001"
+      SOIL_UPSTREAM:         "http://soil-service:3002"
+      FINANCE_UPSTREAM:      "http://finance-service:3003"
+      MARKET_UPSTREAM:       "http://market-service:3004"
+      COMMUNITY_UPSTREAM:    "http://community-service:3005"
+      GOVT_UPSTREAM:         "http://govt-service:3006"
+      NOTIFICATION_UPSTREAM: "http://notification-service:3007"
+      MEDIA_UPSTREAM:        "http://media-service:3009"
+      USSD_UPSTREAM:         "http://ussd-service:3010"
+      ADMIN_UPSTREAM:        "http://admin-service:3011"
+      WEATHER_UPSTREAM:      "http://weather-service:8001"
+      PREDICT_UPSTREAM:      "http://predict-service:8002"
+      DIAGNOSE_UPSTREAM:     "http://farm-service:3001"
+    ports:
+      - "0.0.0.0:3000:3000"
+    depends_on:
+      - auth-service
+      - farm-service
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auth-service:
+    build:
+      context: ..
+      dockerfile: apps/auth-service/Dockerfile.dev
+    container_name: agroconnect-auth-service
+    restart: unless-stopped
+    env_file:
+      - ../apps/auth-service/.env
+    environment:
+      AUTH_DATABASE_URL: "postgresql://agroconnect:agroconnect_dev@postgres:5432/auth_db"
+      KAFKA_BROKERS: "kafka:9092"
+      REDIS_URL: "redis://:redis_dev_password@redis:6379"
+    command: >
+      sh -c "cd /workspace && pnpm --filter @agroconnect/db exec prisma migrate deploy --schema prisma/auth/schema.prisma && cd apps/auth-service && exec npx tsx src/index.ts"
+    ports:
+      - "127.0.0.1:3008:3008"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3008/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  farm-service:
+    build:
+      context: ..
+      dockerfile: apps/farm-service/Dockerfile.dev
+    container_name: agroconnect-farm-service
+    restart: unless-stopped
+    env_file:
+      - ../apps/farm-service/.env
+    environment:
+      DATABASE_URL: "postgresql://agroconnect:agroconnect_dev@postgres:5432/farm_db"
+      KAFKA_BROKERS: "kafka:9092"
+      REDIS_URL: "redis://:redis_dev_password@redis:6379"
+      MEDIA_SERVICE_URL: "http://media-service:3009"
+      DIAGNOSIS_SERVICE_URL: "http://diagnosis-service:8000"
+      AUTH_SERVICE_URL: "http://auth-service:3008"
+      INTERNAL_SERVICE_SECRET: "agroconnect-internal-dev-secret-2026"
+    command: >
+      sh -c "cd /workspace && pnpm --filter @agroconnect/db exec prisma migrate deploy --schema prisma/farm/schema.prisma && cd apps/farm-service && exec npx tsx src/index.ts"
+    ports:
+      - "127.0.0.1:3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  soil-service:
+    build:
+      context: ..
+      dockerfile: apps/soil-service/Dockerfile.dev
+    container_name: agroconnect-soil-service
+    restart: unless-stopped
+    env_file:
+      - ../apps/soil-service/.env
+    environment:
+      SOIL_DATABASE_URL: "postgresql://agroconnect:agroconnect_dev@postgres:5432/soil_db"
+      KAFKA_BROKERS: "kafka:9092"
+      REDIS_URL: "redis://:redis_dev_password@redis:6379"
+      MARKET_SERVICE_URL: "http://market-service:3004"
+    command: >
+      sh -c "cd /workspace && pnpm --filter @agroconnect/db exec prisma db push --schema prisma/soil/schema.prisma --accept-data-loss && cd apps/soil-service && exec npx tsx src/index.ts"
+    ports:
+      - "127.0.0.1:3002:3002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3002/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  finance-service:
+    build:
+      context: ..
+      dockerfile: apps/finance-service/Dockerfile.dev
+    container_name: agroconnect-finance-service
+    restart: unless-stopped
+    env_file:
+      - ../apps/finance-service/.env
+    environment:
+      DATABASE_URL: "postgresql://agroconnect:agroconnect_dev@postgres:5432/finance_db"
+      KAFKA_BROKERS: "kafka:9092"
+      REDIS_URL: "redis://:redis_dev_password@redis:6379"
+      FARM_SERVICE_URL: "http://farm-service:3001"
+      INTERNAL_SERVICE_SECRET: "agroconnect-internal-dev-secret-2026"
+    command: >
+      sh -c "cd /workspace && pnpm --filter @agroconnect/db exec prisma migrate deploy --schema prisma/finance/schema.prisma && cd apps/finance-service && exec npx tsx src/index.ts"
+    ports:
+      - "127.0.0.1:3003:3003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3003/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  market-service:
+    build:
+      context: ..
+      dockerfile: apps/market-service/Dockerfile.dev
+    container_name: agroconnect-market-service
+    restart: unless-stopped
+    env_file:
+      - ../apps/market-service/.env
+    environment:
+      MARKET_DATABASE_URL: "postgresql://agroconnect:agroconnect_dev@postgres:5432/market_db"
+      KAFKA_BROKERS: "kafka:9092"
+      REDIS_URL: "redis://:redis_dev_password@redis:6379"
+    command: >
+      sh -c "cd /workspace && pnpm --filter @agroconnect/db exec prisma migrate deploy --schema prisma/market/schema.prisma && cd apps/market-service && exec npx tsx src/index.ts"
+    ports:
+      - "127.0.0.1:3004:3004"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3004/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  community-service:
+    build:
+      context: ..
+      dockerfile: apps/community-service/Dockerfile.dev
+    container_name: agroconnect-community-service
+    restart: unless-stopped
+    env_file:
+      - ../apps/community-service/.env
+    environment:
+      COMMUNITY_DATABASE_URL: "postgresql://agroconnect:agroconnect_dev@postgres:5432/community_db"
+      KAFKA_BROKERS: "kafka:9092"
+      REDIS_URL: "redis://:redis_dev_password@redis:6379"
+    command: >
+      sh -c "cd /workspace && pnpm --filter @agroconnect/db exec prisma db push --schema prisma/community/schema.prisma --accept-data-loss && cd apps/community-service && exec npx tsx src/index.ts"
+    ports:
+      - "127.0.0.1:3005:3005"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3005/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  govt-service:
+    build:
+      context: ..
+      dockerfile: apps/govt-service/Dockerfile.dev
+    container_name: agroconnect-govt-service
+    restart: unless-stopped
+    env_file:
+      - ../apps/govt-service/.env
+    environment:
+      DATABASE_URL: "postgresql://agroconnect:agroconnect_dev@postgres:5432/govt_db"
+      GOVT_DATABASE_URL: "postgresql://agroconnect:agroconnect_dev@postgres:5432/govt_db"
+      KAFKA_BROKERS: "kafka:9092"
+      REDIS_URL: "redis://:redis_dev_password@redis:6379"
+    command: >
+      sh -c "cd /workspace && pnpm --filter @agroconnect/db exec prisma db push --schema prisma/govt/schema.prisma --accept-data-loss && cd apps/govt-service && exec npx tsx src/index.ts"
+    ports:
+      - "127.0.0.1:3006:3006"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3006/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  notification-service:
+    build:
+      context: ..
+      dockerfile: apps/notification-service/Dockerfile.dev
+    container_name: agroconnect-notification-service
+    restart: unless-stopped
+    env_file:
+      - ../apps/notification-service/.env
+    environment:
+      NOTIFICATION_DATABASE_URL: "postgresql://agroconnect:agroconnect_dev@postgres:5432/notification_db"
+      KAFKA_BROKERS: "kafka:9092"
+      REDIS_URL: "redis://:redis_dev_password@redis:6379"
+    command: >
+      sh -c "cd /workspace && pnpm --filter @agroconnect/db exec prisma db push --schema ../../apps/notification-service/prisma/schema.prisma --accept-data-loss && cd apps/notification-service && exec npx tsx src/index.ts"
+    ports:
+      - "127.0.0.1:3007:3007"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f tsx || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  media-service:
+    build:
+      context: ..
+      dockerfile: apps/media-service/Dockerfile.dev
+    container_name: agroconnect-media-service
+    restart: unless-stopped
+    env_file:
+      - ../apps/media-service/.env
+    environment:
+      S3_ENDPOINT: "http://minio:9000"
+      AWS_ACCESS_KEY_ID: "minioadmin"
+      AWS_SECRET_ACCESS_KEY: "minioadmin"
+      CDN_BASE_URL: "http://158.220.122.88:9000/agroconnect-media-dev"
+    ports:
+      - "127.0.0.1:3009:3009"
+    depends_on:
+      minio-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3009/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ussd-service:
+    build:
+      context: ..
+      dockerfile: apps/ussd-service/Dockerfile.dev
+    container_name: agroconnect-ussd-service
+    restart: unless-stopped
+    env_file:
+      - ../apps/ussd-service/.env
+    environment:
+      REDIS_URL: "redis://:redis_dev_password@redis:6379"
+      AUTH_SERVICE_URL: "http://auth-service:3008"
+      FARM_SERVICE_URL: "http://farm-service:3001"
+      MARKET_SERVICE_URL: "http://market-service:3004"
+      FINANCE_SERVICE_URL: "http://finance-service:3003"
+    ports:
+      - "127.0.0.1:3010:3010"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3010/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  admin-service:
+    build:
+      context: ..
+      dockerfile: apps/admin-service/Dockerfile.dev
+    container_name: agroconnect-admin-service
+    restart: unless-stopped
+    env_file:
+      - ../apps/admin-service/.env
+    environment:
+      KAFKA_BROKERS: "kafka:9092"
+      AUTH_SERVICE_URL: "http://auth-service:3008"
+      FARM_SERVICE_URL: "http://farm-service:3001"
+      FINANCE_SERVICE_URL: "http://finance-service:3003"
+      MARKET_SERVICE_URL: "http://market-service:3004"
+      COMMUNITY_SERVICE_URL: "http://community-service:3005"
+      NOTIFICATION_SERVICE_URL: "http://notification-service:3007"
+      GOVT_SERVICE_URL: "http://govt-service:3006"
+    ports:
+      - "127.0.0.1:3011:3011"
+    depends_on:
+      - auth-service
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3011/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  diagnosis-service:
+    build:
+      context: ..
+      dockerfile: apps/diagnosis-service/Dockerfile.dev
+    container_name: agroconnect-diagnosis-service
+    restart: unless-stopped
+    env_file:
+      - ../apps/diagnosis-service/.env
+    environment:
+      MONGODB_URI: "mongodb://mongodb:27017/diagnosis_db"
+      KAFKA_BROKERS: "kafka:9092"
+      NODE_ENV: "production"
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:8000/health').then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))\""]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+
+  weather-service:
+    build:
+      context: ../apps/weather-service
+      dockerfile: Dockerfile
+    container_name: agroconnect-weather-service
+    restart: unless-stopped
+    environment:
+      REDIS_URL: "redis://:redis_dev_password@redis:6379"
+      KAFKA_BROKERS: "kafka:9092"
+      OPENWEATHER_API_KEY: "${OPENWEATHER_API_KEY:-dev_dummy}"
+      REST_PORT: "8001"
+      LOG_LEVEL: "info"
+      OWM_TIMEOUT_S: "5"
+    ports:
+      - "127.0.0.1:8001:8001"
+    depends_on:
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import socket; s=socket.socket(); s.settimeout(3); s.connect(('localhost',8001)); s.close()\" 2>/dev/null && exit 0 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  predict-service:
+    build:
+      context: ../apps/predict-service
+      dockerfile: Dockerfile
+    container_name: agroconnect-predict-service
+    restart: unless-stopped
+    environment:
+      FARM_SERVICE_URL: "http://farm-service:3001"
+      KAFKA_BROKERS: "kafka:9092"
+      REDIS_URL: "redis://:redis_dev_password@redis:6379"
+      REST_PORT: "8002"
+      LOG_LEVEL: "info"
+      FARM_SERVICE_TIMEOUT_S: "5"
+    ports:
+      - "127.0.0.1:8002:8002"
+    depends_on:
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import socket; s=socket.socket(); s.settimeout(3); s.connect(('localhost',8002)); s.close()\" 2>/dev/null && exit 0 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # ── Web frontend ──────────────────────────────────────────────────────────
+
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: "http://158.220.122.88:3000"
+    container_name: agroconnect-web
+    restart: unless-stopped
+    env_file:
+      - ../apps/web/.env.local
+    environment:
+      NEXT_PUBLIC_API_URL: "http://158.220.122.88:3000"
+      AUTH_SERVICE_URL: "http://auth-service:3008"
+      FARM_SERVICE_URL: "http://farm-service:3001"
+      FINANCE_SERVICE_URL: "http://finance-service:3003"
+      GOVT_SERVICE_URL: "http://govt-service:3006"
+      MARKET_SERVICE_URL: "http://market-service:3004"
+      MEDIA_SERVICE_URL: "http://media-service:3009"
+      COMMUNITY_SERVICE_URL: "http://community-service:3005"
+      # No TLS termination in front of this VPS yet (Phase 1-2). Remove once HTTPS is added.
+      COOKIE_SECURE: "false"
+    ports:
+      - "0.0.0.0:8081:3001"
+    depends_on:
+      - api-gateway
+
+volumes:
+  postgres_data:
+  redis_data:
+  kafka_data:
+  mongodb_data:
+  minio_data:
