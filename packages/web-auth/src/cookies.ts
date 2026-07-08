@@ -7,7 +7,7 @@ export const REFRESH_TOKEN_TTL_SECONDS = 2_592_000
 export function authCookieOptions(maxAge: number) {
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env.COOKIE_SECURE !== 'false',
     sameSite: 'lax' as const,
     maxAge,
     path: '/',
