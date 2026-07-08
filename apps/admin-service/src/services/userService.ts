@@ -1,3 +1,4 @@
+import type { KenyaCounty } from '@agroconnect/shared/constants/counties';
 import * as authClient from '../clients/authServiceClient.js';
 import * as auditService from './auditService.js';
 import { assertCapability } from '../middleware/staffAccess.js';
@@ -9,7 +10,7 @@ export interface Requester {
   actor: string;
   isSuperAdmin?: boolean;
   staffRole?: string;
-  county?: string;
+  county?: KenyaCounty;
 }
 
 function requireSuperAdmin(requester: Requester): void {

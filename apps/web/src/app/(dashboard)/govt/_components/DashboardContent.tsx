@@ -151,7 +151,7 @@ export function DashboardContent() {
       <div className="mb-4 flex items-center justify-between">
         <div>
           <p className="text-lg font-bold text-ink">
-            {summary?.county ? `${summary.county} County` : 'County'} — Agricultural Dashboard
+            {summary?.county ? `${summary.county} County` : 'County'}, Agricultural Dashboard
           </p>
           <p className="mt-0.5 text-sm text-muted">Ministry of Agriculture</p>
         </div>
@@ -197,7 +197,7 @@ export function DashboardContent() {
           <div className="rounded-base border border-border bg-white">
             <div className="border-b border-border px-4 py-3">
               <span className="text-md font-semibold text-ink">
-                County Crop Coverage{summary?.county ? ` — ${summary.county}` : ''}
+                County Crop Coverage{summary?.county ? `, ${summary.county}` : ''}
               </span>
             </div>
             <div className="flex flex-col gap-2.5 px-4 py-3">

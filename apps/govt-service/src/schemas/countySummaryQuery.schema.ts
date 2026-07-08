@@ -1,7 +1,8 @@
 import { z } from 'zod';
+import { KENYA_COUNTIES } from '@agroconnect/shared/constants/counties';
 
 export const countySummaryQuerySchema = z.object({
-  county: z.string().min(1).max(100).optional(),
+  county: z.enum(KENYA_COUNTIES).optional(),
 });
 
 export type CountySummaryQuery = z.infer<typeof countySummaryQuerySchema>;

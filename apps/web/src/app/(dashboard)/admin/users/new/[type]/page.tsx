@@ -14,6 +14,13 @@ interface Farm {
 
 const PHONE_RE = /^(\+2547\d{8}|07\d{8})$/
 
+const EXPERT_TYPE_TO_PROVIDER_TYPE: Record<string, string> = {
+  vet_officer: 'vet',
+  extension_officer: 'extension_officer',
+  agronomist: 'agronomist',
+  soil_lab: 'soil_lab',
+}
+
 function initialValues(fields: FieldConfig[]): Record<string, string | string[]> {
   const values: Record<string, string | string[]> = {}
   for (const f of fields) {
@@ -113,6 +120,57 @@ export default function CreateRoleUserPage() {
         if (!workerRes.ok) {
           const workerBody = await workerRes.json().catch(() => ({}))
           throw new Error(workerBody?.message_key ?? 'Failed to assign worker to farm')
+        }
+      }
+
+      if (params.type === 'vet_officer') {
+        const expertType = String(values['expertType'] ?? '')
+        const providerType = EXPERT_TYPE_TO_PROVIDER_TYPE[expertType]
+        const specialisations = (values['specialisations'] as string[] | undefined) ?? []
+        const county = findCounty()
+        try {
+          const expertRes = await fetch('/api/community/internal/experts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: fullName.trim(),
+              providerType,
+              specialisations: specialisations.length ? specialisations : ['general'],
+              countiesServed: county ? [county] : [],
+              phone: phone.trim(),
+            }),
+          })
+          if (!expertRes.ok) {
+            toast.error('Account created, but adding to the public Find-Help directory failed')
+          }
+        } catch {
+          toast.error('Account created, but adding to the public Find-Help directory failed')
+        }
+      }
+
+      if (params.type === 'supplier') {
+        const businessName = String(values['businessName'] ?? '')
+        const county = findCounty()
+        const categories = (values['productCategories'] as string[] | undefined) ?? []
+        try {
+          const profileRes = await fetch('/api/market/internal/supplier-profiles', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId,
+              businessName,
+              county,
+              categories,
+              phone: phone.trim(),
+              address: values['address'] ? String(values['address']) : undefined,
+              description: values['deliveryRadiusKm'] ? `Delivery: ${String(values['deliveryRadiusKm'])}` : undefined,
+            }),
+          })
+          if (!profileRes.ok) {
+            toast.error('Account created, but adding to the supplier directory failed')
+          }
+        } catch {
+          toast.error('Account created, but adding to the supplier directory failed')
         }
       }
 

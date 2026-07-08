@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const createExpertSchema = z.object({
   name: z.string().min(2).max(100),
   photoUrl: z.string().url().optional(),
-  providerType: z.enum(['agronomist', 'vet', 'extension_officer']),
+  providerType: z.enum(['agronomist', 'vet', 'extension_officer', 'soil_lab']),
   specialisations: z.array(z.string().max(80)).min(1).max(10),
   countiesServed: z.array(z.string().max(80)).min(1).max(50),
   bio: z.string().max(1000).optional(),

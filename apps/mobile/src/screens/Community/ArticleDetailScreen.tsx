@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   StyleSheet,
   StatusBar,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
@@ -37,6 +38,12 @@ type Props = NativeStackScreenProps<CommunityStackParamList, 'ArticleDetail'>;
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-KE', {
     year: 'numeric', month: 'long', day: 'numeric',
+  });
+}
+
+function formatEventDateTime(iso: string): string {
+  return new Date(iso).toLocaleString('en-KE', {
+    year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
   });
 }
 
@@ -84,6 +91,35 @@ export function ArticleDetailScreen({ navigation, route }: Props) {
                 <Text style={s.author}>{articleQuery.data.data.authorName}</Text>
                 <Text style={s.date}>{formatDate(articleQuery.data.data.publishedAt)}</Text>
               </View>
+
+              {articleQuery.data.data.type !== 'news' && (
+                <View style={s.eventCard}>
+                  <Text style={s.eventCardTitle}>
+                    {t(`community.articles.type.${articleQuery.data.data.type}`)}
+                  </Text>
+                  {articleQuery.data.data.startsAt && (
+                    <Text style={s.eventCardRow}>
+                      🗓 {formatEventDateTime(articleQuery.data.data.startsAt)}
+                      {articleQuery.data.data.endsAt
+                        ? ` – ${formatEventDateTime(articleQuery.data.data.endsAt)}`
+                        : ''}
+                    </Text>
+                  )}
+                  {articleQuery.data.data.location && (
+                    <Text style={s.eventCardRow}>📍 {articleQuery.data.data.location}</Text>
+                  )}
+                  {articleQuery.data.data.joinLink && (
+                    <Pressable
+                      style={s.joinBtn}
+                      onPress={() => void Linking.openURL(articleQuery.data!.data.joinLink!)}
+                      accessibilityRole="button"
+                    >
+                      <Text style={s.joinBtnLabel}>{t('community.articles.join')}</Text>
+                    </Pressable>
+                  )}
+                </View>
+              )}
+
               <View style={s.divider} />
               <Text style={s.summary}>{articleQuery.data.data.summary}</Text>
               <View style={s.divider} />
@@ -121,4 +157,12 @@ const s = StyleSheet.create({
   divider:       { height: 1, backgroundColor: '#F3F4F6', marginVertical: 12 },
   summary:       { fontSize: 13, color: '#374151', lineHeight: 20, fontStyle: 'italic', marginBottom: 4 },
   body:          { fontSize: 12, color: '#374151', lineHeight: 20 },
+
+  eventCard:      { backgroundColor: '#F9FAFB', borderRadius: 10, borderWidth: 1, borderColor: '#EEEEEE',
+                    padding: 12, marginBottom: 4, gap: 6 },
+  eventCardTitle: { fontSize: 11, fontWeight: '700', color: '#1A6B3C', textTransform: 'uppercase' },
+  eventCardRow:   { fontSize: 12, color: '#374151' },
+  joinBtn:        { marginTop: 4, backgroundColor: '#1A6B3C', borderRadius: 8, paddingVertical: 10,
+                    alignItems: 'center' },
+  joinBtnLabel:   { color: '#fff', fontSize: 12, fontWeight: '700' },
 });

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { KENYA_COUNTIES } from '@agroconnect/shared/constants/counties';
 
 export const registerSchema = z.object({
   phone: z
@@ -15,7 +16,7 @@ export const registerSchema = z.object({
     'buyer',
     'govt_officer',
   ]),
-  county: z.string().optional(),
+  county: z.enum(KENYA_COUNTIES).optional(),
   language: z.enum(['sw', 'en']).default('sw'),
 });
 

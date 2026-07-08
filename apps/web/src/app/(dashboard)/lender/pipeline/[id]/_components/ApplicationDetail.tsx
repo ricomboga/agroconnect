@@ -221,7 +221,7 @@ export function ApplicationDetail({ loanId }: { loanId: string }) {
               <>
                 <div className="mb-3 text-4xl font-extrabold text-ac-green">
                   {totalScore}
-                  <span className="text-sm font-normal text-muted"> / 100 — Band {report.creditScore.band}</span>
+                  <span className="text-sm font-normal text-muted"> / 100, Band {report.creditScore.band}</span>
                 </div>
                 <div className="flex flex-col gap-2.5">
                   {[

@@ -1,13 +1,23 @@
 import * as articleRepo from '../repositories/articleRepository.js';
+import { publishArticleCreated } from '../events/producers/articleCreatedProducer.js';
 import { CreateArticleDto } from '../schemas/createArticle.schema.js';
 import { ListArticlesQuery } from '../schemas/listArticles.query.schema.js';
 import { PaginationParams } from '../types/index.js';
 import { createError } from '../middleware/errorHandler.js';
 import { slugify } from '../utils/slugify.js';
+import { logger } from '../logger.js';
 
 export async function createArticle(dto: CreateArticleDto) {
   const slug = slugify(dto.title);
-  return articleRepo.createArticle({ ...dto, slug });
+  const article = await articleRepo.createArticle({ ...dto, slug });
+
+  if (article.isPublished) {
+    publishArticleCreated(article.id, article.slug, article.title, article.type).catch((err: unknown) => {
+      logger.warn({ err, articleId: article.id }, 'Kafka publish failed — article still created');
+    });
+  }
+
+  return article;
 }
 
 export async function getArticle(slug: string) {
@@ -17,7 +27,7 @@ export async function getArticle(slug: string) {
 }
 
 export async function listArticles(query: ListArticlesQuery, pagination: PaginationParams) {
-  const filter: articleRepo.ArticleFilter = { category: query.category };
+  const filter: articleRepo.ArticleFilter = { category: query.category, type: query.type };
   const [articles, total] = await Promise.all([
     articleRepo.findArticles(filter, pagination),
     articleRepo.countArticles(filter),

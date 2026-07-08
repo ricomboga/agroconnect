@@ -408,7 +408,7 @@ export default function ListingDetailPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <TrendingUp className="h-4 w-4 text-green-600" />
-            {listing.crop} — 90-Day Price History
+            {listing.crop}, 90-Day Price History
           </CardTitle>
         </CardHeader>
         <CardContent>

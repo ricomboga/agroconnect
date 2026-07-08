@@ -3,6 +3,7 @@
 const moduleNameMapper = {
   '^(\\.{1,2}/.*)\\.js$': '$1',
   '^@agroconnect/shared$': '<rootDir>/../../packages/shared/src/index.ts',
+  '^@agroconnect/shared/constants/counties$': '<rootDir>/../../packages/shared/src/constants/counties.ts',
   '^@agroconnect/db/community$': '<rootDir>/../../packages/db/src/community.ts',
   '^@agroconnect/kafka$': '<rootDir>/../../packages/kafka/src/index.ts',
 };
@@ -18,6 +19,10 @@ const transform = {
         declaration: false,
         declarationMap: false,
         strict: true,
+        baseUrl: '.',
+        paths: {
+          '@agroconnect/shared/constants/counties': ['../../packages/shared/src/constants/counties.ts'],
+        },
       },
     },
   ],

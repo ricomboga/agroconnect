@@ -91,7 +91,7 @@ export function ProductForm() {
   const [linkedDiseases, setLinkedDiseases] = useState('')
   const [lowStockThreshold, setLowStockThreshold] = useState('10')
   const [autoReorderQty, setAutoReorderQty] = useState('50')
-  const [deliveryAvailable, setDeliveryAvailable] = useState('Yes — within 30km')
+  const [deliveryAvailable, setDeliveryAvailable] = useState('Yes, within 30km')
   const [deliveryTime, setDeliveryTime] = useState('Same day')
   const [minOrderQty, setMinOrderQty] = useState('1')
   const [govtProgram, setGovtProgram] = useState('Not part of any program')
@@ -258,9 +258,9 @@ export function ProductForm() {
               <FieldGroup cols={2}>
                 <Field label="Delivery Available?">
                   <Select value={deliveryAvailable} onChange={(e) => setDeliveryAvailable(e.target.value)}>
-                    <option>Yes — within 30km</option>
-                    <option>Yes — within 50km</option>
-                    <option>No — collection only</option>
+                    <option>Yes, within 30km</option>
+                    <option>Yes, within 50km</option>
+                    <option>No, collection only</option>
                   </Select>
                 </Field>
                 <Field label="Delivery Time">

@@ -213,7 +213,7 @@ function UploadModal({ loanId, onClose }: { loanId: string; onClose: () => void 
       toast.success('Document uploaded')
       onClose()
     } catch {
-      toast.error('Upload failed — please try again')
+      toast.error('Upload failed. Please try again')
     } finally {
       setUploading(false)
     }

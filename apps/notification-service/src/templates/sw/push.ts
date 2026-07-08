@@ -66,6 +66,17 @@ export const swPushTemplates: Record<string, (data: TemplateData) => PushTemplat
     title: `${d['replierName'] ?? 'Mtu'} amejibu chapisho lako`,
     body: `"${d['threadTitle'] ?? 'chapisho lako'}" lina jibu jipya. Gonga kuona na kujibu.`,
   }),
+  'community.article.created': (d) => {
+    const type = d['type'] ?? 'news';
+    const title =
+      type === 'webinar' ? 'Semina Mpya ya Mtandaoni' :
+      type === 'event' ? 'Tukio Jipya' :
+      'Habari Mpya';
+    return {
+      title,
+      body: `${d['title'] ?? ''}. Gonga kuona maelezo zaidi.`,
+    };
+  },
   'user.registered': (d) => ({
     title: `Karibu AgroConnect, ${d['fullName'] ?? ''}!`,
     body: 'Akaunti yako imeundwa. Anza kusimamia shamba lako leo.',

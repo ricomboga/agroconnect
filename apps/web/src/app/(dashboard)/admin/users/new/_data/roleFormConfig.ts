@@ -37,7 +37,7 @@ export const ROLE_FORM_CONFIG: Record<string, RoleFormConfig> = {
   lender: {
     role: 'lender',
     apiRole: 'lender',
-    title: 'Create Lender Rep',
+    title: 'Create Institution',
     sections: [
       {
         title: 'Contact Person Details',
@@ -62,9 +62,11 @@ export const ROLE_FORM_CONFIG: Record<string, RoleFormConfig> = {
               { value: 'microfinance', label: 'MFI (AMFI)' },
               { value: 'sacco', label: 'SACCO' },
               { value: 'mobile_lender', label: 'Mobile Lender' },
+              { value: 'cooperative', label: 'Cooperative' },
+              { value: 'ngo', label: 'NGO' },
             ],
           },
-          { key: 'licenceNo', label: 'CBK / AMFI Licence No.', type: 'text', required: true },
+          { key: 'licenceNo', label: 'Licence No.', type: 'text', required: true },
           {
             key: 'paybill',
             label: 'M-Pesa Paybill (Disbursements)',
@@ -98,7 +100,13 @@ export const ROLE_FORM_CONFIG: Record<string, RoleFormConfig> = {
           { key: 'businessName', label: 'Business Name', type: 'text', required: true },
           { key: 'businessRegNumber', label: 'Business Reg Number', type: 'text', required: true },
           { key: 'businessCounty', label: 'Business County', type: 'select', required: true, options: countyOptions },
-          { key: 'deliveryRadiusKm', label: 'Delivery Radius (km)', type: 'number' },
+          {
+            key: 'deliveryRadiusKm',
+            label: 'Delivery Radius',
+            type: 'text',
+            placeholder: 'e.g. 15km, or "within Nakuru town"',
+            hint: 'Type an estimate — an exact number isn’t required',
+          },
           { key: 'address', label: 'Physical Address', type: 'text' },
           {
             key: 'productCategories',
@@ -144,6 +152,7 @@ export const ROLE_FORM_CONFIG: Record<string, RoleFormConfig> = {
               { value: 'vet_officer', label: 'Veterinary Officer (KVB-licenced)' },
               { value: 'extension_officer', label: 'Extension Officer (Ministry)' },
               { value: 'agronomist', label: 'Agronomist (private/NGO)' },
+              { value: 'soil_lab', label: 'Soil Testing Lab' },
             ],
           },
           { key: 'licenceNumber', label: 'Licence / Cert Number', type: 'text', required: true },

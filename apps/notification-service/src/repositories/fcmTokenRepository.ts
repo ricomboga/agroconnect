@@ -12,3 +12,7 @@ export async function upsertToken(userId: string, token: string): Promise<void> 
     update: { token },
   });
 }
+
+export async function findAllTokens(): Promise<{ userId: string; token: string }[]> {
+  return prisma.fcmToken.findMany({ select: { userId: true, token: true } });
+}

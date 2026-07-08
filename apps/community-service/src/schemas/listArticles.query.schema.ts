@@ -14,6 +14,7 @@ export const listArticlesQuerySchema = paginationQuerySchema.extend({
       'equipment_tools',
     ])
     .optional(),
+  type: z.enum(['news', 'event', 'webinar']).optional(),
 });
 
 export type ListArticlesQuery = z.infer<typeof listArticlesQuerySchema>;

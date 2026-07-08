@@ -69,7 +69,7 @@ export default function KycDetailPage() {
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'kyc'] })
-      toast.success('KYC decision recorded — SMS sent to user')
+      toast.success('KYC decision recorded, SMS sent to user')
       router.push('/admin/kyc')
     },
     onError: () => toast.error('Failed to record KYC decision'),
@@ -98,7 +98,7 @@ export default function KycDetailPage() {
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-3">
           {documents.length === 0 && (
-            <AlertBox variant="red">No documents uploaded yet — cannot approve without documents.</AlertBox>
+            <AlertBox variant="red">No documents uploaded yet. Cannot approve without documents.</AlertBox>
           )}
           {documents.map((doc) => (
             <div key={doc.type} className="rounded-base border border-border bg-white p-3">

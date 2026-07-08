@@ -17,6 +17,17 @@ async function requireAdmin() {
   return session
 }
 
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  if (!(await requireAdmin())) {
+    return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
+  }
+  const upstream = await fetch(`${AUTH}/internal/admin/users/${params.id}`, {
+    headers: serviceHeaders(),
+  })
+  const result = await upstream.json()
+  return NextResponse.json(result, { status: upstream.status })
+}
+
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   if (!(await requireAdmin())) {
     return NextResponse.json({ message: 'Forbidden' }, { status: 403 })

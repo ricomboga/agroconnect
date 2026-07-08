@@ -286,6 +286,7 @@
       "loanUpdates": "Loan updates",
       "weatherAlerts": "Weather alerts",
       "communityReplies": "Community replies",
+      "newsEvents": "News, events & webinars",
       "save": "Save",
       "saving": "Saving...",
       "success": "Settings saved!"
@@ -1368,7 +1369,8 @@
       "tabs": {
         "discussions": "Discussions",
         "experts": "Experts",
-        "articles": "Learn"
+        "articles": "Learn",
+        "suppliers": "Suppliers"
       }
     },
     "thread": {
@@ -1429,7 +1431,8 @@
       "type": {
         "agronomist": "Agronomist",
         "vet": "Veterinarian",
-        "extension_officer": "Extension Officer"
+        "extension_officer": "Extension Officer",
+        "soil_lab": "Soil Testing Lab"
       }
     },
     "experts": {
@@ -1440,8 +1443,28 @@
         "body": "Extension officers and agronomists will appear here."
       }
     },
+    "suppliers": {
+      "title": "Find a Supplier",
+      "profileTitle": "Supplier",
+      "myCounty": "{{county}}",
+      "allCounties": "All Counties",
+      "about": "About",
+      "categories": "Products",
+      "address": "Address",
+      "empty": {
+        "title": "No suppliers yet",
+        "body": "Agrovets and suppliers in your area will appear here."
+      }
+    },
     "articles": {
       "title": "Knowledge Base",
+      "typeAll": "All",
+      "type": {
+        "news": "News",
+        "event": "Event",
+        "webinar": "Webinar"
+      },
+      "join": "Join",
       "empty": {
         "title": "No articles yet",
         "body": "Farming guides and tips will appear here."

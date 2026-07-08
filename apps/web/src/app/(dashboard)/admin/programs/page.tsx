@@ -102,7 +102,7 @@ export default function ProgramsPage() {
       <div className="mb-4 flex items-center justify-between">
         <div>
           <p className="text-lg font-bold text-ink">Government Programs</p>
-          <p className="mt-0.5 text-sm text-muted">Admin view — all programs across all ministries</p>
+          <p className="mt-0.5 text-sm text-muted">Admin view, all programs across all ministries</p>
         </div>
         <Link href="/govt/programs/new" className="rounded-md bg-ac-green px-3 py-1.5 text-base font-semibold text-white">
           ➕ Create Program

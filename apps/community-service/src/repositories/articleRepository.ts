@@ -4,6 +4,7 @@ import { PaginationParams } from '../types/index.js';
 
 export type ArticleFilter = {
   category?: string;
+  type?: string;
 };
 
 export async function createArticle(dto: CreateArticleDto & { slug: string }) {
@@ -19,6 +20,7 @@ export async function findArticles(filter: ArticleFilter, pagination: Pagination
     where: {
       isPublished: true,
       ...(filter.category && { category: filter.category as never }),
+      ...(filter.type && { type: filter.type as never }),
     },
     orderBy: { publishedAt: 'desc' },
     take: pagination.take,
@@ -31,6 +33,7 @@ export async function countArticles(filter: ArticleFilter) {
     where: {
       isPublished: true,
       ...(filter.category && { category: filter.category as never }),
+      ...(filter.type && { type: filter.type as never }),
     },
   });
 }

@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
+import { KENYA_COUNTIES } from '@agroconnect/shared/constants/counties';
 import * as adminUserService from '../services/adminUserService.js';
 import * as kycService from '../services/kycService.js';
 import { findUsersByIds } from '../repositories/userRepository.js';
@@ -11,7 +12,7 @@ const createUserSchema = z.object({
   password: z.string().min(8),
   fullName: z.string().min(1),
   role: z.enum(['farmer', 'extension_officer', 'vet_officer', 'supplier', 'buyer', 'govt_officer', 'admin', 'lender', 'farm_worker']),
-  county: z.string().optional(),
+  county: z.enum(KENYA_COUNTIES).optional(),
   language: z.enum(['sw', 'en']).optional(),
   isSuperAdmin: z.boolean().optional(),
   staffRole: z.enum(['admin', 'county_admin', 'moderator']).optional(),

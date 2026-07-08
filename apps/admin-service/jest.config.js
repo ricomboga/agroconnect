@@ -11,12 +11,14 @@ module.exports = {
   },
   transform: {
     '^.+\\.ts$': ['ts-jest', {
+      diagnostics: { ignoreCodes: [2307, 6059] },
       tsconfig: {
         module: 'CommonJS',
         moduleResolution: 'Node',
         declaration: false,
         declarationMap: false,
         strict: true,
+        baseUrl: '.',
         paths: {
           '@agroconnect/shared/constants/counties': ['../../packages/shared/src/constants/counties.ts'],
         },

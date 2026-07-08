@@ -24,6 +24,7 @@ router.use(requireServiceToken);
 
 router.get('/users', listUsersHandler);
 router.get('/users/batch', batchGetUsersHandler);
+router.get('/users/:id', getUserHandler);
 router.post('/users', createUserHandler);
 router.get('/users/:id', getUserHandler);
 router.patch('/users/:id/status', setUserStatusHandler);

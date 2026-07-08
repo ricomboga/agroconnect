@@ -128,7 +128,7 @@ export default function FarmerStep4Page() {
               <option value="borehole">Borehole + Rainwater</option>
               <option value="river">River / Stream</option>
               <option value="rain">Rain-fed only</option>
-              <option value="irrigation">Irrigation — piped</option>
+              <option value="irrigation">Irrigation, piped</option>
               <option value="mixed">Dam / Water pan</option>
             </Select>
             {errors.waterSource && <p className="mt-1 text-xs text-ac-red">{errors.waterSource}</p>}
@@ -175,7 +175,7 @@ export default function FarmerStep4Page() {
         )}
         {state.gpsValidation?.valid && (
           <AlertBox variant="green">
-            ✓ GPS location confirmed — {state.gpsValidation.distanceKm} km from {state.county} centroid.
+            ✓ GPS location confirmed, {state.gpsValidation.distanceKm} km from {state.county} centroid.
           </AlertBox>
         )}
       </FormSection>

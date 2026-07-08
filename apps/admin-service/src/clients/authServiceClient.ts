@@ -45,6 +45,7 @@ export interface UserRow {
   language: string;
   isVerified: boolean;
   isActive: boolean;
+  isSuperAdmin?: boolean;
   kycStatus: string;
   lastLoginAt: string | null;
   createdAt: string;

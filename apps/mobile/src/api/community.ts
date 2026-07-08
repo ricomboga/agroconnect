@@ -10,7 +10,7 @@ export type ThreadCategory =
   | 'success'
   | 'tools';
 
-export type ExpertType = 'agronomist' | 'vet' | 'extension_officer';
+export type ExpertType = 'agronomist' | 'vet' | 'extension_officer' | 'soil_lab';
 
 const CATEGORY_TO_API: Record<ThreadCategory, string> = {
   crops:      'crop_advice',
@@ -74,6 +74,8 @@ export interface Expert {
   whatsapp: string | null;
 }
 
+export type ArticleType = 'news' | 'event' | 'webinar';
+
 export interface Article {
   id: string;
   slug: string;
@@ -81,6 +83,11 @@ export interface Article {
   summary: string;
   body: string;
   category: ThreadCategory;
+  type: ArticleType;
+  startsAt: string | null;
+  endsAt: string | null;
+  joinLink: string | null;
+  location: string | null;
   authorName: string;
   publishedAt: string;
 }
@@ -227,10 +234,10 @@ export const communityApi = {
   },
 
   articles: {
-    list: (params?: { category?: ThreadCategory; page?: number }) => {
+    list: (params?: { category?: ThreadCategory; type?: ArticleType; page?: number }) => {
       const apiCategory = params?.category ? CATEGORY_TO_API[params.category] : undefined;
       return apiFetch<{ data: Article[]; meta: ListMeta }>(
-        `/community/articles${buildQs({ category: apiCategory, page: params?.page })}`,
+        `/community/articles${buildQs({ category: apiCategory, type: params?.type, page: params?.page })}`,
       );
     },
     get: (slug: string) => apiFetch<{ data: Article }>(`/community/articles/${slug}`),

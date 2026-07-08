@@ -45,3 +45,40 @@ export async function listInputs(
     next(err);
   }
 }
+
+export async function updateInput(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const input = await inputService.updateInput(
+      req.params['farmId'] as string,
+      req.user.id,
+      req.user.role,
+      req.params['inputId'] as string,
+      req.body,
+    );
+    res.json({ data: input });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function deleteInput(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    await inputService.deleteInput(
+      req.params['farmId'] as string,
+      req.user.id,
+      req.user.role,
+      req.params['inputId'] as string,
+    );
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}

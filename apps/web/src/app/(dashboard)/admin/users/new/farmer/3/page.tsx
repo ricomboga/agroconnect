@@ -15,6 +15,21 @@ const CROP_OPTIONS = [
   { value: 'sunflower', label: '🌻 Sunflower' },
   { value: 'coffee', label: '☕ Coffee' },
   { value: 'tea', label: '🍵 Tea' },
+  { value: 'sugarcane', label: '🎋 Sugarcane' },
+  { value: 'cassava', label: '🍠 Cassava' },
+  { value: 'sweet_potato', label: '🍠 Sweet Potato' },
+  { value: 'sorghum', label: '🌾 Sorghum' },
+  { value: 'millet', label: '🌾 Millet' },
+  { value: 'banana', label: '🍌 Banana' },
+  { value: 'groundnuts', label: '🥜 Groundnuts' },
+  { value: 'avocado', label: '🥑 Avocado' },
+  { value: 'mango', label: '🥭 Mango' },
+  { value: 'onion', label: '🧅 Onion' },
+  { value: 'kale', label: '🥬 Kale (Sukuma Wiki)' },
+  { value: 'rice', label: '🍚 Rice' },
+  { value: 'macadamia', label: '🌰 Macadamia' },
+  { value: 'pyrethrum', label: '🌼 Pyrethrum' },
+  { value: 'cotton', label: '🌱 Cotton' },
 ]
 
 const LIVESTOCK_OPTIONS = [
@@ -25,6 +40,10 @@ const LIVESTOCK_OPTIONS = [
   { value: 'pigs', label: '🐖 Pigs' },
   { value: 'goats', label: '🐐 Goats' },
   { value: 'sheep', label: '🐑 Sheep' },
+  { value: 'fish_farming', label: '🐟 Fish Farming (Aquaculture)' },
+  { value: 'rabbits', label: '🐇 Rabbits' },
+  { value: 'bees', label: '🐝 Bees (Apiary)' },
+  { value: 'camels', label: '🐫 Camels' },
 ]
 
 const LIVESTOCK_COUNT_LABELS: Record<string, string> = {
@@ -34,6 +53,11 @@ const LIVESTOCK_COUNT_LABELS: Record<string, string> = {
   broilers: 'Broilers (birds)',
   goats: 'Goats (heads)',
   pigs: 'Pigs (heads)',
+  sheep: 'Sheep (heads)',
+  fish_farming: 'Fish (ponds/cages)',
+  rabbits: 'Rabbits (heads)',
+  bees: 'Bee Hives (count)',
+  camels: 'Camels (heads)',
 }
 
 export default function FarmerStep3Page() {
@@ -137,8 +161,8 @@ export default function FarmerStep3Page() {
               onChange={(e) => update({ incomeSource: e.target.value })}
             >
               <option value="">Select…</option>
-              <option value="farming_primary">Farming — primary income</option>
-              <option value="farming_secondary">Farming — secondary income</option>
+              <option value="farming_primary">Farming, primary income</option>
+              <option value="farming_secondary">Farming, secondary income</option>
               <option value="subsistence_only">Subsistence only</option>
             </Select>
           </Field>

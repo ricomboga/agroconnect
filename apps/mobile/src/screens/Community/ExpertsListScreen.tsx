@@ -24,17 +24,20 @@ const TYPE_FILTERS: Array<{ value: ExpertType | ''; labelKey: string }> = [
   { value: 'agronomist',       labelKey: 'community.expert.type.agronomist' },
   { value: 'vet',              labelKey: 'community.expert.type.vet' },
   { value: 'extension_officer',labelKey: 'community.expert.type.extension_officer' },
+  { value: 'soil_lab',         labelKey: 'community.expert.type.soil_lab' },
 ];
 
 const TYPE_COLORS: Record<ExpertType, string> = {
   agronomist:        '#2E7D32',
   vet:               '#6D4C41',
   extension_officer: '#1565C0',
+  soil_lab:          '#B45309',
 };
 const TYPE_BG: Record<ExpertType, string> = {
   agronomist:        '#E8F5E9',
   vet:               '#EFEBE9',
   extension_officer: '#E3F2FD',
+  soil_lab:          '#FEF3C7',
 };
 
 function getInitials(name: string): string {

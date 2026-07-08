@@ -89,7 +89,7 @@ export function FarmerReportView({ farmerId }: { farmerId: string }) {
         <p className="mb-2 text-md font-semibold text-ink">Credit Score</p>
         <div className="mb-3 text-4xl font-extrabold text-ac-green">
           {totalScore}
-          <span className="text-sm font-normal text-muted"> / 100 — Band {report.creditScore.band}</span>
+          <span className="text-sm font-normal text-muted"> / 100, Band {report.creditScore.band}</span>
         </div>
         <div className="flex flex-col gap-2.5">
           {[
@@ -135,7 +135,7 @@ export function FarmerReportView({ farmerId }: { farmerId: string }) {
           <ul className="flex flex-col gap-1 text-sm text-ink2">
             {report.activitySummary.recentCompleted.map((a) => (
               <li key={a.title} className="flex justify-between border-b border-border py-1">
-                <span>{new Date(a.date).toLocaleDateString('en-KE')} — {a.title}</span>
+                <span>{new Date(a.date).toLocaleDateString('en-KE')}, {a.title}</span>
                 <span className="font-medium text-ink">{formatKes(a.costKes)}</span>
               </li>
             ))}

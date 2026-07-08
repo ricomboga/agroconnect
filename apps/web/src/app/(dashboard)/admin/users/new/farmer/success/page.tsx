@@ -16,8 +16,8 @@ export default function FarmerSuccessPage() {
       credentials={[
         { label: 'Phone', value: state.phone || '—' },
         { label: 'Farm', value: `${state.farmName || '—'} (${state.areaAcres || '0'} acres)` },
-        { label: 'Temp PIN', value: '1234 — must change on login' },
-        { label: 'KYC Status', value: 'Pending — documents needed' },
+        { label: 'Temp PIN', value: '1234, must change on login' },
+        { label: 'KYC Status', value: 'Pending, documents needed' },
       ]}
       nextActions={[
         {

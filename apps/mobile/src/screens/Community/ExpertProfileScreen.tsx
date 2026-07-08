@@ -35,11 +35,13 @@ const EXPERT_TYPE_COLORS: Record<Expert['providerType'], string> = {
   agronomist:        '#2E7D32',
   vet:               '#6D4C41',
   extension_officer: '#1565C0',
+  soil_lab:          '#B45309',
 };
 const EXPERT_TYPE_BG: Record<Expert['providerType'], string> = {
   agronomist:        '#E8F5E9',
   vet:               '#EFEBE9',
   extension_officer: '#E3F2FD',
+  soil_lab:          '#FEF3C7',
 };
 
 export function ExpertProfileScreen({ navigation, route }: Props) {

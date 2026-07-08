@@ -142,7 +142,7 @@ export default function FarmerStep6Page() {
         <InfoRow label="Full Name" value={state.fullName} />
         <InfoRow label="Phone" value={state.phone} />
         <InfoRow label="National ID" value={state.nationalId} />
-        <InfoRow label="County / Sub-county" value={`${state.county} — ${state.subCounty}`} />
+        <InfoRow label="County / Sub-county" value={`${state.county}, ${state.subCounty}`} />
         <InfoRow label="Language" value={state.language === 'sw' ? 'Kiswahili' : 'English'} />
         <InfoRow label="Crops" value={state.crops.join(', ') || '—'} />
         <InfoRow label="Livestock" value={state.livestockTypes.join(', ') || '—'} />

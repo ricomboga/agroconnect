@@ -4,11 +4,11 @@ import { logger } from './logger.js';
 import { userRouter } from './routes/userRoutes.js';
 import { moderationRouter } from './routes/moderationRoutes.js';
 import { analyticsRouter } from './routes/analyticsRoutes.js';
+import { reportsRouter } from './routes/reportsRoutes.js';
 import { kycRouter } from './routes/kycRoutes.js';
 import { farmsRouter } from './routes/farmsRoutes.js';
 import { auditRouter } from './routes/auditRoutes.js';
 import { programsRouter } from './routes/programsRoutes.js';
-import { reportsRouter } from './routes/reportsRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { startConsumers } from './events/consumers/index.js';
 
@@ -25,11 +25,11 @@ app.get('/health', (_req, res) => {
 app.use('/api/v1/admin', userRouter);
 app.use('/api/v1/admin', moderationRouter);
 app.use('/api/v1/admin', analyticsRouter);
+app.use('/api/v1/admin', reportsRouter);
 app.use('/api/v1/admin', kycRouter);
 app.use('/api/v1/admin', farmsRouter);
 app.use('/api/v1/admin', auditRouter);
 app.use('/api/v1/admin', programsRouter);
-app.use('/api/v1/admin', reportsRouter);
 
 app.use(errorHandler);
 

@@ -140,6 +140,7 @@ services:
         B=kafka:9092
         t() { $$K --bootstrap-server $$B --create --if-not-exists --topic $$1 --partitions 3 --replication-factor 1 --config retention.ms=$$2 && echo "created: $$1"; }
         t farm.created               604800000
+        t farm.worker.assigned       604800000
         t farm.activity.completed    604800000
         t farm.harvest.recorded      2592000000
         t diagnosis.submitted        604800000
@@ -155,6 +156,7 @@ services:
         t weather.alert.issued       604800000
         t community.post.created     604800000
         t community.reply.created    604800000
+        t community.article.created  604800000
         t user.registered            2592000000
         t notification.send          259200000
         t dead_letter                7776000000

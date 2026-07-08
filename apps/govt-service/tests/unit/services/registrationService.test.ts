@@ -52,7 +52,7 @@ describe('registrationService.submitRegistration', () => {
     mockCreateRegistration.mockResolvedValue(fakeRegistration as never);
     mockPublishRegistrationSubmitted.mockResolvedValue();
 
-    const dto = { farmId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', farmName: 'Wanjiru Farm', county: 'Meru', areaAcres: 5.5 };
+    const dto = { farmId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', farmName: 'Wanjiru Farm', county: 'Meru' as const, areaAcres: 5.5 };
     const result = await registrationService.submitRegistration('farmer-1', dto);
 
     expect(mockSubmitFarmRegistration).toHaveBeenCalledWith({
@@ -76,7 +76,7 @@ describe('registrationService.listRegistrations', () => {
       'farmer-1',
       'farmer',
       { take: 20, skip: 0 },
-      { county: 'Meru', status: 'approved' },
+      { county: 'Meru' as const, status: 'approved' },
     );
 
     expect(result.registrations).toHaveLength(1);
@@ -89,7 +89,7 @@ describe('registrationService.listRegistrations', () => {
     mockFindAllRegistrations.mockResolvedValue([fakeRegistration] as never);
     mockCountAllRegistrations.mockResolvedValue(1);
 
-    const filters = { county: 'Meru', status: 'submitted' as const };
+    const filters = { county: 'Meru' as const, status: 'submitted' as const };
     const result = await registrationService.listRegistrations(
       'officer-1',
       'govt_officer',

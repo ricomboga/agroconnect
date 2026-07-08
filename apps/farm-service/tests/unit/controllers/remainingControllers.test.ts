@@ -11,6 +11,8 @@ import * as internalStatsController from '../../../src/controllers/internalStats
 jest.mock('../../../src/services/inputService', () => ({
   recordInput: jest.fn(),
   listInputs: jest.fn(),
+  updateInput: jest.fn(),
+  deleteInput: jest.fn(),
 }));
 
 jest.mock('../../../src/services/reportService', () => ({
@@ -28,6 +30,8 @@ jest.mock('../../../src/repositories/adminStatsRepository', () => ({
 
 const mockRecordInput = jest.mocked(inputService.recordInput);
 const mockListInputs = jest.mocked(inputService.listInputs);
+const mockUpdateInput = jest.mocked(inputService.updateInput);
+const mockDeleteInput = jest.mocked(inputService.deleteInput);
 const mockGenerateReport = jest.mocked(reportService.generateReport);
 const mockGetFarmSummary = jest.mocked(summaryService.getFarmSummary);
 const mockCountActiveFarms = jest.mocked(adminStatsRepo.countActiveFarms);
@@ -47,6 +51,7 @@ function makeRes(): Response {
   const res = {
     json: jest.fn().mockReturnThis(),
     status: jest.fn().mockReturnThis(),
+    send: jest.fn().mockReturnThis(),
   };
   return res as unknown as Response;
 }
@@ -100,6 +105,63 @@ describe('inputController.listInputs', () => {
     mockListInputs.mockRejectedValue(new Error('Error'));
 
     await inputController.listInputs(makeAuthReq() as never, makeRes(), next);
+
+    expect(next).toHaveBeenCalledWith(expect.any(Error));
+  });
+});
+
+describe('inputController.updateInput', () => {
+  it('updates input and responds with the updated record', async () => {
+    const fakeInput = { id: 'inp-1', productName: 'DAP' };
+    mockUpdateInput.mockResolvedValue(fakeInput as never);
+
+    const req = makeAuthReq({
+      params: { farmId: 'farm-1', inputId: 'inp-1' },
+      body: { productName: 'DAP' },
+    });
+    const res = makeRes();
+
+    await inputController.updateInput(req as never, res, next);
+
+    expect(mockUpdateInput).toHaveBeenCalledWith('farm-1', 'owner-1', 'farmer', 'inp-1', req.body);
+    expect(res.json).toHaveBeenCalledWith({ data: fakeInput });
+  });
+
+  it('forwards errors to next', async () => {
+    mockUpdateInput.mockRejectedValue(new Error('Failed'));
+
+    await inputController.updateInput(
+      makeAuthReq({ params: { farmId: 'farm-1', inputId: 'inp-1' } }) as never,
+      makeRes(),
+      next,
+    );
+
+    expect(next).toHaveBeenCalledWith(expect.any(Error));
+  });
+});
+
+describe('inputController.deleteInput', () => {
+  it('deletes input and responds 204', async () => {
+    mockDeleteInput.mockResolvedValue(undefined);
+
+    const req = makeAuthReq({ params: { farmId: 'farm-1', inputId: 'inp-1' } });
+    const res = makeRes();
+
+    await inputController.deleteInput(req as never, res, next);
+
+    expect(mockDeleteInput).toHaveBeenCalledWith('farm-1', 'owner-1', 'farmer', 'inp-1');
+    expect(res.status).toHaveBeenCalledWith(204);
+    expect(res.send).toHaveBeenCalled();
+  });
+
+  it('forwards errors to next', async () => {
+    mockDeleteInput.mockRejectedValue(new Error('Failed'));
+
+    await inputController.deleteInput(
+      makeAuthReq({ params: { farmId: 'farm-1', inputId: 'inp-1' } }) as never,
+      makeRes(),
+      next,
+    );
 
     expect(next).toHaveBeenCalledWith(expect.any(Error));
   });

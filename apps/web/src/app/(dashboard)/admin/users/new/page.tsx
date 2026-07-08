@@ -11,8 +11,8 @@ const ROLE_TILES = [
   },
   {
     value: 'lender',
-    label: '🏦 Lender Rep',
-    caption: 'Institution + CBK details',
+    label: '🏦 Institution',
+    caption: 'Institution + licence details',
     href: '/admin/users/new/lender',
   },
   {
@@ -68,7 +68,7 @@ export default function CreateUserStep1Page() {
 
   return (
     <div>
-      <h1 className="mb-1 text-lg font-bold text-ink">Step 1 — Select User Type</h1>
+      <h1 className="mb-1 text-lg font-bold text-ink">Step 1, Select User Type</h1>
       <p className="mb-4 text-sm text-muted">
         All users are created by Admin. No self-registration. Farmer creation includes farm setup.
       </p>

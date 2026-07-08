@@ -7,6 +7,7 @@ export interface NotificationPreferences {
   loanUpdates: boolean;
   weatherAlerts: boolean;
   communityReplies: boolean;
+  newsEvents: boolean;
 }
 
 export const DEFAULT_PREFS: NotificationPreferences = {
@@ -16,6 +17,7 @@ export const DEFAULT_PREFS: NotificationPreferences = {
   loanUpdates: true,
   weatherAlerts: true,
   communityReplies: true,
+  newsEvents: true,
 };
 
 export interface UserProfile {

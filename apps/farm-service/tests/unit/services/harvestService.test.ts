@@ -7,6 +7,9 @@ jest.mock('../../../src/repositories/harvestRepository', () => ({
   createHarvest: jest.fn(),
   findHarvestsByFarm: jest.fn(),
   countHarvestsByFarm: jest.fn(),
+  findHarvestById: jest.fn(),
+  updateHarvest: jest.fn(),
+  deleteHarvest: jest.fn(),
 }));
 jest.mock('../../../src/events/producers/harvestRecordedProducer', () => ({
   publishHarvestRecorded: jest.fn(),
@@ -18,6 +21,9 @@ const mockFindFarmById = jest.mocked(farmRepo.findFarmById);
 const mockCreateHarvest = jest.mocked(harvestRepo.createHarvest);
 const mockFindHarvestsByFarm = jest.mocked(harvestRepo.findHarvestsByFarm);
 const mockCountHarvestsByFarm = jest.mocked(harvestRepo.countHarvestsByFarm);
+const mockFindHarvestById = jest.mocked(harvestRepo.findHarvestById);
+const mockUpdateHarvest = jest.mocked(harvestRepo.updateHarvest);
+const mockDeleteHarvest = jest.mocked(harvestRepo.deleteHarvest);
 const mockPublishHarvestRecorded = jest.mocked(publishHarvestRecorded);
 
 const fakeFarm = { id: 'farm-001', ownerId: 'owner-001', county: 'Kirinyaga', status: 'active', plots: [] };
@@ -109,5 +115,64 @@ describe('harvestService.listHarvests', () => {
     await expect(
       harvestService.listHarvests('farm-001', 'other-owner', 'farmer', { take: 20, skip: 0 }),
     ).rejects.toMatchObject({ statusCode: 404, errorCode: 'FARM_NOT_FOUND' });
+  });
+});
+
+describe('harvestService.updateHarvest', () => {
+  it('updates and returns the harvest when it exists on the farm', async () => {
+    mockFindFarmById.mockResolvedValue(fakeFarm as never);
+    mockFindHarvestById
+      .mockResolvedValueOnce(fakeHarvest as never)
+      .mockResolvedValueOnce({ ...fakeHarvest, crop: 'beans' } as never);
+    mockUpdateHarvest.mockResolvedValue({ count: 1 } as never);
+
+    const result = await harvestService.updateHarvest('farm-001', 'owner-001', 'farmer', 'harvest-001', {
+      crop: 'beans',
+    });
+
+    expect(result?.crop).toBe('beans');
+    expect(mockUpdateHarvest).toHaveBeenCalledTimes(1);
+  });
+
+  it('throws 404 HARVEST_NOT_FOUND when the harvest does not exist on the farm', async () => {
+    mockFindFarmById.mockResolvedValue(fakeFarm as never);
+    mockFindHarvestById.mockResolvedValue(null);
+
+    await expect(
+      harvestService.updateHarvest('farm-001', 'owner-001', 'farmer', 'ghost-harvest', { crop: 'beans' }),
+    ).rejects.toMatchObject({ statusCode: 404, errorCode: 'HARVEST_NOT_FOUND' });
+
+    expect(mockUpdateHarvest).not.toHaveBeenCalled();
+  });
+
+  it('throws 404 FARM_NOT_FOUND when farm does not belong to owner', async () => {
+    mockFindFarmById.mockResolvedValue(null);
+
+    await expect(
+      harvestService.updateHarvest('farm-001', 'other-owner', 'farmer', 'harvest-001', { crop: 'beans' }),
+    ).rejects.toMatchObject({ statusCode: 404, errorCode: 'FARM_NOT_FOUND' });
+  });
+});
+
+describe('harvestService.deleteHarvest', () => {
+  it('deletes the harvest when it exists on the farm', async () => {
+    mockFindFarmById.mockResolvedValue(fakeFarm as never);
+    mockFindHarvestById.mockResolvedValue(fakeHarvest as never);
+    mockDeleteHarvest.mockResolvedValue({ count: 1 } as never);
+
+    await harvestService.deleteHarvest('farm-001', 'owner-001', 'farmer', 'harvest-001');
+
+    expect(mockDeleteHarvest).toHaveBeenCalledWith('harvest-001', 'farm-001');
+  });
+
+  it('throws 404 HARVEST_NOT_FOUND when the harvest does not exist on the farm', async () => {
+    mockFindFarmById.mockResolvedValue(fakeFarm as never);
+    mockFindHarvestById.mockResolvedValue(null);
+
+    await expect(
+      harvestService.deleteHarvest('farm-001', 'owner-001', 'farmer', 'ghost-harvest'),
+    ).rejects.toMatchObject({ statusCode: 404, errorCode: 'HARVEST_NOT_FOUND' });
+
+    expect(mockDeleteHarvest).not.toHaveBeenCalled();
   });
 });

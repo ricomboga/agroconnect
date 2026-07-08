@@ -70,14 +70,16 @@ export type FinanceStackParamList = {
 };
 
 export type CommunityStackParamList = {
-  CommunityHome:  undefined;
-  ThreadDetail:   { threadId: string };
-  NewThread:      undefined;
-  ExpertsList:    undefined;
-  ExpertProfile:  { expertId: string };
-  ArticlesList:   undefined;
-  ArticleDetail:  { slug: string };
-  WeatherDetail:  { lat?: number | null; lng?: number | null; county?: string | null };
+  CommunityHome:          undefined;
+  ThreadDetail:           { threadId: string };
+  NewThread:              undefined;
+  ExpertsList:            undefined;
+  ExpertProfile:          { expertId: string };
+  ArticlesList:           undefined;
+  ArticleDetail:          { slug: string };
+  WeatherDetail:          { lat?: number | null; lng?: number | null; county?: string | null };
+  SupplierDirectory:      undefined;
+  SupplierDirectoryProfile: { supplierId: string };
 };
 
 export type ProfileStackParamList = {

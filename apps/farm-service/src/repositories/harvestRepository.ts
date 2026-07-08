@@ -1,5 +1,6 @@
 import { prisma } from '@agroconnect/db/farm';
 import { CreateHarvestDto } from '../schemas/createHarvest.schema.js';
+import { UpdateHarvestDto } from '../schemas/updateHarvest.schema.js';
 import { PaginationParams } from '../types/index.js';
 
 export async function createHarvest(farmId: string, dto: CreateHarvestDto) {
@@ -32,4 +33,23 @@ export async function findHarvestsByFarm(farmId: string, pagination: PaginationP
 
 export async function countHarvestsByFarm(farmId: string) {
   return prisma.harvest.count({ where: { farmId } });
+}
+
+export async function findHarvestById(harvestId: string, farmId: string) {
+  return prisma.harvest.findFirst({ where: { id: harvestId, farmId } });
+}
+
+export async function updateHarvest(harvestId: string, farmId: string, dto: UpdateHarvestDto) {
+  const { harvestDate, ...rest } = dto;
+  return prisma.harvest.updateMany({
+    where: { id: harvestId, farmId },
+    data: {
+      ...rest,
+      ...(harvestDate ? { harvestDate: new Date(harvestDate) } : {}),
+    },
+  });
+}
+
+export async function deleteHarvest(harvestId: string, farmId: string) {
+  return prisma.harvest.deleteMany({ where: { id: harvestId, farmId } });
 }

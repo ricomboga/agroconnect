@@ -286,6 +286,7 @@
       "loanUpdates": "Masasisho ya mkopo",
       "weatherAlerts": "Arifa za hali ya hewa",
       "communityReplies": "Majibu ya jamii",
+      "newsEvents": "Habari, matukio na semina mtandaoni",
       "save": "Hifadhi",
       "saving": "Inabadilisha...",
       "success": "Mipangilio imehifadhiwa!"
@@ -1368,7 +1369,8 @@
       "tabs": {
         "discussions": "Mazungumzo",
         "experts": "Wataalamu",
-        "articles": "Jifunze"
+        "articles": "Jifunze",
+        "suppliers": "Wauzaji"
       }
     },
     "thread": {
@@ -1429,7 +1431,8 @@
       "type": {
         "agronomist": "Mtaalamu wa Kilimo",
         "vet": "Daktari wa Mifugo",
-        "extension_officer": "Mshauri wa Kilimo"
+        "extension_officer": "Mshauri wa Kilimo",
+        "soil_lab": "Maabara ya Udongo"
       }
     },
     "experts": {
@@ -1440,8 +1443,28 @@
         "body": "Washauri wa kilimo na mifugo wataonekana hapa."
       }
     },
+    "suppliers": {
+      "title": "Tafuta Muuzaji",
+      "profileTitle": "Muuzaji",
+      "myCounty": "{{county}}",
+      "allCounties": "Kaunti Zote",
+      "about": "Kuhusu",
+      "categories": "Bidhaa",
+      "address": "Anwani",
+      "empty": {
+        "title": "Hakuna wauzaji bado",
+        "body": "Maduka ya pembejeo na wauzaji katika eneo lako watatokea hapa."
+      }
+    },
     "articles": {
       "title": "Maktaba ya Maarifa",
+      "typeAll": "Zote",
+      "type": {
+        "news": "Habari",
+        "event": "Tukio",
+        "webinar": "Semina Mtandaoni"
+      },
+      "join": "Jiunge",
       "empty": {
         "title": "Hakuna makala bado",
         "body": "Mwongozo wa kilimo na vidokezo vitaonekana hapa."

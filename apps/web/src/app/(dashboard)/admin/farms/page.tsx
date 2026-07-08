@@ -86,7 +86,7 @@ export default function FarmRegistryPage() {
         <KpiCard variant="green" value={data?.meta.total ?? 0} label="Total Farms" />
         <KpiCard variant="teal" value={farms.reduce((s, f) => s + f.plots_count, 0)} label="Total Plots (page)" />
         <KpiCard variant="blue" value={farms.reduce((s, f) => s + f.workers_count, 0)} label="Total Workers (page)" />
-        <KpiCard variant="red" value={belowHealth} label="Health < 50% — Need Attention" />
+        <KpiCard variant="red" value={belowHealth} label="Health < 50%, Need Attention" />
       </div>
 
       <div className="mb-3 flex gap-2">

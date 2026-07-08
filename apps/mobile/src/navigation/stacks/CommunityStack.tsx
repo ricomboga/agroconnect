@@ -8,6 +8,8 @@ import { ExpertsListScreen } from '../../screens/Community/ExpertsListScreen';
 import { ExpertProfileScreen } from '../../screens/Community/ExpertProfileScreen';
 import { ArticlesListScreen } from '../../screens/Community/ArticlesListScreen';
 import { ArticleDetailScreen } from '../../screens/Community/ArticleDetailScreen';
+import { SupplierDirectoryScreen } from '../../screens/Community/SupplierDirectoryScreen';
+import { SupplierProfileScreen } from '../../screens/Community/SupplierProfileScreen';
 import { WeatherDetailScreen } from '../../screens/Weather/WeatherDetailScreen';
 
 const Stack = createNativeStackNavigator<CommunityStackParamList>();
@@ -22,6 +24,8 @@ export function CommunityStack() {
       <Stack.Screen name="ExpertProfile"  component={ExpertProfileScreen}  options={{ headerShown: false }} />
       <Stack.Screen name="ArticlesList"   component={ArticlesListScreen}   options={{ headerShown: false }} />
       <Stack.Screen name="ArticleDetail"  component={ArticleDetailScreen}  options={{ headerShown: false }} />
+      <Stack.Screen name="SupplierDirectory"        component={SupplierDirectoryScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="SupplierDirectoryProfile" component={SupplierProfileScreen}   options={{ headerShown: false }} />
       <Stack.Screen name="WeatherDetail"  component={WeatherDetailScreen}  options={{ headerShown: false }} />
     </Stack.Navigator>
   );

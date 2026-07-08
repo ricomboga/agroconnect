@@ -20,7 +20,7 @@ import type { Thread, ThreadCategory } from '../../api/community';
 import type { CommunityStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<CommunityStackParamList, 'CommunityHome'>;
-type Tab = 'discussions' | 'experts' | 'articles';
+type Tab = 'discussions' | 'experts' | 'articles' | 'suppliers';
 type CategoryFilter = ThreadCategory | '';
 
 const CATEGORIES: Array<{ value: CategoryFilter; labelKey: string }> = [
@@ -150,6 +150,8 @@ export function CommunityHomeScreen({ navigation }: Props) {
       onPress: () => navigation.navigate('ExpertsList') },
     { key: 'articles',    label: t('community.home.tabs.articles'),    emoji: '📖',
       onPress: () => navigation.navigate('ArticlesList') },
+    { key: 'suppliers',   label: t('community.home.tabs.suppliers'),   emoji: '🏪',
+      onPress: () => navigation.navigate('SupplierDirectory') },
   ];
 
   return (

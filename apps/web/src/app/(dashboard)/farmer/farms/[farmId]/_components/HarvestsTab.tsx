@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Plus, Loader2, Wheat, X } from 'lucide-react'
+import { Plus, Loader2, Wheat, X, Pencil, Trash2 } from 'lucide-react'
 
 type QualityGrade = 'A' | 'B' | 'C' | 'reject'
 
@@ -47,25 +47,42 @@ function fmtKes(v: string | null) {
 
 function RecordHarvestModal({
   farmId,
+  editingHarvest,
   onClose,
   onSaved,
 }: {
   farmId: string
+  editingHarvest?: Harvest | null
   onClose: () => void
   onSaved: () => void
 }) {
-  const [form, setForm] = useState({
-    crop: '',
-    variety: '',
-    quantityKg: '',
-    qualityGrade: '' as QualityGrade | '',
-    harvestDate: new Date().toISOString().slice(0, 10),
-    storageLocation: '',
-    soldQuantityKg: '0',
-    avgPriceKes: '',
-    totalRevenueKes: '',
-    notes: '',
-  })
+  const [form, setForm] = useState(() =>
+    editingHarvest
+      ? {
+          crop: editingHarvest.crop,
+          variety: editingHarvest.variety ?? '',
+          quantityKg: String(editingHarvest.quantityKg),
+          qualityGrade: (editingHarvest.qualityGrade ?? '') as QualityGrade | '',
+          harvestDate: editingHarvest.harvestDate.slice(0, 10),
+          storageLocation: editingHarvest.storageLocation ?? '',
+          soldQuantityKg: String(editingHarvest.soldQuantityKg),
+          avgPriceKes: editingHarvest.avgPriceKes ?? '',
+          totalRevenueKes: editingHarvest.totalRevenueKes ?? '',
+          notes: editingHarvest.notes ?? '',
+        }
+      : {
+          crop: '',
+          variety: '',
+          quantityKg: '',
+          qualityGrade: '' as QualityGrade | '',
+          harvestDate: new Date().toISOString().slice(0, 10),
+          storageLocation: '',
+          soldQuantityKg: '0',
+          avgPriceKes: '',
+          totalRevenueKes: '',
+          notes: '',
+        },
+  )
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
 
@@ -85,8 +102,11 @@ function RecordHarvestModal({
 
     setSubmitting(true)
     try {
-      const res = await fetch(`/api/farm/farms/${farmId}/harvests`, {
-        method: 'POST',
+      const url = editingHarvest
+        ? `/api/farm/farms/${farmId}/harvests/${editingHarvest.id}`
+        : `/api/farm/farms/${farmId}/harvests`
+      const res = await fetch(url, {
+        method: editingHarvest ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           crop: form.crop,
@@ -103,13 +123,13 @@ function RecordHarvestModal({
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({})) as { message?: string }
-        throw new Error(body.message ?? 'Failed to record harvest')
+        throw new Error(body.message ?? `Failed to ${editingHarvest ? 'update' : 'record'} harvest`)
       }
-      toast.success('Harvest recorded')
+      toast.success(editingHarvest ? 'Harvest updated' : 'Harvest recorded')
       onSaved()
       onClose()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to record harvest')
+      toast.error(err instanceof Error ? err.message : `Failed to ${editingHarvest ? 'update' : 'record'} harvest`)
     } finally {
       setSubmitting(false)
     }
@@ -123,7 +143,7 @@ function RecordHarvestModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-md rounded-xl bg-white shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 sticky top-0 bg-white">
-          <h2 className="text-lg font-semibold text-gray-900">Record Harvest</h2>
+          <h2 className="text-lg font-semibold text-gray-900">{editingHarvest ? 'Edit Harvest' : 'Record Harvest'}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X className="h-5 w-5" /></button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4 px-6 py-5">
@@ -188,7 +208,7 @@ function RecordHarvestModal({
             <button type="button" onClick={onClose} disabled={submitting} className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50">Cancel</button>
             <button type="submit" disabled={submitting} className="flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-60">
               {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              {submitting ? 'Saving…' : 'Record Harvest'}
+              {submitting ? 'Saving…' : editingHarvest ? 'Save Changes' : 'Record Harvest'}
             </button>
           </div>
         </form>
@@ -201,6 +221,8 @@ function RecordHarvestModal({
 
 export function HarvestsTab({ farmId }: { farmId: string }) {
   const [showModal, setShowModal] = useState(false)
+  const [editingHarvest, setEditingHarvest] = useState<Harvest | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const queryClient = useQueryClient()
 
   const { data, isLoading } = useQuery<HarvestsResponse>({
@@ -217,6 +239,34 @@ export function HarvestsTab({ farmId }: { farmId: string }) {
 
   const totalRevenue = harvests.reduce((s, h) => s + Number(h.totalRevenueKes ?? 0), 0)
   const totalKg = harvests.reduce((s, h) => s + Number(h.quantityKg), 0)
+
+  function openEdit(harvest: Harvest) {
+    setEditingHarvest(harvest)
+    setShowModal(true)
+  }
+
+  function closeModal() {
+    setShowModal(false)
+    setEditingHarvest(null)
+  }
+
+  async function handleDelete(harvestId: string) {
+    if (!window.confirm('Delete this harvest record? This cannot be undone.')) return
+    setDeletingId(harvestId)
+    try {
+      const res = await fetch(`/api/farm/farms/${farmId}/harvests/${harvestId}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({})) as { message?: string }
+        throw new Error(body.message ?? 'Failed to delete harvest')
+      }
+      toast.success('Harvest deleted')
+      invalidate()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete harvest')
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   return (
     <div>
@@ -255,6 +305,7 @@ export function HarvestsTab({ farmId }: { farmId: string }) {
                 <th className="px-4 py-3">Sold</th>
                 <th className="px-4 py-3">Revenue</th>
                 <th className="px-4 py-3">Storage</th>
+                <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -276,6 +327,25 @@ export function HarvestsTab({ farmId }: { farmId: string }) {
                   <td className="px-4 py-3 text-gray-600">{Number(h.soldQuantityKg) > 0 ? `${Number(h.soldQuantityKg).toLocaleString()} kg` : '—'}</td>
                   <td className="px-4 py-3 font-medium text-green-700">{fmtKes(h.totalRevenueKes)}</td>
                   <td className="px-4 py-3 text-gray-500">{h.storageLocation ?? '—'}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => openEdit(h)}
+                        className="text-gray-400 hover:text-green-700"
+                        title="Edit"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => void handleDelete(h.id)}
+                        disabled={deletingId === h.id}
+                        className="text-gray-400 hover:text-red-600 disabled:opacity-50"
+                        title="Delete"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -284,7 +354,7 @@ export function HarvestsTab({ farmId }: { farmId: string }) {
       )}
 
       {showModal && (
-        <RecordHarvestModal farmId={farmId} onClose={() => setShowModal(false)} onSaved={invalidate} />
+        <RecordHarvestModal farmId={farmId} editingHarvest={editingHarvest} onClose={closeModal} onSaved={invalidate} />
       )}
     </div>
   )

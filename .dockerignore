@@ -42,7 +42,10 @@ packages/*/.turbo
 
 # Non-backend apps not needed in any service image
 apps/mobile
-apps/web
+
+# apps/web is needed for the web service's own Docker build (apps/web/Dockerfile)
+apps/web/node_modules
+apps/web/.next
 
 # Repo meta
 .git

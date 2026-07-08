@@ -7,12 +7,18 @@ jest.mock('../../../src/repositories/inputRepository', () => ({
   createInput: jest.fn(),
   findInputsByFarm: jest.fn(),
   countInputsByFarm: jest.fn(),
+  findInputById: jest.fn(),
+  updateInput: jest.fn(),
+  deleteInput: jest.fn(),
 }));
 
 const mockFindFarmById = jest.mocked(farmRepo.findFarmById);
 const mockCreateInput = jest.mocked(inputRepo.createInput);
 const mockFindInputsByFarm = jest.mocked(inputRepo.findInputsByFarm);
 const mockCountInputsByFarm = jest.mocked(inputRepo.countInputsByFarm);
+const mockFindInputById = jest.mocked(inputRepo.findInputById);
+const mockUpdateInput = jest.mocked(inputRepo.updateInput);
+const mockDeleteInput = jest.mocked(inputRepo.deleteInput);
 
 const fakeFarm = { id: 'farm-001', ownerId: 'owner-001', county: 'Meru', status: 'active', plots: [] };
 
@@ -86,5 +92,64 @@ describe('inputService.listInputs — season coercion', () => {
 
     expect(mockFindInputsByFarm).toHaveBeenCalledTimes(1);
     expect(mockCountInputsByFarm).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('inputService.updateInput', () => {
+  it('updates and returns the input when it exists on the farm', async () => {
+    mockFindFarmById.mockResolvedValue(fakeFarm as never);
+    mockFindInputById
+      .mockResolvedValueOnce({ id: 'input-001', ...createDto } as never)
+      .mockResolvedValueOnce({ id: 'input-001', ...createDto, productName: 'DAP' } as never);
+    mockUpdateInput.mockResolvedValue({ count: 1 } as never);
+
+    const result = await inputService.updateInput('farm-001', 'owner-001', 'farmer', 'input-001', {
+      productName: 'DAP',
+    });
+
+    expect(result?.productName).toBe('DAP');
+    expect(mockUpdateInput).toHaveBeenCalledTimes(1);
+  });
+
+  it('throws 404 INPUT_NOT_FOUND when the input does not exist on the farm', async () => {
+    mockFindFarmById.mockResolvedValue(fakeFarm as never);
+    mockFindInputById.mockResolvedValue(null);
+
+    await expect(
+      inputService.updateInput('farm-001', 'owner-001', 'farmer', 'ghost-input', { productName: 'DAP' }),
+    ).rejects.toMatchObject({ statusCode: 404, errorCode: 'INPUT_NOT_FOUND' });
+
+    expect(mockUpdateInput).not.toHaveBeenCalled();
+  });
+
+  it('throws 404 FARM_NOT_FOUND when farm does not belong to owner', async () => {
+    mockFindFarmById.mockResolvedValue(null);
+
+    await expect(
+      inputService.updateInput('farm-001', 'other-owner', 'farmer', 'input-001', { productName: 'DAP' }),
+    ).rejects.toMatchObject({ statusCode: 404, errorCode: 'FARM_NOT_FOUND' });
+  });
+});
+
+describe('inputService.deleteInput', () => {
+  it('deletes the input when it exists on the farm', async () => {
+    mockFindFarmById.mockResolvedValue(fakeFarm as never);
+    mockFindInputById.mockResolvedValue({ id: 'input-001', ...createDto } as never);
+    mockDeleteInput.mockResolvedValue({ count: 1 } as never);
+
+    await inputService.deleteInput('farm-001', 'owner-001', 'farmer', 'input-001');
+
+    expect(mockDeleteInput).toHaveBeenCalledWith('input-001', 'farm-001');
+  });
+
+  it('throws 404 INPUT_NOT_FOUND when the input does not exist on the farm', async () => {
+    mockFindFarmById.mockResolvedValue(fakeFarm as never);
+    mockFindInputById.mockResolvedValue(null);
+
+    await expect(
+      inputService.deleteInput('farm-001', 'owner-001', 'farmer', 'ghost-input'),
+    ).rejects.toMatchObject({ statusCode: 404, errorCode: 'INPUT_NOT_FOUND' });
+
+    expect(mockDeleteInput).not.toHaveBeenCalled();
   });
 });

@@ -317,7 +317,7 @@ export function UsersTable() {
                 <td style={tdStyle}>
                   <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
                     <Link href={`/admin/users/${u.id}`} style={{ textDecoration: 'none' }}>
-                      <button style={wbtnSm('#1A6B3C', '#1A6B3C')}>Angalia</button>
+                      <button style={wbtnSm('#1A6B3C', '#1A6B3C')}>View</button>
                     </Link>
                     {(u.kyc_status === 'pending' || u.kyc_status === 'submitted') && (
                       <>

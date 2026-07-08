@@ -163,7 +163,7 @@ export default function ProviderRegisterPage() {
         verificationDocs: credentialUrls,
       })
 
-      toast.success('Registration submitted — you will be notified once verified.')
+      toast.success('Registration submitted. You will be notified once verified.')
       router.push('/provider/profile')
     } catch {
       toast.error('Registration failed. Please try again.')
@@ -217,7 +217,7 @@ export default function ProviderRegisterPage() {
             {step === 2 && 'Select your areas of expertise'}
             {step === 3 && 'Select the counties where you operate'}
             {step === 4 && 'Write a short professional bio visible to farmers'}
-            {step === 5 && 'Upload copies of your credentials (PDF, JPG, PNG — max 10 MB each)'}
+            {step === 5 && 'Upload copies of your credentials (PDF, JPG, PNG, max 10 MB each)'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -392,7 +392,7 @@ export default function ProviderRegisterPage() {
               >
                 <Upload className="mb-2 h-8 w-8 text-gray-400" />
                 <span className="text-sm font-medium text-gray-700">Click to upload credentials</span>
-                <span className="mt-1 text-xs text-gray-500">PDF, JPG, PNG — max 10 MB each</span>
+                <span className="mt-1 text-xs text-gray-500">PDF, JPG, PNG, max 10 MB each</span>
                 <input
                   id="credential-upload"
                   type="file"

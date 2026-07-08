@@ -28,6 +28,7 @@ const PREF_KEYS: PrefKey[] = [
   'loanUpdates',
   'weatherAlerts',
   'communityReplies',
+  'newsEvents',
 ];
 
 export function NotificationSettingsScreen({ navigation }: Props) {

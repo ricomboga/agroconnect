@@ -6,7 +6,7 @@ import {
 import { AnimatedWords } from './_components/AnimatedWords'
 
 export const metadata: Metadata = {
-  title: 'AgroConnect — Smart Farming for Kenya',
+  title: 'AgroConnect, Smart Farming for Kenya',
   description:
     'One platform to diagnose crop disease, manage your farm, access credit, and sell your harvest. Built for Kenyan farmers.',
 }
@@ -15,7 +15,7 @@ const FEATURES = [
   {
     Icon: Stethoscope,
     title: 'Instant Diagnosis',
-    desc: 'Snap a photo of a sick crop and get an AI diagnosis with treatment steps in seconds — even offline.',
+    desc: 'Snap a photo of a sick crop and get an AI diagnosis with treatment steps in seconds, even offline.',
   },
   {
     Icon: Sprout,
@@ -106,7 +106,7 @@ export default function LandingPage() {
             built for <AnimatedWords />
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-green-100 sm:text-xl">
-            Diagnose disease, manage your farm, access credit, and sell your harvest —
+            Diagnose disease, manage your farm, access credit, and sell your harvest,
             all in one app that works even when your signal doesn&apos;t.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -146,7 +146,7 @@ export default function LandingPage() {
             Everything your farm needs
           </h2>
           <p className="mt-4 text-gray-500">
-            One platform, from planting to payout — designed for smallholder and commercial
+            One platform, from planting to payout, designed for smallholder and commercial
             farmers across Kenya.
           </p>
         </div>

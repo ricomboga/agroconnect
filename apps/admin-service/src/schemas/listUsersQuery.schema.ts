@@ -1,10 +1,11 @@
 import { z } from 'zod';
+import { KENYA_COUNTIES } from '@agroconnect/shared/constants/counties';
 
 export const listUsersQuerySchema = z.object({
   role: z
     .enum(['farmer', 'extension_officer', 'vet_officer', 'supplier', 'buyer', 'govt_officer', 'admin'])
     .optional(),
-  county: z.string().optional(),
+  county: z.enum(KENYA_COUNTIES).optional(),
   kyc_status: z.enum(['pending', 'submitted', 'verified', 'rejected']).optional(),
   is_active: z
     .enum(['true', 'false'])

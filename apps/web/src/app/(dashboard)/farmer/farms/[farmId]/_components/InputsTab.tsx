@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Plus, Loader2, FlaskConical, X } from 'lucide-react'
+import { Plus, Loader2, FlaskConical, X, Pencil, Trash2 } from 'lucide-react'
 
 type InputType = 'seed' | 'fertiliser' | 'pesticide' | 'herbicide' | 'fuel' | 'equipment' | 'other'
 
@@ -45,23 +45,38 @@ function fmtDate(d: string) {
 
 function LogInputModal({
   farmId,
+  editingInput,
   onClose,
   onSaved,
 }: {
   farmId: string
+  editingInput?: FarmInput | null
   onClose: () => void
   onSaved: () => void
 }) {
-  const [form, setForm] = useState({
-    type: 'seed' as InputType,
-    productName: '',
-    quantity: '',
-    unit: 'kg',
-    unitCostKes: '',
-    totalCostKes: '',
-    appliedDate: new Date().toISOString().slice(0, 10),
-    notes: '',
-  })
+  const [form, setForm] = useState(() =>
+    editingInput
+      ? {
+          type: editingInput.type,
+          productName: editingInput.productName,
+          quantity: String(editingInput.quantity),
+          unit: editingInput.unit,
+          unitCostKes: String(editingInput.unitCostKes),
+          totalCostKes: String(editingInput.totalCostKes),
+          appliedDate: editingInput.appliedDate.slice(0, 10),
+          notes: editingInput.notes ?? '',
+        }
+      : {
+          type: 'seed' as InputType,
+          productName: '',
+          quantity: '',
+          unit: 'kg',
+          unitCostKes: '',
+          totalCostKes: '',
+          appliedDate: new Date().toISOString().slice(0, 10),
+          notes: '',
+        },
+  )
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
 
@@ -94,8 +109,11 @@ function LogInputModal({
 
     setSubmitting(true)
     try {
-      const res = await fetch(`/api/farm/farms/${farmId}/inputs`, {
-        method: 'POST',
+      const url = editingInput
+        ? `/api/farm/farms/${farmId}/inputs/${editingInput.id}`
+        : `/api/farm/farms/${farmId}/inputs`
+      const res = await fetch(url, {
+        method: editingInput ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: form.type,
@@ -110,13 +128,13 @@ function LogInputModal({
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({})) as { message?: string }
-        throw new Error(body.message ?? 'Failed to log input')
+        throw new Error(body.message ?? `Failed to ${editingInput ? 'update' : 'log'} input`)
       }
-      toast.success('Input logged')
+      toast.success(editingInput ? 'Input updated' : 'Input logged')
       onSaved()
       onClose()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to log input')
+      toast.error(err instanceof Error ? err.message : `Failed to ${editingInput ? 'update' : 'log'} input`)
     } finally {
       setSubmitting(false)
     }
@@ -130,7 +148,7 @@ function LogInputModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-md rounded-xl bg-white shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 sticky top-0 bg-white">
-          <h2 className="text-lg font-semibold text-gray-900">Log Farm Input</h2>
+          <h2 className="text-lg font-semibold text-gray-900">{editingInput ? 'Edit Farm Input' : 'Log Farm Input'}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X className="h-5 w-5" /></button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4 px-6 py-5">
@@ -185,7 +203,7 @@ function LogInputModal({
             <button type="button" onClick={onClose} disabled={submitting} className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50">Cancel</button>
             <button type="submit" disabled={submitting} className="flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-60">
               {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              {submitting ? 'Saving…' : 'Log Input'}
+              {submitting ? 'Saving…' : editingInput ? 'Save Changes' : 'Log Input'}
             </button>
           </div>
         </form>
@@ -198,6 +216,8 @@ function LogInputModal({
 
 export function InputsTab({ farmId }: { farmId: string }) {
   const [showModal, setShowModal] = useState(false)
+  const [editingInput, setEditingInput] = useState<FarmInput | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const queryClient = useQueryClient()
 
   const { data, isLoading } = useQuery<InputsResponse>({
@@ -213,6 +233,34 @@ export function InputsTab({ farmId }: { farmId: string }) {
   const inputs = data?.data ?? []
 
   const totalCost = inputs.reduce((s, i) => s + Number(i.totalCostKes), 0)
+
+  function openEdit(input: FarmInput) {
+    setEditingInput(input)
+    setShowModal(true)
+  }
+
+  function closeModal() {
+    setShowModal(false)
+    setEditingInput(null)
+  }
+
+  async function handleDelete(inputId: string) {
+    if (!window.confirm('Delete this input record? This cannot be undone.')) return
+    setDeletingId(inputId)
+    try {
+      const res = await fetch(`/api/farm/farms/${farmId}/inputs/${inputId}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({})) as { message?: string }
+        throw new Error(body.message ?? 'Failed to delete input')
+      }
+      toast.success('Input deleted')
+      invalidate()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete input')
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   return (
     <div>
@@ -249,6 +297,7 @@ export function InputsTab({ farmId }: { farmId: string }) {
                 <th className="px-4 py-3">Quantity</th>
                 <th className="px-4 py-3">Unit Cost</th>
                 <th className="px-4 py-3">Total Cost</th>
+                <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -264,6 +313,25 @@ export function InputsTab({ farmId }: { farmId: string }) {
                   <td className="px-4 py-3 text-gray-700">{Number(inp.quantity).toLocaleString()} {inp.unit}</td>
                   <td className="px-4 py-3 text-gray-600">KES {Number(inp.unitCostKes).toLocaleString()}</td>
                   <td className="px-4 py-3 font-semibold text-gray-900">KES {Number(inp.totalCostKes).toLocaleString()}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => openEdit(inp)}
+                        className="text-gray-400 hover:text-green-700"
+                        title="Edit"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => void handleDelete(inp.id)}
+                        disabled={deletingId === inp.id}
+                        className="text-gray-400 hover:text-red-600 disabled:opacity-50"
+                        title="Delete"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -271,6 +339,7 @@ export function InputsTab({ farmId }: { farmId: string }) {
               <tr className="border-t-2 border-gray-200 bg-gray-50">
                 <td colSpan={5} className="px-4 py-3 text-right text-xs font-medium text-gray-500">Total Input Cost</td>
                 <td className="px-4 py-3 text-sm font-bold text-gray-900">KES {totalCost.toLocaleString()}</td>
+                <td />
               </tr>
             </tfoot>
           </table>
@@ -278,7 +347,7 @@ export function InputsTab({ farmId }: { farmId: string }) {
       )}
 
       {showModal && (
-        <LogInputModal farmId={farmId} onClose={() => setShowModal(false)} onSaved={invalidate} />
+        <LogInputModal farmId={farmId} editingInput={editingInput} onClose={closeModal} onSaved={invalidate} />
       )}
     </div>
   )

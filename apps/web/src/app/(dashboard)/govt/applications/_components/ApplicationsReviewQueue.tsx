@@ -141,7 +141,7 @@ export function ApplicationsReviewQueue() {
     <div>
       <div className="mb-4">
         <p className="text-lg font-bold text-ink">Subsidy Applications</p>
-        <p className="mt-0.5 text-sm text-muted">Review queue — all programs</p>
+        <p className="mt-0.5 text-sm text-muted">Review queue, all programs</p>
       </div>
 
       <div className="mb-4 grid grid-cols-4 gap-2.5">
@@ -220,8 +220,8 @@ export function ApplicationsReviewQueue() {
                   <Field label="Transport Provided?">
                     <ChipSelect
                       options={[
-                        { value: 'no', label: 'No — farmer collects' },
-                        { value: 'yes', label: 'Yes — delivery arranged' },
+                        { value: 'no', label: 'No, farmer collects' },
+                        { value: 'yes', label: 'Yes, delivery arranged' },
                       ]}
                       value={transportProvided}
                       onChange={setTransportProvided}

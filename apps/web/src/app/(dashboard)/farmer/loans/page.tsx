@@ -240,7 +240,7 @@ function AlertPanel({ loans }: { loans: DummyLoan[] }) {
                       {loan.institution.initials}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold text-red-900 truncate">{loan.institution.shortName} — {loan.productTitle}</p>
+                      <p className="text-xs font-semibold text-red-900 truncate">{loan.institution.shortName}, {loan.productTitle}</p>
                       <p className="text-[10px] text-red-500">
                         {overduePmts.length} payment{overduePmts.length > 1 ? 's' : ''} overdue · {daysLate} day{daysLate !== 1 ? 's' : ''} late
                       </p>
@@ -582,7 +582,7 @@ function ProductCard({ product, creditBand }: { product: LoanProduct; creditBand
 
             <div>
               <p className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
-                <Percent className="h-3.5 w-3.5 text-gray-400" /> Full cost breakdown — {fmtKes(sampleAmount)} / {sampleTerm}mo
+                <Percent className="h-3.5 w-3.5 text-gray-400" /> Full cost breakdown, {fmtKes(sampleAmount)} / {sampleTerm}mo
               </p>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 {[
@@ -669,7 +669,7 @@ function ProductCard({ product, creditBand }: { product: LoanProduct; creditBand
         {!eligible && (
           <p className="text-[10px] text-amber-600 mt-2 flex items-center gap-1">
             <AlertCircle className="h-3 w-3" />
-            Requires Band {product.minCreditBand} credit — improve your score by recording more farm activity
+            Requires Band {product.minCreditBand} credit. Improve your score by recording more farm activity
           </p>
         )}
       </div>

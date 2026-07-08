@@ -203,6 +203,17 @@ All endpoints require JWT. Farmers access their own farms only; admin can access
 
 ---
 
+## Admin API
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| GET | /admin/reports/farmers-by-county | JWT (admin) | Distinct farmer count per county |
+| GET | /admin/reports/livestock | JWT (admin) | Livestock totals by animal type and county. Query: county, animalType (both optional) |
+| GET | /admin/reports/loans-by-institution | JWT (admin) | Total KES disbursed per lending institution |
+| GET | /admin/reports/:type/export | JWT (admin) | CSV export of one of the above reports. `type` is one of `farmers-by-county`, `livestock`, `loans-by-institution`. Query: county, animalType (only used by `livestock`) |
+
+---
+
 ## Standard error response
 
 All services return errors in this format:

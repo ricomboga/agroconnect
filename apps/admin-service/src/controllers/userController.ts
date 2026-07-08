@@ -1,4 +1,5 @@
 import type { Response, NextFunction } from 'express';
+import type { KenyaCounty } from '@agroconnect/shared/constants/counties';
 import type { AdminRequest } from '../types/index.js';
 import * as userService from '../services/userService.js';
 import type { Requester } from '../services/userService.js';
@@ -11,7 +12,9 @@ function requesterFrom(req: AdminRequest): Requester {
     actor: req.user.id,
     isSuperAdmin: req.user.isSuperAdmin,
     staffRole: req.user.staffRole,
-    county: req.user.county,
+    // JWT county claim is only ever issued for accounts whose county was
+    // already validated against KENYA_COUNTIES at creation time.
+    county: req.user.county as KenyaCounty | undefined,
   };
 }
 
@@ -28,8 +31,8 @@ export const listUsers = async (req: AdminRequest, res: Response, next: NextFunc
 export const createUser = async (req: AdminRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const dto = req.body as CreateUserDto;
-    const user = await userService.createUser(dto, requesterFrom(req));
-    res.status(201).json({ data: user });
+    const data = await userService.createUser(dto, requesterFrom(req));
+    res.status(201).json({ data });
   } catch (err) {
     next(err);
   }

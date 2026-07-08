@@ -63,6 +63,14 @@ export const enPushTemplates: Record<string, (data: TemplateData) => PushTemplat
     title: `${d['replierName'] ?? 'Someone'} replied to your post`,
     body: `"${d['threadTitle'] ?? 'your post'}" has a new reply. Tap to read and respond.`,
   }),
+  'community.article.created': (d) => {
+    const type = d['type'] ?? 'news';
+    const title = type === 'webinar' ? 'New Webinar' : type === 'event' ? 'New Event' : 'News Update';
+    return {
+      title,
+      body: `${d['title'] ?? ''}. Tap for details.`,
+    };
+  },
   'user.registered': (d) => ({
     title: `Welcome to AgroConnect, ${d['fullName'] ?? ''}!`,
     body: 'Your account is ready. Start managing your farm today.',

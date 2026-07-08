@@ -77,7 +77,7 @@ export function OverviewTab({ farm, farmId }: { farm: Farm; farmId: string }) {
       {/* Weather placeholder */}
       <div>
         <p className="text-[9px] font-bold text-[#1A6B3C] uppercase tracking-[0.8px] mb-2">
-          Weather — {farm.county}
+          Weather, {farm.county}
         </p>
         <div
           className="rounded-[8px] px-[10px] py-[8px] text-[9px] text-[#374151]"

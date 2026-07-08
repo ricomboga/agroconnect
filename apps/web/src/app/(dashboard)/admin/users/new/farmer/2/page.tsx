@@ -4,7 +4,8 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { FormSection, Field, FieldGroup, TextInput, Select, AlertBox } from '@agroconnect/web-ui'
 import { useFarmerCreation } from '../../_context/FarmerCreationContext'
-import { KENYA_COUNTIES } from '../../_data/counties'
+import { KENYA_COUNTIES, type KenyaCounty } from '../../_data/counties'
+import { SUB_COUNTIES_BY_COUNTY } from '../../_data/subCounties'
 
 const PHONE_RE = /^(\+2547\d{8}|07\d{8})$/
 
@@ -69,7 +70,10 @@ export default function FarmerStep2Page() {
       <FormSection title="Location">
         <FieldGroup cols={2}>
           <Field label="County" required>
-            <Select value={state.county} onChange={(e) => update({ county: e.target.value })}>
+            <Select
+              value={state.county}
+              onChange={(e) => update({ county: e.target.value, subCounty: '' })}
+            >
               <option value="">Select county…</option>
               {KENYA_COUNTIES.map((c) => (
                 <option key={c} value={c}>
@@ -80,11 +84,18 @@ export default function FarmerStep2Page() {
             {errors.county && <p className="mt-1 text-xs text-ac-red">{errors.county}</p>}
           </Field>
           <Field label="Sub-county" required>
-            <TextInput
+            <Select
               value={state.subCounty}
               onChange={(e) => update({ subCounty: e.target.value })}
-              placeholder="Bahati"
-            />
+              disabled={!state.county}
+            >
+              <option value="">{state.county ? 'Select sub-county…' : 'Select a county first'}</option>
+              {(SUB_COUNTIES_BY_COUNTY[state.county as KenyaCounty] ?? []).map((sc) => (
+                <option key={sc} value={sc}>
+                  {sc}
+                </option>
+              ))}
+            </Select>
             {errors.subCounty && <p className="mt-1 text-xs text-ac-red">{errors.subCounty}</p>}
           </Field>
           <Field label="Village / Ward">
@@ -109,7 +120,7 @@ export default function FarmerStep2Page() {
           </Field>
           <Field label="USSD Access">
             <Select value={state.ussdEnabled} onChange={(e) => update({ ussdEnabled: e.target.value })}>
-              <option value="enabled">Enabled — *384#</option>
+              <option value="enabled">Enabled, *384#</option>
               <option value="disabled">Disabled</option>
             </Select>
           </Field>

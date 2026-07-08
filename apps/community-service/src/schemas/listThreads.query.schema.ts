@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { paginationQuerySchema } from '@agroconnect/shared';
+import { KENYA_COUNTIES } from '@agroconnect/shared/constants/counties';
 
 export const listThreadsQuerySchema = paginationQuerySchema.extend({
   category: z
@@ -15,7 +16,7 @@ export const listThreadsQuerySchema = paginationQuerySchema.extend({
     ])
     .optional(),
   cropType: z.string().max(100).optional(),
-  county: z.string().max(100).optional(),
+  county: z.enum(KENYA_COUNTIES).optional(),
   sort: z.enum(['newest', 'top']).default('newest'),
 });
 

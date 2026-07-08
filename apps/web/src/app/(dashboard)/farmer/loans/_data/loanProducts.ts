@@ -365,7 +365,7 @@ export const DUMMY_LOANS: DummyLoan[] = [
       },
       {
         id: 'doc-002',
-        name: 'Farm Photo - Maize Field',
+        name: 'Farm Photo, Maize Field',
         documentType: 'farm_photo',
         storageKey: 'dev-uploads/farm_maize.jpg',
         mimeType: 'image/jpeg',

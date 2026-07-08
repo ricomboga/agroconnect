@@ -6,11 +6,12 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import {
   ArrowLeft, Loader2, MapPin, Leaf, Droplets,
-  CalendarDays, Wheat, FlaskConical,
+  CalendarDays, Wheat, FlaskConical, TrendingUp,
 } from 'lucide-react'
 import { ActivitiesTab } from './_components/ActivitiesTab'
 import { HarvestsTab } from './_components/HarvestsTab'
 import { InputsTab } from './_components/InputsTab'
+import { SummaryExportTab } from './_components/SummaryExportTab'
 
 interface Farm {
   id: string
@@ -41,6 +42,7 @@ const TABS = [
   { id: 'activities', label: 'Activities', Icon: CalendarDays },
   { id: 'harvests',   label: 'Harvests',   Icon: Wheat },
   { id: 'inputs',     label: 'Inputs',     Icon: FlaskConical },
+  { id: 'summary',    label: 'Summary',    Icon: TrendingUp },
 ] as const
 
 type TabId = typeof TABS[number]['id']
@@ -167,9 +169,10 @@ export default function FarmDetailPage() {
 
       {/* Tab content */}
       <div>
-        {activeTab === 'activities' && <ActivitiesTab farmId={farmId} />}
-        {activeTab === 'harvests'   && <HarvestsTab   farmId={farmId} />}
-        {activeTab === 'inputs'     && <InputsTab     farmId={farmId} />}
+        {activeTab === 'activities' && <ActivitiesTab     farmId={farmId} />}
+        {activeTab === 'harvests'   && <HarvestsTab       farmId={farmId} />}
+        {activeTab === 'inputs'     && <InputsTab         farmId={farmId} />}
+        {activeTab === 'summary'    && <SummaryExportTab  farmId={farmId} />}
       </div>
     </div>
   )

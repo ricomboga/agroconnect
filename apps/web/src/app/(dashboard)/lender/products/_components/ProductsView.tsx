@@ -78,7 +78,7 @@ export function ProductsView() {
       return res.json()
     },
     onSuccess: () => {
-      toast.success('Product saved (draft — not yet reflected in the live catalogue)')
+      toast.success('Product saved (draft, not yet reflected in the live catalogue)')
       setShowForm(false)
       void queryClient.invalidateQueries({ queryKey: ['lender', 'products'] })
     },

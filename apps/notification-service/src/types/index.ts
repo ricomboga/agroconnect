@@ -176,6 +176,16 @@ export const CommunityReplyCreatedPayload = z.object({
 });
 export type CommunityReplyCreatedPayload = z.infer<typeof CommunityReplyCreatedPayload>;
 
+// community.article.created
+export const CommunityArticleCreatedPayload = z.object({
+  articleId: z.string(),
+  slug: z.string(),
+  title: z.string(),
+  type: z.enum(['news', 'event', 'webinar']),
+  occurredAt: z.string(),
+});
+export type CommunityArticleCreatedPayload = z.infer<typeof CommunityArticleCreatedPayload>;
+
 // notification.send (generic pass-through)
 export const NotificationSendPayload = z.object({
   userId: z.string(),

@@ -496,7 +496,7 @@ function ApplyContent() {
         ),
       )
     } catch {
-      toast.error('Upload failed — you can still proceed, document will be re-uploaded on submit')
+      toast.error('Upload failed. You can still proceed, document will be re-uploaded on submit')
     } finally {
       setUploadingIdx(null)
     }
@@ -574,7 +574,7 @@ function ApplyContent() {
           </Link>
           <div>
             <h1 className="text-base font-bold text-gray-900">Loan Application</h1>
-            <p className="text-xs text-gray-400">Step {step + 1} of {STEPS.length} — {STEPS[step]}</p>
+            <p className="text-xs text-gray-400">Step {step + 1} of {STEPS.length}, {STEPS[step]}</p>
           </div>
         </div>
       </div>
@@ -686,7 +686,7 @@ function ApplyContent() {
                   {score.band === 'ineligible' ? (
                     <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg p-3">
                       <XCircle className="h-4 w-4 text-red-500 flex-shrink-0 mt-0.5" />
-                      <p className="text-xs text-red-700">Not eligible — record more farm activities, harvests, and inputs to build your profile.</p>
+                      <p className="text-xs text-red-700">Not eligible. Record more farm activities, harvests, and inputs to build your profile.</p>
                     </div>
                   ) : amountNum > score.maxLoanKes ? (
                     <div className="flex items-start gap-2 bg-orange-50 border border-orange-200 rounded-lg p-3">
@@ -747,7 +747,7 @@ function ApplyContent() {
                   ['Monthly Payment (EMI)', fmtKes(emi)],
                   ['Total Repayment', fmtKes(emi * monthsNum)],
                   ['Linked Farm', farms.find((f) => f.id === farmId)?.name ?? (farms[0]?.name ?? 'Not selected')],
-                  ['Credit Band', `Band ${score.band} — ${BAND_CONFIG[score.band]?.label ?? ''}`],
+                  ['Credit Band', `Band ${score.band}, ${BAND_CONFIG[score.band]?.label ?? ''}`],
                 ].map(([l, v]) => (
                   <div key={l} className="flex justify-between px-4 py-3 text-sm">
                     <span className="text-gray-500">{l}</span>
@@ -781,7 +781,7 @@ function ApplyContent() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-gray-800">{def.label}</p>
                         {df.file && <p className="text-xs text-gray-400 truncate">{df.file.name}</p>}
-                        {!df.file && <p className="text-xs text-gray-400 italic">{def.required ? 'Not uploaded — may delay approval' : 'Skipped (optional)'}</p>}
+                        {!df.file && <p className="text-xs text-gray-400 italic">{def.required ? 'Not uploaded, may delay approval' : 'Skipped (optional)'}</p>}
                       </div>
                     </div>
                   )

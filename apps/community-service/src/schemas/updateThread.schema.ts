@@ -1,11 +1,12 @@
 import { z } from 'zod';
+import { KENYA_COUNTIES } from '@agroconnect/shared/constants/counties';
 
 export const updateThreadSchema = z
   .object({
     title: z.string().min(3).max(300).optional(),
     body: z.string().min(10).optional(),
     cropType: z.string().max(100).optional(),
-    county: z.string().max(100).optional(),
+    county: z.enum(KENYA_COUNTIES).optional(),
     photos: z.array(z.string().url()).max(5).optional(),
   })
   .refine((data) => Object.values(data).some((v) => v !== undefined), {

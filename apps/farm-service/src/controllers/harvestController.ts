@@ -42,3 +42,40 @@ export async function listHarvests(
     next(err);
   }
 }
+
+export async function updateHarvest(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const harvest = await harvestService.updateHarvest(
+      req.params['farmId'] as string,
+      req.user.id,
+      req.user.role,
+      req.params['harvestId'] as string,
+      req.body,
+    );
+    res.json({ data: harvest });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function deleteHarvest(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    await harvestService.deleteHarvest(
+      req.params['farmId'] as string,
+      req.user.id,
+      req.user.role,
+      req.params['harvestId'] as string,
+    );
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}

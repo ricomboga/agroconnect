@@ -1,5 +1,6 @@
 import { prisma, Prisma } from '@agroconnect/db/farm';
 import { CreateInputDto } from '../schemas/createInput.schema.js';
+import { UpdateInputDto } from '../schemas/updateInput.schema.js';
 import { PaginationParams } from '../types/index.js';
 
 export interface InputFilter {
@@ -50,4 +51,23 @@ export async function countInputsByFarm(farmId: string, filter: InputFilter) {
       ...(filter.appliedDateRange ? { appliedDate: filter.appliedDateRange } : {}),
     },
   });
+}
+
+export async function findInputById(inputId: string, farmId: string) {
+  return prisma.input.findFirst({ where: { id: inputId, farmId } });
+}
+
+export async function updateInput(inputId: string, farmId: string, dto: UpdateInputDto) {
+  const { appliedDate, ...rest } = dto;
+  return prisma.input.updateMany({
+    where: { id: inputId, farmId },
+    data: {
+      ...rest,
+      ...(appliedDate ? { appliedDate: new Date(appliedDate) } : {}),
+    },
+  });
+}
+
+export async function deleteInput(inputId: string, farmId: string) {
+  return prisma.input.deleteMany({ where: { id: inputId, farmId } });
 }

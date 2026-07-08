@@ -6,6 +6,7 @@ import { productRouter } from './routes/productRoutes.js';
 import { orderRouter } from './routes/orderRoutes.js';
 import { priceRouter } from './routes/priceRoutes.js';
 import { supplierRouter } from './routes/supplierRoutes.js';
+import { supplierProfileRouter, internalSupplierProfileRouter } from './routes/supplierProfileRoutes.js';
 import { internalStatsRouter } from './routes/internalStatsRoutes.js';
 import { internalProductSearchRouter } from './routes/internalProductSearchRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -24,8 +25,10 @@ app.use('/api/v1/market/products', productRouter);
 app.use('/api/v1/market/orders', orderRouter);
 app.use('/api/v1/market/prices', priceRouter);
 app.use('/api/v1/market/suppliers', supplierRouter);
+app.use('/api/v1/market/supplier-profiles', supplierProfileRouter);
 app.use('/internal/admin', internalStatsRouter);
 app.use('/internal/products', internalProductSearchRouter);
+app.use('/internal/supplier-profiles', internalSupplierProfileRouter);
 
 app.use(errorHandler);
 

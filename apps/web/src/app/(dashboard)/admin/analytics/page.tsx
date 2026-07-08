@@ -33,21 +33,17 @@ export default function AnalyticsPage() {
     },
   })
 
-  const { data: farmsData } = useQuery({
-    queryKey: ['admin', 'farms', 'top-counties'],
+  const { data: farmersByCounty } = useQuery({
+    queryKey: ['admin', 'reports', 'farmers-by-county'],
     queryFn: async () => {
-      const res = await api.get<{ data: { county: string }[] }>('/api/v1/admin/farms?page_size=100')
+      const res = await api.get<{ data: { county: string; farmerCount: number }[] }>(
+        '/api/v1/admin/reports/farmers-by-county',
+      )
       return res.data.data
     },
   })
 
-  const countyCounts = (farmsData ?? []).reduce<Record<string, number>>((acc, f) => {
-    acc[f.county] = (acc[f.county] ?? 0) + 1
-    return acc
-  }, {})
-  const topCounties = Object.entries(countyCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
+  const topCounties = (farmersByCounty ?? []).slice(0, 5).map((row) => [row.county, row.farmerCount] as const)
   const maxCounty = topCounties[0]?.[1] ?? 1
 
   return (
@@ -85,7 +81,7 @@ export default function AnalyticsPage() {
         </div>
 
         <div className="rounded-base border border-border bg-white px-4 py-3">
-          <p className="mb-2 text-md font-semibold text-ink">Top Counties by Farm Count</p>
+          <p className="mb-2 text-md font-semibold text-ink">Top Counties by Farmer Count</p>
           <div className="flex flex-col gap-2">
             {topCounties.map(([county, count]) => (
               <div key={county}>

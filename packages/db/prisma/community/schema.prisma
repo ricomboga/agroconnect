@@ -97,13 +97,27 @@ model Article {
   summary     String
   body        String
   category    ThreadCategory
+  type        ArticleType    @default(news)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  joinLink    String?
+  location    String?
   authorName  String
   isPublished Boolean        @default(true)
   publishedAt DateTime       @default(now())
   createdAt   DateTime       @default(now())
 
   @@index([category, isPublished])
+  @@index([type, isPublished])
   @@map("articles")
+}
+
+enum ArticleType {
+  news
+  event
+  webinar
+
+  @@map("article_type")
 }
 
 enum ThreadCategory {
@@ -140,6 +154,7 @@ enum ExpertType {
   agronomist
   vet
   extension_officer
+  soil_lab
 
   @@map("expert_type")
 }

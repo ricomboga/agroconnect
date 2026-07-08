@@ -2,6 +2,7 @@ import * as harvestRepo from '../repositories/harvestRepository.js';
 import * as farmRepo from '../repositories/farmRepository.js';
 import { publishHarvestRecorded } from '../events/producers/harvestRecordedProducer.js';
 import { CreateHarvestDto } from '../schemas/createHarvest.schema.js';
+import { UpdateHarvestDto } from '../schemas/updateHarvest.schema.js';
 import { PaginationParams } from '../types/index.js';
 import { createError } from '../middleware/errorHandler.js';
 
@@ -41,4 +42,29 @@ export async function listHarvests(
     harvestRepo.countHarvestsByFarm(farmId),
   ]);
   return { harvests, total };
+}
+
+export async function updateHarvest(
+  farmId: string,
+  ownerId: string,
+  role: string,
+  harvestId: string,
+  dto: UpdateHarvestDto,
+) {
+  await assertFarmAccess(farmId, ownerId, role);
+  const harvest = await harvestRepo.findHarvestById(harvestId, farmId);
+  if (!harvest)
+    throw createError('Harvest not found', 404, 'HARVEST_NOT_FOUND', 'error.harvest.not_found');
+
+  await harvestRepo.updateHarvest(harvestId, farmId, dto);
+  return harvestRepo.findHarvestById(harvestId, farmId);
+}
+
+export async function deleteHarvest(farmId: string, ownerId: string, role: string, harvestId: string) {
+  await assertFarmAccess(farmId, ownerId, role);
+  const harvest = await harvestRepo.findHarvestById(harvestId, farmId);
+  if (!harvest)
+    throw createError('Harvest not found', 404, 'HARVEST_NOT_FOUND', 'error.harvest.not_found');
+
+  await harvestRepo.deleteHarvest(harvestId, farmId);
 }

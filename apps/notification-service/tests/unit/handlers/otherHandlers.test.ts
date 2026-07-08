@@ -1,4 +1,5 @@
 import { communityPostCreatedHandler } from '../../../src/handlers/communityPostCreatedHandler';
+import { communityArticleCreatedHandler } from '../../../src/handlers/communityArticleCreatedHandler';
 import { govtRegistrationSubmittedHandler } from '../../../src/handlers/govtRegistrationSubmittedHandler';
 import { marketListingCreatedHandler } from '../../../src/handlers/marketListingCreatedHandler';
 import { marketOrderPlacedHandler } from '../../../src/handlers/marketOrderPlacedHandler';
@@ -9,6 +10,7 @@ import { notificationSendHandler } from '../../../src/handlers/notificationSendH
 
 jest.mock('../../../src/services/tokenService', () => ({
   getToken: jest.fn(),
+  getAllTokens: jest.fn(),
 }));
 jest.mock('../../../src/services/fcmService', () => ({
   sendPush: jest.fn(),
@@ -20,12 +22,13 @@ jest.mock('../../../src/deliveryLogger', () => ({
   logDelivery: jest.fn(),
 }));
 
-import { getToken } from '../../../src/services/tokenService';
+import { getToken, getAllTokens } from '../../../src/services/tokenService';
 import { sendPush } from '../../../src/services/fcmService';
 import { sendSms } from '../../../src/services/smsService';
 import { logDelivery } from '../../../src/deliveryLogger';
 
 const mockGetToken = getToken as jest.MockedFunction<typeof getToken>;
+const mockGetAllTokens = getAllTokens as jest.MockedFunction<typeof getAllTokens>;
 const mockSendPush = sendPush as jest.MockedFunction<typeof sendPush>;
 const mockSendSms = sendSms as jest.MockedFunction<typeof sendSms>;
 const mockLogDelivery = logDelivery as jest.MockedFunction<typeof logDelivery>;
@@ -67,6 +70,46 @@ describe('communityPostCreatedHandler', () => {
 
   it('does not throw for invalid payload', async () => {
     await expect(communityPostCreatedHandler(null)).resolves.toBeUndefined();
+  });
+});
+
+describe('communityArticleCreatedHandler', () => {
+  const validPayload = {
+    articleId: 'article-1',
+    slug: 'maize-planting-webinar',
+    title: 'Maize Planting Webinar',
+    type: 'webinar',
+    occurredAt: '2026-06-14T08:00:00Z',
+  };
+
+  it('broadcasts push to every registered token', async () => {
+    mockGetAllTokens.mockResolvedValue([
+      { userId: 'user-1', token: 'fcm-token-1' },
+      { userId: 'user-2', token: 'fcm-token-2' },
+    ]);
+
+    await communityArticleCreatedHandler(validPayload);
+
+    expect(mockSendPush).toHaveBeenCalledTimes(2);
+    expect(mockLogDelivery).toHaveBeenCalledWith(
+      expect.objectContaining({ eventType: 'community.article.created', farmerId: 'user-1' }),
+    );
+    expect(mockLogDelivery).toHaveBeenCalledWith(
+      expect.objectContaining({ eventType: 'community.article.created', farmerId: 'user-2' }),
+    );
+  });
+
+  it('sends nothing when there are no registered tokens', async () => {
+    mockGetAllTokens.mockResolvedValue([]);
+
+    await communityArticleCreatedHandler(validPayload);
+
+    expect(mockSendPush).not.toHaveBeenCalled();
+  });
+
+  it('does not throw for invalid payload', async () => {
+    await expect(communityArticleCreatedHandler(null)).resolves.toBeUndefined();
+    expect(mockGetAllTokens).not.toHaveBeenCalled();
   });
 });
 

@@ -55,10 +55,10 @@ const REVENUE_TREND = [
 // TODO(real-data): no AI-signal model (diagnosis-linked sales opportunities)
 // exists yet — mirrors the wireframe's "AI Sales Opportunities" panel with mock rows.
 const AI_OPPORTUNITIES = [
-  { initials: 'JW', color: undefined, name: 'Jane Wanjiru', note: 'Spray Maize due today — Mancozeb 80WP out of stock on her inventory', action: '📱 SMS' },
-  { initials: 'SM', color: '#0E7490', name: 'Samuel Mwas', note: '2nd Fertiliser (CAN 50kg) due Jun 10 — not yet purchased', action: '📱 SMS' },
-  { initials: 'GK', color: '#7C3AED', name: 'Grace Kamau', note: 'Newcastle Vaccine overdue 7 days — 50 birds at risk', action: 'Urgent' },
-  { initials: 'AH', color: '#C9A84C', name: '147 farmers (Grey Leaf Spot)', note: 'AI diagnosed Grey Leaf Spot this month — Mancozeb 80WP opportunity', action: '📢 Bulk SMS' },
+  { initials: 'JW', color: undefined, name: 'Jane Wanjiru', note: 'Spray Maize due today, Mancozeb 80WP out of stock on her inventory', action: '📱 SMS' },
+  { initials: 'SM', color: '#0E7490', name: 'Samuel Mwas', note: '2nd Fertiliser (CAN 50kg) due Jun 10, not yet purchased', action: '📱 SMS' },
+  { initials: 'GK', color: '#7C3AED', name: 'Grace Kamau', note: 'Newcastle Vaccine overdue 7 days, 50 birds at risk', action: 'Urgent' },
+  { initials: 'AH', color: '#C9A84C', name: '147 farmers (Grey Leaf Spot)', note: 'AI diagnosed Grey Leaf Spot this month, Mancozeb 80WP opportunity', action: '📢 Bulk SMS' },
 ] as const
 
 // TODO(real-data): no sales-aggregate model exists yet — top-selling products
@@ -200,7 +200,7 @@ export function DashboardContent() {
 
           <div className="mb-3.5 rounded-base border border-border bg-white">
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
-              <span className="text-md font-semibold text-ink">Pending Orders — Action Needed</span>
+              <span className="text-md font-semibold text-ink">Pending Orders, Action Needed</span>
             </div>
             <div className="px-4 py-3">
               {orders.length === 0 ? (

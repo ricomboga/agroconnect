@@ -59,7 +59,7 @@ export default function FarmerStep5Page() {
     <div>
       <FormSection title="🏦 Assign Lending Partner">
         <AlertBox variant="blue">
-          Loan applications from this farmer will be auto-routed to the assigned lender. Optional —
+          Loan applications from this farmer will be auto-routed to the assigned lender. Optional,
           the farmer can also select a lender at loan application time.
         </AlertBox>
 
@@ -98,7 +98,7 @@ export default function FarmerStep5Page() {
             onClick={() => update({ lenderId: null })}
             className="w-full rounded-base border border-dashed border-border p-2.5 text-sm font-semibold text-muted"
           >
-            Skip — farmer selects lender at loan application time
+            Skip, farmer selects lender at loan application time
           </button>
         </div>
       </FormSection>
@@ -155,7 +155,7 @@ export default function FarmerStep5Page() {
             onClick={() => update({ expertId: null })}
             className="w-full rounded-base border border-dashed border-border p-2.5 text-sm font-semibold text-muted"
           >
-            Skip — no expert assigned
+            Skip, no expert assigned
           </button>
         </div>
       </FormSection>

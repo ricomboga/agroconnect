@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { KENYA_COUNTIES } from '@agroconnect/shared/constants/counties';
 
 export const createProductSchema = z.object({
   name: z.string().min(1).max(200),
@@ -9,7 +10,7 @@ export const createProductSchema = z.object({
   pricePerUnitKes: z.number().positive(),
   stockQuantity: z.number().nonnegative(),
   sku: z.string().max(100).optional(),
-  countyAvailability: z.array(z.string()).min(1),
+  countyAvailability: z.array(z.enum(KENYA_COUNTIES)).min(1),
   photos: z.array(z.string().url()).max(5).optional(),
 });
 

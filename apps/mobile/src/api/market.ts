@@ -85,6 +85,23 @@ export interface MarketOrder {
   createdAt: string;
 }
 
+export interface SupplierProfile {
+  id: string;
+  userId: string;
+  businessName: string;
+  description: string | null;
+  county: string;
+  subCounty: string | null;
+  categories: string[];
+  phone: string;
+  address: string | null;
+}
+
+interface SupplierProfileListResponse {
+  data: SupplierProfile[];
+  meta: { page: number; page_size: number; total: number; total_pages: number };
+}
+
 export const marketApi = {
   listings: {
     list: (params?: { crop?: string; county?: string; grade?: QualityGrade; page?: number }) =>
@@ -116,6 +133,19 @@ export const marketApi = {
       apiFetch<ListResponse<SupplierProduct>>(
         `/market/products${buildQs({ category: params?.category, page: params?.page })}`
       ),
+  },
+  supplierProfiles: {
+    list: (params?: { county?: string; subCounty?: string; category?: string; page?: number }) =>
+      apiFetch<SupplierProfileListResponse>(
+        `/market/supplier-profiles${buildQs({
+          county: params?.county,
+          subCounty: params?.subCounty,
+          category: params?.category,
+          page: params?.page,
+        })}`,
+      ),
+    get: (id: string) =>
+      apiFetch<{ data: SupplierProfile }>(`/market/supplier-profiles/${id}`),
   },
   prices: {
     history: (crop: string) =>

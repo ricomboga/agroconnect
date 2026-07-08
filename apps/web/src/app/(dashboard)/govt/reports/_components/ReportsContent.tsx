@@ -121,7 +121,7 @@ export function ReportsContent() {
 
         <div className="rounded-base border border-border bg-white px-4 py-3">
           <p className="mb-2 text-md font-semibold text-ink">
-            {appliedCounty} County Summary — {period}
+            {appliedCounty} County Summary, {period}
           </p>
           <div className="mb-3 grid grid-cols-2 gap-2">
             <div className="rounded-base bg-ac-green-light p-2.5 text-center">

@@ -74,7 +74,7 @@ export function RiskAnalyticsView() {
             </div>
             <div className="mt-3">
               <AlertBox variant="blue">
-                Band D farmers show the steepest repayment drop-off — consider capping new
+                Band D farmers show the steepest repayment drop-off. Consider capping new
                 disbursements to Band D at 50,000 KES until repayment history improves.
               </AlertBox>
             </div>
@@ -95,7 +95,7 @@ export function RiskAnalyticsView() {
             </div>
             <div className="mt-3">
               <AlertBox variant="amber">
-                Disbursements typically dip in April — plan liquidity ahead of the long-rains
+                Disbursements typically dip in April. Plan liquidity ahead of the long-rains
                 planting season demand spike in May.
               </AlertBox>
             </div>

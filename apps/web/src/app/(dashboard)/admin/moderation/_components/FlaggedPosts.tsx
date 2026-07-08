@@ -47,7 +47,7 @@ export function FlaggedPosts() {
       api.patch(`/api/v1/admin/moderation/${postId}`, { status: 'active' }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'moderation'] })
-      toast.success('Post approved — flag removed')
+      toast.success('Post approved, flag removed')
     },
     onError: () => toast.error('Failed to approve post'),
   })
