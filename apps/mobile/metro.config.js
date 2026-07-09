@@ -7,6 +7,8 @@ const workspaceRoot = path.resolve(projectRoot, '../..');
 
 const config = getDefaultConfig(projectRoot);
 
+config.resolver.unstable_enablePackageExports = true;
+
 config.watchFolders = [
   path.resolve(workspaceRoot, 'node_modules/.pnpm'),
   path.resolve(workspaceRoot, 'packages'),
