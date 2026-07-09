@@ -27,7 +27,6 @@
         "backgroundColor": "#1B5E20"
       },
       "package": "ke.agroconnect.mobile",
-      "usesCleartextTraffic": true,
       "permissions": [
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
@@ -47,6 +46,14 @@
         "expo-camera",
         {
           "cameraPermission": "AgroConnect inahitaji kamera yako kupiga picha za mimea au wanyama kwa uchunguzi."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
         }
       ]
     ],
