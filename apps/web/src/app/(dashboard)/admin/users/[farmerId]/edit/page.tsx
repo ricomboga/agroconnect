@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -66,7 +66,7 @@ interface OfficerProfile {
 }
 
 interface PageProps {
-  params: Promise<{ farmerId: string }>
+  params: { farmerId: string }
 }
 
 function countyKeyOf(fields: FieldConfig[]): string | undefined {
@@ -77,7 +77,7 @@ function subCountyKeyOf(fields: FieldConfig[]): string | undefined {
 }
 
 export default function EditRoleUserPage({ params }: PageProps) {
-  const { farmerId } = use(params)
+  const { farmerId } = params
   const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
   const [expertId, setExpertId] = useState<string | undefined>()
