@@ -7,6 +7,7 @@ export const listSupplierProfilesQuerySchema = z.object({
   county: z.enum(KENYA_COUNTIES).optional(),
   subCounty: z.string().max(100).optional(),
   category: z.string().max(80).optional(),
+  userId: z.string().uuid().optional(),
 });
 
 export type ListSupplierProfilesQuery = z.infer<typeof listSupplierProfilesQuerySchema>;

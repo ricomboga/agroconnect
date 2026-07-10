@@ -37,13 +37,13 @@ export async function listSupplierProfiles(
   try {
     const query = req.query as unknown as ListSupplierProfilesQuery;
     const pagination = parsePaginationParams(req.query as Record<string, unknown>);
-    const { profiles, total } = await supplierProfileService.listSupplierProfiles(
-      { county: query.county, subCounty: query.subCounty, category: query.category },
+    const { profiles, total, matchedOn } = await supplierProfileService.listSupplierProfiles(
+      { county: query.county, subCounty: query.subCounty, category: query.category, userId: query.userId },
       pagination,
     );
     res.json({
       data: profiles,
-      meta: buildMeta(req.query as Record<string, unknown>, pagination, total),
+      meta: { ...buildMeta(req.query as Record<string, unknown>, pagination, total), matched_on: matchedOn },
     });
   } catch (err) {
     next(err);

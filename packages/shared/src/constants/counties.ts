@@ -88,3 +88,38 @@ export const SUB_COUNTIES_BY_COUNTY: Record<KenyaCounty, string[]> = {
     'Embakasi East', 'Embakasi West', 'Makadara', 'Kamukunji', 'Starehe', 'Mathare',
   ],
 };
+
+export const KENYA_REGIONS = {
+  Nairobi: ['Nairobi'],
+  Central: ['Kiambu', "Murang'a", 'Nyeri', 'Kirinyaga', 'Nyandarua'],
+  Coast: ['Mombasa', 'Kwale', 'Kilifi', 'Tana River', 'Lamu', 'Taita-Taveta'],
+  Eastern: ['Machakos', 'Makueni', 'Kitui', 'Embu', 'Tharaka-Nithi', 'Meru', 'Isiolo', 'Marsabit'],
+  'North Eastern': ['Garissa', 'Wajir', 'Mandera'],
+  Nyanza: ['Kisumu', 'Siaya', 'Homa Bay', 'Migori', 'Kisii', 'Nyamira'],
+  'Rift Valley': [
+    'Turkana', 'West Pokot', 'Samburu', 'Trans Nzoia', 'Uasin Gishu', 'Elgeyo-Marakwet',
+    'Nandi', 'Baringo', 'Laikipia', 'Nakuru', 'Narok', 'Kajiado', 'Kericho', 'Bomet',
+  ],
+  Western: ['Kakamega', 'Vihiga', 'Bungoma', 'Busia'],
+} as const satisfies Record<string, readonly KenyaCounty[]>;
+
+export type KenyaRegion = keyof typeof KENYA_REGIONS;
+
+const COUNTY_TO_REGION: Record<KenyaCounty, KenyaRegion> = Object.entries(KENYA_REGIONS).reduce(
+  (acc, [region, counties]) => {
+    for (const county of counties) acc[county as KenyaCounty] = region as KenyaRegion;
+    return acc;
+  },
+  {} as Record<KenyaCounty, KenyaRegion>,
+);
+
+/** Returns the region name a county belongs to, e.g. "Nakuru" -> "Rift Valley". */
+export function getRegionForCounty(county: string): KenyaRegion | undefined {
+  return COUNTY_TO_REGION[county as KenyaCounty];
+}
+
+/** Returns every county in the same region as `county` (including itself). */
+export function getRegionCounties(county: string): readonly string[] {
+  const region = getRegionForCounty(county);
+  return region ? KENYA_REGIONS[region] : [];
+}

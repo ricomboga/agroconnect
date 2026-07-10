@@ -13,6 +13,8 @@ const supplierOnly = authorize('supplier', 'admin') as (req: Request, res: Respo
 
 router.get('/', validateQuery(listProductsQuerySchema), productController.browseProducts);
 
+router.get('/:productId', productController.getProduct);
+
 router.post('/', auth, supplierOnly, validateBody(createProductSchema), (req, res, next) =>
   productController.createProduct(req as AuthenticatedRequest, res, next),
 );

@@ -25,7 +25,11 @@ export async function createListing(farmerId: string, dto: CreateListingDto) {
 }
 
 function buildListingsWhere(query: ListListingsQuery) {
-  const where: Record<string, unknown> = { status: 'active' };
+  // A farmer viewing their own listings sees every status (sold/expired/withdrawn
+  // included); public browse only ever shows active listings.
+  const where: Record<string, unknown> = query.farmerId
+    ? { farmerId: query.farmerId }
+    : { status: 'active' };
   if (query.crop) where['crop'] = { contains: query.crop, mode: 'insensitive' };
   if (query.county) where['locationCounty'] = { contains: query.county, mode: 'insensitive' };
   if (query.quality_grade) where['qualityGrade'] = query.quality_grade;

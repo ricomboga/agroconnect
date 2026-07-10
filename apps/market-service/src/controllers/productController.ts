@@ -37,6 +37,27 @@ export async function browseProducts(req: Request, res: Response, next: NextFunc
 
 /**
  * @openapi
+ * /api/v1/market/products/{productId}:
+ *   get:
+ *     summary: Get a single supplier product
+ *     tags: [Products]
+ *     responses:
+ *       200:
+ *         description: Product detail
+ *       404:
+ *         description: Product not found
+ */
+export async function getProduct(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const product = await productService.getProduct(req.params['productId'] as string);
+    res.json({ data: product });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * @openapi
  * /api/v1/market/products:
  *   post:
  *     summary: Create a supplier product

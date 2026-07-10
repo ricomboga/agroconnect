@@ -23,6 +23,12 @@ export async function createProduct(supplierId: string, dto: CreateProductDto) {
   return productRepo.createProduct(supplierId, dto);
 }
 
+export async function getProduct(productId: string) {
+  const product = await productRepo.findProductById(productId);
+  if (!product) throw createError('Product not found', 404, 'PRODUCT_NOT_FOUND');
+  return product;
+}
+
 export async function updateProduct(productId: string, supplierId: string, dto: UpdateProductDto) {
   const product = await productRepo.findProductById(productId);
   if (!product) throw createError('Product not found', 404, 'PRODUCT_NOT_FOUND');
