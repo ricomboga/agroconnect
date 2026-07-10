@@ -73,18 +73,18 @@ module.exports = {
         },
       },
       fontSize: {
-        xs: '8px', // timestamps, sub-labels, hint text, badge text
-        sm: '9px', // secondary text, table data, form labels
-        md: '10px', // body text, list items, card subtitles
-        base: '11px', // standard body
-        lg: '12px', // screen titles, nav links
-        xl: '13px', // section titles, important labels
-        '2xl': '14px', // page headings, feature titles
-        '3xl': '16px', // stat values
-        '4xl': '18px', // large stats, hero numbers
-        '5xl': '20px', // hero titles
-        '6xl': '22px', // major KPI displays only
-        '7xl': '24px', // major KPI displays only
+        xs: '12px', // timestamps, sub-labels, hint text, badge text
+        sm: '13px', // secondary text, table data, form labels
+        md: '14px', // body text, list items, card subtitles
+        base: '16px', // standard body
+        lg: '18px', // screen titles, nav links
+        xl: '20px', // section titles, important labels
+        '2xl': '22px', // page headings, feature titles
+        '3xl': '24px', // stat values
+        '4xl': '28px', // large stats, hero numbers
+        '5xl': '32px', // hero titles
+        '6xl': '36px', // major KPI displays only
+        '7xl': '40px', // major KPI displays only
       },
       borderRadius: {
         sm: '4px', // inputs, small elements
