@@ -39,6 +39,7 @@ export interface DiagnosisResult {
   prescriptions?: DiagnosisPrescription[];
   suppliers?: SupplierProduct[];
   processing_time_ms?: number;
+  created_at: string;
 }
 
 // Matches backend: Literal["resolved", "improved", "no_change", "worsened"]

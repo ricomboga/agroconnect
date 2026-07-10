@@ -5,6 +5,7 @@ import { DiagnosisHomeScreen } from '../../screens/Diagnosis/DiagnosisHomeScreen
 import { DiagnosisInputScreen } from '../../screens/Diagnosis/DiagnosisInputScreen';
 import { DiagnosisResultScreen } from '../../screens/Diagnosis/DiagnosisResultScreen';
 import { SupplierProductsScreen } from '../../screens/Market/SupplierProductsScreen';
+import { SupplierProductDetailScreen } from '../../screens/Market/SupplierProductDetailScreen';
 
 const Stack = createNativeStackNavigator<DiagnoseStackParamList>();
 
@@ -30,6 +31,11 @@ export function DiagnoseStack() {
         name="SupplierProducts"
         component={SupplierProductsScreen}
         options={{ title: '', headerBackTitle: '' }}
+      />
+      <Stack.Screen
+        name="SupplierProductDetail"
+        component={SupplierProductDetailScreen}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );

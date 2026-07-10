@@ -7,7 +7,6 @@ import type { DiagnoseStackParamList } from '../../navigation/types';
 import { marketApi } from '../../api/market';
 import type { SupplierProduct } from '../../api/market';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
-import { useCartStore } from '../../store/cart.store';
 import { LoadingScreen } from '../../components/Common/LoadingScreen';
 import { ErrorScreen } from '../../components/Common/ErrorScreen';
 import { EmptyState } from '../../components/Common/EmptyState';
@@ -20,7 +19,6 @@ export function SupplierProductsScreen({ route, navigation }: Props) {
   const { productName } = route.params;
   const { t } = useTranslation();
   const { isOnline } = useOfflineSync();
-  const { addItem } = useCartStore();
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['market', 'products', 'all'],
@@ -59,7 +57,7 @@ export function SupplierProductsScreen({ route, navigation }: Props) {
           renderItem={({ item }) => (
             <SupplierProductCard
               product={item}
-              onAddToCart={() => addItem(item)}
+              onPress={() => navigation.navigate('SupplierProductDetail', { productId: item.id })}
             />
           )}
           contentContainerStyle={s.list}

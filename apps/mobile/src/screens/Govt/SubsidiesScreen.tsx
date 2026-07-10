@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { govtApi } from '../../api/govt';
 import type { SubsidyStatus, SubsidyProgram, SubsidyApplication } from '../../api/govt';
+import { useFarmStore } from '../../store/farm.store';
 import type { GovtStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<GovtStackParamList, 'Subsidies'>;
@@ -33,6 +34,7 @@ const STATUS_BG: Record<SubsidyStatus, string> = {
 
 export function SubsidiesScreen({ navigation: _navigation }: Props) {
   const { t } = useTranslation();
+  const activeFarmId = useFarmStore((s) => s.activeFarmId);
 
   const programsQuery = useQuery({
     queryKey: ['govt', 'subsidies', 'programs'],
@@ -45,8 +47,12 @@ export function SubsidiesScreen({ navigation: _navigation }: Props) {
   });
 
   async function handleApply(programId: string) {
+    if (!activeFarmId) {
+      Alert.alert(t('common.error.loadFailed'));
+      return;
+    }
     try {
-      await govtApi.subsidies.apply(programId, 'current_farm');
+      await govtApi.subsidies.apply(programId, activeFarmId);
       Alert.alert(t('govt.subsidies.apply'), t('common.save'));
     } catch {
       Alert.alert(t('common.error.loadFailed'));

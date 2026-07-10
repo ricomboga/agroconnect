@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { farmApi, type Farm, type CreateAnimalDto, type AddWorkerDto } from '../api/farm';
+import { farmApi, type Farm, type CreateAnimalDto, type AddWorkerDto, type UpdateFarmDto } from '../api/farm';
 import { activityApi, type ActivityStatus } from '../api/activity';
 import { useOfflineSync } from './useOfflineSync';
 
@@ -94,6 +94,17 @@ export function useAddWorker(farmId: string) {
     mutationFn: (dto: AddWorkerDto) => farmApi.addWorker(farmId, dto),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['farms/workers', farmId] });
+    },
+  });
+}
+
+export function useUpdateFarm(farmId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (dto: UpdateFarmDto) => farmApi.update(farmId, dto),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['farm', farmId] });
+      void queryClient.invalidateQueries({ queryKey: ['farms'] });
     },
   });
 }

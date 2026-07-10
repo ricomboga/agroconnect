@@ -1,28 +1,23 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import type { SupplierProduct, StockStatus } from '../../api/market';
+import type { SupplierProduct } from '../../api/market';
 
 interface SupplierProductCardProps {
   product: SupplierProduct;
-  onAddToCart: () => void;
+  onPress: () => void;
 }
 
 const fmtKes = (n: number | null | undefined): string =>
   Math.round(n ?? 0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
-const STOCK_COLORS: Record<StockStatus, { bg: string; text: string }> = {
-  in_stock:    { bg: '#E8F5E9', text: '#1B5E20' },
-  low_stock:   { bg: '#FFF9C4', text: '#F57F17' },
-  out_of_stock: { bg: '#FFEBEE', text: '#C62828' },
-};
-
-export function SupplierProductCard({ product, onAddToCart }: SupplierProductCardProps) {
+export function SupplierProductCard({ product, onPress }: SupplierProductCardProps) {
   const { t } = useTranslation();
-  const stockColor = STOCK_COLORS[product.stockStatus] ?? { bg: '#F5F5F5', text: '#757575' };
+  const inStock = product.stockQuantity > 0;
+  const stockColor = inStock ? { bg: '#E8F5E9', text: '#1B5E20' } : { bg: '#FFEBEE', text: '#C62828' };
 
   return (
-    <View style={styles.card}>
+    <Pressable style={styles.card} onPress={onPress} accessibilityRole="button">
       <View style={styles.topRow}>
         <View style={styles.nameBlock}>
           <Text style={styles.name} numberOfLines={1}>{product.name}</Text>
@@ -32,37 +27,22 @@ export function SupplierProductCard({ product, onAddToCart }: SupplierProductCar
         </View>
         <View style={[styles.stockBadge, { backgroundColor: stockColor.bg }]}>
           <Text style={[styles.stockText, { color: stockColor.text }]}>
-            {t(`market.product.stock.${product.stockStatus}`)}
+            {inStock
+              ? t('market.product.stock.in_stock')
+              : t('market.product.stock.out_of_stock')}
           </Text>
         </View>
       </View>
 
       <View style={styles.midRow}>
         <Text style={styles.price}>
-          KES {fmtKes(product.pricePerUnit)}/{product.unit}
+          KES {fmtKes(product.pricePerUnitKes)}/{product.unit}
         </Text>
         <Text style={styles.category}>
           {t(`market.product.filter.${product.category}`)}
         </Text>
       </View>
-
-      <View style={styles.bottomRow}>
-        <Text style={styles.supplier}>
-          {t('market.product.card.by', { name: product.supplierName })} · {product.county}
-        </Text>
-        <Pressable
-          style={[
-            styles.cartBtn,
-            product.stockStatus === 'out_of_stock' && styles.cartBtnDisabled,
-          ]}
-          onPress={onAddToCart}
-          disabled={product.stockStatus === 'out_of_stock'}
-          accessibilityRole="button"
-        >
-          <Text style={styles.cartBtnText}>{t('market.product.card.addToCart')}</Text>
-        </Pressable>
-      </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -110,20 +90,4 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 6,
   },
-  bottomRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  supplier: { fontSize: 12, color: '#9E9E9E', flex: 1, marginRight: 8 },
-  cartBtn: {
-    minHeight: 36,
-    backgroundColor: '#1565C0',
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cartBtnDisabled: { backgroundColor: '#BDBDBD' },
-  cartBtnText: { color: '#FFFFFF', fontSize: 13, fontWeight: '600' },
 });

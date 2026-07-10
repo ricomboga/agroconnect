@@ -1,5 +1,7 @@
-import React, { useLayoutEffect, useMemo, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import {
+  FlatList,
+  Modal,
   Pressable,
   ScrollView,
   StatusBar,
@@ -13,8 +15,10 @@ import { DatePickerField } from '../../components/ui/DatePickerField';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useAddCustomerCollection, useCustomerCollections } from '../../hooks/useInventory';
+import { useFarms } from '../../hooks/useFarms';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
 import { useUiStore } from '../../store/ui.store';
+import type { Farm } from '../../api/farm';
 import type { StockStackParamList } from '../../navigation/types';
 import { ANIMAL_PRODUCT_TYPES, getProductConfig } from '../../constants/animalProducts';
 
@@ -37,6 +41,8 @@ export function AddCollectionScreen({ navigation, route }: Props) {
   const showToast      = useUiStore((st) => st.showToast);
   const mutation       = useAddCustomerCollection();
   const collectionsQ   = useCustomerCollections();
+  const farmsQuery     = useFarms();
+  const farms: Farm[]  = farmsQuery.data?.data ?? [];
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
@@ -58,6 +64,17 @@ export function AddCollectionScreen({ navigation, route }: Props) {
   const [priceText, setPriceText]       = useState('');
   const [takenDate, setTakenDate]       = useState(new Date());
   const [notes, setNotes]               = useState('');
+  const [farmId, setFarmId]             = useState('');
+  const [farmName, setFarmName]         = useState('');
+  const [showFarmPicker, setShowFarmPicker] = useState(false);
+
+  useEffect(() => {
+    const first = farms[0];
+    if (farms.length === 1 && !farmId && first) {
+      setFarmId(first.id);
+      setFarmName(first.name);
+    }
+  }, [farms, farmId]);
 
   const isCustom = product === CUSTOM_KEY;
   const unit    = CROP_UNITS[product] ?? getProductConfig(product).unit;
@@ -68,6 +85,7 @@ export function AddCollectionScreen({ navigation, route }: Props) {
     customerName.trim().length > 0 &&
     qty > 0 &&
     price > 0 &&
+    farmId.length > 0 &&
     (!isCustom || customProductName.trim().length > 0);
 
   // Recent customer names for quick-fill
@@ -95,7 +113,7 @@ export function AddCollectionScreen({ navigation, route }: Props) {
       pricePerUnit: price,
       totalAmount:  total,
       takenDate:    takenDate.toISOString().split('T')[0] ?? takenDate.toISOString(),
-      farmId:       'farm-1',
+      farmId,
       notes:        notes.trim(),
     };
 
@@ -261,6 +279,19 @@ export function AddCollectionScreen({ navigation, route }: Props) {
           textAlignVertical="top"
         />
 
+        {/* Farm picker */}
+        <Text style={s.fieldLabel}>{t('inventory.addHarvest.farmLabel')}</Text>
+        <Pressable
+          style={s.pickerBtn}
+          onPress={() => setShowFarmPicker(true)}
+          accessibilityRole="button"
+        >
+          <Text style={farmId ? s.pickerBtnValue : s.pickerBtnPlaceholder}>
+            {farmName || t('inventory.addHarvest.farmPlaceholder')}
+          </Text>
+          <Text style={s.pickerChevron}>›</Text>
+        </Pressable>
+
         <Pressable
           style={[s.saveBtn, (!isValid || mutation.isPending) && s.saveBtnDisabled]}
           onPress={() => { void handleSave(); }}
@@ -278,6 +309,58 @@ export function AddCollectionScreen({ navigation, route }: Props) {
 
         <View style={s.bottomPad} />
       </ScrollView>
+
+      {/* Farm picker modal */}
+      <Modal
+        visible={showFarmPicker}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowFarmPicker(false)}
+      >
+        <View style={s.modalOverlay}>
+          <View style={s.modalSheet}>
+            <View style={s.modalHeader}>
+              <Text style={s.modalTitle}>{t('inventory.addHarvest.farmPickerTitle')}</Text>
+              <Pressable
+                style={s.modalCloseBtn}
+                onPress={() => setShowFarmPicker(false)}
+                accessibilityRole="button"
+              >
+                <Text style={s.modalCloseLabel}>✕</Text>
+              </Pressable>
+            </View>
+            <FlatList
+              data={farms}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <Pressable
+                  style={[s.farmOption, farmId === item.id && s.farmOptionSelected]}
+                  onPress={() => {
+                    setFarmId(item.id);
+                    setFarmName(item.name);
+                    setShowFarmPicker(false);
+                  }}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: farmId === item.id }}
+                >
+                  <View style={s.farmOptionInfo}>
+                    <Text style={s.farmOptionName}>{item.name}</Text>
+                    <Text style={s.farmOptionSub}>
+                      {t('inventory.addHarvest.farmOptionSub', { county: item.county, area: item.areaAcres })}
+                    </Text>
+                  </View>
+                  {farmId === item.id && <Text style={s.farmOptionCheck}>✓</Text>}
+                </Pressable>
+              )}
+              ListEmptyComponent={
+                <View style={s.farmEmpty}>
+                  <Text style={s.farmEmptyText}>{t('inventory.addHarvest.farmPickerEmpty')}</Text>
+                </View>
+              }
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -335,4 +418,39 @@ const s = StyleSheet.create({
   saveBtnDisabled: { opacity: 0.5 },
   saveBtnLabel:    { fontSize: 12, fontWeight: '700', color: '#fff' },
   bottomPad: { height: 20 },
+  pickerBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 5,
+    paddingVertical: 8, paddingHorizontal: 9, backgroundColor: '#F9FAFB', minHeight: 36,
+  },
+  pickerBtnValue:       { fontSize: 10, color: '#111827', flex: 1 },
+  pickerBtnPlaceholder: { fontSize: 10, color: '#9CA3AF', flex: 1 },
+  pickerChevron:        { fontSize: 16, color: '#9CA3AF', marginLeft: 8 },
+  modalOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end',
+  },
+  modalSheet: {
+    backgroundColor: '#fff', borderTopLeftRadius: 16, borderTopRightRadius: 16,
+    maxHeight: '60%', paddingBottom: 24,
+  },
+  modalHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingVertical: 12,
+    borderBottomWidth: 1, borderColor: '#E5E7EB',
+  },
+  modalTitle:      { fontSize: 12, fontWeight: '700', color: '#111827' },
+  modalCloseBtn:   { minHeight: 44, minWidth: 44, alignItems: 'center', justifyContent: 'center' },
+  modalCloseLabel: { fontSize: 16, color: '#6B7280' },
+  farmOption: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingVertical: 12,
+    borderBottomWidth: 1, borderColor: '#E5E7EB', minHeight: 52,
+  },
+  farmOptionSelected: { backgroundColor: '#EAF4EE' },
+  farmOptionInfo:     { flex: 1 },
+  farmOptionName:     { fontSize: 11, fontWeight: '600', color: '#111827' },
+  farmOptionSub:      { fontSize: 9, color: '#6B7280', marginTop: 2 },
+  farmOptionCheck:    { fontSize: 14, color: '#1A6B3C', fontWeight: '700', marginLeft: 8 },
+  farmEmpty:          { padding: 20, alignItems: 'center' },
+  farmEmptyText:      { fontSize: 11, color: '#6B7280' },
 });

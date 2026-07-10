@@ -1,53 +1,61 @@
 import { apiFetch } from './client';
+import { useAuthStore } from '../stores/authStore';
 
-export interface PriceForecast {
+export type PriceTrend = 'rising' | 'falling' | 'stable';
+
+export interface PricePrediction {
   crop: string;
-  currentPriceKes: number;
-  forecastPriceKes: number;
-  changePercent: number;
-  trend: 'rising' | 'falling' | 'stable';
-  daysAhead: number;
-  confidence: number;
+  current_price_kes: number;
+  predicted_price_kes: number;
+  days_ahead: number;
+  confidence_low: number;
+  confidence_high: number;
+  trend: PriceTrend;
 }
 
-export interface YieldEstimate {
-  farmId: string;
+export interface YieldPrediction {
   crop: string;
-  estimatedYieldKg: number;
-  estimatedRevenueKes: number;
-  harvestWindowStart: string;
-  harvestWindowEnd: string;
-  confidence: number;
-}
-
-export interface HarvestTiming {
-  farmId: string;
-  plotId: string | null;
-  crop: string;
-  optimalHarvestDate: string;
-  windowStartDate: string;
-  windowEndDate: string;
-  rationale: string;
+  estimated_yield_kg: number;
+  based_on_seasons: number;
+  farm_area_acres: number;
 }
 
 export interface MarketSignal {
   crop: string;
-  supplyIndex: number;
-  demandIndex: number;
-  signal: 'sell_now' | 'hold' | 'buy_now';
-  rationale: string;
+  signal: PriceTrend;
+  change_pct: number;
+}
+
+export interface MarketSignalsResponse {
+  signals: MarketSignal[];
+}
+
+function buildQs(params: Record<string, string | number | undefined>): string {
+  const qs = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined) qs.set(k, String(v));
+  }
+  const s = qs.toString();
+  return s ? `?${s}` : '';
 }
 
 export const predictApi = {
-  prices: (crop: string, daysAhead: 30 | 60 | 90 = 30) =>
-    apiFetch<{ data: PriceForecast[] }>(`/predict/prices?crop=${encodeURIComponent(crop)}&days_ahead=${daysAhead}`),
+  // Server only has forecasts for 10 staple crops (maize, beans, wheat,
+  // rice, potatoes, tomatoes, sorghum, millet, cassava, groundnuts) —
+  // 404s for anything else, so callers should handle that as "unavailable".
+  priceForecast: (crop: string, daysAhead = 30) =>
+    apiFetch<PricePrediction>(`/predict/prices${buildQs({ crop, days_ahead: daysAhead })}`),
 
-  yield: () =>
-    apiFetch<{ data: YieldEstimate[] }>('/predict/yield'),
+  marketSignals: () => apiFetch<MarketSignalsResponse>('/predict/market-signals'),
 
-  harvestTiming: () =>
-    apiFetch<{ data: HarvestTiming[] }>('/predict/harvest-timing'),
-
-  marketSignals: () =>
-    apiFetch<{ data: MarketSignal[] }>('/predict/market-signals'),
+  // predict-service reads the caller's JWT from an `authorization` query
+  // param (not the Authorization header) to forward on to farm-service, so
+  // it has to be attached explicitly here rather than relying on apiFetch's
+  // usual header.
+  yieldEstimate: (farmId: string) => {
+    const token = useAuthStore.getState().token;
+    return apiFetch<YieldPrediction>(
+      `/predict/yield${buildQs({ farmId, authorization: token ? `Bearer ${token}` : undefined })}`,
+    );
+  },
 };

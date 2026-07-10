@@ -109,7 +109,7 @@ export function DashboardScreen() {
   }, [navigation]);
 
   const goToPriceAlerts = useCallback(() => {
-    navigation.navigate('Market', { screen: 'PriceAlerts' } as never);
+    navigation.navigate('Insights', { screen: 'Insights' } as never);
   }, [navigation]);
 
   const goToWizard = useCallback(() => {

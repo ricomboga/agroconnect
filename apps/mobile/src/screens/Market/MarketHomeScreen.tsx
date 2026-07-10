@@ -6,7 +6,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { MarketStackParamList } from '../../navigation/types';
 import { marketApi, type ProductCategory, type QualityGrade } from '../../api/market';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
-import { useCartStore } from '../../store/cart.store';
+import { useAuthStore } from '../../stores/authStore';
 import { OfflineBanner } from '../../components/Common/OfflineBanner';
 import { LoadingScreen } from '../../components/Common/LoadingScreen';
 import { ErrorScreen } from '../../components/Common/ErrorScreen';
@@ -37,12 +37,14 @@ const GRADE_CHIPS = [
 ] satisfies Array<{ value: '' | QualityGrade; key: string }>;
 
 const CATEGORY_CHIPS = [
-  { value: '' as const,              key: 'market.product.filter.all' },
-  { value: 'seeds' as const,         key: 'market.product.filter.seeds' },
-  { value: 'fertilisers' as const,   key: 'market.product.filter.fertilisers' },
-  { value: 'pesticides' as const,    key: 'market.product.filter.pesticides' },
-  { value: 'equipment' as const,     key: 'market.product.filter.equipment' },
-  { value: 'other' as const,         key: 'market.product.filter.other' },
+  { value: '' as const,           key: 'market.product.filter.all' },
+  { value: 'seed' as const,       key: 'market.product.filter.seed' },
+  { value: 'fertiliser' as const, key: 'market.product.filter.fertiliser' },
+  { value: 'pesticide' as const,  key: 'market.product.filter.pesticide' },
+  { value: 'herbicide' as const,  key: 'market.product.filter.herbicide' },
+  { value: 'equipment' as const,  key: 'market.product.filter.equipment' },
+  { value: 'veterinary' as const, key: 'market.product.filter.veterinary' },
+  { value: 'other' as const,      key: 'market.product.filter.other' },
 ] satisfies Array<{ value: '' | ProductCategory; key: string }>;
 
 // ── Filter chip row ───────────────────────────────────────────────────────────
@@ -89,10 +91,10 @@ function FilterChips<V extends string>({
 export function MarketHomeScreen({ navigation }: Props) {
   const { t } = useTranslation();
   const { isOnline } = useOfflineSync();
-  const { addItem, totalCount } = useCartStore();
-  const cartCount = totalCount();
+  const userId = useAuthStore((s) => s.user?.id);
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('sell');
+  const [showMineOnly, setShowMineOnly] = useState(false);
 
   // Sell-tab filters
   const [cropFilter, setCropFilter]   = useState('');
@@ -102,14 +104,15 @@ export function MarketHomeScreen({ navigation }: Props) {
   const [categoryFilter, setCategoryFilter] = useState<'' | ProductCategory>('');
 
   const listingsQuery = useQuery({
-    queryKey: ['market', 'listings', cropFilter, gradeFilter],
+    queryKey: ['market', 'listings', cropFilter, gradeFilter, showMineOnly, userId],
     queryFn: () =>
       marketApi.listings.list({
-        crop:  cropFilter  || undefined,
-        grade: (gradeFilter || undefined) as QualityGrade | undefined,
+        crop:     cropFilter || undefined,
+        grade:    (gradeFilter || undefined) as QualityGrade | undefined,
+        farmerId: showMineOnly ? userId : undefined,
       }),
     staleTime: isOnline ? 5 * 60 * 1000 : Infinity,
-    enabled: activeTab === 'sell',
+    enabled: activeTab === 'sell' && (!showMineOnly || !!userId),
   });
 
   const productsQuery = useQuery({
@@ -145,17 +148,42 @@ export function MarketHomeScreen({ navigation }: Props) {
       {/* ── Sell tab ───────────────────────────────────────────────────── */}
       {activeTab === 'sell' && (
         <View style={styles.flex}>
-          <FilterChips
-            chips={CROP_CHIPS}
-            selected={cropFilter}
-            onSelect={setCropFilter}
-          />
-          <FilterChips
-            chips={GRADE_CHIPS}
-            selected={gradeFilter}
-            onSelect={setGradeFilter}
-            gradeLabel
-          />
+          <View style={styles.mineToggleRow}>
+            <Pressable
+              style={[styles.mineToggle, !showMineOnly && styles.mineToggleActive]}
+              onPress={() => setShowMineOnly(false)}
+              accessibilityRole="tab"
+            >
+              <Text style={[styles.mineToggleText, !showMineOnly && styles.mineToggleTextActive]}>
+                {t('market.listing.browseAll')}
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[styles.mineToggle, showMineOnly && styles.mineToggleActive]}
+              onPress={() => setShowMineOnly(true)}
+              accessibilityRole="tab"
+            >
+              <Text style={[styles.mineToggleText, showMineOnly && styles.mineToggleTextActive]}>
+                {t('market.listing.myListings')}
+              </Text>
+            </Pressable>
+          </View>
+
+          {!showMineOnly && (
+            <>
+              <FilterChips
+                chips={CROP_CHIPS}
+                selected={cropFilter}
+                onSelect={setCropFilter}
+              />
+              <FilterChips
+                chips={GRADE_CHIPS}
+                selected={gradeFilter}
+                onSelect={setGradeFilter}
+                gradeLabel
+              />
+            </>
+          )}
 
           {listingsQuery.isLoading && <LoadingScreen />}
           {listingsQuery.isError && (
@@ -221,24 +249,14 @@ export function MarketHomeScreen({ navigation }: Props) {
                 renderItem={({ item }) => (
                   <SupplierProductCard
                     product={item}
-                    onAddToCart={() => addItem(item)}
+                    onPress={() =>
+                      navigation.navigate('SupplierProductDetail', { productId: item.id })
+                    }
                   />
                 )}
                 contentContainerStyle={styles.list}
               />
             )
-          )}
-
-          {cartCount > 0 && (
-            <Pressable
-              style={styles.cartFloating}
-              onPress={() => navigation.navigate('Cart')}
-              accessibilityRole="button"
-            >
-              <Text style={styles.cartFloatingText}>
-                {t('market.cart.floatingBtn', { count: cartCount })}
-              </Text>
-            </Pressable>
           )}
         </View>
       )}
@@ -284,21 +302,23 @@ const styles = StyleSheet.create({
 
   list: { paddingBottom: 80, paddingTop: 4 },
 
-  cartFloating: {
-    position: 'absolute',
-    bottom: 24,
-    left: 24,
-    right: 24,
-    backgroundColor: '#1565C0',
-    borderRadius: 12,
-    minHeight: 52,
+  mineToggleRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    gap: 8,
+  },
+  mineToggle: {
+    flex: 1,
+    minHeight: 36,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
   },
-  cartFloatingText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
+  mineToggleActive: { backgroundColor: '#E8F5E9', borderColor: '#2E7D32' },
+  mineToggleText: { fontSize: 13, color: '#555555', fontWeight: '500' },
+  mineToggleTextActive: { color: '#2E7D32', fontWeight: '700' },
 });

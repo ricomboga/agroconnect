@@ -212,6 +212,7 @@ function TopBar({
   onBack,
   onSwitchFarm,
   onAddActivity,
+  onEditFarm,
 }: {
   farm: Farm;
   allFarms: Farm[];
@@ -219,6 +220,7 @@ function TopBar({
   onBack: () => void;
   onSwitchFarm: (id: string) => void;
   onAddActivity: () => void;
+  onEditFarm: () => void;
 }) {
   const { t } = useTranslation();
   const [showSwitcher, setShowSwitcher] = useState(false);
@@ -233,7 +235,7 @@ function TopBar({
       },
       {
         text: t('farm.profile.menuEditFarm'),
-        onPress: () => { /* navigate to edit screen */ },
+        onPress: onEditFarm,
       },
     ];
     if (hasMultipleFarms) {
@@ -241,7 +243,7 @@ function TopBar({
     }
     options.push({ text: t('common.cancel'), style: 'cancel' });
     Alert.alert(farm.name, undefined, options);
-  }, [farm, hasMultipleFarms, t]);
+  }, [farm, hasMultipleFarms, onEditFarm, t]);
 
   // Back label: "← My Farms" on overview, "← [Farm Name]" on sub-tabs
   const backLabel = activeTab === 'overview'
@@ -1198,6 +1200,7 @@ export function FarmProfileScreen({ navigation, route }: Props) {
           onBack={handleBack}
           onSwitchFarm={(id) => { setFarmId(id); setActiveFarmId(id); }}
           onAddActivity={() => navigation.navigate('ActivityForm', { farmId })}
+          onEditFarm={() => navigation.navigate('EditFarmScreen', { farmId })}
         />
       )}
 

@@ -15,7 +15,9 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { InventoryItem } from '../../../hooks/useInventory';
 import { useRecordInputUsage } from '../../../hooks/useInventory';
+import { useFarmActivities } from '../../../hooks/useFarms';
 import { useOfflineSync } from '../../../hooks/useOfflineSync';
+import type { Activity } from '../../../api/activity';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -37,37 +39,6 @@ function barColor(pct: number): string {
   return '#1A6B3C';
 }
 
-// ── Linked activity options (matched by item category) ────────────────────────
-
-interface ActivityOption {
-  id: string;
-  label: string;
-  matchesCategory: (cat: string) => boolean;
-}
-
-const ACTIVITY_OPTIONS: ActivityOption[] = [
-  {
-    id: 'act-spray-maize',
-    label: 'Spray Maize (June 8)',
-    matchesCategory: (cat) => cat === 'pesticide' || cat === 'herbicide',
-  },
-  {
-    id: 'act-fertilise-maize',
-    label: 'Apply 2nd CAN Fertiliser (June 10)',
-    matchesCategory: (cat) => cat === 'fertiliser',
-  },
-  {
-    id: 'act-weed-beans',
-    label: 'Weed Bean crop (July 13)',
-    matchesCategory: (cat) => cat === 'herbicide',
-  },
-  {
-    id: 'act-newcastle',
-    label: 'Newcastle Vaccine — 50 chickens (overdue)',
-    matchesCategory: (cat) => cat === 'vaccine' || cat === 'animal_medicine',
-  },
-];
-
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -81,6 +52,7 @@ export function RecordInputUseModal({ item, onClose, onSuccess, onFindSupplier }
   const { t }                   = useTranslation();
   const { isOnline, queueWrite } = useOfflineSync();
   const mutation                 = useRecordInputUsage();
+  const activitiesQuery          = useFarmActivities(item.farmId, { status: 'pending' });
 
   // ── State ──────────────────────────────────────────────────────────────────
 
@@ -121,7 +93,7 @@ export function RecordInputUseModal({ item, onClose, onSuccess, onFindSupplier }
   const newRemaining  = Math.max(0, item.remainingQty - safeQty);
   const totalQty      = item.totalPurchasedQty > 0 ? item.totalPurchasedQty : item.purchasedQty;
   const newPct        = totalQty > 0 ? (newRemaining / totalQty) * 100 : 0;
-  const relevantActivities = ACTIVITY_OPTIONS.filter((a) => a.matchesCategory(item.category));
+  const relevantActivities: Activity[] = activitiesQuery.data?.data ?? [];
   const isToday = usedDate.toDateString() === new Date().toDateString();
 
   // ── Qty stepper ────────────────────────────────────────────────────────────
@@ -340,7 +312,9 @@ export function RecordInputUseModal({ item, onClose, onSuccess, onFindSupplier }
                         accessibilityState={{ checked: selected }}
                       >
                         <View style={[s.radio, selected && s.radioActive]} />
-                        <Text style={s.activityText}>{act.label}</Text>
+                        <Text style={s.activityText}>
+                          {act.title} ({formatDate(new Date(act.scheduledDate))})
+                        </Text>
                       </Pressable>
                     );
                   })}

@@ -8,32 +8,31 @@ import {
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { DiagnoseStackParamList } from '../../navigation/types';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
+import { useFarmStore } from '../../store/farm.store';
+import { diagnoseApi, type DiagnosisResult } from '../../api/diagnose';
 
 type Props = NativeStackScreenProps<DiagnoseStackParamList, 'DiagnosisHome'>;
 
-interface HistoryItem {
-  id: string;
-  emoji: string;
-  cropName: string;
-  diseaseName: string;
-  date: string;
-  resolved: boolean;
-  confidence: number;
+function subjectEmoji(subjectType: string): string {
+  return subjectType === 'animal' ? '🐄' : '🌱';
 }
-
-// Test data — Jane Wanjiru, June 2025. Replace with GET /diagnose/history once endpoint exists.
-const HISTORY: HistoryItem[] = [
-  { id: '1', emoji: '🌽', cropName: 'Maize',   diseaseName: 'Grey Leaf Spot', date: 'Jun 3',  resolved: true,  confidence: 88 },
-  { id: '2', emoji: '🥬', cropName: 'Cabbage', diseaseName: 'Downy Mildew',   date: 'May 20', resolved: false, confidence: 74 },
-];
 
 export function DiagnosisHomeScreen({ navigation }: Props) {
   const { t } = useTranslation();
   const { isOnline } = useOfflineSync();
+  const activeFarmId = useFarmStore((s) => s.activeFarmId);
+
+  const historyQuery = useQuery({
+    queryKey: ['diagnose', 'history', activeFarmId],
+    queryFn: () => diagnoseApi.listByFarm(activeFarmId as string),
+    enabled: !!activeFarmId,
+  });
+  const history: DiagnosisResult[] = historyQuery.data?.data ?? [];
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['top']}>
@@ -108,36 +107,46 @@ export function DiagnosisHomeScreen({ navigation }: Props) {
 
         <Text style={s.sectionHeader}>{t('diagnose.home.sectionHistory')}</Text>
 
-        {HISTORY.length === 0 ? (
+        {history.length === 0 ? (
           <View style={s.emptyWrap}>
             <Text style={s.emptyTitle}>{t('diagnose.home.history.empty.title')}</Text>
             <Text style={s.emptyBody}>{t('diagnose.home.history.empty.body')}</Text>
           </View>
         ) : (
-          HISTORY.map((item) => (
-            <View key={item.id} style={s.historyRow}>
-              <Text style={{ fontSize: 20 }}>{item.emoji}</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={s.historyTitle}>{item.cropName} — {item.diseaseName}</Text>
-                <Text style={s.historyMeta}>
-                  {item.date} · {item.resolved
-                    ? t('diagnose.home.historyItem.resolved')
-                    : t('diagnose.home.historyItem.pending')}
-                </Text>
+          history.map((item) => {
+            const resolved = item.status === 'completed';
+            const diseaseName = item.diagnosis?.disease_name ?? t('diagnose.home.historyItem.processing');
+            const date = new Date(item.created_at).toLocaleDateString(undefined, {
+              month: 'short',
+              day: 'numeric',
+            });
+            return (
+              <View key={item.id} style={s.historyRow}>
+                <Text style={{ fontSize: 20 }}>{subjectEmoji(item.subject.type)}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.historyTitle}>{item.subject.name} — {diseaseName}</Text>
+                  <Text style={s.historyMeta}>
+                    {date} · {resolved
+                      ? t('diagnose.home.historyItem.resolved')
+                      : t('diagnose.home.historyItem.pending')}
+                  </Text>
+                </View>
+                {item.diagnosis && (
+                  <View style={[
+                    s.confBadge,
+                    { backgroundColor: item.diagnosis.confidence >= 80 ? '#EAF4EE' : '#FEF3C7' },
+                  ]}>
+                    <Text style={[
+                      s.confText,
+                      { color: item.diagnosis.confidence >= 80 ? '#0D4A28' : '#92400E' },
+                    ]}>
+                      {t('diagnose.home.historyItem.confidence', { pct: item.diagnosis.confidence })}
+                    </Text>
+                  </View>
+                )}
               </View>
-              <View style={[
-                s.confBadge,
-                { backgroundColor: item.confidence >= 80 ? '#EAF4EE' : '#FEF3C7' },
-              ]}>
-                <Text style={[
-                  s.confText,
-                  { color: item.confidence >= 80 ? '#0D4A28' : '#92400E' },
-                ]}>
-                  {t('diagnose.home.historyItem.confidence', { pct: item.confidence })}
-                </Text>
-              </View>
-            </View>
-          ))
+            );
+          })
         )}
       </ScrollView>
     </SafeAreaView>

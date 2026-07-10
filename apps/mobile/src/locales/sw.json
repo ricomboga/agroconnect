@@ -401,6 +401,38 @@
         "overdue": "Imechelewa"
       }
     },
+    "editFarm": {
+      "title": "Hariri Shamba",
+      "nameLabel": "Jina la Shamba",
+      "namePlaceholder": "mfano Shamba la Chai la Kamau",
+      "countyLabel": "Kaunti",
+      "countyPlaceholder": "Chagua kaunti…",
+      "countyPickerTitle": "Chagua Kaunti",
+      "subCountyLabel": "Kaunti Ndogo",
+      "subCountyPlaceholder": "mfano Limuru",
+      "areaLabel": "Eneo (ekari)",
+      "areaPlaceholder": "0",
+      "soilLabel": "Aina ya Udongo",
+      "soil": {
+        "clay": "Udongo mfinyanzi",
+        "loam": "Tifutifu",
+        "sandy": "Kichanga",
+        "silty": "Tope",
+        "peaty": "Mboji",
+        "chalky": "Chokaa"
+      },
+      "waterLabel": "Chanzo cha Maji",
+      "water": {
+        "rain": "Mvua",
+        "irrigation": "Umwagiliaji",
+        "borehole": "Kisima",
+        "river": "Mto",
+        "mixed": "Mchanganyiko"
+      },
+      "saveBtn": "Hifadhi Mabadiliko",
+      "saving": "Inahifadhi…",
+      "successToast": "Maelezo ya shamba yamesasishwa"
+    },
     "care": {
       "title": "Kadi za Utunzaji za AI",
       "careSuffix": "Utunzaji",
@@ -875,7 +907,8 @@
       "historyItem": {
         "confidence": "{{pct}}%",
         "resolved": "Imepona",
-        "pending": "Inasubiri"
+        "pending": "Inasubiri",
+        "processing": "Inachanganua…"
       }
     },
     "input": {
@@ -968,6 +1001,8 @@
     "listing": {
       "title": "Orodha ya mazao",
       "createBtn": "Ongeza orodha",
+      "browseAll": "Wakulima Wote",
+      "myListings": "Orodha Zangu",
       "filter": {
         "allCrops": "Mazao yote",
         "allGrades": "Daraja yote",
@@ -992,108 +1027,86 @@
         "body": "Kuwa wa kwanza kuuza mazao yako hapa",
         "cta": "Ongeza orodha"
       },
+      "status": {
+        "active": "Inapatikana",
+        "sold": "Imeuzwa",
+        "expired": "Imeisha muda",
+        "withdrawn": "Imeondolewa"
+      },
       "detail": {
-        "title": "Maelezo ya orodha",
-        "contact": "Wasiliana na Mkulima",
-        "report": "Ripoti orodha hii",
-        "priceHistory": "Historia ya bei (siku 30)",
-        "description": "Maelezo",
-        "noPhotos": "Hakuna picha",
-        "sellerInfo": "Taarifa za muuzaji",
-        "contactModal": {
-          "title": "Mawasiliano ya mkulima",
-          "phone": "Nambari ya simu",
-          "close": "Funga",
-          "loginRequired": "Ingia kwanza ili kuwasiliana na mkulima",
-          "loginBtn": "Ingia"
-        }
+        "locationLabel": "Mahali",
+        "availabilityLabel": "Upatikanaji",
+        "availabilityRange": "{{from}} hadi {{until}}",
+        "viewsLabel": "Miwani",
+        "forecastLabel": "Utabiri wa Bei ya Soko",
+        "withdrawBtn": "Ondoa Orodha",
+        "withdrawing": "Inaondoa…",
+        "withdrawConfirmTitle": "Ondoa orodha hii?",
+        "withdrawConfirmBody": "Wanunuzi hawataweza tena kuiona au kuwasiliana nawe kuihusu."
       },
       "create": {
-        "title": "Ongeza orodha",
-        "crop": "Jina la zao",
-        "variety": "Aina (hiari)",
-        "quantity": "Kiasi (kg)",
-        "pricePerKg": "Bei (KES/kg)",
-        "grade": "Daraja (hiari)",
-        "county": "Kaunti",
-        "availableFrom": "Inapatikana kuanzia",
-        "availableTo": "Inapatikana hadi (hiari)",
-        "description": "Maelezo (hiari)",
-        "linkHarvest": "Unganisha na mavuno (hiari)",
-        "noHarvest": "Bila mavuno",
-        "addPhotos": "Ongeza picha (hadi 3)",
-        "save": "Chapisha orodha",
-        "success": "Orodha imechapishwa vizuri!"
+        "title": "Ongeza Orodha",
+        "farmLabel": "Shamba",
+        "farmPlaceholder": "Chagua shamba…",
+        "farmPickerTitle": "Chagua Shamba",
+        "cropLabel": "Zao",
+        "cropPlaceholder": "mfano Mahindi",
+        "varietyLabel": "Aina (hiari)",
+        "varietyPlaceholder": "mfano H614",
+        "qtyLabel": "Kiasi (kg)",
+        "priceLabel": "Bei Unayotaka (KES/kg)",
+        "gradeLabel": "Daraja la Ubora",
+        "availableFromLabel": "Inapatikana Kuanzia",
+        "availableUntilLabel": "Inapatikana Hadi",
+        "countyLabel": "Kaunti",
+        "countyPlaceholder": "Chagua kaunti…",
+        "countyPickerTitle": "Chagua Kaunti",
+        "locationDescLabel": "Maelezo ya kuchukulia (hiari)",
+        "locationDescPlaceholder": "mfano Getini ya shamba, karibu na barabara kuu",
+        "saveBtn": "Chapisha Orodha",
+        "saving": "Inachapisha…",
+        "successToast": "Orodha imechapishwa"
       }
     },
     "product": {
       "title": "Bidhaa za wasambazaji",
       "filter": {
         "all": "Zote",
-        "seeds": "Mbegu",
-        "fertilisers": "Mbolea",
-        "pesticides": "Dawa",
+        "seed": "Mbegu",
+        "fertiliser": "Mbolea",
+        "pesticide": "Dawa za Wadudu",
+        "herbicide": "Dawa za Magugu",
         "equipment": "Zana",
+        "veterinary": "Dawa za Mifugo",
         "other": "Nyingine"
-      },
-      "card": {
-        "by": "Na {{name}}",
-        "addToCart": "Weka kikapuni"
       },
       "stock": {
         "in_stock": "Inapatikana",
-        "low_stock": "Inakwisha",
         "out_of_stock": "Haipatikani"
       },
       "empty": {
         "title": "Hakuna bidhaa kwa sasa",
         "body": "Bidhaa mpya za wasambazaji zitaonekana hapa",
         "cta": "Jaribu tena"
-      }
-    },
-    "cart": {
-      "title": "Kikapu changu",
-      "floatingBtn": "Kikapu · {{count}}",
-      "item": {
-        "qty": "Idadi",
-        "remove": "Ondoa"
       },
-      "total": "Jumla",
-      "checkout": "Endelea kulipa",
-      "empty": {
-        "title": "Kikapu chako ni tupu",
-        "body": "Ongeza bidhaa kutoka soko",
-        "cta": "Endelea kununua"
-      }
-    },
-    "checkout": {
-      "title": "Thibitisha order",
-      "orderSummary": "Muhtasari wa order",
-      "mpesaPhone": "Nambari ya M-Pesa",
-      "confirm": "Lipa KES {{amount}}",
-      "processing": "Inachakata...",
-      "stkPush": "Angalia simu yako kwa ombi la M-Pesa",
-      "success": "Malipo yamefanikiwa!"
-    },
-    "priceAlerts": {
-      "title": "Arifa za Bei",
-      "addAlert": "Ongeza arifa",
-      "crop": "Zao",
-      "targetPrice": "Bei unayotaka (KES/kg)",
-      "currentPrice": "Bei ya sasa",
-      "trend": {
-        "up": "↑",
-        "down": "↓",
-        "stable": "→"
-      },
-      "save": "Hifadhi arifa",
-      "saving": "Inahifadhi...",
-      "success": "Arifa imeongezwa!",
-      "enabled": "Arifa imewashwa",
-      "disabled": "Arifa imezimwa",
-      "empty": {
-        "title": "Hakuna arifa za bei",
-        "body": "Ongeza arifa upate taarifa za bei za mazao"
+      "detail": {
+        "descriptionLabel": "Maelezo",
+        "availabilityLabel": "Upatikanaji",
+        "inStock": "{{qty}} {{unit}} zinapatikana",
+        "outOfStock": "Haipatikani",
+        "supplierLabel": "Msambazaji",
+        "callBtn": "📞 Piga {{phone}}",
+        "supplierUnavailable": "Mawasiliano ya msambazaji hayapatikani",
+        "orderLabel": "Tuma Ombi la Order",
+        "qtyLabel": "Kiasi ({{unit}})",
+        "deliveryLabel": "Anwani ya Kuletewa",
+        "deliveryPlaceholder": "mfano Kiambu Mjini, karibu na soko",
+        "notesLabel": "Maelezo (hiari)",
+        "notesPlaceholder": "Chochote msambazaji anafaa kujua",
+        "sendOrderBtn": "Tuma Order",
+        "sending": "Inatuma…",
+        "orderSent": "Order imetumwa! Msambazaji atakuwasiliana kupanga uletaji na malipo.",
+        "orderError": "Imeshindikana kutuma order. Tafadhali jaribu tena."
       }
     }
   },
@@ -1438,6 +1451,11 @@
     "experts": {
       "title": "Tafuta Mtaalamu",
       "filterAll": "Wataalamu Wote",
+      "matchedOn": {
+        "subCounty": "Inaonyesha wataalamu katika kata yako ndogo",
+        "county": "Hakuna wataalamu katika kata yako ndogo — inaonyesha {{county}} yote",
+        "region": "Hakuna wataalamu {{county}} — inaonyesha kaunti za jirani"
+      },
       "empty": {
         "title": "Hakuna wataalamu bado",
         "body": "Washauri wa kilimo na mifugo wataonekana hapa."
@@ -1451,6 +1469,11 @@
       "about": "Kuhusu",
       "categories": "Bidhaa",
       "address": "Anwani",
+      "matchedOn": {
+        "subCounty": "Inaonyesha wauzaji katika kata yako ndogo",
+        "county": "Hakuna wauzaji katika kata yako ndogo — inaonyesha {{county}} yote",
+        "region": "Hakuna wauzaji {{county}} — inaonyesha kaunti za jirani"
+      },
       "empty": {
         "title": "Hakuna wauzaji bado",
         "body": "Maduka ya pembejeo na wauzaji katika eneo lako watatokea hapa."
@@ -1571,13 +1594,21 @@
   "insights": {
     "title": "Maarifa ya Soko",
     "signals": "Ishara za Soko",
-    "yield": "Matarajio ya Mavuno",
+    "yield": "Makadirio ya Mavuno",
     "prices": "Utabiri wa Bei",
-    "signal": {
-      "sell_now": "Uza Sasa",
-      "hold": "Subiri",
-      "buy_now": "Nunua Sasa"
+    "trend": {
+      "rising": "Inapanda",
+      "falling": "Inashuka",
+      "stable": "Thabiti"
     },
+    "vsLastMonth": "ikilinganishwa na mwezi uliopita",
+    "noFarm": "Chagua shamba ili kuona makadirio ya mavuno",
+    "yieldLabel": "Mavuno Yanayokadiriwa",
+    "acresLabel": "Ekari",
+    "basedOnSeasons": "Kutokana na msimu {{count}} uliopita",
+    "basedOnSeasons_other": "Kutokana na misimu {{count}} iliyopita",
+    "forecastIn": "Utabiri wa siku {{days}}",
+    "forecastValue": "Utabiri: KES {{price}} / kg",
     "empty": "Hakuna data ya utabiri"
   },
   "harvest": {

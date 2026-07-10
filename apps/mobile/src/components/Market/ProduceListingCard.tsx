@@ -12,11 +12,12 @@ const GRADE_COLORS: Record<QualityGrade, { bg: string; text: string }> = {
   A: { bg: '#E8F5E9', text: '#1B5E20' },
   B: { bg: '#FFF9C4', text: '#F57F17' },
   C: { bg: '#FBE9E7', text: '#BF360C' },
+  reject: { bg: '#FFEBEE', text: '#C62828' },
 };
 
 export function ProduceListingCard({ listing, onPress }: ProduceListingCardProps) {
   const { t } = useTranslation();
-  const gradeColor = listing.qualityGrade ? GRADE_COLORS[listing.qualityGrade] : null;
+  const gradeColor = GRADE_COLORS[listing.qualityGrade];
 
   return (
     <Pressable style={styles.card} onPress={onPress} accessibilityRole="button">
@@ -25,32 +26,28 @@ export function ProduceListingCard({ listing, onPress }: ProduceListingCardProps
           {listing.crop}
           {listing.variety ? ` · ${listing.variety}` : ''}
         </Text>
-        {gradeColor && listing.qualityGrade && (
-          <View style={[styles.gradeBadge, { backgroundColor: gradeColor.bg }]}>
-            <Text style={[styles.gradeText, { color: gradeColor.text }]}>
-              {t('market.listing.card.grade', { grade: listing.qualityGrade })}
-            </Text>
-          </View>
-        )}
+        <View style={[styles.gradeBadge, { backgroundColor: gradeColor.bg }]}>
+          <Text style={[styles.gradeText, { color: gradeColor.text }]}>
+            {t('market.listing.card.grade', { grade: listing.qualityGrade })}
+          </Text>
+        </View>
       </View>
 
       <View style={styles.midRow}>
         <Text style={styles.price}>
-          {t('market.listing.card.pricePerKg', { price: (listing.pricePerKg ?? 0).toLocaleString() })}
+          {t('market.listing.card.pricePerKg', { price: listing.askingPriceKes.toLocaleString() })}
         </Text>
         <Text style={styles.qty}>
-          {t('market.listing.card.quantityKg', { quantity: (listing.quantityKg ?? 0).toLocaleString() })}
+          {t('market.listing.card.quantityKg', { quantity: listing.quantityKg.toLocaleString() })}
         </Text>
       </View>
 
       <View style={styles.bottomRow}>
-        <Text style={styles.meta}>{listing.county}</Text>
+        <Text style={styles.meta}>{listing.locationCounty}</Text>
         <Text style={styles.meta}>
           {t('market.listing.card.availableFrom', { date: listing.availableFrom })}
         </Text>
       </View>
-
-      <Text style={styles.farmer}>{listing.farmerName}</Text>
     </Pressable>
   );
 }
@@ -113,10 +110,5 @@ const styles = StyleSheet.create({
   meta: {
     fontSize: 12,
     color: '#9E9E9E',
-  },
-  farmer: {
-    fontSize: 12,
-    color: '#757575',
-    fontStyle: 'italic',
   },
 });

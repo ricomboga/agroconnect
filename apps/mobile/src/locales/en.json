@@ -401,6 +401,38 @@
         "overdue": "Overdue"
       }
     },
+    "editFarm": {
+      "title": "Edit Farm",
+      "nameLabel": "Farm Name",
+      "namePlaceholder": "e.g. Kamau Tea Farm",
+      "countyLabel": "County",
+      "countyPlaceholder": "Select county…",
+      "countyPickerTitle": "Select County",
+      "subCountyLabel": "Sub-county",
+      "subCountyPlaceholder": "e.g. Limuru",
+      "areaLabel": "Area (acres)",
+      "areaPlaceholder": "0",
+      "soilLabel": "Soil Type",
+      "soil": {
+        "clay": "Clay",
+        "loam": "Loam",
+        "sandy": "Sandy",
+        "silty": "Silty",
+        "peaty": "Peaty",
+        "chalky": "Chalky"
+      },
+      "waterLabel": "Water Source",
+      "water": {
+        "rain": "Rain-fed",
+        "irrigation": "Irrigation",
+        "borehole": "Borehole",
+        "river": "River",
+        "mixed": "Mixed"
+      },
+      "saveBtn": "Save Changes",
+      "saving": "Saving…",
+      "successToast": "Farm details updated"
+    },
     "care": {
       "title": "AI Care Cards",
       "careSuffix": "Care",
@@ -875,7 +907,8 @@
       "historyItem": {
         "confidence": "{{pct}}%",
         "resolved": "Resolved",
-        "pending": "Pending"
+        "pending": "Pending",
+        "processing": "Analysing…"
       }
     },
     "input": {
@@ -968,6 +1001,8 @@
     "listing": {
       "title": "Produce listings",
       "createBtn": "Add listing",
+      "browseAll": "All Farmers",
+      "myListings": "My Listings",
       "filter": {
         "allCrops": "All crops",
         "allGrades": "All grades",
@@ -992,108 +1027,86 @@
         "body": "Be the first to sell your produce here",
         "cta": "Add listing"
       },
+      "status": {
+        "active": "Active",
+        "sold": "Sold",
+        "expired": "Expired",
+        "withdrawn": "Withdrawn"
+      },
       "detail": {
-        "title": "Listing details",
-        "contact": "Contact Farmer",
-        "report": "Report this listing",
-        "priceHistory": "Price history (30 days)",
-        "description": "Description",
-        "noPhotos": "No photos",
-        "sellerInfo": "Seller info",
-        "contactModal": {
-          "title": "Farmer contact",
-          "phone": "Phone number",
-          "close": "Close",
-          "loginRequired": "Sign in first to contact the farmer",
-          "loginBtn": "Sign in"
-        }
+        "locationLabel": "Location",
+        "availabilityLabel": "Availability",
+        "availabilityRange": "{{from}} to {{until}}",
+        "viewsLabel": "Views",
+        "forecastLabel": "Market Price Forecast",
+        "withdrawBtn": "Withdraw Listing",
+        "withdrawing": "Withdrawing…",
+        "withdrawConfirmTitle": "Withdraw this listing?",
+        "withdrawConfirmBody": "Buyers will no longer be able to see or contact you about it."
       },
       "create": {
-        "title": "Add listing",
-        "crop": "Crop name",
-        "variety": "Variety (optional)",
-        "quantity": "Quantity (kg)",
-        "pricePerKg": "Price (KES/kg)",
-        "grade": "Grade (optional)",
-        "county": "County",
-        "availableFrom": "Available from",
-        "availableTo": "Available until (optional)",
-        "description": "Description (optional)",
-        "linkHarvest": "Link to harvest (optional)",
-        "noHarvest": "No harvest link",
-        "addPhotos": "Add photos (up to 3)",
-        "save": "Publish listing",
-        "success": "Listing published successfully!"
+        "title": "Add Listing",
+        "farmLabel": "Farm",
+        "farmPlaceholder": "Select farm…",
+        "farmPickerTitle": "Select Farm",
+        "cropLabel": "Crop",
+        "cropPlaceholder": "e.g. Maize",
+        "varietyLabel": "Variety (optional)",
+        "varietyPlaceholder": "e.g. H614",
+        "qtyLabel": "Quantity (kg)",
+        "priceLabel": "Asking Price (KES/kg)",
+        "gradeLabel": "Quality Grade",
+        "availableFromLabel": "Available From",
+        "availableUntilLabel": "Available Until",
+        "countyLabel": "County",
+        "countyPlaceholder": "Select county…",
+        "countyPickerTitle": "Select County",
+        "locationDescLabel": "Pickup details (optional)",
+        "locationDescPlaceholder": "e.g. Farm gate, near the main road",
+        "saveBtn": "Publish Listing",
+        "saving": "Publishing…",
+        "successToast": "Listing published"
       }
     },
     "product": {
       "title": "Supplier products",
       "filter": {
         "all": "All",
-        "seeds": "Seeds",
-        "fertilisers": "Fertilisers",
-        "pesticides": "Pesticides",
+        "seed": "Seeds",
+        "fertiliser": "Fertilisers",
+        "pesticide": "Pesticides",
+        "herbicide": "Herbicides",
         "equipment": "Equipment",
+        "veterinary": "Veterinary",
         "other": "Other"
-      },
-      "card": {
-        "by": "By {{name}}",
-        "addToCart": "Add to cart"
       },
       "stock": {
         "in_stock": "In stock",
-        "low_stock": "Low stock",
         "out_of_stock": "Out of stock"
       },
       "empty": {
         "title": "No products yet",
         "body": "Supplier products will appear here",
         "cta": "Try again"
-      }
-    },
-    "cart": {
-      "title": "My cart",
-      "floatingBtn": "Cart · {{count}}",
-      "item": {
-        "qty": "Qty",
-        "remove": "Remove"
       },
-      "total": "Total",
-      "checkout": "Proceed to checkout",
-      "empty": {
-        "title": "Your cart is empty",
-        "body": "Add products from the market",
-        "cta": "Continue shopping"
-      }
-    },
-    "checkout": {
-      "title": "Confirm order",
-      "orderSummary": "Order summary",
-      "mpesaPhone": "M-Pesa number",
-      "confirm": "Pay KES {{amount}}",
-      "processing": "Processing...",
-      "stkPush": "Check your phone for the M-Pesa prompt",
-      "success": "Payment successful!"
-    },
-    "priceAlerts": {
-      "title": "Price Alerts",
-      "addAlert": "Add alert",
-      "crop": "Crop",
-      "targetPrice": "Target price (KES/kg)",
-      "currentPrice": "Current price",
-      "trend": {
-        "up": "↑",
-        "down": "↓",
-        "stable": "→"
-      },
-      "save": "Save alert",
-      "saving": "Saving...",
-      "success": "Alert added!",
-      "enabled": "Alert is active",
-      "disabled": "Alert is paused",
-      "empty": {
-        "title": "No price alerts",
-        "body": "Add an alert to track crop price changes"
+      "detail": {
+        "descriptionLabel": "Description",
+        "availabilityLabel": "Availability",
+        "inStock": "{{qty}} {{unit}} in stock",
+        "outOfStock": "Out of stock",
+        "supplierLabel": "Supplier",
+        "callBtn": "📞 Call {{phone}}",
+        "supplierUnavailable": "Supplier contact unavailable",
+        "orderLabel": "Send Order Request",
+        "qtyLabel": "Quantity ({{unit}})",
+        "deliveryLabel": "Delivery Address",
+        "deliveryPlaceholder": "e.g. Kiambu Town, near the market",
+        "notesLabel": "Notes (optional)",
+        "notesPlaceholder": "Anything the supplier should know",
+        "sendOrderBtn": "Send Order",
+        "sending": "Sending…",
+        "orderSent": "Order sent! The supplier will contact you to arrange delivery and payment.",
+        "orderError": "Could not send the order. Please try again."
       }
     }
   },
@@ -1438,6 +1451,11 @@
     "experts": {
       "title": "Find an Expert",
       "filterAll": "All Experts",
+      "matchedOn": {
+        "subCounty": "Showing experts in your sub-county",
+        "county": "No experts in your sub-county — showing all of {{county}}",
+        "region": "No experts in {{county}} — showing nearby counties"
+      },
       "empty": {
         "title": "No experts yet",
         "body": "Extension officers and agronomists will appear here."
@@ -1451,6 +1469,11 @@
       "about": "About",
       "categories": "Products",
       "address": "Address",
+      "matchedOn": {
+        "subCounty": "Showing suppliers in your sub-county",
+        "county": "No suppliers in your sub-county — showing all of {{county}}",
+        "region": "No suppliers in {{county}} — showing nearby counties"
+      },
       "empty": {
         "title": "No suppliers yet",
         "body": "Agrovets and suppliers in your area will appear here."
@@ -1571,13 +1594,21 @@
   "insights": {
     "title": "Market Insights",
     "signals": "Market Signals",
-    "yield": "Yield Estimates",
+    "yield": "Yield Estimate",
     "prices": "Price Forecast",
-    "signal": {
-      "sell_now": "Sell Now",
-      "hold": "Hold",
-      "buy_now": "Buy Now"
+    "trend": {
+      "rising": "Rising",
+      "falling": "Falling",
+      "stable": "Stable"
     },
+    "vsLastMonth": "vs last month",
+    "noFarm": "Select a farm to see a yield estimate",
+    "yieldLabel": "Estimated Yield",
+    "acresLabel": "Acres",
+    "basedOnSeasons": "Based on {{count}} past season",
+    "basedOnSeasons_other": "Based on {{count}} past seasons",
+    "forecastIn": "{{days}}-day forecast",
+    "forecastValue": "Forecast: KES {{price}} / kg",
     "empty": "No forecast data available"
   },
   "harvest": {

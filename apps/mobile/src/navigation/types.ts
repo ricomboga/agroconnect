@@ -30,6 +30,7 @@ export type AppTabParamList = {
 export type FarmStackParamList = {
   FarmList:        undefined;
   FarmProfile:     { farmId: string; initialTab?: 'overview' | 'my_tasks' | 'workers' };
+  EditFarmScreen:  { farmId: string };
   AddCropScreen:   { farmId: string };
   AddAnimalScreen: { farmId: string };
   AddWorkerScreen: { farmId: string };
@@ -48,15 +49,14 @@ export type DiagnoseStackParamList = {
   DiagnosisInput:  { mode: 'text' | 'photo' | 'both' };
   DiagnosisResult: { diagnosisId: string; farmId?: string };
   SupplierProducts: { productName: string };
+  SupplierProductDetail: { productId: string };
 };
 
 export type MarketStackParamList = {
   MarketHome:             undefined;
   ProduceListingDetail:   { listingId: string };
   CreateListing:          undefined;
-  Cart:                   undefined;
-  Checkout:               undefined;
-  PriceAlerts:            undefined;
+  SupplierProductDetail:  { productId: string };
 };
 
 export type FinanceStackParamList = {

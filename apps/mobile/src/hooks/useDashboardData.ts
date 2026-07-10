@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { farmApi, type Farm } from '../api/farm';
 import { activityApi, type Activity } from '../api/activity';
 import { financeApi, type LoanApplication, type Transaction } from '../api/finance';
-import { priceAlertsApi, type PriceAlert } from '../api/marketPriceAlerts';
+import { predictApi, type MarketSignal } from '../api/predict';
 import { useOfflineSync } from './useOfflineSync';
 import type { MonthBar } from '../components/Dashboard/FinanceSnapshotCard';
 
@@ -125,11 +125,23 @@ export function useDashboardData(): DashboardData {
     staleTime: staleMs,
   });
 
-  const priceAlertsQ = useQuery({
-    queryKey: ['priceAlerts'],
-    queryFn: () => priceAlertsApi.list(),
+  const marketSignalsQ = useQuery({
+    queryKey: ['predict', 'marketSignals'],
+    queryFn: () => predictApi.marketSignals(),
     enabled: hasData,
     staleTime: staleMs,
+  });
+
+  const topSignal = (marketSignalsQ.data?.signals ?? [])
+    .filter((sig: MarketSignal) => sig.signal !== 'stable')
+    .sort((a: MarketSignal, b: MarketSignal) => Math.abs(b.change_pct) - Math.abs(a.change_pct))[0];
+
+  const topSignalPriceQ = useQuery({
+    queryKey: ['predict', 'prices', topSignal?.crop],
+    queryFn: () => predictApi.priceForecast(topSignal!.crop, 30),
+    enabled: !!topSignal,
+    staleTime: staleMs,
+    retry: false,
   });
 
   const transactionsQ = useQuery({
@@ -174,22 +186,15 @@ export function useDashboardData(): DashboardData {
       })()
     : null;
 
-  const priceAlerts: PriceAlert[] = priceAlertsQ.data?.data ?? [];
-  const topPriceAlert: TopPriceAlert | null = (() => {
-    const rising = priceAlerts
-      .filter((a: PriceAlert) => a.trend === 'up' && a.currentPriceKes != null && a.enabled)
-      .map((a: PriceAlert) => ({
-        crop: a.crop,
-        priceKes: a.currentPriceKes!,
-        changePct: Math.round(
-          ((a.currentPriceKes! - a.targetPriceKes) / a.targetPriceKes) * 100,
-        ),
-        direction: 'up' as const,
-      }))
-      .filter((a: { changePct: number }) => a.changePct >= 10)
-      .sort((a: { changePct: number }, b: { changePct: number }) => b.changePct - a.changePct);
-    return rising[0] ?? null;
-  })();
+  const topPriceAlert: TopPriceAlert | null =
+    topSignal && topSignalPriceQ.data
+      ? {
+          crop: topSignal.crop,
+          priceKes: topSignalPriceQ.data.current_price_kes,
+          changePct: Math.round(topSignal.change_pct),
+          direction: topSignal.signal === 'rising' ? 'up' : 'down',
+        }
+      : null;
 
   const isLoading =
     farmsQ.isLoading ||
@@ -207,7 +212,7 @@ export function useDashboardData(): DashboardData {
     if (hasData) {
       void creditQ.refetch();
       void loansQ.refetch();
-      void priceAlertsQ.refetch();
+      void marketSignalsQ.refetch();
       void transactionsQ.refetch();
     }
   };

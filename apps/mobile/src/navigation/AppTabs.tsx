@@ -13,10 +13,13 @@ import type { AppTabParamList } from './types';
 import { DashboardScreen } from '../screens/Dashboard/DashboardScreen';
 import { FarmStackNavigator } from './FarmStackNavigator';
 import { DiagnoseStack } from './stacks/DiagnoseStack';
+import { MarketStack } from './stacks/MarketStack';
 import { FinanceStack } from './stacks/FinanceStack';
 import { CommunityStack } from './stacks/CommunityStack';
 import { ProfileStack } from './stacks/ProfileStack';
 import { InventoryStack } from './stacks/InventoryStack';
+import { GovtStack } from './stacks/GovtStack';
+import { InsightsStack } from './stacks/InsightsStack';
 import { useAuthStore } from '../stores/authStore';
 
 const Tab = createBottomTabNavigator<AppTabParamList>();
@@ -151,6 +154,14 @@ export function AppTabs() {
         }}
       />
       <Tab.Screen
+        name="Market"
+        component={MarketStack}
+        options={{
+          title: t('tabs.market'),
+          tabBarIcon: ({ color }) => <TabIcon emoji="🛒" />,
+        }}
+      />
+      <Tab.Screen
         name="FarmersCommunity"
         component={CommunityStack}
         options={{
@@ -185,6 +196,26 @@ export function AppTabs() {
           options={{
             title: t('tabs.farmInventory'),
             tabBarIcon: ({ color }) => <TabIcon emoji="📋" />,
+          }}
+        />
+      )}
+      {!isFarmWorker && (
+        <Tab.Screen
+          name="Govt"
+          component={GovtStack}
+          options={{
+            title: t('tabs.govt'),
+            tabBarIcon: ({ color }) => <TabIcon emoji="🏛️" />,
+          }}
+        />
+      )}
+      {!isFarmWorker && (
+        <Tab.Screen
+          name="Insights"
+          component={InsightsStack}
+          options={{
+            title: t('tabs.insights'),
+            tabBarIcon: ({ color }) => <TabIcon emoji="📊" />,
           }}
         />
       )}

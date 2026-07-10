@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { FarmStackParamList } from './types';
 import { FarmListScreen } from '../screens/Farm/FarmListScreen';
 import { FarmProfileScreen } from '../screens/Farm/FarmProfileScreen';
+import { EditFarmScreen } from '../screens/Farm/EditFarmScreen';
 import { AddCropScreen } from '../screens/Farm/AddCropScreen';
 import { AddAnimalScreen } from '../screens/Farm/AddAnimalScreen';
 import { AddWorkerScreen } from '../screens/Farm/AddWorkerScreen';
@@ -22,6 +23,7 @@ export function FarmStackNavigator() {
     <Stack.Navigator initialRouteName="FarmList">
       <Stack.Screen name="FarmList" component={FarmListScreen} options={{ headerShown: false }} />
       <Stack.Screen name="FarmProfile" component={FarmProfileScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="EditFarmScreen" component={EditFarmScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AddCropScreen" component={AddCropScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AddAnimalScreen" component={AddAnimalScreen} options={{ headerShown: false }} />
       <Stack.Screen name="AddWorkerScreen" component={AddWorkerScreen} options={{ headerShown: false }} />
