@@ -1,8 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Leaf } from 'lucide-react'
-import { CartNav } from './_components/CartNav'
-import { CartDrawer } from './_components/CartDrawer'
 
 export const metadata: Metadata = {
   title: 'AgroConnect Market',
@@ -26,11 +24,9 @@ export default function MarketLayout({ children }: { children: React.ReactNode }
               Supplies
             </Link>
           </nav>
-          <CartNav />
         </div>
       </header>
       <main className="mx-auto max-w-7xl px-4 py-8">{children}</main>
-      <CartDrawer />
     </div>
   )
 }

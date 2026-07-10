@@ -1,25 +1,24 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { Package, MapPin, SlidersHorizontal, ShoppingCart, Check } from 'lucide-react'
-import { toast } from 'sonner'
+import { Package, MapPin, SlidersHorizontal, ChevronRight } from 'lucide-react'
 import api from '@/lib/api'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { useCartStore } from '@/stores/cartStore'
 
 interface Product {
   id: string
   name: string
-  category: string
+  category: 'seed' | 'fertiliser' | 'pesticide' | 'herbicide' | 'equipment' | 'veterinary' | 'other'
+  brand: string | null
   description: string
-  price: number
   unit: string
-  supplier_name: string
-  county: string
-  in_stock: boolean
+  pricePerUnitKes: number
+  stockQuantity: number
+  countyAvailability: string[]
 }
 
 interface ProductsPage {
@@ -27,15 +26,14 @@ interface ProductsPage {
   meta: { page: number; page_size: number; total: number; total_pages: number }
 }
 
-const CATEGORIES = [
-  'Animal Feed',
-  'Fertilizers',
-  'Herbicides',
-  'Irrigation',
-  'Pesticides',
-  'Seeds',
-  'Tools & Equipment',
-  'Veterinary',
+const CATEGORIES: { label: string; value: Product['category'] }[] = [
+  { label: 'Seeds', value: 'seed' },
+  { label: 'Fertilisers', value: 'fertiliser' },
+  { label: 'Pesticides', value: 'pesticide' },
+  { label: 'Herbicides', value: 'herbicide' },
+  { label: 'Equipment', value: 'equipment' },
+  { label: 'Veterinary', value: 'veterinary' },
+  { label: 'Other', value: 'other' },
 ]
 
 const COUNTIES = [
@@ -50,96 +48,70 @@ const COUNTIES = [
 ]
 
 function ProductCard({ product }: { product: Product }) {
-  const addItem = useCartStore((s) => s.addItem)
-  const openCart = useCartStore((s) => s.openCart)
-  const items = useCartStore((s) => s.items)
-  const inCart = items.some((i) => i.productId === product.id)
-
-  const handleAddToCart = () => {
-    addItem({
-      productId: product.id,
-      name: product.name,
-      price: product.price,
-      unit: product.unit,
-    })
-    openCart()
-    toast.success(`${product.name} added to cart`)
-  }
+  const inStock = product.stockQuantity > 0
+  const categoryLabel = CATEGORIES.find((c) => c.value === product.category)?.label ?? product.category
 
   return (
-    <Card className={`flex flex-col ${!product.in_stock ? 'opacity-60' : ''}`}>
-      <CardContent className="flex flex-1 flex-col p-5">
-        <div className="flex-1">
-          <div className="mb-2 flex items-start justify-between gap-2">
-            <p className="font-semibold text-gray-900">{product.name}</p>
-            <Badge variant={product.in_stock ? 'success' : 'secondary'} className="flex-shrink-0">
-              {product.in_stock ? 'In Stock' : 'Out of Stock'}
-            </Badge>
-          </div>
-          {product.description && (
-            <p className="mb-3 line-clamp-2 text-xs text-gray-500">{product.description}</p>
-          )}
-          <div className="space-y-1 text-xs text-gray-500">
-            <div className="flex items-center gap-1.5">
-              <Package className="h-3 w-3 text-gray-400" />
-              {product.category}
+    <Link href={`/products/${product.id}`}>
+      <Card className={`flex h-full cursor-pointer flex-col transition-shadow hover:shadow-md ${!inStock ? 'opacity-60' : ''}`}>
+        <CardContent className="flex flex-1 flex-col p-5">
+          <div className="flex-1">
+            <div className="mb-2 flex items-start justify-between gap-2">
+              <p className="font-semibold text-gray-900">{product.name}</p>
+              <Badge variant={inStock ? 'success' : 'secondary'} className="flex-shrink-0">
+                {inStock ? 'In Stock' : 'Out of Stock'}
+              </Badge>
             </div>
-            <div className="flex items-center gap-1.5">
-              <MapPin className="h-3 w-3 text-gray-400" />
-              {product.county} · {product.supplier_name}
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-4 flex items-center justify-between gap-2">
-          <p className="text-lg font-bold text-green-700">
-            KES {product.price.toLocaleString()}
-            <span className="text-xs font-normal text-gray-500">/{product.unit}</span>
-          </p>
-          <Button
-            size="sm"
-            variant={inCart ? 'secondary' : 'default'}
-            disabled={!product.in_stock}
-            onClick={handleAddToCart}
-          >
-            {inCart ? (
-              <>
-                <Check className="mr-1.5 h-3.5 w-3.5" />
-                Added
-              </>
-            ) : (
-              <>
-                <ShoppingCart className="mr-1.5 h-3.5 w-3.5" />
-                Add to Cart
-              </>
+            {product.description && (
+              <p className="mb-3 line-clamp-2 text-xs text-gray-500">{product.description}</p>
             )}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+            <div className="space-y-1 text-xs text-gray-500">
+              <div className="flex items-center gap-1.5">
+                <Package className="h-3 w-3 text-gray-400" />
+                {categoryLabel}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <MapPin className="h-3 w-3 text-gray-400" />
+                {product.countyAvailability.join(', ')}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 flex items-center justify-between gap-2">
+            <p className="text-lg font-bold text-green-700">
+              KES {product.pricePerUnitKes.toLocaleString()}
+              <span className="text-xs font-normal text-gray-500">/{product.unit}</span>
+            </p>
+            <span className="flex items-center text-sm font-medium text-green-700">
+              View Details
+              <ChevronRight className="ml-0.5 h-3.5 w-3.5" />
+            </span>
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
   )
 }
 
 export default function ProductsPage() {
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([])
+  const [category, setCategory] = useState<Product['category'] | ''>('')
   const [county, setCounty] = useState('')
   const [inStockOnly, setInStockOnly] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const loaderRef = useRef<HTMLDivElement>(null)
 
-  const filters = { selectedCategories, county, inStockOnly }
+  const filters = { category, county }
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfiniteQuery({
       queryKey: ['market', 'products', filters],
       queryFn: async ({ pageParam }) => {
-        const params: Record<string, string | number | boolean> = {
+        const params: Record<string, string | number> = {
           page: pageParam as number,
           page_size: 20,
         }
-        if (selectedCategories.length > 0) params.category = selectedCategories.join(',')
+        if (category) params.category = category
         if (county) params.county = county
-        if (inStockOnly) params.in_stock = true
 
         const res = await api.get<ProductsPage>('/api/v1/market/products', { params })
         return res.data
@@ -166,21 +138,17 @@ export default function ProductsPage() {
     return () => observer.disconnect()
   }, [fetchNextPage, hasNextPage, isFetchingNextPage])
 
-  const products = data?.pages.flatMap((p) => p.data) ?? []
-
-  const toggleCategory = (cat: string) =>
-    setSelectedCategories((prev) =>
-      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat],
-    )
+  // stockQuantity isn't a backend filter, so "in stock only" is applied client-side
+  const allProducts = data?.pages.flatMap((p) => p.data) ?? []
+  const products = inStockOnly ? allProducts.filter((p) => p.stockQuantity > 0) : allProducts
 
   const resetFilters = () => {
-    setSelectedCategories([])
+    setCategory('')
     setCounty('')
     setInStockOnly(false)
   }
 
-  const activeFilterCount =
-    selectedCategories.length + (county ? 1 : 0) + (inStockOnly ? 1 : 0)
+  const activeFilterCount = (category ? 1 : 0) + (county ? 1 : 0) + (inStockOnly ? 1 : 0)
 
   return (
     <div>
@@ -233,16 +201,17 @@ export default function ProductsPage() {
             <div className="space-y-1.5">
               {CATEGORIES.map((cat) => (
                 <label
-                  key={cat}
+                  key={cat.value}
                   className="flex cursor-pointer items-center gap-2 text-sm text-gray-700"
                 >
                   <input
-                    type="checkbox"
-                    checked={selectedCategories.includes(cat)}
-                    onChange={() => toggleCategory(cat)}
-                    className="h-3.5 w-3.5 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                    type="radio"
+                    name="category-filter"
+                    checked={category === cat.value}
+                    onChange={() => setCategory(category === cat.value ? '' : cat.value)}
+                    className="h-3.5 w-3.5 rounded-full border-gray-300 text-green-600 focus:ring-green-500"
                   />
-                  {cat}
+                  {cat.label}
                 </label>
               ))}
             </div>

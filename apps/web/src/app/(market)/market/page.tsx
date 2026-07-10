@@ -12,20 +12,20 @@ import { Button } from '@/components/ui/button'
 interface Listing {
   id: string
   crop: string
-  quantity_kg: number
-  grade: string
-  price_per_kg: number
-  county: string
-  available_from: string
-  created_at: string
+  variety: string | null
+  quantityKg: number
+  qualityGrade: 'A' | 'B' | 'C' | 'reject'
+  askingPriceKes: number
+  locationCounty: string
+  availableFrom: string
+  availableUntil: string
+  createdAt: string
 }
 
 interface ListingsPage {
   data: Listing[]
   meta: { page: number; page_size: number; total: number; total_pages: number }
 }
-
-type SortOption = 'newest' | 'price_asc' | 'price_desc' | 'quantity_desc'
 
 const CROPS = [
   'Avocado', 'Beans', 'Cabbage', 'Cassava', 'Coffee',
@@ -46,13 +46,6 @@ const COUNTIES = [
   'Uasin Gishu', 'Vihiga', 'Wajir', 'West Pokot',
 ]
 
-const SORT_OPTIONS: { label: string; value: SortOption }[] = [
-  { label: 'Newest', value: 'newest' },
-  { label: 'Price: Low → High', value: 'price_asc' },
-  { label: 'Price: High → Low', value: 'price_desc' },
-  { label: 'Most Quantity', value: 'quantity_desc' },
-]
-
 function gradeBadgeVariant(
   grade: string,
 ): 'success' | 'warning' | 'secondary' {
@@ -68,27 +61,32 @@ function ListingCard({ listing }: { listing: Listing }) {
         <CardContent className="p-5">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-lg font-bold text-gray-900">{listing.crop}</p>
+              <p className="text-lg font-bold text-gray-900">
+                {listing.crop}
+                {listing.variety ? ` · ${listing.variety}` : ''}
+              </p>
               <p className="text-2xl font-extrabold text-green-700">
-                KES {listing.price_per_kg.toLocaleString()}
+                KES {listing.askingPriceKes.toLocaleString()}
                 <span className="text-sm font-normal text-gray-500">/kg</span>
               </p>
             </div>
-            <Badge variant={gradeBadgeVariant(listing.grade)}>Grade {listing.grade}</Badge>
+            <Badge variant={gradeBadgeVariant(listing.qualityGrade)}>
+              Grade {listing.qualityGrade}
+            </Badge>
           </div>
           <div className="mt-4 space-y-1.5 text-sm text-gray-600">
             <div className="flex items-center gap-1.5">
               <Package className="h-3.5 w-3.5 text-gray-400" />
-              {listing.quantity_kg.toLocaleString()} kg available
+              {listing.quantityKg.toLocaleString()} kg available
             </div>
             <div className="flex items-center gap-1.5">
               <MapPin className="h-3.5 w-3.5 text-gray-400" />
-              {listing.county}
+              {listing.locationCounty}
             </div>
             <div className="flex items-center gap-1.5">
               <Calendar className="h-3.5 w-3.5 text-gray-400" />
               From{' '}
-              {new Date(listing.available_from).toLocaleDateString('en-KE', {
+              {new Date(listing.availableFrom).toLocaleDateString('en-KE', {
                 dateStyle: 'medium',
               })}
             </div>
@@ -100,16 +98,15 @@ function ListingCard({ listing }: { listing: Listing }) {
 }
 
 export default function ProduceListingsPage() {
-  const [selectedCrops, setSelectedCrops] = useState<string[]>([])
+  const [crop, setCrop] = useState('')
   const [county, setCounty] = useState('')
   const [grade, setGrade] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
-  const [sort, setSort] = useState<SortOption>('newest')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const loaderRef = useRef<HTMLDivElement>(null)
 
-  const filters = { selectedCrops, county, grade, dateFrom, dateTo, sort }
+  const filters = { crop, county, grade, dateFrom, dateTo }
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfiniteQuery({
@@ -118,13 +115,12 @@ export default function ProduceListingsPage() {
         const params: Record<string, string | number> = {
           page: pageParam as number,
           page_size: 20,
-          sort_by: sort,
         }
-        if (selectedCrops.length > 0) params.crop = selectedCrops.join(',')
+        if (crop) params.crop = crop
         if (county) params.county = county
-        if (grade) params.grade = grade
-        if (dateFrom) params.from_date = dateFrom
-        if (dateTo) params.to_date = dateTo
+        if (grade) params.quality_grade = grade
+        if (dateFrom) params.available_from = dateFrom
+        if (dateTo) params.available_until = dateTo
 
         const res = await api.get<ListingsPage>('/api/v1/market/listings', { params })
         return res.data
@@ -153,13 +149,8 @@ export default function ProduceListingsPage() {
 
   const listings = data?.pages.flatMap((p) => p.data) ?? []
 
-  const toggleCrop = (crop: string) =>
-    setSelectedCrops((prev) =>
-      prev.includes(crop) ? prev.filter((c) => c !== crop) : [...prev, crop],
-    )
-
   const resetFilters = () => {
-    setSelectedCrops([])
+    setCrop('')
     setCounty('')
     setGrade('')
     setDateFrom('')
@@ -167,7 +158,7 @@ export default function ProduceListingsPage() {
   }
 
   const activeFilterCount =
-    selectedCrops.length + (county ? 1 : 0) + (grade ? 1 : 0) + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0)
+    (crop ? 1 : 0) + (county ? 1 : 0) + (grade ? 1 : 0) + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0)
 
   return (
     <div>
@@ -176,28 +167,15 @@ export default function ProduceListingsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Fresh Produce</h1>
           <p className="text-sm text-gray-500">Browse listings from farmers across Kenya</p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setSidebarOpen((o) => !o)}
-            className="lg:hidden"
-          >
-            <SlidersHorizontal className="mr-2 h-4 w-4" />
-            Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
-          </Button>
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value as SortOption)}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-          >
-            {SORT_OPTIONS.map(({ label, value }) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setSidebarOpen((o) => !o)}
+          className="lg:hidden"
+        >
+          <SlidersHorizontal className="mr-2 h-4 w-4" />
+          Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+        </Button>
       </div>
 
       <div className="flex gap-6">
@@ -219,18 +197,19 @@ export default function ProduceListingsPage() {
               Crop Type
             </legend>
             <div className="space-y-1.5">
-              {CROPS.map((crop) => (
+              {CROPS.map((c) => (
                 <label
-                  key={crop}
+                  key={c}
                   className="flex cursor-pointer items-center gap-2 text-sm text-gray-700"
                 >
                   <input
-                    type="checkbox"
-                    checked={selectedCrops.includes(crop)}
-                    onChange={() => toggleCrop(crop)}
-                    className="h-3.5 w-3.5 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                    type="radio"
+                    name="crop-filter"
+                    checked={crop === c}
+                    onChange={() => setCrop(crop === c ? '' : c)}
+                    className="h-3.5 w-3.5 rounded-full border-gray-300 text-green-600 focus:ring-green-500"
                   />
-                  {crop}
+                  {c}
                 </label>
               ))}
             </div>

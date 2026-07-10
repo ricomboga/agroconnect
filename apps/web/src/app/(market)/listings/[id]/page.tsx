@@ -17,18 +17,36 @@ import { Button } from '@/components/ui/button'
 interface ListingDetail {
   id: string
   crop: string
-  quantity_kg: number
-  grade: string
-  price_per_kg: number
-  county: string
-  available_from: string
-  created_at: string
-  description?: string
+  variety: string | null
+  quantityKg: number
+  qualityGrade: 'A' | 'B' | 'C' | 'reject'
+  askingPriceKes: number
+  locationCounty: string
+  locationDescription: string | null
+  availableFrom: string
+  createdAt: string
 }
 
-interface PricePoint {
-  date: string
-  price_per_kg: number
+interface CommodityPrice {
+  id: string
+  crop: string
+  priceKes: number
+  unit: string
+  updatedAt: string
+}
+
+// From predict-service, not market-service — a forward-looking forecast,
+// not a stored price history. Only covers 10 staple crops (maize, beans,
+// wheat, rice, potatoes, tomatoes, sorghum, millet, cassava, groundnuts);
+// 404s for anything else.
+interface PricePrediction {
+  crop: string
+  current_price_kes: number
+  predicted_price_kes: number
+  days_ahead: number
+  confidence_low: number
+  confidence_high: number
+  trend: 'rising' | 'falling' | 'stable'
 }
 
 interface ListingResponse {
@@ -36,153 +54,75 @@ interface ListingResponse {
 }
 
 interface PricesResponse {
-  data: PricePoint[]
-}
-
-interface InquireResponse {
-  data: { farmer_phone: string }
+  data: CommodityPrice[]
 }
 
 interface ApiErrorBody {
   error: { message: string }
 }
 
-// ── SVG price chart ──────────────────────────────────────────────────────────
+// ── Current market price (no historical series exists server-side —
+// GET /market/prices returns one current snapshot per crop, not a time
+// series, so this shows "today's reference price" rather than a chart) ──────
 
-function PriceHistoryChart({ points }: { points: PricePoint[] }) {
-  if (points.length < 2) {
+function CurrentPriceCard({ price }: { price: CommodityPrice | undefined }) {
+  if (!price) {
     return (
-      <p className="py-8 text-center text-sm text-gray-400">
-        Not enough data for price history
+      <p className="py-4 text-center text-sm text-gray-400">
+        No reference price available for this crop
       </p>
     )
   }
-
-  const W = 600
-  const H = 180
-  const PAD = { top: 16, right: 16, bottom: 28, left: 52 }
-
-  const prices = points.map((p) => p.price_per_kg)
-  const minP = Math.min(...prices)
-  const maxP = Math.max(...prices)
-  const range = maxP - minP || 1
-
-  const xScale = (i: number) =>
-    PAD.left + (i / (points.length - 1)) * (W - PAD.left - PAD.right)
-  const yScale = (p: number) =>
-    PAD.top + (1 - (p - minP) / range) * (H - PAD.top - PAD.bottom)
-
-  const polyPoints = points
-    .map((p, i) => `${xScale(i)},${yScale(p.price_per_kg)}`)
-    .join(' ')
-
-  const areaPoints = [
-    `${xScale(0)},${H - PAD.bottom}`,
-    ...points.map((p, i) => `${xScale(i)},${yScale(p.price_per_kg)}`),
-    `${xScale(points.length - 1)},${H - PAD.bottom}`,
-  ].join(' ')
-
-  const currentPrice = prices[prices.length - 1] ?? 0
-  const firstPrice = prices[0] ?? 0
-  const changeKes = currentPrice - firstPrice
-  const changePct = firstPrice > 0 ? ((changeKes / firstPrice) * 100).toFixed(1) : '0.0'
-
-  const formatAxisDate = (d: string) =>
-    new Date(d).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })
-
   return (
-    <div>
-      <div className="mb-3 flex flex-wrap items-baseline gap-3">
-        <span className="text-2xl font-bold text-gray-900">
-          KES {currentPrice.toFixed(2)}
+    <div className="flex items-baseline gap-2">
+      <span className="text-2xl font-bold text-gray-900">
+        KES {price.priceKes.toFixed(2)}
+      </span>
+      <span className="text-sm text-gray-500">
+        /{price.unit} reference price · updated{' '}
+        {new Date(price.updatedAt).toLocaleDateString('en-KE', { dateStyle: 'medium' })}
+      </span>
+    </div>
+  )
+}
+
+const TREND_LABEL: Record<PricePrediction['trend'], string> = {
+  rising: 'Rising',
+  falling: 'Falling',
+  stable: 'Stable',
+}
+const TREND_COLOR: Record<PricePrediction['trend'], string> = {
+  rising: 'text-green-600',
+  falling: 'text-red-500',
+  stable: 'text-gray-500',
+}
+
+function PriceForecastCard({ forecast }: { forecast: PricePrediction | undefined }) {
+  if (!forecast) return null
+  return (
+    <div className="mt-4 border-t border-gray-100 pt-4">
+      <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
+        {forecast.days_ahead}-Day Forecast
+      </p>
+      <div className="flex items-baseline gap-2">
+        <span className="text-lg font-bold text-gray-900">
+          KES {forecast.predicted_price_kes.toFixed(2)}
         </span>
-        <span
-          className={`text-sm font-medium ${
-            changeKes >= 0 ? 'text-green-600' : 'text-red-500'
-          }`}
-        >
-          {changeKes >= 0 ? '+' : ''}
-          {changeKes.toFixed(2)} ({changePct}%)
+        <span className={`text-sm font-medium ${TREND_COLOR[forecast.trend]}`}>
+          {TREND_LABEL[forecast.trend]}
         </span>
-        <span className="text-xs text-gray-400">vs 90 days ago</span>
       </div>
-
-      <svg
-        viewBox={`0 0 ${W} ${H}`}
-        className="w-full"
-        role="img"
-        aria-label="90-day commodity price chart"
-      >
-        <defs>
-          <linearGradient id="price-area-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#16a34a" stopOpacity={0.15} />
-            <stop offset="100%" stopColor="#16a34a" stopOpacity={0} />
-          </linearGradient>
-        </defs>
-
-        {/* Horizontal grid lines at 0 %, 50 %, 100 % */}
-        {([0, 0.5, 1] as const).map((t) => {
-          const y = PAD.top + t * (H - PAD.top - PAD.bottom)
-          const label = (maxP - t * range).toFixed(0)
-          return (
-            <g key={t}>
-              <line
-                x1={PAD.left}
-                y1={y}
-                x2={W - PAD.right}
-                y2={y}
-                stroke="#e5e7eb"
-                strokeWidth={1}
-              />
-              <text x={PAD.left - 6} y={y + 4} textAnchor="end" fontSize={10} fill="#9ca3af">
-                {label}
-              </text>
-            </g>
-          )
-        })}
-
-        {/* Area fill */}
-        <polygon points={areaPoints} fill="url(#price-area-fill)" />
-
-        {/* Price line */}
-        <polyline
-          points={polyPoints}
-          fill="none"
-          stroke="#16a34a"
-          strokeWidth={2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-
-        {/* X-axis start / end labels */}
-        {points[0] && (
-          <text
-            x={xScale(0)}
-            y={H - 4}
-            textAnchor="middle"
-            fontSize={10}
-            fill="#9ca3af"
-          >
-            {formatAxisDate(points[0].date)}
-          </text>
-        )}
-        {points[points.length - 1] && (
-          <text
-            x={xScale(points.length - 1)}
-            y={H - 4}
-            textAnchor="middle"
-            fontSize={10}
-            fill="#9ca3af"
-          >
-            {formatAxisDate(points[points.length - 1]!.date)}
-          </text>
-        )}
-      </svg>
+      <p className="mt-0.5 text-xs text-gray-400">
+        Range: KES {forecast.confidence_low.toFixed(2)} – {forecast.confidence_high.toFixed(2)}
+      </p>
     </div>
   )
 }
 
 // ── Contact modal ────────────────────────────────────────────────────────────
+// The inquire endpoint only accepts a message and notifies the farmer — it
+// does not return a phone number, so this sends an inquiry rather than
+// pretending to reveal contact details.
 
 function ContactModal({
   listingId,
@@ -191,19 +131,20 @@ function ContactModal({
   listingId: string
   onClose: () => void
 }) {
-  const [phone, setPhone] = useState<string | null>(null)
+  const [message, setMessage] = useState('')
+  const [sent, setSent] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleReveal = async () => {
+  const handleSend = async () => {
     setIsLoading(true)
     try {
-      const res = await api.post<InquireResponse>(
-        `/api/v1/market/listings/${listingId}/inquire`,
-      )
-      setPhone(res.data.data.farmer_phone)
+      await api.post(`/api/v1/market/listings/${listingId}/inquire`, {
+        message: message.trim(),
+      })
+      setSent(true)
     } catch (err) {
       const error = err as AxiosError<ApiErrorBody>
-      toast.error(error.response?.data?.error?.message ?? 'Failed to get contact details')
+      toast.error(error.response?.data?.error?.message ?? 'Failed to send inquiry')
     } finally {
       setIsLoading(false)
     }
@@ -235,31 +176,32 @@ function ContactModal({
           </button>
         </div>
 
-        {phone ? (
+        {sent ? (
           <div className="mt-4 flex items-center gap-3 rounded-lg bg-green-50 p-4">
             <Phone className="h-5 w-5 flex-shrink-0 text-green-600" />
-            <div>
-              <p className="text-xs text-gray-500">Farmer&apos;s phone</p>
-              <a
-                href={`tel:${phone}`}
-                className="text-lg font-bold text-green-700 hover:underline"
-              >
-                {phone}
-              </a>
-            </div>
+            <p className="text-sm text-green-800">
+              Your inquiry has been sent. The farmer will reach out to arrange delivery or
+              collection.
+            </p>
           </div>
         ) : (
           <>
             <p className="mt-3 text-sm text-gray-600">
-              Your contact details will be shared with the farmer so they can arrange
-              delivery or collection.
+              Send a message to the farmer — they&apos;ll be notified and can contact you back.
             </p>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              rows={3}
+              placeholder="e.g. I'm interested in buying 200kg, is it still available?"
+              className="mt-3 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
             <Button
               className="mt-4 w-full"
-              onClick={() => void handleReveal()}
-              disabled={isLoading}
+              onClick={() => void handleSend()}
+              disabled={isLoading || message.trim().length === 0}
             >
-              {isLoading ? 'Loading…' : 'Reveal Contact Number'}
+              {isLoading ? 'Sending…' : 'Send Inquiry'}
             </Button>
           </>
         )}
@@ -293,15 +235,27 @@ export default function ListingDetailPage() {
     enabled: Boolean(id),
   })
 
-  const { data: pricePoints } = useQuery({
-    queryKey: ['market', 'prices', listing?.crop],
+  const { data: prices } = useQuery({
+    queryKey: ['market', 'prices'],
     queryFn: async () => {
-      const res = await api.get<PricesResponse>('/api/v1/market/prices', {
-        params: { crop: listing!.crop, days: 90 },
-      })
+      const res = await api.get<PricesResponse>('/api/v1/market/prices')
       return res.data.data
     },
+  })
+  const cropPrice = prices?.find(
+    (p) => p.crop.toLowerCase() === listing?.crop.toLowerCase(),
+  )
+
+  const { data: forecast } = useQuery({
+    queryKey: ['predict', 'prices', listing?.crop],
+    queryFn: async () => {
+      const res = await api.get<PricePrediction>('/api/v1/predict/prices', {
+        params: { crop: listing!.crop.toLowerCase(), days_ahead: 30 },
+      })
+      return res.data
+    },
     enabled: Boolean(listing?.crop),
+    retry: false,
   })
 
   if (listingLoading) {
@@ -333,18 +287,18 @@ export default function ListingDetailPage() {
   const statCards = [
     {
       label: 'Price per kg',
-      value: `KES ${listing.price_per_kg.toLocaleString()}`,
+      value: `KES ${listing.askingPriceKes.toLocaleString()}`,
       Icon: TrendingUp,
     },
     {
       label: 'Quantity',
-      value: `${listing.quantity_kg.toLocaleString()} kg`,
+      value: `${listing.quantityKg.toLocaleString()} kg`,
       Icon: Package,
     },
-    { label: 'County', value: listing.county, Icon: MapPin },
+    { label: 'County', value: listing.locationCounty, Icon: MapPin },
     {
       label: 'Available from',
-      value: new Date(listing.available_from).toLocaleDateString('en-KE', {
+      value: new Date(listing.availableFrom).toLocaleDateString('en-KE', {
         dateStyle: 'medium',
       }),
       Icon: Calendar,
@@ -363,14 +317,17 @@ export default function ListingDetailPage() {
 
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-gray-900">{listing.crop}</h1>
+          <h1 className="text-3xl font-extrabold text-gray-900">
+            {listing.crop}
+            {listing.variety ? ` · ${listing.variety}` : ''}
+          </h1>
           <div className="mt-1 flex items-center gap-2">
-            <Badge variant={gradeBadgeVariant(listing.grade)}>
-              Grade {listing.grade}
+            <Badge variant={gradeBadgeVariant(listing.qualityGrade)}>
+              Grade {listing.qualityGrade}
             </Badge>
             <span className="text-xs text-gray-400">
               Listed{' '}
-              {new Date(listing.created_at).toLocaleDateString('en-KE', {
+              {new Date(listing.createdAt).toLocaleDateString('en-KE', {
                 dateStyle: 'medium',
               })}
             </span>
@@ -396,10 +353,10 @@ export default function ListingDetailPage() {
         ))}
       </div>
 
-      {listing.description && (
+      {listing.locationDescription && (
         <Card className="mb-6">
           <CardContent className="p-5">
-            <p className="text-sm text-gray-700">{listing.description}</p>
+            <p className="text-sm text-gray-700">{listing.locationDescription}</p>
           </CardContent>
         </Card>
       )}
@@ -408,15 +365,12 @@ export default function ListingDetailPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <TrendingUp className="h-4 w-4 text-green-600" />
-            {listing.crop}, 90-Day Price History
+            {listing.crop} Market Price
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {pricePoints ? (
-            <PriceHistoryChart points={pricePoints} />
-          ) : (
-            <div className="h-40 animate-pulse rounded bg-gray-100" />
-          )}
+          <CurrentPriceCard price={cropPrice} />
+          <PriceForecastCard forecast={forecast} />
         </CardContent>
       </Card>
 
