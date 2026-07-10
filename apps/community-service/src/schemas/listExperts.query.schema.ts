@@ -4,6 +4,7 @@ import { KENYA_COUNTIES } from '@agroconnect/shared/constants/counties';
 
 export const listExpertsQuerySchema = paginationQuerySchema.extend({
   county: z.enum(KENYA_COUNTIES).optional(),
+  subCounty: z.string().max(100).optional(),
   providerType: z.enum(['agronomist', 'vet', 'extension_officer', 'soil_lab']).optional(),
 });
 

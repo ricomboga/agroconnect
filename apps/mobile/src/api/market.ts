@@ -105,6 +105,7 @@ export interface SupplierProfile {
   id: string;
   userId: string;
   businessName: string;
+  deliveryRadiusKm: string | null;
   description: string | null;
   county: string;
   subCounty: string | null;

@@ -13,9 +13,19 @@ const createUserSchema = z.object({
   fullName: z.string().min(1),
   role: z.enum(['farmer', 'extension_officer', 'vet_officer', 'supplier', 'buyer', 'govt_officer', 'admin', 'lender', 'farm_worker']),
   county: z.enum(KENYA_COUNTIES).optional(),
+  subCounty: z.string().max(100).optional(),
   language: z.enum(['sw', 'en']).optional(),
   isSuperAdmin: z.boolean().optional(),
   staffRole: z.enum(['admin', 'county_admin', 'moderator']).optional(),
+  partnerBankId: z.string().optional(),
+});
+
+const updateUserSchema = z.object({
+  fullName: z.string().min(1).optional(),
+  email: z.string().email().optional(),
+  county: z.enum(KENYA_COUNTIES).optional(),
+  subCounty: z.string().max(100).optional(),
+  partnerBankId: z.string().optional(),
 });
 
 export async function listUsersHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -89,6 +99,21 @@ export async function createUserHandler(req: Request, res: Response, next: NextF
     }
     const user = await adminUserService.createUser(parsed.data);
     res.status(201).json({ data: user });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function updateUserHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { id } = req.params as { id: string };
+    const parsed = updateUserSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ message: 'Invalid request', errors: parsed.error.flatten().fieldErrors });
+      return;
+    }
+    const user = await adminUserService.updateUser(id, parsed.data);
+    res.json({ data: user });
   } catch (err) {
     next(err);
   }

@@ -4,6 +4,7 @@ import type { UserRole, KycStatus, Language } from './userRepository.js';
 export interface AdminUserFilter {
   role?: UserRole;
   county?: string;
+  subCounty?: string;
   kycStatus?: KycStatus;
   isActive?: boolean;
 }
@@ -15,6 +16,7 @@ const ADMIN_USER_SELECT = {
   fullName: true,
   role: true,
   county: true,
+  subCounty: true,
   language: true,
   isVerified: true,
   isActive: true,
@@ -36,6 +38,7 @@ export async function adminListUsers(filter: AdminUserFilter, pagination: AdminP
     where: {
       ...(filter.role !== undefined ? { role: filter.role } : {}),
       ...(filter.county !== undefined ? { county: filter.county } : {}),
+      ...(filter.subCounty !== undefined ? { subCounty: filter.subCounty } : {}),
       ...(filter.kycStatus !== undefined ? { kycStatus: filter.kycStatus } : {}),
       ...(filter.isActive !== undefined ? { isActive: filter.isActive } : {}),
     },
@@ -58,6 +61,7 @@ export async function adminCountUsers(filter: AdminUserFilter) {
     where: {
       ...(filter.role !== undefined ? { role: filter.role } : {}),
       ...(filter.county !== undefined ? { county: filter.county } : {}),
+      ...(filter.subCounty !== undefined ? { subCounty: filter.subCounty } : {}),
       ...(filter.kycStatus !== undefined ? { kycStatus: filter.kycStatus } : {}),
       ...(filter.isActive !== undefined ? { isActive: filter.isActive } : {}),
     },
@@ -90,11 +94,13 @@ export interface AdminCreateUserParams {
   fullName: string;
   role: UserRole;
   county?: string;
+  subCounty?: string;
   language?: Language;
   isVerified: boolean;
   kycStatus: KycStatus;
   isSuperAdmin?: boolean;
   staffRole?: 'admin' | 'county_admin' | 'moderator';
+  partnerBankId?: string;
 }
 
 export async function adminCreateUser(params: AdminCreateUserParams) {
@@ -103,6 +109,22 @@ export async function adminCreateUser(params: AdminCreateUserParams) {
       ...params,
       isActive: true,
     },
+    select: ADMIN_USER_SELECT,
+  });
+}
+
+export interface AdminUpdateUserParams {
+  fullName?: string;
+  email?: string;
+  county?: string;
+  subCounty?: string;
+  partnerBankId?: string;
+}
+
+export async function adminUpdateUser(id: string, params: AdminUpdateUserParams) {
+  return prisma.user.update({
+    where: { id },
+    data: params,
     select: ADMIN_USER_SELECT,
   });
 }

@@ -47,3 +47,26 @@ export async function getLoansByInstitution(): Promise<InstitutionLoanTotal[]> {
     return [];
   }
 }
+
+export interface LoanPartnerDirectoryRow {
+  id: string;
+  name: string;
+  type: string;
+  licenceNo: string | null;
+  paybill: string | null;
+  headOfficeCounty: string | null;
+  headOfficeSubCounty: string | null;
+  maxLoanKes: number;
+  interestRateAnnual: number;
+  activeFarmers: number;
+}
+
+export async function getLoanPartners(): Promise<LoanPartnerDirectoryRow[]> {
+  try {
+    const res = await client.get<{ data: LoanPartnerDirectoryRow[] }>('/api/v1/finance/partners');
+    return res.data.data;
+  } catch (err) {
+    logger.warn({ err }, 'finance-service loan-partners unavailable');
+    return [];
+  }
+}

@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { toast } from 'sonner'
-import { FormSection, Field, FieldGroup, TextInput, Select, ChipSelect } from '@agroconnect/web-ui'
-import { ROLE_FORM_CONFIG, type FieldConfig } from '../_data/roleFormConfig'
+import { ROLE_FORM_CONFIG } from '../_data/roleFormConfig'
+import { EXPERT_TYPE_TO_PROVIDER_TYPE } from '../_data/expertTypeMap'
+import { RoleFormFields } from '../_components/RoleFormFields'
+import { useRoleFormValues } from '../_components/useRoleFormValues'
 
 interface Farm {
   id: string
@@ -14,30 +16,13 @@ interface Farm {
 
 const PHONE_RE = /^(\+2547\d{8}|07\d{8})$/
 
-const EXPERT_TYPE_TO_PROVIDER_TYPE: Record<string, string> = {
-  vet_officer: 'vet',
-  extension_officer: 'extension_officer',
-  agronomist: 'agronomist',
-  soil_lab: 'soil_lab',
-}
-
-function initialValues(fields: FieldConfig[]): Record<string, string | string[]> {
-  const values: Record<string, string | string[]> = {}
-  for (const f of fields) {
-    values[f.key] = f.default ?? (f.type === 'chips' && f.multiple ? [] : '')
-  }
-  return values
-}
-
 export default function CreateRoleUserPage() {
   const router = useRouter()
   const params = useParams<{ type: string }>()
   const config = ROLE_FORM_CONFIG[params.type]
 
   const allFields = useMemo(() => config?.sections.flatMap((s) => s.fields) ?? [], [config])
-  const [values, setValues] = useState<Record<string, string | string[]>>(() =>
-    initialValues(allFields),
-  )
+  const { values, setValue } = useRoleFormValues(allFields)
   const [farms, setFarms] = useState<Farm[]>([])
   const [submitting, setSubmitting] = useState(false)
 
@@ -53,14 +38,17 @@ export default function CreateRoleUserPage() {
     return <p className="text-sm text-ac-red">Unknown role type: {params.type}</p>
   }
 
-  function setValue(key: string, v: string | string[]) {
-    setValues((prev) => ({ ...prev, [key]: v }))
-  }
-
   function findCounty(): string | undefined {
-    const countyKey = allFields.find((f) => /county$/i.test(f.key))?.key
+    const countyKey = allFields.find((f) => /county$/i.test(f.key) && f.type === 'select')?.key
     if (!countyKey) return undefined
     const v = values[countyKey]
+    return typeof v === 'string' ? v || undefined : undefined
+  }
+
+  function findSubCounty(): string | undefined {
+    const subCountyKey = allFields.find((f) => f.type === 'subcounty')?.key
+    if (!subCountyKey) return undefined
+    const v = values[subCountyKey]
     return typeof v === 'string' ? v || undefined : undefined
   }
 
@@ -88,6 +76,29 @@ export default function CreateRoleUserPage() {
     try {
       const fullName = String(values['fullName'] ?? '')
       const phone = String(values['phone'] ?? '')
+      const county = findCounty()
+      const subCounty = findSubCounty()
+
+      let partnerBankId: string | undefined
+      if (params.type === 'lender') {
+        const partnerRes = await fetch('/api/finance/internal/loan-partners', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: String(values['institutionName'] ?? ''),
+            type: String(values['institutionType'] ?? 'bank'),
+            licenceNo: values['licenceNo'] ? String(values['licenceNo']) : undefined,
+            paybill: values['paybill'] ? String(values['paybill']) : undefined,
+            headOfficeCounty: county,
+            headOfficeSubCounty: subCounty,
+            maxLoanKes: values['maxLoanKes'] ? Number(values['maxLoanKes']) : undefined,
+            interestRateAnnual: values['interestRate'] ? Number(values['interestRate']) : undefined,
+          }),
+        })
+        const partnerBody = await partnerRes.json()
+        if (!partnerRes.ok) throw new Error(partnerBody?.message ?? 'Failed to create institution record')
+        partnerBankId = partnerBody.data?.id
+      }
 
       const userRes = await fetch('/api/admin/users', {
         method: 'POST',
@@ -97,8 +108,10 @@ export default function CreateRoleUserPage() {
           password: 'Agro1234',
           fullName: fullName.trim(),
           role: config.apiRole,
-          county: findCounty(),
+          county,
+          subCounty,
           email: values['email'] ? String(values['email']) : undefined,
+          partnerBankId,
         }),
       })
       const userBody = await userRes.json()
@@ -127,16 +140,20 @@ export default function CreateRoleUserPage() {
         const expertType = String(values['expertType'] ?? '')
         const providerType = EXPERT_TYPE_TO_PROVIDER_TYPE[expertType]
         const specialisations = (values['specialisations'] as string[] | undefined) ?? []
-        const county = findCounty()
         try {
           const expertRes = await fetch('/api/community/internal/experts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+              userId,
               name: fullName.trim(),
               providerType,
               specialisations: specialisations.length ? specialisations : ['general'],
               countiesServed: county ? [county] : [],
+              subCountiesServed: subCounty ? [subCounty] : [],
+              organisation: values['organisation'] ? String(values['organisation']) : undefined,
+              licenceNumber: values['licenceNumber'] ? String(values['licenceNumber']) : undefined,
+              maxFarmers: values['maxFarmers'] ? Number(values['maxFarmers']) : undefined,
               phone: phone.trim(),
             }),
           })
@@ -150,7 +167,6 @@ export default function CreateRoleUserPage() {
 
       if (params.type === 'supplier') {
         const businessName = String(values['businessName'] ?? '')
-        const county = findCounty()
         const categories = (values['productCategories'] as string[] | undefined) ?? []
         try {
           const profileRes = await fetch('/api/market/internal/supplier-profiles', {
@@ -159,11 +175,13 @@ export default function CreateRoleUserPage() {
             body: JSON.stringify({
               userId,
               businessName,
+              businessRegNumber: values['businessRegNumber'] ? String(values['businessRegNumber']) : undefined,
+              deliveryRadiusKm: values['deliveryRadiusKm'] ? String(values['deliveryRadiusKm']) : undefined,
               county,
+              subCounty,
               categories,
               phone: phone.trim(),
               address: values['address'] ? String(values['address']) : undefined,
-              description: values['deliveryRadiusKm'] ? `Delivery: ${String(values['deliveryRadiusKm'])}` : undefined,
             }),
           })
           if (!profileRes.ok) {
@@ -171,6 +189,30 @@ export default function CreateRoleUserPage() {
           }
         } catch {
           toast.error('Account created, but adding to the supplier directory failed')
+        }
+      }
+
+      if (params.type === 'govt_officer') {
+        try {
+          const profileRes = await fetch('/api/govt/internal/officer-profiles', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId,
+              fullName: fullName.trim(),
+              phone: phone.trim(),
+              ministry: String(values['ministry'] ?? ''),
+              position: String(values['position'] ?? ''),
+              staffId: String(values['staffId'] ?? ''),
+              assignedCounty: county,
+              assignedSubCounty: subCounty,
+            }),
+          })
+          if (!profileRes.ok) {
+            toast.error('Account created, but saving ministry/position details failed')
+          }
+        } catch {
+          toast.error('Account created, but saving ministry/position details failed')
         }
       }
 
@@ -187,45 +229,7 @@ export default function CreateRoleUserPage() {
     <div>
       <h1 className="mb-3 text-lg font-bold text-ink">{config.title}</h1>
       <div className="rounded-base border border-border bg-white p-4">
-        {config.sections.map((section) => (
-          <FormSection key={section.title} title={section.title}>
-            <FieldGroup cols={2}>
-              {section.fields.map((f) => (
-                <Field key={f.key} label={f.label} required={f.required} hint={f.hint}>
-                  {f.type === 'select' ? (
-                    <Select
-                      value={values[f.key] as string}
-                      onChange={(e) => setValue(f.key, e.target.value)}
-                    >
-                      <option value="">Select…</option>
-                      {(f.key === 'farmId' ? farms.map((fm) => ({ value: fm.id, label: fm.name })) : f.options ?? []).map(
-                        (opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ),
-                      )}
-                    </Select>
-                  ) : f.type === 'chips' ? (
-                    <ChipSelect
-                      options={f.options ?? []}
-                      multiple
-                      value={(values[f.key] as string[]) ?? []}
-                      onChange={(v) => setValue(f.key, v)}
-                    />
-                  ) : (
-                    <TextInput
-                      type={f.type === 'tel' ? 'tel' : f.type === 'number' ? 'number' : f.type === 'date' ? 'date' : 'text'}
-                      value={values[f.key] as string}
-                      onChange={(e) => setValue(f.key, e.target.value)}
-                      placeholder={f.placeholder}
-                    />
-                  )}
-                </Field>
-              ))}
-            </FieldGroup>
-          </FormSection>
-        ))}
+        <RoleFormFields sections={config.sections} values={values} setValue={setValue} farms={farms} />
 
         <div className="flex gap-2">
           <button

@@ -7,6 +7,7 @@ import {
   verifyUserHandler,
   getStatsHandler,
   createUserHandler,
+  updateUserHandler,
   deleteUserHandler,
   batchGetUsersHandler,
   listExpertsHandler,
@@ -27,6 +28,7 @@ router.get('/users/batch', batchGetUsersHandler);
 router.get('/users/:id', getUserHandler);
 router.post('/users', createUserHandler);
 router.get('/users/:id', getUserHandler);
+router.patch('/users/:id', updateUserHandler);
 router.patch('/users/:id/status', setUserStatusHandler);
 router.patch('/users/:id/verify', verifyUserHandler);
 router.delete('/users/:id', deleteUserHandler);

@@ -67,6 +67,8 @@ export interface Expert {
   providerType: ExpertType;
   specialisations: string[];
   countiesServed: string[];
+  organisation: string | null;
+  licenceNumber: string | null;
   bio: string | null;
   rating: number;
   reviewCount: number;
@@ -226,9 +228,14 @@ export const communityApi = {
   },
 
   experts: {
-    list: (params?: { county?: string; providerType?: ExpertType; page?: number }) =>
-      apiFetch<{ data: Expert[]; meta: ListMeta }>(
-        `/community/experts${buildQs({ county: params?.county, providerType: params?.providerType, page: params?.page })}`,
+    list: (params?: { county?: string; subCounty?: string; providerType?: ExpertType; page?: number }) =>
+      apiFetch<{ data: Expert[]; meta: ListMeta & { matched_on: 'subCounty' | 'county' | 'region' | null } }>(
+        `/community/experts${buildQs({
+          county: params?.county,
+          subCounty: params?.subCounty,
+          providerType: params?.providerType,
+          page: params?.page,
+        })}`,
       ),
     get: (id: string) => apiFetch<{ data: Expert }>(`/community/experts/${id}`),
   },

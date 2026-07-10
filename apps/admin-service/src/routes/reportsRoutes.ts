@@ -6,6 +6,10 @@ import {
   getFarmersByCounty,
   getLivestockStats,
   getLoansByInstitution,
+  getExpertDirectory,
+  getSupplierDirectory,
+  getLenderDirectory,
+  getOfficerDirectory,
   exportReport,
 } from '../controllers/reportsController.js';
 import { livestockReportQuerySchema } from '../schemas/reportsQuery.schema.js';
@@ -28,6 +32,30 @@ router.get(
 );
 router.get('/reports/loans-by-institution', auth, adminOnly, (req, res, next) =>
   getLoansByInstitution(req as AdminRequest, res, next),
+);
+router.get(
+  '/reports/experts',
+  auth,
+  adminOnly,
+  validateQuery(livestockReportQuerySchema),
+  (req, res, next) => getExpertDirectory(req as AdminRequest, res, next),
+);
+router.get(
+  '/reports/suppliers',
+  auth,
+  adminOnly,
+  validateQuery(livestockReportQuerySchema),
+  (req, res, next) => getSupplierDirectory(req as AdminRequest, res, next),
+);
+router.get('/reports/lenders', auth, adminOnly, (req, res, next) =>
+  getLenderDirectory(req as AdminRequest, res, next),
+);
+router.get(
+  '/reports/govt-officers',
+  auth,
+  adminOnly,
+  validateQuery(livestockReportQuerySchema),
+  (req, res, next) => getOfficerDirectory(req as AdminRequest, res, next),
 );
 router.get(
   '/reports/:type/export',

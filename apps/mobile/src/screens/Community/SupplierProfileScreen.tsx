@@ -99,6 +99,9 @@ export function SupplierProfileScreen({ navigation, route }: Props) {
             <Text style={s.countyText}>
               {supplier.county}{supplier.subCounty ? `, ${supplier.subCounty}` : ''}
             </Text>
+            {supplier.deliveryRadiusKm ? (
+              <Text style={s.deliveryText}>{t('community.suppliers.delivery', { radius: supplier.deliveryRadiusKm })}</Text>
+            ) : null}
           </View>
         </View>
 
@@ -167,6 +170,7 @@ const s = StyleSheet.create({
   heroRight:      { flex: 1, gap: 6 },
   supplierName:   { fontSize: 18, fontWeight: '800', color: '#1A1A1A' },
   countyText:     { fontSize: 13, color: '#6B7280' },
+  deliveryText:   { fontSize: 12, color: '#1A6B3C', fontWeight: '600' },
 
   section:        { backgroundColor: '#FFF', borderRadius: 12, padding: 14, marginBottom: 12,
                     borderWidth: 1, borderColor: '#EEEEEE', gap: 10 },

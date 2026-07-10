@@ -32,8 +32,48 @@ interface InstitutionLoanTotal {
   totalDisbursedKes: number
 }
 
+interface ExpertDirectoryRow {
+  id: string
+  name: string
+  providerType: string
+  organisation: string | null
+  licenceNumber: string | null
+  maxFarmers: number | null
+  countiesServed: string[]
+}
+
+interface SupplierDirectoryRow {
+  id: string
+  businessName: string
+  businessRegNumber: string | null
+  deliveryRadiusKm: string | null
+  county: string
+  subCounty: string | null
+}
+
+interface LenderDirectoryRow {
+  id: string
+  name: string
+  type: string
+  licenceNo: string | null
+  paybill: string | null
+  headOfficeCounty: string | null
+  activeFarmers: number
+}
+
+interface OfficerDirectoryRow {
+  id: string
+  fullName: string
+  phone: string
+  ministry: string
+  position: string
+  staffId: string
+  assignedCounty: string
+  assignedSubCounty: string | null
+}
+
 async function downloadReportCsv(
-  type: 'farmers-by-county' | 'livestock' | 'loans-by-institution',
+  type: 'farmers-by-county' | 'livestock' | 'loans-by-institution' | 'experts' | 'suppliers' | 'lenders' | 'govt-officers',
   params: Record<string, string | undefined> = {},
 ) {
   const query = new URLSearchParams()
@@ -88,6 +128,38 @@ export function ReportsContent() {
     queryKey: ['admin', 'reports', 'loans-by-institution'],
     queryFn: async () => {
       const res = await api.get<{ data: InstitutionLoanTotal[] }>('/api/v1/admin/reports/loans-by-institution')
+      return res.data.data
+    },
+  })
+
+  const { data: experts, isFetching: isExpertsLoading } = useQuery({
+    queryKey: ['admin', 'reports', 'experts'],
+    queryFn: async () => {
+      const res = await api.get<{ data: ExpertDirectoryRow[] }>('/api/v1/admin/reports/experts')
+      return res.data.data
+    },
+  })
+
+  const { data: suppliers, isFetching: isSuppliersLoading } = useQuery({
+    queryKey: ['admin', 'reports', 'suppliers'],
+    queryFn: async () => {
+      const res = await api.get<{ data: SupplierDirectoryRow[] }>('/api/v1/admin/reports/suppliers')
+      return res.data.data
+    },
+  })
+
+  const { data: lenders, isFetching: isLendersLoading } = useQuery({
+    queryKey: ['admin', 'reports', 'lenders'],
+    queryFn: async () => {
+      const res = await api.get<{ data: LenderDirectoryRow[] }>('/api/v1/admin/reports/lenders')
+      return res.data.data
+    },
+  })
+
+  const { data: govtOfficers, isFetching: isGovtOfficersLoading } = useQuery({
+    queryKey: ['admin', 'reports', 'govt-officers'],
+    queryFn: async () => {
+      const res = await api.get<{ data: OfficerDirectoryRow[] }>('/api/v1/admin/reports/govt-officers')
       return res.data.data
     },
   })
@@ -212,6 +284,131 @@ export function ReportsContent() {
               },
             ]}
             data={loansByInstitution ?? []}
+          />
+        )}
+      </div>
+
+      <div className="mt-3.5 rounded-base border border-border bg-white px-4 py-3">
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-md font-semibold text-ink">Experts &amp; Service Providers</p>
+          <button
+            type="button"
+            onClick={() => downloadReportCsv('experts')}
+            className="rounded-md border border-border px-3 py-1.5 text-sm font-semibold text-ink"
+          >
+            Download CSV
+          </button>
+        </div>
+        {isExpertsLoading ? (
+          <p className="py-6 text-center text-sm text-muted">Loading…</p>
+        ) : (experts ?? []).length === 0 ? (
+          <p className="py-6 text-center text-sm text-muted">No experts recorded yet</p>
+        ) : (
+          <DataTable<ExpertDirectoryRow>
+            columns={[
+              { key: 'name', header: 'Name' },
+              { key: 'providerType', header: 'Type' },
+              { key: 'organisation', header: 'Organisation', render: (row) => row.organisation ?? '—' },
+              { key: 'licenceNumber', header: 'Licence #', render: (row) => row.licenceNumber ?? '—' },
+              { key: 'maxFarmers', header: 'Max Farmers', render: (row) => row.maxFarmers ?? '—' },
+              { key: 'countiesServed', header: 'Counties', render: (row) => row.countiesServed.join(', ') || '—' },
+            ]}
+            data={experts ?? []}
+          />
+        )}
+      </div>
+
+      <div className="mt-3.5 rounded-base border border-border bg-white px-4 py-3">
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-md font-semibold text-ink">Supplier Registry</p>
+          <button
+            type="button"
+            onClick={() => downloadReportCsv('suppliers')}
+            className="rounded-md border border-border px-3 py-1.5 text-sm font-semibold text-ink"
+          >
+            Download CSV
+          </button>
+        </div>
+        {isSuppliersLoading ? (
+          <p className="py-6 text-center text-sm text-muted">Loading…</p>
+        ) : (suppliers ?? []).length === 0 ? (
+          <p className="py-6 text-center text-sm text-muted">No suppliers recorded yet</p>
+        ) : (
+          <DataTable<SupplierDirectoryRow>
+            columns={[
+              { key: 'businessName', header: 'Business' },
+              { key: 'businessRegNumber', header: 'Reg. Number', render: (row) => row.businessRegNumber ?? '—' },
+              { key: 'deliveryRadiusKm', header: 'Delivery', render: (row) => row.deliveryRadiusKm ?? '—' },
+              {
+                key: 'county',
+                header: 'County / Sub-county',
+                render: (row) => `${row.county}${row.subCounty ? `, ${row.subCounty}` : ''}`,
+              },
+            ]}
+            data={suppliers ?? []}
+          />
+        )}
+      </div>
+
+      <div className="mt-3.5 rounded-base border border-border bg-white px-4 py-3">
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-md font-semibold text-ink">Lending Institutions</p>
+          <button
+            type="button"
+            onClick={() => downloadReportCsv('lenders')}
+            className="rounded-md border border-border px-3 py-1.5 text-sm font-semibold text-ink"
+          >
+            Download CSV
+          </button>
+        </div>
+        {isLendersLoading ? (
+          <p className="py-6 text-center text-sm text-muted">Loading…</p>
+        ) : (lenders ?? []).length === 0 ? (
+          <p className="py-6 text-center text-sm text-muted">No lending institutions recorded yet</p>
+        ) : (
+          <DataTable<LenderDirectoryRow>
+            columns={[
+              { key: 'name', header: 'Institution' },
+              { key: 'type', header: 'Type' },
+              { key: 'licenceNo', header: 'Licence No.', render: (row) => row.licenceNo ?? '—' },
+              { key: 'paybill', header: 'Paybill', render: (row) => row.paybill ?? '—' },
+              { key: 'headOfficeCounty', header: 'Head Office', render: (row) => row.headOfficeCounty ?? '—' },
+              { key: 'activeFarmers', header: 'Active Farmers' },
+            ]}
+            data={lenders ?? []}
+          />
+        )}
+      </div>
+
+      <div className="mt-3.5 rounded-base border border-border bg-white px-4 py-3">
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-md font-semibold text-ink">Government Officers</p>
+          <button
+            type="button"
+            onClick={() => downloadReportCsv('govt-officers')}
+            className="rounded-md border border-border px-3 py-1.5 text-sm font-semibold text-ink"
+          >
+            Download CSV
+          </button>
+        </div>
+        {isGovtOfficersLoading ? (
+          <p className="py-6 text-center text-sm text-muted">Loading…</p>
+        ) : (govtOfficers ?? []).length === 0 ? (
+          <p className="py-6 text-center text-sm text-muted">No government officers recorded yet</p>
+        ) : (
+          <DataTable<OfficerDirectoryRow>
+            columns={[
+              { key: 'fullName', header: 'Name' },
+              { key: 'ministry', header: 'Ministry / Agency' },
+              { key: 'position', header: 'Position' },
+              { key: 'staffId', header: 'Staff ID' },
+              {
+                key: 'assignedCounty',
+                header: 'County / Sub-county',
+                render: (row) => `${row.assignedCounty}${row.assignedSubCounty ? `, ${row.assignedSubCounty}` : ''}`,
+              },
+            ]}
+            data={govtOfficers ?? []}
           />
         )}
       </div>

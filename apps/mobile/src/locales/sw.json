@@ -1437,6 +1437,7 @@
       "title": "Wasifu wa Mtaalamu",
       "specialisations": "Utaalamu",
       "counties": "Kaunti zinazohudumia",
+      "licence": "Leseni #{{number}}",
       "bio": "Kuhusu",
       "rating": "{{rating}}/5 · maoni {{count}}",
       "callBtn": "Piga simu",
@@ -1469,6 +1470,7 @@
       "about": "Kuhusu",
       "categories": "Bidhaa",
       "address": "Anwani",
+      "delivery": "Husafirisha ndani ya {{radius}}",
       "matchedOn": {
         "subCounty": "Inaonyesha wauzaji katika kata yako ndogo",
         "county": "Hakuna wauzaji katika kata yako ndogo — inaonyesha {{county}} yote",

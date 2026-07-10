@@ -10,6 +10,33 @@ const client = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+function serviceToken(): string {
+  return process.env['INTERNAL_SERVICE_SECRET'] ?? '';
+}
+
+export interface OfficerProfileDirectoryRow {
+  id: string;
+  fullName: string;
+  phone: string;
+  ministry: string;
+  position: string;
+  staffId: string;
+  assignedCounty: string;
+  assignedSubCounty: string | null;
+}
+
+export async function getOfficerProfiles(): Promise<OfficerProfileDirectoryRow[]> {
+  try {
+    const res = await client.get<{ data: OfficerProfileDirectoryRow[] }>('/api/v1/govt/officer-profiles', {
+      headers: { 'x-service-token': serviceToken() },
+    });
+    return res.data.data;
+  } catch (err) {
+    logger.warn({ err }, 'govt-service officer-profiles unavailable');
+    return [];
+  }
+}
+
 export interface ProgramRow {
   id: string;
   name: string;

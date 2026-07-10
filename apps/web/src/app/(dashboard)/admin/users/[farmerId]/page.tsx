@@ -1,11 +1,13 @@
 'use client'
 
 import { use } from 'react'
+import { useRouter } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { FarmerDetailView, farmTypeInfo } from './_components/FarmerDetailView'
 import { LenderDetailView } from './_components/LenderDetailView'
 import { SupplierDetailView } from './_components/SupplierDetailView'
 import { GenericStaffDetailView } from './_components/GenericStaffDetailView'
+import { ROLE_TO_TYPE } from '../new/_data/roleFormConfig'
 
 interface AdminUser {
   id: string
@@ -38,6 +40,7 @@ const ROLE_LABEL: Record<string, string> = {
 
 export default function UserDetailPage({ params }: PageProps) {
   const { farmerId } = use(params)
+  const router = useRouter()
   const queryClient = useQueryClient()
 
   const userQuery = useQuery({
@@ -139,6 +142,15 @@ export default function UserDetailPage({ params }: PageProps) {
         </div>
 
         <div style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'row', gap: 5 }}>
+          {user.role !== 'farmer' && ROLE_TO_TYPE[user.role] && (
+            <button
+              className="w-btn"
+              onClick={() => router.push(`/admin/users/${farmerId}/edit`)}
+              disabled={busy}
+            >
+              ✏️ Edit Details
+            </button>
+          )}
           <button
             className="w-btn"
             onClick={() => resetPinMutation.mutate()}

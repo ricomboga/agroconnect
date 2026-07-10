@@ -1437,6 +1437,7 @@
       "title": "Expert Profile",
       "specialisations": "Specialisations",
       "counties": "Counties served",
+      "licence": "Licence #{{number}}",
       "bio": "About",
       "rating": "{{rating}}/5 · {{count}} reviews",
       "callBtn": "Call",
@@ -1469,6 +1470,7 @@
       "about": "About",
       "categories": "Products",
       "address": "Address",
+      "delivery": "Delivers within {{radius}}",
       "matchedOn": {
         "subCounty": "Showing suppliers in your sub-county",
         "county": "No suppliers in your sub-county — showing all of {{county}}",

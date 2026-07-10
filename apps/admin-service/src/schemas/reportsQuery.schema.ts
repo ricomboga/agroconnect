@@ -9,7 +9,7 @@ export const livestockReportQuerySchema = z.object({
 export type LivestockReportQuery = z.infer<typeof livestockReportQuerySchema>;
 
 export const reportTypeParamSchema = z.object({
-  type: z.enum(['farmers-by-county', 'livestock', 'loans-by-institution']),
+  type: z.enum(['farmers-by-county', 'livestock', 'loans-by-institution', 'experts', 'suppliers', 'lenders', 'govt-officers']),
 });
 
 export type ReportTypeParam = z.infer<typeof reportTypeParamSchema>;

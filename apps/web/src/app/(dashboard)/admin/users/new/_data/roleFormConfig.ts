@@ -1,6 +1,6 @@
 import { KENYA_COUNTIES } from './counties'
 
-export type FieldType = 'text' | 'tel' | 'number' | 'date' | 'select' | 'chips' | 'textarea'
+export type FieldType = 'text' | 'tel' | 'number' | 'date' | 'select' | 'chips' | 'textarea' | 'subcounty'
 
 export interface FieldOption {
   value: string
@@ -17,6 +17,8 @@ export interface FieldConfig {
   options?: FieldOption[]
   multiple?: boolean
   default?: string | string[]
+  /** For type: 'subcounty' — the key of the sibling county field this one depends on. */
+  countyKey?: string
 }
 
 export interface SectionConfig {
@@ -75,6 +77,12 @@ export const ROLE_FORM_CONFIG: Record<string, RoleFormConfig> = {
             hint: 'Farmers receive disbursements here',
           },
           { key: 'headOfficeCounty', label: 'Head Office County', type: 'select', options: countyOptions },
+          {
+            key: 'headOfficeSubCounty',
+            label: 'Head Office Sub-County',
+            type: 'subcounty',
+            countyKey: 'headOfficeCounty',
+          },
           { key: 'maxLoanKes', label: 'Max Loan Amount (KES)', type: 'number' },
           { key: 'interestRate', label: 'Interest Rate (% p.a.)', type: 'number' },
         ],
@@ -100,6 +108,13 @@ export const ROLE_FORM_CONFIG: Record<string, RoleFormConfig> = {
           { key: 'businessName', label: 'Business Name', type: 'text', required: true },
           { key: 'businessRegNumber', label: 'Business Reg Number', type: 'text', required: true },
           { key: 'businessCounty', label: 'Business County', type: 'select', required: true, options: countyOptions },
+          {
+            key: 'businessSubCounty',
+            label: 'Business Sub-County',
+            type: 'subcounty',
+            required: true,
+            countyKey: 'businessCounty',
+          },
           {
             key: 'deliveryRadiusKm',
             label: 'Delivery Radius',
@@ -171,6 +186,13 @@ export const ROLE_FORM_CONFIG: Record<string, RoleFormConfig> = {
             ],
           },
           { key: 'assignedCounty', label: 'Assigned County', type: 'select', required: true, options: countyOptions },
+          {
+            key: 'assignedSubCounty',
+            label: 'Assigned Sub-County',
+            type: 'subcounty',
+            required: true,
+            countyKey: 'assignedCounty',
+          },
           { key: 'maxFarmers', label: 'Max Farmers Assignable', type: 'number' },
         ],
       },
@@ -210,6 +232,13 @@ export const ROLE_FORM_CONFIG: Record<string, RoleFormConfig> = {
           { key: 'position', label: 'Position / Title', type: 'text', required: true },
           { key: 'staffId', label: 'Staff ID Number', type: 'text', required: true },
           { key: 'assignedCounty', label: 'Assigned County', type: 'select', required: true, options: countyOptions },
+          {
+            key: 'assignedSubCounty',
+            label: 'Assigned Sub-County',
+            type: 'subcounty',
+            required: true,
+            countyKey: 'assignedCounty',
+          },
         ],
       },
     ],
@@ -336,3 +365,8 @@ export const ROLE_FORM_CONFIG: Record<string, RoleFormConfig> = {
     ],
   },
 }
+
+/** Maps a stored user `role` (as persisted on the User record) back to its wizard type key. */
+export const ROLE_TO_TYPE: Record<string, string> = Object.fromEntries(
+  Object.entries(ROLE_FORM_CONFIG).map(([type, cfg]) => [cfg.apiRole, type]),
+)

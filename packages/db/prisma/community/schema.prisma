@@ -73,11 +73,16 @@ model ReplyVote {
 
 model Expert {
   id              String     @id @default(uuid())
+  userId          String?    @unique
   name            String
   photoUrl        String?
   providerType    ExpertType
   specialisations String[]   @default([])
   countiesServed  String[]   @default([])
+  subCountiesServed String[] @default([])
+  organisation    String?
+  licenceNumber   String?
+  maxFarmers      Int?
   bio             String?
   rating          Float      @default(0)
   reviewCount     Int        @default(0)

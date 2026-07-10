@@ -10,6 +10,19 @@ async function requireAdmin() {
   return session
 }
 
+export async function GET(req: NextRequest) {
+  if (!(await requireAdmin())) {
+    return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
+  }
+  const userId = req.nextUrl.searchParams.get('userId')
+  if (!userId) {
+    return NextResponse.json({ message: 'userId is required' }, { status: 400 })
+  }
+  const upstream = await fetch(`${MARKET_SERVICE}/api/v1/market/supplier-profiles?userId=${userId}`)
+  const result = await upstream.json()
+  return NextResponse.json(result, { status: upstream.status })
+}
+
 export async function POST(req: NextRequest) {
   if (!(await requireAdmin())) {
     return NextResponse.json({ message: 'Forbidden' }, { status: 403 })

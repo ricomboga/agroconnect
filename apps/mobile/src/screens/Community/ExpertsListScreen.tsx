@@ -13,6 +13,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
+import { useFarms } from '../../hooks/useFarms';
+import { useAuthStore } from '../../stores/authStore';
 import { communityApi } from '../../api/community';
 import type { Expert, ExpertType } from '../../api/community';
 import type { CommunityStackParamList } from '../../navigation/types';
@@ -55,14 +57,25 @@ export function ExpertsListScreen({ navigation }: Props) {
   const { isOnline } = useOfflineSync();
   const [filter, setFilter] = useState<ExpertType | ''>('');
 
+  const myCounty = useAuthStore((s) => s.user?.county) ?? undefined;
+  const { data: farmsData } = useFarms(1, 1);
+  const primaryFarm = farmsData?.data?.[0];
+  const county = primaryFarm?.county ?? myCounty;
+  const subCounty = primaryFarm?.subCounty ?? undefined;
+
   const expertsQuery = useQuery({
-    queryKey: ['experts', filter],
+    queryKey: ['experts', filter, county, subCounty],
     queryFn: () =>
-      communityApi.experts.list(filter ? { providerType: filter } : undefined),
+      communityApi.experts.list({
+        providerType: filter || undefined,
+        county,
+        subCounty,
+      }),
     staleTime: isOnline ? 10 * 60 * 1000 : Infinity,
   });
 
   const experts = expertsQuery.data?.data ?? [];
+  const matchedOn = expertsQuery.data?.meta.matched_on;
 
   const renderExpert = ({ item }: { item: Expert }) => {
     const color = TYPE_COLORS[item.providerType];
@@ -124,6 +137,14 @@ export function ExpertsListScreen({ navigation }: Props) {
         })}
       </View>
 
+      {matchedOn && matchedOn !== 'subCounty' && county && (
+        <View style={s.banner}>
+          <Text style={s.bannerText}>
+            {t(`community.experts.matchedOn.${matchedOn}`, { county })}
+          </Text>
+        </View>
+      )}
+
       {expertsQuery.isLoading ? (
         <View style={s.center}><ActivityIndicator size="large" color="#1A6B3C" /></View>
       ) : expertsQuery.isError ? (
@@ -161,6 +182,9 @@ const s = StyleSheet.create({
                      flexWrap: 'wrap' },
   filterChip:      { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 16,
                      borderWidth: 1, borderColor: '#1A6B3C' },
+  banner:          { marginHorizontal: 12, marginBottom: 8, paddingHorizontal: 10, paddingVertical: 6,
+                     backgroundColor: '#FEF3C7', borderRadius: 8 },
+  bannerText:      { fontSize: 10, color: '#92400E' },
   filterChipActive:{ backgroundColor: '#1A6B3C' },
   filterText:      { fontSize: 9, color: '#1A6B3C', fontWeight: '500' },
   filterTextActive:{ color: '#fff', fontWeight: '600' },

@@ -121,6 +121,22 @@ model LicenseApplication {
   @@map("license_applications")
 }
 
+model GovtOfficerProfile {
+  id                String   @id @default(uuid())
+  userId            String   @unique
+  fullName          String
+  phone             String
+  ministry          String
+  position          String
+  staffId           String
+  assignedCounty    String
+  assignedSubCounty String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("govt_officer_profiles")
+}
+
 model GovtDocument {
   id             String            @id @default(uuid())
   userId         String

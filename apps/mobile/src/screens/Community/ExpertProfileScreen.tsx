@@ -129,6 +129,10 @@ export function ExpertProfileScreen({ navigation, route }: Props) {
                 {t(`community.expert.type.${expert.providerType}`)}
               </Text>
             </View>
+            {expert.organisation ? <Text style={s.orgText}>{expert.organisation}</Text> : null}
+            {expert.licenceNumber ? (
+              <Text style={s.licenceText}>{t('community.expert.licence', { number: expert.licenceNumber })}</Text>
+            ) : null}
           </View>
         </View>
 
@@ -209,6 +213,8 @@ const s = StyleSheet.create({
   verifiedLabel:  { fontSize: 12, color: '#2E7D32', fontWeight: '600' },
   typeBadge:      { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
   typeText:       { fontSize: 12, fontWeight: '700' },
+  orgText:        { fontSize: 12, color: '#374151', fontWeight: '600' },
+  licenceText:    { fontSize: 11, color: '#6B7280' },
 
   ratingCard:     { backgroundColor: '#FFF', borderRadius: 12, padding: 14, marginBottom: 12,
                     borderWidth: 1, borderColor: '#EEEEEE', alignItems: 'center', gap: 4 },

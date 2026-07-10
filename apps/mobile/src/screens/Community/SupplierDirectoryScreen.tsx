@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
 import { useAuthStore } from '../../stores/authStore';
+import { useFarms } from '../../hooks/useFarms';
 import { marketApi } from '../../api/market';
 import type { SupplierProfile } from '../../api/market';
 import type { CommunityStackParamList } from '../../navigation/types';
@@ -27,16 +28,21 @@ function getInitials(name: string): string {
 export function SupplierDirectoryScreen({ navigation }: Props) {
   const { t } = useTranslation();
   const { isOnline } = useOfflineSync();
-  const myCounty = useAuthStore((s) => s.user?.county) ?? undefined;
+  const { data: farmsData } = useFarms(1, 1);
+  const primaryFarm = farmsData?.data?.[0];
+  const authCounty = useAuthStore((s) => s.user?.county) ?? undefined;
+  const myCounty = primaryFarm?.county ?? authCounty;
   const [county, setCounty] = useState<string | undefined>(myCounty);
+  const subCounty = county === myCounty ? primaryFarm?.subCounty ?? undefined : undefined;
 
   const suppliersQuery = useQuery({
-    queryKey: ['supplierProfiles', county],
-    queryFn: () => marketApi.supplierProfiles.list({ county }),
+    queryKey: ['supplierProfiles', county, subCounty],
+    queryFn: () => marketApi.supplierProfiles.list({ county, subCounty }),
     staleTime: isOnline ? 10 * 60 * 1000 : Infinity,
   });
 
   const suppliers = suppliersQuery.data?.data ?? [];
+  const matchedOn = suppliersQuery.data?.meta.matched_on;
 
   const renderSupplier = ({ item }: { item: SupplierProfile }) => (
     <Pressable
@@ -95,6 +101,14 @@ export function SupplierDirectoryScreen({ navigation }: Props) {
         </View>
       )}
 
+      {matchedOn && matchedOn !== 'subCounty' && county && (
+        <View style={s.banner}>
+          <Text style={s.bannerText}>
+            {t(`community.suppliers.matchedOn.${matchedOn}`, { county })}
+          </Text>
+        </View>
+      )}
+
       {suppliersQuery.isLoading ? (
         <View style={s.center}><ActivityIndicator size="large" color="#1A6B3C" /></View>
       ) : suppliersQuery.isError ? (
@@ -135,6 +149,9 @@ const s = StyleSheet.create({
                      borderWidth: 1, borderColor: '#1A6B3C' },
   filterChipActive:{ backgroundColor: '#1A6B3C' },
   filterText:      { fontSize: 9, color: '#1A6B3C', fontWeight: '500' },
+  banner:          { marginHorizontal: 12, marginBottom: 8, paddingHorizontal: 10, paddingVertical: 6,
+                     backgroundColor: '#FEF3C7', borderRadius: 8 },
+  bannerText:      { fontSize: 10, color: '#92400E' },
   filterTextActive:{ color: '#fff', fontWeight: '600' },
 
   center:          { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },

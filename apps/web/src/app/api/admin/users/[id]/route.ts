@@ -34,8 +34,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
   const body = await req.json().catch(() => ({}))
   const { action, ...rest } = body as { action?: string; [k: string]: unknown }
-  const path = action === 'verify' ? 'verify' : 'status'
-  const upstream = await fetch(`${AUTH}/internal/admin/users/${params.id}/${path}`, {
+  const url =
+    action === 'verify'
+      ? `${AUTH}/internal/admin/users/${params.id}/verify`
+      : action === 'update'
+        ? `${AUTH}/internal/admin/users/${params.id}`
+        : `${AUTH}/internal/admin/users/${params.id}/status`
+  const upstream = await fetch(url, {
     method: 'PATCH',
     headers: serviceHeaders(),
     body: JSON.stringify(rest),

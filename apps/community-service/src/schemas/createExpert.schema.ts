@@ -1,11 +1,16 @@
 import { z } from 'zod';
 
 export const createExpertSchema = z.object({
+  userId: z.string().uuid().optional(),
   name: z.string().min(2).max(100),
   photoUrl: z.string().url().optional(),
   providerType: z.enum(['agronomist', 'vet', 'extension_officer', 'soil_lab']),
   specialisations: z.array(z.string().max(80)).min(1).max(10),
   countiesServed: z.array(z.string().max(80)).min(1).max(50),
+  subCountiesServed: z.array(z.string().max(80)).max(200).default([]),
+  organisation: z.string().max(150).optional(),
+  licenceNumber: z.string().max(80).optional(),
+  maxFarmers: z.number().int().min(0).optional(),
   bio: z.string().max(1000).optional(),
   rating: z.number().min(0).max(5).default(0),
   reviewCount: z.number().int().min(0).default(0),

@@ -66,3 +66,29 @@ export async function setPostStatus(id: string, status: 'active' | 'deleted'): P
     handleError(err, 'setPostStatus');
   }
 }
+
+export interface ExpertDirectoryRow {
+  id: string;
+  userId: string | null;
+  name: string;
+  providerType: string;
+  organisation: string | null;
+  licenceNumber: string | null;
+  maxFarmers: number | null;
+  countiesServed: string[];
+  subCountiesServed: string[];
+  rating: number;
+  reviewCount: number;
+}
+
+export async function getExperts(): Promise<ExpertDirectoryRow[]> {
+  try {
+    const res = await client.get<{ data: ExpertDirectoryRow[] }>('/api/v1/community/experts', {
+      params: { page_size: 500 },
+    });
+    return res.data.data;
+  } catch (err) {
+    logger.warn({ err }, 'community-service experts unavailable');
+    return [];
+  }
+}

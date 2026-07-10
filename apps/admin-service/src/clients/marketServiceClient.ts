@@ -29,3 +29,27 @@ export async function getStats(): Promise<MarketStats> {
     return { active_listings: 0 };
   }
 }
+
+export interface SupplierDirectoryRow {
+  id: string;
+  userId: string;
+  businessName: string;
+  businessRegNumber: string | null;
+  deliveryRadiusKm: string | null;
+  county: string;
+  subCounty: string | null;
+  categories: string[];
+  phone: string;
+}
+
+export async function getSupplierProfiles(): Promise<SupplierDirectoryRow[]> {
+  try {
+    const res = await client.get<{ data: SupplierDirectoryRow[] }>('/api/v1/market/supplier-profiles', {
+      params: { page_size: 500 },
+    });
+    return res.data.data;
+  } catch (err) {
+    logger.warn({ err }, 'market-service supplier-profiles unavailable');
+    return [];
+  }
+}

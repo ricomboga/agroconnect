@@ -18,6 +18,7 @@ model User {
   role         UserRole
   partnerBankId String?
   county       String?
+  subCounty    String?
   language     Language   @default(sw)
   isVerified   Boolean    @default(false)
   isActive     Boolean    @default(true)
@@ -172,10 +173,4 @@ enum KycStatus {
   submitted
   verified
   rejected
-}
-
-enum StaffRole {
-  admin
-  county_admin
-  moderator
 }

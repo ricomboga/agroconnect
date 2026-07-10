@@ -1,5 +1,8 @@
 import * as farmClient from '../clients/farmServiceClient.js';
 import * as financeClient from '../clients/financeServiceClient.js';
+import * as communityClient from '../clients/communityServiceClient.js';
+import * as marketClient from '../clients/marketServiceClient.js';
+import * as govtClient from '../clients/govtServiceClient.js';
 
 export async function getFarmersByCounty(county?: string) {
   const rows = await farmClient.getFarmersByCounty();
@@ -12,6 +15,25 @@ export async function getLivestockStats(filters: { county?: string; animalType?:
 
 export async function getLoansByInstitution() {
   return financeClient.getLoansByInstitution();
+}
+
+export async function getExpertDirectory(county?: string) {
+  const rows = await communityClient.getExperts();
+  return county ? rows.filter((row) => row.countiesServed.includes(county)) : rows;
+}
+
+export async function getSupplierDirectory(county?: string) {
+  const rows = await marketClient.getSupplierProfiles();
+  return county ? rows.filter((row) => row.county === county) : rows;
+}
+
+export async function getLenderDirectory() {
+  return financeClient.getLoanPartners();
+}
+
+export async function getOfficerDirectory(county?: string) {
+  const rows = await govtClient.getOfficerProfiles();
+  return county ? rows.filter((row) => row.assignedCounty === county) : rows;
 }
 
 function toCsv<T extends object>(rows: T[]): string {
@@ -29,7 +51,7 @@ function toCsv<T extends object>(rows: T[]): string {
 }
 
 export async function exportReportCsv(
-  type: 'farmers-by-county' | 'livestock' | 'loans-by-institution',
+  type: 'farmers-by-county' | 'livestock' | 'loans-by-institution' | 'experts' | 'suppliers' | 'lenders' | 'govt-officers',
   filters: { county?: string; animalType?: string },
 ): Promise<string> {
   switch (type) {
@@ -39,5 +61,13 @@ export async function exportReportCsv(
       return toCsv(await getLivestockStats(filters));
     case 'loans-by-institution':
       return toCsv(await getLoansByInstitution());
+    case 'experts':
+      return toCsv(await getExpertDirectory(filters.county));
+    case 'suppliers':
+      return toCsv(await getSupplierDirectory(filters.county));
+    case 'lenders':
+      return toCsv(await getLenderDirectory());
+    case 'govt-officers':
+      return toCsv(await getOfficerDirectory(filters.county));
   }
 }

@@ -41,6 +41,52 @@ export const getLoansByInstitution = async (req: AdminRequest, res: Response, ne
   }
 };
 
+export const getExpertDirectory = async (req: AdminRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    assertCapability(req.user, 'analytics');
+    const { county } = req.query as unknown as LivestockReportQuery;
+    const scope = countyScopeFor(req);
+    const data = await reportsService.getExpertDirectory(scope ?? county);
+    res.json({ data });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getSupplierDirectory = async (req: AdminRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    assertCapability(req.user, 'analytics');
+    const { county } = req.query as unknown as LivestockReportQuery;
+    const scope = countyScopeFor(req);
+    const data = await reportsService.getSupplierDirectory(scope ?? county);
+    res.json({ data });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getLenderDirectory = async (req: AdminRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    assertCapability(req.user, 'analytics');
+    const data = await reportsService.getLenderDirectory();
+    res.json({ data });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getOfficerDirectory = async (req: AdminRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    assertCapability(req.user, 'analytics');
+    const { county } = req.query as unknown as LivestockReportQuery;
+    const scope = countyScopeFor(req);
+    const data = await reportsService.getOfficerDirectory(scope ?? county);
+    res.json({ data });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const exportReport = async (req: AdminRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     assertCapability(req.user, 'analytics');

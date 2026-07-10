@@ -108,6 +108,7 @@ enum PartnerType {
   sacco
   mobile_lender
   ngo_grant
+  cooperative
 }
 
 enum LoanCategory {
@@ -129,6 +130,10 @@ model LoanPartner {
   type               PartnerType
   description        String?
   logoUrl            String?
+  licenceNo          String?
+  paybill            String?
+  headOfficeCounty   String?
+  headOfficeSubCounty String?
   minLoanKes         Decimal       @db.Decimal(12, 2)
   maxLoanKes         Decimal       @db.Decimal(12, 2)
   processingDays     Int

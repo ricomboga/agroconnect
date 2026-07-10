@@ -8,6 +8,7 @@ import {
   adminSetUserActive,
   adminVerifyUser,
   adminCreateUser,
+  adminUpdateUser,
   adminDeleteUser,
   type AdminUserFilter,
 } from '../repositories/adminUserRepository.js';
@@ -52,6 +53,7 @@ export async function listUsers(params: ListUsersParams) {
     email: u.email ?? null,
     role: u.role,
     county: u.county ?? '',
+    sub_county: u.subCounty ?? '',
     kyc_status: u.kycStatus,
     is_active: u.isActive,
     is_verified: u.isVerified,
@@ -73,6 +75,7 @@ export async function getUser(id: string) {
     email: u.email ?? null,
     role: u.role,
     county: u.county ?? '',
+    sub_county: u.subCounty ?? '',
     kyc_status: u.kycStatus,
     is_active: u.isActive,
     is_verified: u.isVerified,
@@ -90,9 +93,11 @@ export interface CreateUserParams {
   fullName: string;
   role: string;
   county?: string;
+  subCounty?: string;
   language?: string;
   isSuperAdmin?: boolean;
   staffRole?: string;
+  partnerBankId?: string;
 }
 
 export async function createUser(params: CreateUserParams) {
@@ -111,9 +116,11 @@ export async function createUser(params: CreateUserParams) {
     fullName: params.fullName,
     role: params.role as UserRole,
     county: params.county,
+    subCounty: params.subCounty,
     language: params.language as 'sw' | 'en' | undefined,
     isSuperAdmin: params.isSuperAdmin,
     staffRole: params.staffRole as 'admin' | 'county_admin' | 'moderator' | undefined,
+    partnerBankId: params.partnerBankId,
     isVerified: !needsManualVerification,
     kycStatus: needsManualVerification ? 'pending' : 'verified',
   });
@@ -124,13 +131,47 @@ export async function createUser(params: CreateUserParams) {
     email: u.email ?? null,
     role: u.role,
     county: u.county ?? '',
+    sub_county: u.subCounty ?? '',
     kyc_status: u.kycStatus,
     is_active: u.isActive,
     is_verified: u.isVerified,
     is_super_admin: u.isSuperAdmin,
     staff_role: u.staffRole,
+    partner_bank_id: u.partnerBankId ?? null,
     created_at: u.createdAt,
   };
+}
+
+export interface UpdateUserParams {
+  fullName?: string;
+  email?: string;
+  county?: string;
+  subCounty?: string;
+  partnerBankId?: string;
+}
+
+export async function updateUser(id: string, params: UpdateUserParams) {
+  try {
+    const u = await adminUpdateUser(id, params);
+    return {
+      id: u.id,
+      full_name: u.fullName,
+      phone: u.phone,
+      email: u.email ?? null,
+      role: u.role,
+      county: u.county ?? '',
+      sub_county: u.subCounty ?? '',
+      kyc_status: u.kycStatus,
+      is_active: u.isActive,
+      is_verified: u.isVerified,
+      is_super_admin: u.isSuperAdmin,
+      staff_role: u.staffRole,
+      partner_bank_id: u.partnerBankId ?? null,
+      created_at: u.createdAt,
+    };
+  } catch {
+    throw createError('User not found', 404, 'USER_NOT_FOUND', 'error.user_not_found');
+  }
 }
 
 export async function deleteUser(id: string) {
