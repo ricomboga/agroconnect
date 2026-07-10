@@ -1,6 +1,5 @@
 'use client'
 
-import { use } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { FarmerDetailView, farmTypeInfo } from './_components/FarmerDetailView'
@@ -23,7 +22,7 @@ interface AdminUser {
 }
 
 interface PageProps {
-  params: Promise<{ farmerId: string }>
+  params: { farmerId: string }
 }
 
 function memberMonths(createdAt: string): number {
@@ -39,7 +38,7 @@ const ROLE_LABEL: Record<string, string> = {
 }
 
 export default function UserDetailPage({ params }: PageProps) {
-  const { farmerId } = use(params)
+  const { farmerId } = params
   const router = useRouter()
   const queryClient = useQueryClient()
 
