@@ -65,7 +65,7 @@ export function DashboardContent() {
 
   return (
     <div>
-      <p className="mb-3 text-[14px] font-bold text-[#111827]">Platform Overview</p>
+      <p className="mb-3 text-2xl font-bold text-[#111827]">Platform Overview</p>
 
       {/* 5-column stat cards */}
       {isLoading ? (
@@ -108,13 +108,13 @@ export function DashboardContent() {
 
         {/* Panel 1: Farmer Types */}
         <div className="rounded-[6px] border border-[#E5E7EB] bg-white p-[10px]">
-          <p className="mb-[6px] text-[10px] font-semibold text-[#111827]">Farmer Types</p>
+          <p className="mb-[6px] text-md font-semibold text-[#111827]">Farmer Types</p>
           <div className="space-y-[10px]">
             {FARMER_TYPES.map((row) => (
               <div key={row.label}>
                 <div className="mb-[3px] flex items-center justify-between">
-                  <span className="text-[9px] text-[#374151]">{row.label}</span>
-                  <span className="text-[9px] font-bold" style={{ color: row.color }}>
+                  <span className="text-sm text-[#374151]">{row.label}</span>
+                  <span className="text-sm font-bold" style={{ color: row.color }}>
                     {row.count}
                   </span>
                 </div>
@@ -131,7 +131,7 @@ export function DashboardContent() {
 
         {/* Panel 2: Registration This Week */}
         <div className="rounded-[6px] border border-[#E5E7EB] bg-white p-[10px]">
-          <p className="mb-[6px] text-[10px] font-semibold text-[#111827]">Registration This Week</p>
+          <p className="mb-[6px] text-md font-semibold text-[#111827]">Registration This Week</p>
           <div className="flex h-[44px] items-end gap-[3px]">
             {WEEK_BARS.map((bar) => (
               <div key={bar.day} className="flex flex-1 flex-col items-center">
@@ -147,22 +147,22 @@ export function DashboardContent() {
           </div>
           <div className="mt-[3px] flex gap-[3px]">
             {WEEK_BARS.map((bar) => (
-              <div key={bar.day} className="flex-1 text-center text-[7px] text-[#9CA3AF]">
+              <div key={bar.day} className="flex-1 text-center text-xs text-[#9CA3AF]">
                 {bar.day.slice(0, 1)}
               </div>
             ))}
           </div>
-          <p className="mt-[5px] text-[8px] text-[#6B7280]">Mon–Sun · Peak: Friday</p>
+          <p className="mt-[5px] text-xs text-[#6B7280]">Mon–Sun · Peak: Friday</p>
         </div>
 
         {/* Panel 3: KYC Status */}
         <div className="rounded-[6px] border border-[#E5E7EB] bg-white p-[10px]">
-          <p className="mb-[6px] text-[10px] font-semibold text-[#111827]">KYC Status</p>
+          <p className="mb-[6px] text-md font-semibold text-[#111827]">KYC Status</p>
           <div>
             {KYC_ROWS.map((row, i) => (
               <div
                 key={row.label}
-                className="flex items-center justify-between py-[5px] text-[9px]"
+                className="flex items-center justify-between py-[5px] text-sm"
                 style={{ borderBottom: i < KYC_ROWS.length - 1 ? '1px solid #E5E7EB' : 'none' }}
               >
                 <span className="text-[#374151]">

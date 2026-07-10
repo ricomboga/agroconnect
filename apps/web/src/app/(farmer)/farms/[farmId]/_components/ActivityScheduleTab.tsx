@@ -153,7 +153,7 @@ export function ActivityScheduleTab({ farmId }: { farmId: string }) {
   })
 
   const selectCls =
-    'border border-[#E5E7EB] rounded-[5px] py-[4px] px-[6px] text-[9px] text-[#374151] bg-[#F9FAFB] focus:outline-none focus:border-[#1A6B3C]'
+    'border border-[#E5E7EB] rounded-[5px] py-[4px] px-[6px] text-sm text-[#374151] bg-[#F9FAFB] focus:outline-none focus:border-[#1A6B3C]'
 
   return (
     <div>
@@ -163,7 +163,7 @@ export function ActivityScheduleTab({ farmId }: { farmId: string }) {
           <button
             key={key}
             onClick={() => setFilter(key)}
-            className="rounded-[4px] px-[10px] py-[5px] text-[9px] font-medium transition-colors cursor-pointer"
+            className="rounded-[4px] px-[10px] py-[5px] text-sm font-medium transition-colors cursor-pointer"
             style={{
               background: filter === key ? '#EAF4EE' : '#F3F4F6',
               color:      filter === key ? '#1A6B3C' : '#6B7280',
@@ -181,7 +181,7 @@ export function ActivityScheduleTab({ farmId }: { farmId: string }) {
         </div>
       ) : activities.length === 0 ? (
         <div className="rounded-[8px] border-2 border-dashed border-[#E5E7EB] py-8 text-center">
-          <p className="text-[10px] font-semibold text-[#6B7280] mb-1">
+          <p className="text-md font-semibold text-[#6B7280] mb-1">
             No activities{filter !== 'all' ? ` in "${FILTERS.find((f) => f.key === filter)?.label}"` : ''}
           </p>
         </div>
@@ -212,21 +212,21 @@ export function ActivityScheduleTab({ farmId }: { farmId: string }) {
                   >
                     {fmtDate(act.scheduledDate)}
                     {overdue && (
-                      <span className="ml-1 w-badge-red text-[7px] px-[4px] py-[1px]">
+                      <span className="ml-1 w-badge-red text-xs px-[4px] py-[1px]">
                         overdue
                       </span>
                     )}
                   </td>
                   <td>
                     <p className="font-medium text-[#111827]">{act.title}</p>
-                    <p className="text-[8px] text-[#9CA3AF] capitalize">{act.type}</p>
+                    <p className="text-xs text-[#9CA3AF] capitalize">{act.type}</p>
                   </td>
                   <td>
                     {act.plotName && (
-                      <p className="text-[9px]">{act.plotName}</p>
+                      <p className="text-sm">{act.plotName}</p>
                     )}
                     {act.cropType && (
-                      <p className="text-[8px] text-[#9CA3AF] capitalize">{act.cropType}</p>
+                      <p className="text-xs text-[#9CA3AF] capitalize">{act.cropType}</p>
                     )}
                     {!act.plotName && !act.cropType && <span className="text-[#9CA3AF]">—</span>}
                   </td>
@@ -251,7 +251,7 @@ export function ActivityScheduleTab({ farmId }: { farmId: string }) {
                         ))}
                       </select>
                     ) : (
-                      <span className="text-[9px]">
+                      <span className="text-sm">
                         {act.assignedWorker?.fullName ?? '—'}
                       </span>
                     )}

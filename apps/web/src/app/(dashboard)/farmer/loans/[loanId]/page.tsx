@@ -321,7 +321,7 @@ function DocumentRow({ doc, loanId, canDelete }: { doc: LoanDocument; loanId: st
         </div>
         <div className="min-w-0">
           <p className="text-sm font-semibold text-gray-900 truncate">{doc.name}</p>
-          <p className="text-[11px] text-gray-400 mt-0.5">
+          <p className="text-base text-gray-400 mt-0.5">
             {typeLabel} · {fmtBytes(doc.sizeBytes)} · {new Date(doc.uploadedAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}
           </p>
         </div>
@@ -434,7 +434,7 @@ export default function LoanDetailPage({ params }: { params: { loanId: string } 
                 <div key={label} className="flex items-center gap-3 px-4 py-3">
                   <Icon className="h-4 w-4 text-gray-400 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] text-gray-400">{label}</p>
+                    <p className="text-md text-gray-400">{label}</p>
                     <p className={`text-sm font-semibold truncate ${color}`}>{value}</p>
                   </div>
                 </div>
@@ -485,7 +485,7 @@ export default function LoanDetailPage({ params }: { params: { loanId: string } 
                         ['Remaining Months', String(loan.repaymentMonths)],
                       ].map(([l, v]) => (
                         <div key={l}>
-                          <p className="text-[10px] text-emerald-600">{l}</p>
+                          <p className="text-md text-emerald-600">{l}</p>
                           <p className="text-sm font-bold text-emerald-900">{v}</p>
                         </div>
                       ))}

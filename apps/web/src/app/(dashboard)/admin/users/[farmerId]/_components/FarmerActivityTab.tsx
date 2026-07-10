@@ -71,7 +71,7 @@ export function FarmerActivityTab({ farmerId }: FarmerActivityTabProps) {
 
   if (activities.length === 0) {
     return (
-      <div className="flex h-32 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white text-[9px] text-[#6B7280]">
+      <div className="flex h-32 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white text-sm text-[#6B7280]">
         No activities in the last 30 days
       </div>
     )

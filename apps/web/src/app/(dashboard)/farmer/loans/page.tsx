@@ -135,15 +135,15 @@ function WelcomeBanner({ score, loans }: { score: CreditScoreShape; loans: Dummy
           {/* Quick stats row */}
           <div className="flex flex-wrap gap-4 mt-4">
             <div className="bg-white/10 rounded-xl px-4 py-2.5 min-w-[110px]">
-              <p className="text-[11px] text-green-300 font-medium uppercase tracking-wide">Active Loans</p>
+              <p className="text-base text-green-300 font-medium uppercase tracking-wide">Active Loans</p>
               <p className="text-xl font-bold text-white mt-0.5">{disbursed.length}</p>
             </div>
             <div className="bg-white/10 rounded-xl px-4 py-2.5 min-w-[110px]">
-              <p className="text-[11px] text-green-300 font-medium uppercase tracking-wide">Under Review</p>
+              <p className="text-base text-green-300 font-medium uppercase tracking-wide">Under Review</p>
               <p className="text-xl font-bold text-white mt-0.5">{pending.length}</p>
             </div>
             <div className="bg-white/10 rounded-xl px-4 py-2.5 min-w-[130px]">
-              <p className="text-[11px] text-green-300 font-medium uppercase tracking-wide">Max Eligible</p>
+              <p className="text-base text-green-300 font-medium uppercase tracking-wide">Max Eligible</p>
               <p className="text-lg font-bold text-white mt-0.5">{fmtKes(score.maxLoanKes)}</p>
             </div>
           </div>
@@ -170,7 +170,7 @@ function WelcomeBanner({ score, loans }: { score: CreditScoreShape; loans: Dummy
             <div className="mt-1.5 flex items-center justify-center gap-1.5">
               <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${bandColor}`}>Band {score.band}</span>
             </div>
-            <p className="text-[10px] text-green-400 mt-1">Credit Score</p>
+            <p className="text-md text-green-400 mt-1">Credit Score</p>
           </div>
 
           {/* Sub-scores */}
@@ -182,7 +182,7 @@ function WelcomeBanner({ score, loans }: { score: CreditScoreShape; loans: Dummy
               ['Engagement', score.platformEngagementScore],
             ] as [string, number][]).map(([label, val]) => (
               <div key={label}>
-                <div className="flex justify-between text-[10px] text-green-300 mb-0.5">
+                <div className="flex justify-between text-md text-green-300 mb-0.5">
                   <span>{label}</span>
                   <span>{val.toFixed(1)}/25</span>
                 </div>
@@ -236,24 +236,24 @@ function AlertPanel({ loans }: { loans: DummyLoan[] }) {
               return (
                 <div key={loan.id} className="flex items-center justify-between bg-white border border-red-200 rounded-lg px-3 py-2.5">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className={`h-7 w-7 rounded-md ${loan.institution.color} flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0`}>
+                    <div className={`h-7 w-7 rounded-md ${loan.institution.color} flex items-center justify-center text-white text-md font-bold flex-shrink-0`}>
                       {loan.institution.initials}
                     </div>
                     <div className="min-w-0">
                       <p className="text-xs font-semibold text-red-900 truncate">{loan.institution.shortName}, {loan.productTitle}</p>
-                      <p className="text-[10px] text-red-500">
+                      <p className="text-md text-red-500">
                         {overduePmts.length} payment{overduePmts.length > 1 ? 's' : ''} overdue · {daysLate} day{daysLate !== 1 ? 's' : ''} late
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 ml-2 flex-shrink-0">
                     <div className="text-right">
-                      <p className="text-[10px] text-red-500">Outstanding</p>
+                      <p className="text-md text-red-500">Outstanding</p>
                       <p className="text-sm font-bold text-red-700">{fmtKes(emi * overduePmts.length)}</p>
                     </div>
                     <Link
                       href={`/farmer/loans/${loan.id}`}
-                      className="text-[10px] font-semibold bg-red-600 text-white px-2.5 py-1 rounded-md hover:bg-red-700 transition-colors whitespace-nowrap"
+                      className="text-md font-semibold bg-red-600 text-white px-2.5 py-1 rounded-md hover:bg-red-700 transition-colors whitespace-nowrap"
                     >
                       Pay Now
                     </Link>
@@ -299,7 +299,7 @@ function PaymentHistoryTable({ schedule, emi }: { schedule: PaymentRecord[]; emi
                 {p.paidDate ? fmtDate(p.paidDate) : <span className="text-gray-300">—</span>}
               </td>
               <td className="px-3 py-2">
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize ${statusStyle[p.status]}`}>
+                <span className={`text-md font-semibold px-2 py-0.5 rounded-full capitalize ${statusStyle[p.status]}`}>
                   {p.status === 'due_today' ? 'Due Today' : p.status.charAt(0).toUpperCase() + p.status.slice(1)}
                 </span>
               </td>
@@ -334,17 +334,17 @@ function LoanPaymentCard({ loan }: { loan: DummyLoan }) {
             {loan.institution.initials}
           </div>
           <div className="min-w-0">
-            <p className="text-[10px] text-gray-400 font-medium">{loan.institution.name}</p>
+            <p className="text-md text-gray-400 font-medium">{loan.institution.name}</p>
             <p className="text-sm font-bold text-gray-900 truncate">{loan.productTitle}</p>
           </div>
         </div>
         <div className="flex items-center gap-2 ml-2 flex-shrink-0">
           {isOverdue && (
-            <span className="text-[10px] font-bold bg-red-600 text-white px-2 py-0.5 rounded-full flex items-center gap-1">
+            <span className="text-md font-bold bg-red-600 text-white px-2 py-0.5 rounded-full flex items-center gap-1">
               <AlertTriangle className="h-2.5 w-2.5" /> {overdueMonths} Overdue
             </span>
           )}
-          <span className="text-[10px] font-semibold bg-purple-100 text-purple-700 px-2.5 py-0.5 rounded-full">Active</span>
+          <span className="text-md font-semibold bg-purple-100 text-purple-700 px-2.5 py-0.5 rounded-full">Active</span>
           <Link href={`/farmer/loans/${loan.id}`} className="text-gray-400 hover:text-green-600 transition-colors">
             <ChevronRight className="h-4 w-4" />
           </Link>
@@ -355,19 +355,19 @@ function LoanPaymentCard({ loan }: { loan: DummyLoan }) {
         {/* Stats grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="bg-gray-50 rounded-lg p-2.5 text-center">
-            <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Approved</p>
+            <p className="text-md text-gray-400 font-medium uppercase tracking-wide">Approved</p>
             <p className="text-sm font-bold text-gray-900 mt-0.5">{fmtKes(loan.approvedAmountKes ?? 0)}</p>
           </div>
           <div className="bg-emerald-50 rounded-lg p-2.5 text-center">
-            <p className="text-[10px] text-emerald-600 font-medium uppercase tracking-wide">Paid So Far</p>
+            <p className="text-md text-emerald-600 font-medium uppercase tracking-wide">Paid So Far</p>
             <p className="text-sm font-bold text-emerald-700 mt-0.5">{fmtKes(amountPaid)}</p>
           </div>
           <div className={`rounded-lg p-2.5 text-center ${isOverdue ? 'bg-red-50' : 'bg-blue-50'}`}>
-            <p className={`text-[10px] font-medium uppercase tracking-wide ${isOverdue ? 'text-red-500' : 'text-blue-500'}`}>Remaining</p>
+            <p className={`text-md font-medium uppercase tracking-wide ${isOverdue ? 'text-red-500' : 'text-blue-500'}`}>Remaining</p>
             <p className={`text-sm font-bold mt-0.5 ${isOverdue ? 'text-red-700' : 'text-blue-700'}`}>{fmtKes(amountRemaining)}</p>
           </div>
           <div className="bg-gray-50 rounded-lg p-2.5 text-center">
-            <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Monthly EMI</p>
+            <p className="text-md text-gray-400 font-medium uppercase tracking-wide">Monthly EMI</p>
             <p className="text-sm font-bold text-gray-900 mt-0.5">{fmtKes(emi)}</p>
           </div>
         </div>
@@ -399,11 +399,11 @@ function LoanPaymentCard({ loan }: { loan: DummyLoan }) {
             <div className="flex items-center gap-2">
               <CalendarDays className={`h-4 w-4 ${isOverdue && nextDue.status === 'overdue' ? 'text-red-500' : 'text-green-600'}`} />
               <div>
-                <p className={`text-[10px] font-medium ${isOverdue && nextDue.status === 'overdue' ? 'text-red-500' : 'text-green-600'}`}>
+                <p className={`text-md font-medium ${isOverdue && nextDue.status === 'overdue' ? 'text-red-500' : 'text-green-600'}`}>
                   {nextDue.status === 'overdue' ? `Overdue since ${fmtDate(nextDue.dueDate)}` : `Next payment due ${fmtDate(nextDue.dueDate)}`}
                 </p>
                 {nextDue.status !== 'overdue' && (
-                  <p className="text-[10px] text-gray-400 mt-0.5">
+                  <p className="text-md text-gray-400 mt-0.5">
                     in {daysBetween(new Date().toISOString().slice(0, 10), nextDue.dueDate)} days
                   </p>
                 )}
@@ -433,7 +433,7 @@ function LoanPaymentCard({ loan }: { loan: DummyLoan }) {
 
         {/* M-Pesa ref */}
         {loan.mpesaDisbursementRef && (
-          <div className="flex items-center justify-between text-[11px] text-gray-400 pt-1 border-t border-gray-50">
+          <div className="flex items-center justify-between text-base text-gray-400 pt-1 border-t border-gray-50">
             <span>Disbursed via M-Pesa</span>
             <span className="font-mono font-semibold text-gray-600">{loan.mpesaDisbursementRef}</span>
           </div>
@@ -460,21 +460,21 @@ function LoanStatusCard({ loan }: { loan: DummyLoan }) {
         <p className="text-sm font-bold text-gray-900 truncate">{loan.productTitle}</p>
         <div className="flex items-center gap-3 mt-1 flex-wrap">
           <span className="text-xs text-gray-500">{fmtKes(loan.amountRequestedKes)}</span>
-          <span className="text-[10px] text-gray-400">·</span>
+          <span className="text-md text-gray-400">·</span>
           <span className="text-xs text-gray-500">Applied {daysAgo}d ago</span>
           {loan.status === 'under_review' && (
             <>
-              <span className="text-[10px] text-gray-400">·</span>
+              <span className="text-md text-gray-400">·</span>
               <span className="text-xs text-yellow-600 font-medium">Est. 2–5 business days</span>
             </>
           )}
         </div>
         {loan.rejectionReason && (
-          <p className="text-[11px] text-red-500 mt-1 italic">{loan.rejectionReason}</p>
+          <p className="text-base text-red-500 mt-1 italic">{loan.rejectionReason}</p>
         )}
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
-        <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-full ${s.color}`}>
+        <span className={`inline-flex items-center gap-1 text-md font-semibold px-2.5 py-1 rounded-full ${s.color}`}>
           <Icon className="h-3 w-3" /> {s.label}
         </span>
         <Link href={`/farmer/loans/${loan.id}`} className="text-gray-300 group-hover:text-green-600 transition-colors">
@@ -523,7 +523,7 @@ function ProductCard({ product, creditBand }: { product: LoanProduct; creditBand
               {meta.label}
             </span>
             {product.postedDaysAgo <= 3 && (
-              <span className="text-[10px] font-bold text-white bg-green-500 px-1.5 py-0.5 rounded-full">NEW</span>
+              <span className="text-md font-bold text-white bg-green-500 px-1.5 py-0.5 rounded-full">NEW</span>
             )}
           </div>
         </div>
@@ -533,28 +533,28 @@ function ProductCard({ product, creditBand }: { product: LoanProduct; creditBand
         {/* Key numbers */}
         <div className="grid grid-cols-3 gap-3 mb-4">
           <div className="bg-gray-50 rounded-lg p-2.5 text-center">
-            <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Interest</p>
+            <p className="text-md text-gray-400 font-medium uppercase tracking-wide">Interest</p>
             <p className="text-lg font-bold text-gray-900">{product.interestRatePct}%</p>
-            <p className="text-[10px] text-gray-400">per annum</p>
+            <p className="text-md text-gray-400">per annum</p>
           </div>
           <div className="bg-gray-50 rounded-lg p-2.5 text-center">
-            <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Amount</p>
+            <p className="text-md text-gray-400 font-medium uppercase tracking-wide">Amount</p>
             <p className="text-sm font-bold text-gray-900 leading-tight">{fmtKes(product.minAmountKes)}</p>
-            <p className="text-[10px] text-gray-400">up to {fmtKes(product.maxAmountKes)}</p>
+            <p className="text-md text-gray-400">up to {fmtKes(product.maxAmountKes)}</p>
           </div>
           <div className="bg-gray-50 rounded-lg p-2.5 text-center">
-            <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Term</p>
+            <p className="text-md text-gray-400 font-medium uppercase tracking-wide">Term</p>
             <p className="text-lg font-bold text-gray-900">{product.maxTermMonths}mo</p>
-            <p className="text-[10px] text-gray-400">max repayment</p>
+            <p className="text-md text-gray-400">max repayment</p>
           </div>
         </div>
 
         {/* Tags */}
         <div className="flex flex-wrap gap-1.5 mb-4">
           {product.tags.map((t) => (
-            <span key={t} className="text-[10px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{t}</span>
+            <span key={t} className="text-md font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{t}</span>
           ))}
-          <span className="text-[10px] font-medium text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">
+          <span className="text-md font-medium text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">
             {product.processingFeePct}% processing fee
           </span>
         </div>
@@ -562,11 +562,11 @@ function ProductCard({ product, creditBand }: { product: LoanProduct; creditBand
         {/* EMI sample */}
         <div className="bg-green-50 border border-green-100 rounded-lg px-3 py-2 mb-4 flex items-center justify-between">
           <div>
-            <p className="text-[10px] text-green-600 font-medium">Sample: {fmtKes(sampleAmount)} over {sampleTerm} months</p>
+            <p className="text-md text-green-600 font-medium">Sample: {fmtKes(sampleAmount)} over {sampleTerm} months</p>
             <p className="text-sm font-bold text-green-800">~{fmtKes(emi)}/month</p>
           </div>
           <div className="text-right">
-            <p className="text-[10px] text-green-600">Total interest</p>
+            <p className="text-md text-green-600">Total interest</p>
             <p className="text-sm font-semibold text-green-700">{fmtKes(totalInterest)}</p>
           </div>
         </div>
@@ -628,7 +628,7 @@ function ProductCard({ product, creditBand }: { product: LoanProduct; creditBand
                   <div key={d.type} className="flex items-center gap-2 text-xs">
                     <div className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${d.required ? 'bg-green-500' : 'bg-gray-300'}`} />
                     <span className={d.required ? 'text-gray-700' : 'text-gray-400'}>{d.label}</span>
-                    {!d.required && <span className="text-[10px] text-gray-400 italic">(optional)</span>}
+                    {!d.required && <span className="text-md text-gray-400 italic">(optional)</span>}
                   </div>
                 ))}
               </div>
@@ -667,7 +667,7 @@ function ProductCard({ product, creditBand }: { product: LoanProduct; creditBand
         </div>
 
         {!eligible && (
-          <p className="text-[10px] text-amber-600 mt-2 flex items-center gap-1">
+          <p className="text-md text-amber-600 mt-2 flex items-center gap-1">
             <AlertCircle className="h-3 w-3" />
             Requires Band {product.minCreditBand} credit. Improve your score by recording more farm activity
           </p>

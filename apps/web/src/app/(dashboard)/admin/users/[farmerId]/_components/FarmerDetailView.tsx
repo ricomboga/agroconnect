@@ -166,7 +166,7 @@ export function FarmerDetailView({ farmerId, role }: Props) {
             padding: 10,
           }}
         >
-          <div style={{ fontSize: 10, fontWeight: 600, color: '#111827', marginBottom: 6 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: '#111827', marginBottom: 6 }}>
             Recent Activities
           </div>
           <WebDataTable columns={ACTIVITY_COLS} data={ACTIVITY_ROWS} />
@@ -182,7 +182,7 @@ export function FarmerDetailView({ farmerId, role }: Props) {
               padding: 10,
             }}
           >
-            <div style={{ fontSize: 10, fontWeight: 600, color: '#111827', marginBottom: 6 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#111827', marginBottom: 6 }}>
               Livestock / Animals
             </div>
             {LIVESTOCK_ITEMS.map((item) => (
@@ -191,7 +191,7 @@ export function FarmerDetailView({ farmerId, role }: Props) {
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  fontSize: 9,
+                  fontSize: 13,
                   color: '#374151',
                   padding: '4px 0',
                   borderBottom: '1px solid #E5E7EB',
@@ -215,7 +215,7 @@ export function FarmerDetailView({ farmerId, role }: Props) {
           marginBottom: 12,
         }}
       >
-        <div style={{ fontSize: 10, fontWeight: 600, color: '#111827', marginBottom: 8 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: '#111827', marginBottom: 8 }}>
           Credit Score Breakdown
         </div>
         {!creditScore ? (
@@ -228,7 +228,7 @@ export function FarmerDetailView({ farmerId, role }: Props) {
                   style={{
                     display: 'flex',
                     justifyContent: 'space-between',
-                    fontSize: 9,
+                    fontSize: 13,
                     color: '#374151',
                     marginBottom: 3,
                   }}
@@ -258,7 +258,7 @@ export function FarmerDetailView({ farmerId, role }: Props) {
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: '#111827' }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>
             Financial &amp; Yield Trends (Last 12 Months)
           </div>
           {report && (
@@ -274,19 +274,19 @@ export function FarmerDetailView({ farmerId, role }: Props) {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <div>
-            <div style={{ fontSize: 9, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
               Income vs Expenses
             </div>
             {!report || report.transactions.byMonth.length === 0 ? (
-              <p style={{ fontSize: 9, color: '#6B7280' }}>No data for this period</p>
+              <p style={{ fontSize: 13, color: '#6B7280' }}>No data for this period</p>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={report.transactions.byMonth}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" tick={{ fontSize: 9 }} />
-                  <YAxis tick={{ fontSize: 9 }} />
+                  <XAxis dataKey="month" tick={{ fontSize: 13 }} />
+                  <YAxis tick={{ fontSize: 13 }} />
                   <Tooltip />
-                  <Legend wrapperStyle={{ fontSize: 9 }} />
+                  <Legend wrapperStyle={{ fontSize: 13 }} />
                   <Bar dataKey="incomeKes" name="Income (KES)" fill="#1A6B3C" />
                   <Bar dataKey="expenseKes" name="Expense (KES)" fill="#DC2626" />
                 </BarChart>
@@ -295,17 +295,17 @@ export function FarmerDetailView({ farmerId, role }: Props) {
           </div>
 
           <div>
-            <div style={{ fontSize: 9, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
               Harvest Yield
             </div>
             {!report || report.production.monthlyYieldKg.length === 0 ? (
-              <p style={{ fontSize: 9, color: '#6B7280' }}>No data for this period</p>
+              <p style={{ fontSize: 13, color: '#6B7280' }}>No data for this period</p>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={report.production.monthlyYieldKg}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" tick={{ fontSize: 9 }} />
-                  <YAxis tick={{ fontSize: 9 }} />
+                  <XAxis dataKey="month" tick={{ fontSize: 13 }} />
+                  <YAxis tick={{ fontSize: 13 }} />
                   <Tooltip />
                   <Bar dataKey="harvestedKg" name="Harvested (kg)" fill="#C9A84C" />
                 </BarChart>

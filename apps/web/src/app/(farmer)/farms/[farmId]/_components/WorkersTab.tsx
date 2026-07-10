@@ -46,7 +46,7 @@ function maskPhone(phone: string): string {
 }
 
 const inputCls =
-  'border border-[#E5E7EB] rounded-[5px] py-[7px] px-[9px] text-[10px] text-[#111827] bg-[#F9FAFB] focus:outline-none focus:border-[#1A6B3C]'
+  'border border-[#E5E7EB] rounded-[5px] py-[7px] px-[9px] text-md text-[#111827] bg-[#F9FAFB] focus:outline-none focus:border-[#1A6B3C]'
 
 // ── WorkersTab ────────────────────────────────────────────────────────────────
 
@@ -131,7 +131,7 @@ export function WorkersTab({ farmId }: { farmId: string }) {
 
   return (
     <div className="space-y-5">
-      <p className="text-[9px] text-[#6B7280]">
+      <p className="text-sm text-[#6B7280]">
         Manage who works on this farm and their roles.
       </p>
 
@@ -142,8 +142,8 @@ export function WorkersTab({ farmId }: { farmId: string }) {
         </div>
       ) : workers.length === 0 ? (
         <div className="rounded-[8px] border-2 border-dashed border-[#E5E7EB] py-8 text-center">
-          <p className="text-[10px] font-semibold text-[#6B7280] mb-1">No workers yet</p>
-          <p className="text-[9px] text-[#9CA3AF]">Add workers by phone number below.</p>
+          <p className="text-md font-semibold text-[#6B7280] mb-1">No workers yet</p>
+          <p className="text-sm text-[#9CA3AF]">Add workers by phone number below.</p>
         </div>
       ) : (
         <table className="w-table">
@@ -193,14 +193,14 @@ export function WorkersTab({ farmId }: { farmId: string }) {
                       <button
                         onClick={() => removeMutation.mutate(w.id)}
                         disabled={removeMutation.isPending}
-                        className="text-[9px] font-semibold text-[#DC2626] hover:opacity-75 disabled:opacity-50"
+                        className="text-sm font-semibold text-[#DC2626] hover:opacity-75 disabled:opacity-50"
                       >
                         {removeMutation.isPending ? 'Removing…' : 'Confirm'}
                       </button>
                       <span className="text-[#9CA3AF]">·</span>
                       <button
                         onClick={() => setConfirmRemoveId(null)}
-                        className="text-[9px] text-[#6B7280] hover:opacity-75"
+                        className="text-sm text-[#6B7280] hover:opacity-75"
                       >
                         Cancel
                       </button>
@@ -208,7 +208,7 @@ export function WorkersTab({ farmId }: { farmId: string }) {
                   ) : (
                     <button
                       onClick={() => setConfirmRemoveId(w.id)}
-                      className="text-[9px] font-semibold text-[#DC2626] hover:opacity-75"
+                      className="text-sm font-semibold text-[#DC2626] hover:opacity-75"
                     >
                       Remove
                     </button>
@@ -222,12 +222,12 @@ export function WorkersTab({ farmId }: { farmId: string }) {
 
       {/* Add worker section */}
       <div className="border-t border-[#E5E7EB] pt-4">
-        <p className="text-[9px] font-bold text-[#1A6B3C] uppercase tracking-[0.8px] mb-3">
+        <p className="text-sm font-bold text-[#1A6B3C] uppercase tracking-[0.8px] mb-3">
           Add Worker by Phone Number
         </p>
         <form onSubmit={handleAdd} className="flex items-end gap-2 flex-wrap">
           <div>
-            <label className="mb-1 block text-[9px] font-semibold text-[#374151]">
+            <label className="mb-1 block text-sm font-semibold text-[#374151]">
               Phone Number
             </label>
             <input
@@ -239,7 +239,7 @@ export function WorkersTab({ farmId }: { farmId: string }) {
             />
           </div>
           <div>
-            <label className="mb-1 block text-[9px] font-semibold text-[#374151]">
+            <label className="mb-1 block text-sm font-semibold text-[#374151]">
               Role
             </label>
             <select
@@ -264,7 +264,7 @@ export function WorkersTab({ farmId }: { farmId: string }) {
             {adding ? 'Adding…' : 'Add Worker'}
           </button>
         </form>
-        <p className="mt-2 text-[9px] text-[#9CA3AF]">
+        <p className="mt-2 text-sm text-[#9CA3AF]">
           If no account is found for this number, ask an admin to create a worker account first.
         </p>
       </div>

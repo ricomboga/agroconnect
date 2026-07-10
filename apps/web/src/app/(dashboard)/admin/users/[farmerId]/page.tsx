@@ -89,7 +89,7 @@ export default function UserDetailPage({ params }: PageProps) {
 
   if (!userQuery.data) {
     return (
-      <div className="flex h-64 items-center justify-center text-[10px] text-[#DC2626]">
+      <div className="flex h-64 items-center justify-center text-md text-[#DC2626]">
         User not found
       </div>
     )
@@ -124,7 +124,7 @@ export default function UserDetailPage({ params }: PageProps) {
             alignItems: 'center',
             justifyContent: 'center',
             fontWeight: 700,
-            fontSize: 14,
+            fontSize: 22,
             flexShrink: 0,
           }}
         >
@@ -132,10 +132,10 @@ export default function UserDetailPage({ params }: PageProps) {
         </div>
 
         <div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>
+          <div style={{ fontSize: 22, fontWeight: 700, color: '#111827' }}>
             {user.full_name}
           </div>
-          <div style={{ fontSize: 9, color: '#6B7280', marginTop: 2 }}>
+          <div style={{ fontSize: 13, color: '#6B7280', marginTop: 2 }}>
             {subtitle}
           </div>
         </div>

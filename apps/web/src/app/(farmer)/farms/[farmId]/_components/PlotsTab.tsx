@@ -35,7 +35,7 @@ const CROP_TYPES = [
 ]
 
 const inputCls =
-  'w-full border border-[#E5E7EB] rounded-[5px] py-[7px] px-[9px] text-[10px] text-[#111827] bg-[#F9FAFB] focus:outline-none focus:border-[#1A6B3C]'
+  'w-full border border-[#E5E7EB] rounded-[5px] py-[7px] px-[9px] text-md text-[#111827] bg-[#F9FAFB] focus:outline-none focus:border-[#1A6B3C]'
 
 function fmtDate(d: string) {
   return new Date(d).toLocaleDateString('en-KE', {
@@ -113,7 +113,7 @@ function AddCropModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-md rounded-[8px] bg-white shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between border-b border-[#E5E7EB] px-5 py-3 sticky top-0 bg-white">
-          <h2 className="text-[12px] font-bold text-[#111827]">Add Crop to Plot</h2>
+          <h2 className="text-lg font-bold text-[#111827]">Add Crop to Plot</h2>
           <button onClick={onClose} className="text-[#9CA3AF] hover:text-[#374151]">
             <X className="h-4 w-4" />
           </button>
@@ -121,7 +121,7 @@ function AddCropModal({
 
         <form onSubmit={handleSubmit} className="px-5 py-4 space-y-3">
           <div>
-            <label className="mb-1 block text-[10px] font-semibold text-[#374151]">
+            <label className="mb-1 block text-md font-semibold text-[#374151]">
               Plot<span className="text-[#DC2626] ml-0.5">*</span>
             </label>
             <select
@@ -140,7 +140,7 @@ function AddCropModal({
           </div>
 
           <div>
-            <label className="mb-1 block text-[10px] font-semibold text-[#374151]">
+            <label className="mb-1 block text-md font-semibold text-[#374151]">
               Crop Type<span className="text-[#DC2626] ml-0.5">*</span>
             </label>
             <select
@@ -157,7 +157,7 @@ function AddCropModal({
           </div>
 
           <div>
-            <label className="mb-1 block text-[10px] font-semibold text-[#374151]">
+            <label className="mb-1 block text-md font-semibold text-[#374151]">
               Variety
             </label>
             <input
@@ -170,7 +170,7 @@ function AddCropModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-[10px] font-semibold text-[#374151]">
+              <label className="mb-1 block text-md font-semibold text-[#374151]">
                 Planting Date<span className="text-[#DC2626] ml-0.5">*</span>
               </label>
               <input
@@ -182,7 +182,7 @@ function AddCropModal({
               />
             </div>
             <div>
-              <label className="mb-1 block text-[10px] font-semibold text-[#374151]">
+              <label className="mb-1 block text-md font-semibold text-[#374151]">
                 Area (acres)
               </label>
               <input
@@ -203,7 +203,7 @@ function AddCropModal({
               type="button"
               onClick={onClose}
               disabled={submitting}
-              className="border border-[#E5E7EB] rounded-[5px] px-3 py-[6px] text-[10px] text-[#6B7280] hover:bg-[#F9FAFB] disabled:opacity-50"
+              className="border border-[#E5E7EB] rounded-[5px] px-3 py-[6px] text-md text-[#6B7280] hover:bg-[#F9FAFB] disabled:opacity-50"
             >
               Cancel
             </button>
@@ -270,14 +270,14 @@ function AddPlotModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-sm rounded-[8px] bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-[#E5E7EB] px-5 py-3">
-          <h2 className="text-[12px] font-bold text-[#111827]">Add Plot</h2>
+          <h2 className="text-lg font-bold text-[#111827]">Add Plot</h2>
           <button onClick={onClose} className="text-[#9CA3AF] hover:text-[#374151]">
             <X className="h-4 w-4" />
           </button>
         </div>
         <form onSubmit={handleSubmit} className="px-5 py-4 space-y-3">
           <div>
-            <label className="mb-1 block text-[10px] font-semibold text-[#374151]">
+            <label className="mb-1 block text-md font-semibold text-[#374151]">
               Plot Name<span className="text-[#DC2626] ml-0.5">*</span>
             </label>
             <input
@@ -289,7 +289,7 @@ function AddPlotModal({
             />
           </div>
           <div>
-            <label className="mb-1 block text-[10px] font-semibold text-[#374151]">
+            <label className="mb-1 block text-md font-semibold text-[#374151]">
               Size (acres)
             </label>
             <input
@@ -308,7 +308,7 @@ function AddPlotModal({
               type="button"
               onClick={onClose}
               disabled={submitting}
-              className="border border-[#E5E7EB] rounded-[5px] px-3 py-[6px] text-[10px] text-[#6B7280] hover:bg-[#F9FAFB] disabled:opacity-50"
+              className="border border-[#E5E7EB] rounded-[5px] px-3 py-[6px] text-md text-[#6B7280] hover:bg-[#F9FAFB] disabled:opacity-50"
             >
               Cancel
             </button>
@@ -369,7 +369,7 @@ export function PlotsTab({
   return (
     <>
       <div className="flex justify-between items-center mb-3">
-        <p className="text-[9px] text-[#6B7280]">{plots.length} plot{plots.length !== 1 ? 's' : ''}</p>
+        <p className="text-sm text-[#6B7280]">{plots.length} plot{plots.length !== 1 ? 's' : ''}</p>
         <div className="flex gap-2">
           <button
             onClick={() => openAddCrop(undefined)}
@@ -390,8 +390,8 @@ export function PlotsTab({
 
       {plots.length === 0 ? (
         <div className="rounded-[8px] border-2 border-dashed border-[#E5E7EB] py-10 text-center">
-          <p className="text-[10px] font-semibold text-[#6B7280] mb-1">No plots yet</p>
-          <p className="text-[9px] text-[#9CA3AF]">Add your first plot to start tracking crops.</p>
+          <p className="text-md font-semibold text-[#6B7280] mb-1">No plots yet</p>
+          <p className="text-sm text-[#9CA3AF]">Add your first plot to start tracking crops.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -402,8 +402,8 @@ export function PlotsTab({
             >
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div>
-                  <p className="text-[11px] font-bold text-[#111827]">{plot.name}</p>
-                  <p className="text-[9px] text-[#6B7280]">{plot.areaAcres} acres</p>
+                  <p className="text-base font-bold text-[#111827]">{plot.name}</p>
+                  <p className="text-sm text-[#6B7280]">{plot.areaAcres} acres</p>
                 </div>
                 <button
                   onClick={() => openAddCrop(plot.id)}
@@ -418,21 +418,21 @@ export function PlotsTab({
                 <div
                   className="rounded-[6px] bg-[#EAF4EE] border border-[#1A6B3C] px-[8px] py-[6px]"
                 >
-                  <p className="text-[10px] font-semibold text-[#0D4A28] capitalize">
+                  <p className="text-md font-semibold text-[#0D4A28] capitalize">
                     {plot.currentCrop.cropType}
                     {plot.currentCrop.variety ? ` (${plot.currentCrop.variety})` : ''}
                   </p>
-                  <p className="text-[9px] text-[#374151]">
+                  <p className="text-sm text-[#374151]">
                     Planted: {fmtDate(plot.currentCrop.plantingDate)}
                   </p>
                   {plot.currentCrop.areaAcres && (
-                    <p className="text-[9px] text-[#6B7280]">
+                    <p className="text-sm text-[#6B7280]">
                       {plot.currentCrop.areaAcres} ac
                     </p>
                   )}
                 </div>
               ) : (
-                <p className="text-[9px] text-[#9CA3AF] italic">No crop assigned</p>
+                <p className="text-sm text-[#9CA3AF] italic">No crop assigned</p>
               )}
             </div>
           ))}

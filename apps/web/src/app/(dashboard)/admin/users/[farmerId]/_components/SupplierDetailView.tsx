@@ -94,11 +94,11 @@ export function SupplierDetailView({ supplierId }: Props) {
           padding: 10,
         }}
       >
-        <div style={{ fontSize: 10, fontWeight: 600, color: '#111827', marginBottom: 6 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: '#111827', marginBottom: 6 }}>
           Top Customers
         </div>
         {customers.length === 0 ? (
-          <p style={{ fontSize: 9, color: '#6B7280' }}>No orders yet</p>
+          <p style={{ fontSize: 13, color: '#6B7280' }}>No orders yet</p>
         ) : (
           <WebDataTable
             columns={CUSTOMER_COLS}

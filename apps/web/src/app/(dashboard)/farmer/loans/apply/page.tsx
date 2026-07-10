@@ -103,7 +103,7 @@ function StepBar({ current }: { current: number }) {
             >
               {i < current ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
             </div>
-            <span className={`text-[10px] mt-1 font-medium hidden sm:block ${i === current ? 'text-green-700' : 'text-gray-400'}`}>
+            <span className={`text-md mt-1 font-medium hidden sm:block ${i === current ? 'text-green-700' : 'text-gray-400'}`}>
               {label}
             </span>
           </div>
@@ -238,7 +238,7 @@ function Step1Details({
           onChange={(e) => setMonths(e.target.value)}
           className="w-full accent-green-700"
         />
-        <div className="flex justify-between text-[10px] text-gray-400 mt-0.5">
+        <div className="flex justify-between text-md text-gray-400 mt-0.5">
           <span>{product.minTermMonths} months</span>
           <span className="font-bold text-green-700">{months || product.minTermMonths} months selected</span>
           <span>{product.maxTermMonths} months</span>
@@ -282,7 +282,7 @@ function Step1Details({
           placeholder="Describe specifically how you will use this loan (e.g. purchase of 50 kg certified maize seed, 3 bags DAP fertiliser, and casual labour for land preparation)…"
           className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
         />
-        <p className="text-[10px] text-gray-400 mt-1 text-right">{purpose.length}/500</p>
+        <p className="text-md text-gray-400 mt-1 text-right">{purpose.length}/500</p>
       </div>
 
       {/* Live cost preview */}
@@ -299,13 +299,13 @@ function Step1Details({
               ['Processing Fee', fmtKes(processingFee)],
             ].map(([l, v]) => (
               <div key={l} className="bg-white/10 rounded-lg p-2.5 text-center">
-                <p className="text-[10px] text-green-200">{l}</p>
+                <p className="text-md text-green-200">{l}</p>
                 <p className="text-sm font-bold">{v}</p>
               </div>
             ))}
           </div>
           {product.gracePeriodMonths > 0 && (
-            <p className="text-[10px] text-green-200 mt-2 flex items-center gap-1">
+            <p className="text-md text-green-200 mt-2 flex items-center gap-1">
               <Info className="h-3 w-3" /> {product.gracePeriodMonths}-month grace period before first repayment
             </p>
           )}
@@ -348,12 +348,12 @@ function DocUploadCard({
             <div className="flex items-center gap-2 mb-0.5">
               <p className="text-sm font-semibold text-gray-800">{doc.label}</p>
               {doc.required ? (
-                <span className="text-[10px] font-bold text-red-500 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded">Required</span>
+                <span className="text-md font-bold text-red-500 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded">Required</span>
               ) : (
-                <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">Optional</span>
+                <span className="text-md font-semibold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">Optional</span>
               )}
             </div>
-            <p className="text-[11px] text-gray-400">{doc.hint}</p>
+            <p className="text-base text-gray-400">{doc.hint}</p>
           </div>
           {fileState.uploaded && (
             <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0 ml-3" />
@@ -365,7 +365,7 @@ function DocUploadCard({
             <div className="flex items-center gap-2 bg-white rounded-lg border border-gray-200 px-3 py-2">
               <FileIcon className="h-4 w-4 text-blue-500 flex-shrink-0" />
               <span className="text-xs text-gray-700 flex-1 min-w-0 truncate font-medium">{fileState.file.name}</span>
-              <span className="text-[10px] text-gray-400 flex-shrink-0">{fmtBytes(fileState.file.size)}</span>
+              <span className="text-md text-gray-400 flex-shrink-0">{fmtBytes(fileState.file.size)}</span>
             </div>
             <input
               type="text"
@@ -400,7 +400,7 @@ function DocUploadCard({
           >
             <Upload className="h-5 w-5 text-gray-300 group-hover:text-green-500 transition-colors" />
             <p className="text-xs text-gray-400 group-hover:text-green-600">Click to select file</p>
-            <p className="text-[10px] text-gray-300">JPEG, PNG or PDF · Max 10 MB</p>
+            <p className="text-md text-gray-300">JPEG, PNG or PDF · Max 10 MB</p>
           </button>
         )}
 

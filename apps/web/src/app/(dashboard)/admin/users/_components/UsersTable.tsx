@@ -53,7 +53,7 @@ const wbtn: React.CSSProperties = {
   paddingBottom: 9,
   paddingLeft: 10,
   paddingRight: 10,
-  fontSize: 10,
+  fontSize: 14,
   fontWeight: 600,
   cursor: 'pointer',
 }
@@ -68,7 +68,7 @@ function wbtnSm(color: string, border: string): React.CSSProperties {
     paddingBottom: 4,
     paddingLeft: 8,
     paddingRight: 8,
-    fontSize: 9,
+    fontSize: 13,
     fontWeight: 600,
     cursor: 'pointer',
     whiteSpace: 'nowrap',
@@ -79,14 +79,14 @@ const selectStyle: React.CSSProperties = {
   border: '1px solid #E5E7EB',
   borderRadius: 4,
   padding: '5px 8px',
-  fontSize: 11,
+  fontSize: 16,
   color: '#374151',
   backgroundColor: '#fff',
   outline: 'none',
 }
 
 const thStyle: React.CSSProperties = {
-  fontSize: 8,
+  fontSize: 12,
   fontWeight: 600,
   color: '#6B7280',
   textTransform: 'uppercase',
@@ -97,7 +97,7 @@ const thStyle: React.CSSProperties = {
 }
 
 const tdStyle: React.CSSProperties = {
-  fontSize: 9,
+  fontSize: 13,
   padding: '5px 6px',
   borderBottom: '1px solid #E5E7EB',
   color: '#374151',
@@ -109,7 +109,7 @@ function KycBadge({ status }: { status: string }) {
     <span style={{
       backgroundColor: b.bg, color: b.color,
       borderRadius: 8, paddingLeft: 6, paddingRight: 6,
-      paddingTop: 2, paddingBottom: 2, fontSize: 8, fontWeight: 600,
+      paddingTop: 2, paddingBottom: 2, fontSize: 12, fontWeight: 600,
     }}>
       {b.label}
     </span>
@@ -122,7 +122,7 @@ function StatusBadge({ active }: { active: boolean }) {
       backgroundColor: active ? '#EAF4EE' : '#FEE2E2',
       color: active ? '#0D4A28' : '#991B1B',
       borderRadius: 8, paddingLeft: 6, paddingRight: 6,
-      paddingTop: 2, paddingBottom: 2, fontSize: 8, fontWeight: 600,
+      paddingTop: 2, paddingBottom: 2, fontSize: 12, fontWeight: 600,
     }}>
       {active ? 'Active' : 'Disabled'}
     </span>
@@ -227,7 +227,7 @@ export function UsersTable() {
     <div>
       {/* Header Row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <span style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>User Management</span>
+        <span style={{ fontSize: 22, fontWeight: 700, color: '#111827' }}>User Management</span>
         <button style={wbtn} onClick={() => router.push('/admin/users/new')}>
           ➕ Create New User
         </button>
@@ -245,7 +245,7 @@ export function UsersTable() {
             border: '1px solid #E5E7EB',
             borderRadius: 4,
             padding: '6px 10px',
-            fontSize: 11,
+            fontSize: 16,
             color: '#374151',
             backgroundColor: '#fff',
             outline: 'none',
@@ -364,7 +364,7 @@ export function UsersTable() {
 
       {/* Pagination */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
-        <span style={{ fontSize: 9, color: '#6B7280' }}>
+        <span style={{ fontSize: 13, color: '#6B7280' }}>
           Showing {start}–{end} of {total} users
         </span>
         <div style={{ display: 'flex', gap: 6 }}>

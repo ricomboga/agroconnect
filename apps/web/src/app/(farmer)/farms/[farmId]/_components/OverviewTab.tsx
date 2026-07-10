@@ -50,16 +50,16 @@ export function OverviewTab({ farm, farmId }: { farm: Farm; farmId: string }) {
     <div className="space-y-4">
       {/* Map placeholder */}
       <div>
-        <p className="text-[9px] font-bold text-[#1A6B3C] uppercase tracking-[0.8px] mb-2">
+        <p className="text-sm font-bold text-[#1A6B3C] uppercase tracking-[0.8px] mb-2">
           Farm Location
         </p>
         <div
           className="rounded-[8px] bg-[#EAF4EE] border border-[#1A6B3C] flex flex-col items-center justify-center py-6 gap-2"
         >
-          <p className="text-[12px] font-semibold text-[#0D4A28]">
+          <p className="text-lg font-semibold text-[#0D4A28]">
             {lat}, {lng}
           </p>
-          <p className="text-[10px] text-[#6B7280]">
+          <p className="text-md text-[#6B7280]">
             {farm.county}{farm.subCounty ? `, ${farm.subCounty}` : ''}
           </p>
           <a
@@ -76,18 +76,18 @@ export function OverviewTab({ farm, farmId }: { farm: Farm; farmId: string }) {
 
       {/* Weather placeholder */}
       <div>
-        <p className="text-[9px] font-bold text-[#1A6B3C] uppercase tracking-[0.8px] mb-2">
+        <p className="text-sm font-bold text-[#1A6B3C] uppercase tracking-[0.8px] mb-2">
           Weather, {farm.county}
         </p>
         <div
-          className="rounded-[8px] px-[10px] py-[8px] text-[9px] text-[#374151]"
+          className="rounded-[8px] px-[10px] py-[8px] text-sm text-[#374151]"
           style={{
             background: 'linear-gradient(135deg, #0369A1, #0E7490)',
             color: '#fff',
           }}
         >
-          <p className="font-semibold text-[11px] mb-0.5">🌤 Weather data</p>
-          <p className="text-white/80 text-[9px]">
+          <p className="font-semibold text-base mb-0.5">🌤 Weather data</p>
+          <p className="text-white/80 text-sm">
             Live forecast for {farm.county} county loads from the weather service.
           </p>
         </div>
@@ -95,7 +95,7 @@ export function OverviewTab({ farm, farmId }: { farm: Farm; farmId: string }) {
 
       {/* Recent activities */}
       <div>
-        <p className="text-[9px] font-bold text-[#1A6B3C] uppercase tracking-[0.8px] mb-2">
+        <p className="text-sm font-bold text-[#1A6B3C] uppercase tracking-[0.8px] mb-2">
           Recent Activities
         </p>
 
@@ -104,7 +104,7 @@ export function OverviewTab({ farm, farmId }: { farm: Farm; farmId: string }) {
             <Loader2 className="h-5 w-5 animate-spin text-[#1A6B3C]" />
           </div>
         ) : activities.length === 0 ? (
-          <p className="text-[9px] text-[#9CA3AF] py-4 text-center">
+          <p className="text-sm text-[#9CA3AF] py-4 text-center">
             No activities scheduled yet.
           </p>
         ) : (

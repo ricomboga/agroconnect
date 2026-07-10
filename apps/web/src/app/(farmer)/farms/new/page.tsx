@@ -14,8 +14,8 @@ export default async function NewFarmPage() {
           className="bg-white border border-[#E5E7EB] rounded-[8px]"
           style={{ padding: 28 }}
         >
-          <h1 className="text-[20px] font-bold text-[#111827] mb-1">Create New Farm</h1>
-          <p className="text-[12px] text-[#6B7280] mb-6">
+          <h1 className="text-5xl font-bold text-[#111827] mb-1">Create New Farm</h1>
+          <p className="text-lg text-[#6B7280] mb-6">
             Fill in the details. You&apos;ll add crops and animals after saving.
           </p>
           <CreateFarmForm />

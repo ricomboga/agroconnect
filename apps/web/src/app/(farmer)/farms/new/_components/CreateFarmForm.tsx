@@ -42,11 +42,11 @@ interface ApiError {
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 const inputCls =
-  'w-full border border-[#E5E7EB] rounded-[5px] py-[7px] px-[9px] text-[10px] text-[#111827] bg-[#F9FAFB] focus:outline-none focus:border-[#1A6B3C]'
+  'w-full border border-[#E5E7EB] rounded-[5px] py-[7px] px-[9px] text-md text-[#111827] bg-[#F9FAFB] focus:outline-none focus:border-[#1A6B3C]'
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
-    <div className="text-[11px] font-bold text-[#1A6B3C] uppercase tracking-[0.8px] mb-[10px] pb-[5px] border-b border-[#EAF4EE] mt-6 first:mt-0">
+    <div className="text-base font-bold text-[#1A6B3C] uppercase tracking-[0.8px] mb-[10px] pb-[5px] border-b border-[#EAF4EE] mt-6 first:mt-0">
       {children}
     </div>
   )
@@ -66,13 +66,13 @@ function Field({
   return (
     <div>
       {label && (
-        <label className="mb-1 block text-[10px] font-semibold text-[#374151]">
+        <label className="mb-1 block text-md font-semibold text-[#374151]">
           {label}
           {required && <span className="text-[#DC2626] ml-0.5">*</span>}
         </label>
       )}
       {children}
-      {error && <p className="mt-1 text-[9px] text-[#DC2626]">{error}</p>}
+      {error && <p className="mt-1 text-sm text-[#DC2626]">{error}</p>}
     </div>
   )
 }
@@ -213,7 +213,7 @@ export function CreateFarmForm() {
                 value={farmSize}
                 onChange={(e) => { setFarmSize(e.target.value); clearErr('farmSize') }}
               />
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-[#9CA3AF]">
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[#9CA3AF]">
                 acres
               </span>
             </div>
@@ -247,7 +247,7 @@ export function CreateFarmForm() {
 
         {/* Farm Type tiles */}
         <div>
-          <p className="mb-1 text-[10px] font-semibold text-[#374151]">
+          <p className="mb-1 text-md font-semibold text-[#374151]">
             Farm Type<span className="text-[#DC2626] ml-0.5">*</span>
           </p>
           <div className="flex gap-3">
@@ -258,7 +258,7 @@ export function CreateFarmForm() {
                   key={ft.value}
                   type="button"
                   onClick={() => { setFarmType(ft.value); clearErr('farmType') }}
-                  className="flex-1 rounded-[6px] py-[10px] px-2 text-[10px] text-center transition-all cursor-pointer"
+                  className="flex-1 rounded-[6px] py-[10px] px-2 text-md text-center transition-all cursor-pointer"
                   style={{
                     background:  active ? '#EAF4EE' : '#fff',
                     border:      active ? '2px solid #1A6B3C' : '1px solid #E5E7EB',
@@ -272,13 +272,13 @@ export function CreateFarmForm() {
             })}
           </div>
           {errors.farmType && (
-            <p className="mt-1 text-[9px] text-[#DC2626]">{errors.farmType}</p>
+            <p className="mt-1 text-sm text-[#DC2626]">{errors.farmType}</p>
           )}
         </div>
 
         {/* GPS */}
         <div>
-          <p className="mb-1 text-[10px] font-semibold text-[#374151]">
+          <p className="mb-1 text-md font-semibold text-[#374151]">
             GPS Location<span className="text-[#DC2626] ml-0.5">*</span>
           </p>
           <div className="grid grid-cols-2 gap-4">
@@ -291,9 +291,9 @@ export function CreateFarmForm() {
                 value={lat}
                 onChange={(e) => { setLat(e.target.value); clearErr('lat') }}
               />
-              <span className="mt-0.5 block text-[9px] text-[#9CA3AF]">Latitude</span>
+              <span className="mt-0.5 block text-sm text-[#9CA3AF]">Latitude</span>
               {errors.lat && (
-                <p className="mt-0.5 text-[9px] text-[#DC2626]">{errors.lat}</p>
+                <p className="mt-0.5 text-sm text-[#DC2626]">{errors.lat}</p>
               )}
             </div>
             <div>
@@ -305,13 +305,13 @@ export function CreateFarmForm() {
                 value={lng}
                 onChange={(e) => { setLng(e.target.value); clearErr('lng') }}
               />
-              <span className="mt-0.5 block text-[9px] text-[#9CA3AF]">Longitude</span>
+              <span className="mt-0.5 block text-sm text-[#9CA3AF]">Longitude</span>
               {errors.lng && (
-                <p className="mt-0.5 text-[9px] text-[#DC2626]">{errors.lng}</p>
+                <p className="mt-0.5 text-sm text-[#DC2626]">{errors.lng}</p>
               )}
             </div>
           </div>
-          <p className="mt-1.5 text-[9px] text-[#9CA3AF]">
+          <p className="mt-1.5 text-sm text-[#9CA3AF]">
             Open Google Maps, tap your farm location, copy the coordinates.
           </p>
         </div>
@@ -349,7 +349,7 @@ export function CreateFarmForm() {
       {/* ── Plots / Fields ────────────────────────────────────────────── */}
       <SectionHeading>Plots / Fields</SectionHeading>
 
-      <p className="text-[10px] text-[#6B7280] mb-3">
+      <p className="text-md text-[#6B7280] mb-3">
         A plot is a section of your farm. You can add one or several.
       </p>
 
@@ -382,7 +382,7 @@ export function CreateFarmForm() {
               <button
                 type="button"
                 onClick={() => removePlot(plot.key)}
-                className="flex items-center gap-1 text-[10px] text-[#DC2626] hover:opacity-75 shrink-0"
+                className="flex items-center gap-1 text-md text-[#DC2626] hover:opacity-75 shrink-0"
               >
                 <Trash2 className="h-3.5 w-3.5" />
                 Remove
@@ -395,7 +395,7 @@ export function CreateFarmForm() {
       <button
         type="button"
         onClick={addPlot}
-        className="flex items-center gap-1.5 text-[10px] font-semibold text-[#1A6B3C] hover:text-[#0D4A28]"
+        className="flex items-center gap-1.5 text-md font-semibold text-[#1A6B3C] hover:text-[#0D4A28]"
       >
         <Plus className="h-3.5 w-3.5" />
         Add Another Plot
@@ -404,7 +404,7 @@ export function CreateFarmForm() {
       {/* Error alert */}
       {submitError && (
         <div
-          className="rounded-[5px] bg-[#FEE2E2] px-[9px] py-[6px] text-[9px] text-[#7F1D1D] mt-4"
+          className="rounded-[5px] bg-[#FEE2E2] px-[9px] py-[6px] text-sm text-[#7F1D1D] mt-4"
           style={{ borderLeft: '3px solid #DC2626' }}
         >
           {submitError}
@@ -416,7 +416,7 @@ export function CreateFarmForm() {
         <button
           type="submit"
           disabled={!canSubmit || submitting}
-          className="flex items-center justify-center gap-1.5 bg-[#1A6B3C] text-white text-[10px] font-semibold py-[9px] px-[10px] rounded-[6px] hover:bg-[#0D4A28] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center justify-center gap-1.5 bg-[#1A6B3C] text-white text-md font-semibold py-[9px] px-[10px] rounded-[6px] hover:bg-[#0D4A28] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
           {submitting ? 'Creating…' : 'Create Farm →'}

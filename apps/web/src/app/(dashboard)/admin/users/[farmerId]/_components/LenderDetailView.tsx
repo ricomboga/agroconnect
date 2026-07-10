@@ -72,10 +72,10 @@ export function LenderDetailView({ partnerBankId }: Props) {
           marginBottom: 12,
         }}
       >
-        <div style={{ fontSize: 10, fontWeight: 600, color: '#111827' }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>
           {institution.name} <span style={{ color: '#6B7280', fontWeight: 400 }}>({institution.type})</span>
         </div>
-        <div style={{ fontSize: 9, color: '#6B7280', marginTop: 2 }}>
+        <div style={{ fontSize: 13, color: '#6B7280', marginTop: 2 }}>
           Repayment rate: {institution.repaymentRatePct}%
         </div>
       </div>

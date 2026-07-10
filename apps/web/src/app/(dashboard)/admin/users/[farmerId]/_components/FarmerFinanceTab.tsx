@@ -86,7 +86,7 @@ export function FarmerFinanceTab({ farmerId }: FarmerFinanceTabProps) {
     <div className="space-y-6">
       {/* Credit score panel */}
       <div className="rounded-lg border border-[#E5E7EB] bg-white p-5">
-        <p className="mb-3 text-[9px] font-semibold uppercase tracking-[0.05em] text-[#1A6B3C]">
+        <p className="mb-3 text-sm font-semibold uppercase tracking-[0.05em] text-[#1A6B3C]">
           Credit Score
         </p>
         {scoreQuery.isLoading ? (
@@ -95,12 +95,12 @@ export function FarmerFinanceTab({ farmerId }: FarmerFinanceTabProps) {
           <div className="flex items-center gap-5">
             <div>
               <span className="text-[32px] font-extrabold text-[#1A6B3C]">{score.score}</span>
-              <span className="ml-2 text-[9px] text-[#6B7280]">/ 100</span>
+              <span className="ml-2 text-sm text-[#6B7280]">/ 100</span>
             </div>
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <span className={BAND_CLASS[score.band] ?? 'w-badge-blue'}>Band {score.band}</span>
-                <span className="text-[9px] text-[#6B7280]">
+                <span className="text-sm text-[#6B7280]">
                   Max loan: {formatKES(score.max_loan_kes)}
                 </span>
               </div>
@@ -112,13 +112,13 @@ export function FarmerFinanceTab({ farmerId }: FarmerFinanceTabProps) {
             </div>
           </div>
         ) : (
-          <p className="text-[9px] text-[#6B7280]">No credit score available</p>
+          <p className="text-sm text-[#6B7280]">No credit score available</p>
         )}
       </div>
 
       {/* Loans table */}
       <div>
-        <p className="mb-3 text-[9px] font-semibold uppercase tracking-[0.05em] text-[#1A6B3C]">
+        <p className="mb-3 text-sm font-semibold uppercase tracking-[0.05em] text-[#1A6B3C]">
           Loans
         </p>
         {loansQuery.isLoading ? (
@@ -128,7 +128,7 @@ export function FarmerFinanceTab({ farmerId }: FarmerFinanceTabProps) {
             ))}
           </div>
         ) : loans.length === 0 ? (
-          <div className="flex h-24 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white text-[9px] text-[#6B7280]">
+          <div className="flex h-24 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white text-sm text-[#6B7280]">
             No active loans
           </div>
         ) : (

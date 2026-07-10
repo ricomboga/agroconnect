@@ -96,7 +96,7 @@ export function FarmDetailClient({ farmId, initialTab }: Props) {
 
       {isError && (
         <div
-          className="rounded-[5px] bg-[#FEE2E2] px-[9px] py-[6px] text-[9px] text-[#7F1D1D]"
+          className="rounded-[5px] bg-[#FEE2E2] px-[9px] py-[6px] text-sm text-[#7F1D1D]"
           style={{ borderLeft: '3px solid #DC2626' }}
         >
           Farm not found or you don&apos;t have access.{' '}
@@ -110,14 +110,14 @@ export function FarmDetailClient({ farmId, initialTab }: Props) {
           <div className="flex items-start justify-between gap-4 mb-4">
             <div>
               <div className="flex items-center gap-2 mb-0.5">
-                <h1 className="text-[18px] font-bold text-[#111827]">{farm.name}</h1>
+                <h1 className="text-4xl font-bold text-[#111827]">{farm.name}</h1>
                 {farm.farmType && (
-                  <span className="w-badge-blue text-[9px] px-[8px] py-[3px]">
+                  <span className="w-badge-blue text-sm px-[8px] py-[3px]">
                     {FARM_TYPE_BADGE[farm.farmType] ?? farm.farmType}
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-[#6B7280]">
+              <p className="text-base text-[#6B7280]">
                 {farm.areaAcres} acres · {farm.county}
                 {farm.subCounty ? `, ${farm.subCounty}` : ''}
               </p>
@@ -160,7 +160,7 @@ export function FarmDetailClient({ farmId, initialTab }: Props) {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className="text-[10px] font-medium px-3 py-[6px] rounded-[4px] transition-colors cursor-pointer"
+                  className="text-md font-medium px-3 py-[6px] rounded-[4px] transition-colors cursor-pointer"
                   style={{
                     background:  active ? '#EAF4EE' : 'transparent',
                     color:       active ? '#1A6B3C' : '#6B7280',

@@ -32,7 +32,7 @@ export function WebLayout({
   return (
     <div className="flex flex-col h-screen">
       <nav className="w-nav shrink-0">
-        <span className="text-white font-bold text-[14px] mr-6">
+        <span className="text-white font-bold text-2xl mr-6">
           🌱 AgroConnect {portalName}
         </span>
         <div className="flex items-center gap-4 flex-1">
@@ -41,7 +41,7 @@ export function WebLayout({
               key={link.href}
               href={link.href}
               className={cn(
-                'text-[10px] transition-colors',
+                'text-md transition-colors',
                 link.active
                   ? 'text-white font-semibold'
                   : 'text-white/70 hover:text-white',
@@ -51,7 +51,7 @@ export function WebLayout({
             </Link>
           ))}
         </div>
-        <button className="bg-[#C9A84C] text-white text-[10px] font-semibold px-3 py-1 rounded-[3px]">
+        <button className="bg-[#C9A84C] text-white text-md font-semibold px-3 py-1 rounded-[3px]">
           Account ▾
         </button>
       </nav>
@@ -69,7 +69,7 @@ export function WebLayout({
             >
               <span className="flex-1">{item.label}</span>
               {item.badge != null && item.badge > 0 && (
-                <span className="bg-[#DC2626] text-white text-[7px] font-semibold rounded-lg px-1 min-w-[14px] text-center">
+                <span className="bg-[#DC2626] text-white text-xs font-semibold rounded-lg px-1 min-w-[14px] text-center">
                   {item.badge}
                 </span>
               )}

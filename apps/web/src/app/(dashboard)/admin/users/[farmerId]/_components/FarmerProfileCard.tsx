@@ -75,7 +75,7 @@ export function FarmerProfileCard({ user, farmerId }: FarmerProfileCardProps) {
       {/* Back link */}
       <Link
         href="/admin/users"
-        className="mb-3 inline-flex items-center gap-1 text-[9px] text-[#6B7280] hover:text-[#111827]"
+        className="mb-3 inline-flex items-center gap-1 text-sm text-[#6B7280] hover:text-[#111827]"
       >
         <ChevronLeft className="h-3.5 w-3.5" />
         Back to Users
@@ -85,24 +85,24 @@ export function FarmerProfileCard({ user, farmerId }: FarmerProfileCardProps) {
       <div className="flex flex-wrap items-start justify-between gap-4 rounded-lg border border-[#E5E7EB] bg-white px-5 py-4">
         <div className="flex items-center gap-4">
           {/* Avatar */}
-          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#1A6B3C] text-[13px] font-bold text-white">
+          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#1A6B3C] text-xl font-bold text-white">
             {user.full_name.charAt(0).toUpperCase()}
           </div>
           {/* Identity */}
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-[14px] font-bold text-[#111827]">{user.full_name}</h1>
-              <Badge variant={user.is_active ? 'success' : 'destructive'} className="text-[7px]">
+              <h1 className="text-2xl font-bold text-[#111827]">{user.full_name}</h1>
+              <Badge variant={user.is_active ? 'success' : 'destructive'} className="text-xs">
                 {user.is_active ? 'Active' : 'Inactive'}
               </Badge>
               <Badge
                 variant={KYC_VARIANTS[user.kyc_status] ?? 'secondary'}
-                className="capitalize text-[7px]"
+                className="capitalize text-xs"
               >
                 KYC: {user.kyc_status}
               </Badge>
             </div>
-            <div className="mt-0.5 flex flex-wrap items-center gap-3 text-[9px] text-[#6B7280]">
+            <div className="mt-0.5 flex flex-wrap items-center gap-3 text-sm text-[#6B7280]">
               <span>{user.phone}</span>
               {user.email && <span>{user.email}</span>}
               {user.county && <span>{user.county} County</span>}
