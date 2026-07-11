@@ -10,6 +10,7 @@ import { otpVerifySchema } from '../schemas/otpVerify.schema.js';
 import { updateMeSchema } from '../schemas/updateMe.schema.js';
 import { changePasswordSchema } from '../schemas/changePassword.schema.js';
 import { resetPasswordSchema } from '../schemas/resetPassword.schema.js';
+import { createFarmerSchema } from '../schemas/createFarmer.schema.js';
 import {
   registerHandler,
   loginHandler,
@@ -22,6 +23,8 @@ import {
   sendOtpHandler,
   verifyOtpHandler,
   lookupUserByPhoneHandler,
+  createFarmerHandler,
+  verifyAssistedUserHandler,
 } from '../controllers/authController.js';
 
 const router = Router();
@@ -37,5 +40,7 @@ router.post('/password/reset', validateBody(resetPasswordSchema), resetPasswordH
 router.post('/otp/send', validateBody(otpSendSchema), sendOtpHandler);
 router.post('/otp/verify', validateBody(otpVerifySchema), verifyOtpHandler);
 router.get('/users/lookup', requireAuth as RequestHandler, lookupUserByPhoneHandler as RequestHandler);
+router.post('/farmers', requireAuth as RequestHandler, validateBody(createFarmerSchema), createFarmerHandler as RequestHandler);
+router.patch('/users/:id/verify', requireAuth as RequestHandler, verifyAssistedUserHandler as RequestHandler);
 
 export { router as authRouter };

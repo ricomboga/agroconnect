@@ -10,27 +10,98 @@ datasource db {
 }
 
 model User {
-  id           String     @id @default(uuid())
-  phone        String     @unique
-  email        String?    @unique
-  passwordHash String
-  fullName     String
-  role         UserRole
+  id            String     @id @default(uuid())
+  phone         String     @unique
+  email         String?    @unique
+  passwordHash  String
+  fullName      String
+  role          UserRole
   partnerBankId String?
-  county       String?
-  subCounty    String?
-  language     Language   @default(sw)
-  isVerified   Boolean    @default(false)
-  isActive     Boolean    @default(true)
-  isSuperAdmin Boolean    @default(false)
-  staffRole    StaffRole  @default(admin)
-  kycStatus    KycStatus  @default(pending)
-  lastLoginAt  DateTime?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  sessions     Session[]
+  county        String?
+  subCounty     String?
+  language      Language   @default(sw)
+  status        UserStatus @default(pending_verification)
+  isSuperAdmin  Boolean    @default(false)
+  staffRole     StaffRole  @default(admin)
+  kycStatus     KycStatus  @default(pending)
+  lastLoginAt   DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  sessions      Session[]
 
+  // Maker-checker: who created this account, and who verified it.
+  // The verifier can never be the same user as the creator (enforced in the service layer).
+  createdByUserId String?
+  createdBy        User?   @relation("UserCreatedBy", fields: [createdByUserId], references: [id])
+  createdUsers     User[]  @relation("UserCreatedBy")
+
+  verifiedByUserId String?
+  verifiedBy        User?  @relation("UserVerifiedBy", fields: [verifiedByUserId], references: [id])
+  verifiedUsers      User[] @relation("UserVerifiedBy")
+  verifiedAt        DateTime?
+
+  // Supervisor of this staff/field-agent user. When a field agent (e.g. extension_officer)
+  // creates a farmer, only that field agent's supervisor may verify the farmer.
+  supervisorId String?
+  supervisor    User?   @relation("UserSupervisor", fields: [supervisorId], references: [id])
+  supervisees   User[]  @relation("UserSupervisor")
+
+  roleAssignments      UserRoleAssignment[] @relation("UserRoleAssignments")
+  roleAssignmentsMade  UserRoleAssignment[] @relation("RoleAssignedBy")
+
+  @@index([createdByUserId])
+  @@index([supervisorId])
+  @@index([status])
   @@map("users")
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+
+  permissions RolePermission[]
+  assignments UserRoleAssignment[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRoleAssignment {
+  id               String   @id @default(uuid())
+  userId           String
+  roleId           String
+  assignedByUserId String?
+  assignedAt       DateTime @default(now())
+
+  user       User  @relation("UserRoleAssignments", fields: [userId], references: [id], onDelete: Cascade)
+  role       Role  @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  assignedBy User? @relation("RoleAssignedBy", fields: [assignedByUserId], references: [id])
+
+  @@unique([userId, roleId])
+  @@index([userId])
+  @@map("user_role_assignments")
 }
 
 model Session {
@@ -173,4 +244,13 @@ enum KycStatus {
   submitted
   verified
   rejected
+}
+
+enum UserStatus {
+  pending_verification
+  verified
+  active
+  inactive
+  disabled
+  deleted
 }

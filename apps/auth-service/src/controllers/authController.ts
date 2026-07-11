@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import type { AuthenticatedRequest } from '../types/index.js';
 import * as authService from '../services/authService.js';
 import * as otpService from '../services/otpService.js';
+import * as adminUserService from '../services/adminUserService.js';
 import { verifyUserPhone, findUserByPhone } from '../repositories/userRepository.js';
 import type { RegisterDto } from '../schemas/register.schema.js';
 import type { LoginDto } from '../schemas/login.schema.js';
@@ -11,6 +12,11 @@ import type { OtpVerifyDto } from '../schemas/otpVerify.schema.js';
 import type { UpdateMeDto } from '../schemas/updateMe.schema.js';
 import type { ChangePasswordDto } from '../schemas/changePassword.schema.js';
 import type { ResetPasswordDto } from '../schemas/resetPassword.schema.js';
+import type { CreateFarmerDto } from '../schemas/createFarmer.schema.js';
+
+// Roles allowed to create farmer accounts on a farmer's behalf (assisted
+// registration) and/or act as a checker in the maker-checker verification flow.
+const FIELD_STAFF_ROLES = new Set(['extension_officer', 'vet_officer', 'admin', 'govt_officer']);
 
 export async function registerHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -128,6 +134,56 @@ export async function verifyOtpHandler(req: Request, res: Response, next: NextFu
     }
     const user = await findUserByPhone(phone);
     if (user) await verifyUserPhone(user.id);
+    res.json({ data: { verified: true } });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// Assisted registration: a field agent (extension_officer/vet_officer) creates a
+// farmer account on the farmer's behalf. The account starts pending_verification —
+// only the field agent's own supervisor can verify it (see verifyAssistedUserHandler).
+export async function createFarmerHandler(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const creator = req.user!;
+    if (!FIELD_STAFF_ROLES.has(creator.role)) {
+      res.status(403).json({
+        error_code: 'FORBIDDEN',
+        message_key: 'error.auth.forbidden',
+        request_id: (req.headers['x-request-id'] as string) ?? '',
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+    const dto = req.body as CreateFarmerDto;
+    const farmer = await adminUserService.createUser({
+      ...dto,
+      role: 'farmer',
+      createdByUserId: creator.id,
+    });
+    res.status(201).json({ data: farmer });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// Maker-checker verification for assisted registrations. Enforcement (creator can't
+// verify their own creation; farmers created by a field agent require that field
+// agent's supervisor) lives in adminUserService.verifyUser / adminVerifyUser.
+export async function verifyAssistedUserHandler(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const verifier = req.user!;
+    if (!FIELD_STAFF_ROLES.has(verifier.role)) {
+      res.status(403).json({
+        error_code: 'FORBIDDEN',
+        message_key: 'error.auth.forbidden',
+        request_id: (req.headers['x-request-id'] as string) ?? '',
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+    const { id } = req.params as { id: string };
+    await adminUserService.verifyUser(id, verifier.id);
     res.json({ data: { verified: true } });
   } catch (err) {
     next(err);

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const updateUserStatusSchema = z.object({
-  is_active: z.boolean(),
+  status: z.enum(['pending_verification', 'verified', 'active', 'inactive', 'disabled', 'deleted']),
 });
 
 export type UpdateUserStatusDto = z.infer<typeof updateUserStatusSchema>;

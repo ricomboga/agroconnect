@@ -7,29 +7,89 @@ Reference: `@docs/schemas.md`
 ### users
 ```prisma
 model User {
-  id            String    @id @default(uuid())
-  phone         String    @unique              // E.164 e.g. +254712345678
-  email         String?   @unique
+  id            String     @id @default(uuid())
+  phone         String     @unique              // E.164 e.g. +254712345678
+  email         String?    @unique
   passwordHash  String
   fullName      String
   role          UserRole
+  partnerBankId String?
   county        String?
-  language      Language  @default(sw)
-  isVerified    Boolean   @default(false)
-  isActive      Boolean   @default(true)
-  kycStatus     KycStatus @default(pending)
+  subCounty     String?
+  language      Language   @default(sw)
+  status        UserStatus @default(pending_verification)
+  isSuperAdmin  Boolean    @default(false)
+  staffRole     StaffRole  @default(admin)
+  kycStatus     KycStatus  @default(pending)
   lastLoginAt   DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  // Maker-checker fields
+  createdByUserId String?  // admin/field-agent who created this account
+  verifiedByUserId String? // checker who verified it — must differ from createdByUserId
+  verifiedAt        DateTime?
+
+  // Supervisor of a staff/field-agent user. When a field agent (extension_officer/
+  // vet_officer) creates a farmer, only that field agent's supervisor may verify it.
+  supervisorId String?
 }
 
 enum UserRole {
-  farmer extension_officer vet_officer supplier buyer govt_officer admin
+  farmer extension_officer vet_officer supplier buyer govt_officer admin lender farm_worker
 }
 
 enum Language { sw en }
 enum KycStatus { pending submitted verified rejected }
+enum StaffRole { admin county_admin moderator }
+
+// Account lifecycle status — replaces the old isVerified/isActive booleans.
+// Only `verified` and `active` are login-eligible; everything else is rejected at login.
+enum UserStatus {
+  pending_verification // just created by an admin/field agent, awaiting a different checker
+  verified             // checker approved (maker-checker) — can log in
+  active               // normal operating status — can log in
+  inactive             // administratively paused — cannot log in
+  disabled             // administratively disabled — cannot log in
+  deleted              // soft-deleted — cannot log in
+}
 ```
+
+Self-registered accounts (via `POST /auth/register`) skip the maker-checker flow
+entirely and start at `active` — there is no creator to check against.
+
+### roles / permissions (system-user RBAC)
+```prisma
+model Role {
+  id          String @id @default(uuid())
+  name        String @unique
+  description String?
+}
+
+model Permission {
+  id          String @id @default(uuid())
+  name        String @unique
+  description String?
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  @@id([roleId, permissionId])
+}
+
+model UserRoleAssignment {
+  id               String   @id @default(uuid())
+  userId           String
+  roleId           String
+  assignedByUserId String?
+  assignedAt       DateTime @default(now())
+  @@unique([userId, roleId])
+}
+```
+Fine-grained roles/permissions assignable to admin/system users (`role: admin | govt_officer`),
+layered on top of the coarser `staffRole`/`isSuperAdmin` gate used by `assertCapability` in
+admin-service. See `apps/auth-service/src/repositories/roleRepository.ts`.
 
 ### sessions
 ```prisma

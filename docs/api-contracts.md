@@ -17,6 +17,26 @@ All endpoints are prefixed `/api/v1/`. JWT means a valid Bearer token in the Aut
 | PATCH | /auth/password | JWT | Change password |
 | GET | /auth/me | JWT | Get current user |
 | PATCH | /auth/me | JWT | Update profile |
+| POST | /auth/farmers | JWT (extension_officer/vet_officer/admin/govt_officer) | Assisted registration — field agent creates a farmer account. Starts `pending_verification`; only the field agent's own supervisor may verify it. |
+| PATCH | /auth/users/:id/verify | JWT (extension_officer/vet_officer/admin/govt_officer) | Maker-checker verify. 403 if caller created the account or (for field-agent-created farmers) isn't that agent's supervisor. |
+
+## Admin API — user management (`/api/v1/admin`, staff-only)
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| POST | /admin/users | JWT (admin), `manage_users` | Create a user of any role. Always starts `pending_verification`; creating role `admin` requires super admin. |
+| POST | /admin/system-users | JWT (admin), super admin only | Create an admin/govt_officer staff account; optionally assigns `roleIds` immediately. |
+| PATCH | /admin/users/:id/status | JWT (admin), `manage_users` | Set account status: `pending_verification`\|`verified`\|`active`\|`inactive`\|`disabled`\|`deleted`. |
+| PATCH | /admin/users/:id/verify | JWT (admin), `manage_users` | Maker-checker verify — the calling admin can never verify a user they created. |
+| GET/POST | /admin/roles | JWT (admin) | List / create fine-grained roles. |
+| GET/POST | /admin/permissions | JWT (admin) | List / create permissions. |
+| POST | /admin/roles/:id/permissions | JWT (admin), super admin only | Attach a permission to a role. |
+| GET | /admin/users/:id/roles | JWT (admin), `manage_users` | Get a user's assigned roles + flattened permissions. |
+| POST/DELETE | /admin/users/:id/roles | JWT (admin), `manage_users` | Assign / unassign a role to a user. |
+
+Maker-checker error codes: `SELF_VERIFICATION_FORBIDDEN` (403), `SUPERVISOR_APPROVAL_REQUIRED` (403),
+`INVALID_VERIFICATION_STATE` (409, user isn't `pending_verification`). Login rejects with
+`ACCOUNT_NOT_VERIFIED` (403) or `ACCOUNT_NOT_ACTIVE` (403) for non-login-eligible statuses.
 
 ### POST /auth/register — request body
 ```json

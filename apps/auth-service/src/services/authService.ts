@@ -10,6 +10,7 @@ import {
   updateUserLastLogin,
   updateUserProfile,
   updatePasswordHash,
+  LOGIN_ELIGIBLE_STATUSES,
   type UpdateProfileParams,
 } from '../repositories/userRepository.js';
 import {
@@ -95,13 +96,18 @@ export async function register(dto: RegisterDto, ipAddress: string, userAgent?: 
 
 export async function login(dto: LoginDto, ipAddress: string, userAgent?: string) {
   const user = await findUserByPhone(dto.phone);
-  if (!user || !user.isActive) {
+  if (!user) {
     throw Object.assign(new Error('error.credentials.invalid'), { statusCode: 401, errorCode: 'INVALID_CREDENTIALS' });
   }
 
   const valid = await bcrypt.compare(dto.password, user.passwordHash);
   if (!valid) {
     throw Object.assign(new Error('error.credentials.invalid'), { statusCode: 401, errorCode: 'INVALID_CREDENTIALS' });
+  }
+
+  if (!LOGIN_ELIGIBLE_STATUSES.includes(user.status)) {
+    const errorCode = user.status === 'pending_verification' ? 'ACCOUNT_NOT_VERIFIED' : 'ACCOUNT_NOT_ACTIVE';
+    throw Object.assign(new Error(`error.account.${user.status}`), { statusCode: 403, errorCode });
   }
 
   await updateUserLastLogin(user.id);
@@ -202,7 +208,7 @@ export async function getMe(userId: string) {
     role: user.role,
     county: user.county,
     language: user.language,
-    isVerified: user.isVerified,
+    status: user.status,
     kycStatus: user.kycStatus,
     createdAt: user.createdAt,
   };
@@ -250,7 +256,7 @@ export async function updateMe(userId: string, dto: UpdateMeDto) {
     role: user.role,
     county: user.county,
     language: user.language,
-    isVerified: user.isVerified,
+    status: user.status,
     kycStatus: user.kycStatus,
     createdAt: user.createdAt,
   };

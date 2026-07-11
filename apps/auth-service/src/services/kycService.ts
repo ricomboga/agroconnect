@@ -4,7 +4,6 @@ import {
   createHistoryEntry,
   findPendingKycUsers,
 } from '../repositories/kycRepository.js';
-import { adminVerifyUser, adminSetUserActive } from '../repositories/adminUserRepository.js';
 import { updateKycStatus, findUserById } from '../repositories/userRepository.js';
 import { createError } from '../middleware/errorHandler.js';
 
@@ -66,10 +65,9 @@ export async function decide(userId: string, params: KycDecisionParams) {
   if (!user) throw createError('User not found', 404, 'USER_NOT_FOUND', 'error.user_not_found');
 
   if (params.decision === 'approved') {
-    await adminVerifyUser(userId);
+    await updateKycStatus(userId, 'verified');
   } else if (params.decision === 'rejected') {
     await updateKycStatus(userId, 'rejected');
-    await adminSetUserActive(userId, true);
   } else {
     await updateKycStatus(userId, 'submitted');
   }
