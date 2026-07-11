@@ -62,7 +62,6 @@ export type MarketStackParamList = {
 export type FinanceStackParamList = {
   FinanceHome:         undefined;
   AddTransaction:      undefined;
-  CreditScoreDetail:   undefined;
   LoanProducts:        undefined;
   LoanProductDetail:   { productId: string };
   LoanApplication:     { productId: string };
@@ -105,7 +104,7 @@ export type StockStackParamList = {
   InventoryHome: undefined;
   AddStockScreen: undefined;
   RestockScreen: { itemId: string; itemName: string; unit: string; remainingQty: number; supplier: string; costPerUnit: number };
-  RecordUseScreen: { itemId: string; itemName: string; unit: string; remainingQty: number };
+  RecordUseScreen: { itemId: string; itemName: string; unit: string; remainingQty: number; supplier: string; costPerUnit: number };
   RecordAnimalProductScreen: { productType: string; existingId?: string; existingQty?: number; farmId: string; animalGroupId: string; pricePerUnit: number };
   RecordHarvestSaleScreen: { harvestId: string; cropName: string; remainingKg: number; estimatedPricePerKg: number };
   UpdateHarvestStockScreen: { harvestId: string; cropName: string; remainingKg: number };

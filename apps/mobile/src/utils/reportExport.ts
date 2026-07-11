@@ -67,12 +67,6 @@ export function buildReportCsv(report: FarmerFinancialReport, t: T, periodLabel:
     csv += '\n';
   }
 
-  if (report.creditScore) {
-    csv += csvRow([t('finance.score.title')]);
-    csv += csvRow(['Score', 'Band', 'Max Loan (KES)']);
-    csv += csvRow([report.creditScore.score, report.creditScore.band, report.creditScore.maxLoanKes]);
-  }
-
   return csv;
 }
 
@@ -144,8 +138,6 @@ export function buildReportHtml(report: FarmerFinancialReport, t: T, periodLabel
   ${animalRows ? `<h2>${esc(t('finance.home.reports.production.animalProducts'))}</h2><table><tr><th>Product</th><th>Qty</th><th>${esc(t('finance.home.reports.production.revenue'))}</th></tr>${animalRows}</table>` : ''}
 
   ${collectionRows ? `<h2>${esc(t('finance.home.reports.production.collections'))}</h2><table><tr><th>Product</th><th>Qty</th><th>Amount</th></tr>${collectionRows}</table>` : ''}
-
-  ${report.creditScore ? `<h2>${esc(t('finance.score.title'))}</h2><span class="score-badge">${report.creditScore.score} / 100 — ${esc(report.creditScore.band)}</span><p style="font-size:11px;color:#6B7280;margin-top:8px;">${esc(t('finance.score.maxLoan', { amount: report.creditScore.maxLoanKes.toLocaleString() }))}</p>` : ''}
 
   <div class="footer">${esc(t('finance.home.title'))} · ${new Date(report.generatedAt).toLocaleString()}</div>
 </body>

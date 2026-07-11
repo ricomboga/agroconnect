@@ -93,29 +93,14 @@ export async function submitLoan(
     const { type: resolvedType, partnerBankId: resolvedPartnerBankId, partnerName, productName } =
       await resolveProductInfo(dto.productId, dto);
 
+    // Credit score is computed for the lending partner's internal review only —
+    // it is not shown to farmers and must never block submission of an application.
     const creditScore = await creditScoreRepo.findCreditScore(farmerId);
-    if (!creditScore) {
-      throw createError(
-        'No credit score found — call POST /finance/credit-score/compute first',
-        422,
-        'NO_CREDIT_SCORE',
-        'error.finance.no_credit_score',
-      );
-    }
-
-    if (dto.amountRequestedKes > Number(creditScore.maxLoanKes)) {
-      throw createError(
-        `Requested amount exceeds credit limit of ${creditScore.maxLoanKes} KES`,
-        422,
-        'EXCEEDS_CREDIT_LIMIT',
-        'error.finance.exceeds_credit_limit',
-      );
-    }
 
     const loan = await loanRepo.createLoan(
       farmerId,
-      Number(creditScore.score),
-      creditScore.band as 'A' | 'B' | 'C' | 'D' | 'ineligible',
+      creditScore ? Number(creditScore.score) : null,
+      creditScore ? (creditScore.band as 'A' | 'B' | 'C' | 'D' | 'ineligible') : null,
       {
         ...dto,
         farmId:        dto.farmId ?? '',

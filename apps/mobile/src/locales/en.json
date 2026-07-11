@@ -3,6 +3,7 @@
     "retry": "Try again",
     "save": "Save",
     "cancel": "Cancel",
+    "remove": "Remove",
     "back": "Back",
     "next": "Next",
     "skip": "Skip",
@@ -160,6 +161,12 @@
       "creditScore": "Credit Score",
       "activeFarms": "Active Farms"
     },
+    "notifications": {
+      "bellLabel": "Notifications",
+      "title": "Notifications",
+      "empty": "No notifications yet",
+      "snippet": "You have {{count}} new notifications"
+    },
     "streak": {
       "label": "day streak",
       "best": "Best: {{days}}d"
@@ -215,7 +222,7 @@
     "locked": {
       "cashFlow": "Cash Flow",
       "aiNudge": "AI Recommendations",
-      "creditScore": "Credit Score",
+      "loans": "Loan Access",
       "addFarm": "Add Your Farm",
       "desc": "Add your farm to unlock this feature"
     },
@@ -1127,7 +1134,7 @@
       "dateLabel": "Date *",
       "notesLabel": "Receipt / Notes",
       "notesPlaceholder": "e.g. 200kg @ KES 40/kg",
-      "infoAlert": "💡 This will be added to your June cash flow and update your credit score.",
+      "infoAlert": "💡 This will be added to your {{month}} cash flow.",
       "saveBtn": "Save Transaction ✓",
       "saving": "Saving...",
       "errorSave": "Failed to save. Please try again.",
@@ -1272,9 +1279,8 @@
         "maxAmount": "Up to KES {{amount}}",
         "minAmount": "From KES {{amount}}",
         "repaymentMonths": "Repayment: {{months}} months",
-        "eligibility": "Min. band: {{band}}",
+        "eligibility": "Eligibility requirements",
         "applyBtn": "Apply",
-        "notEligible": "Score too low",
         "viewDetails": "View details",
         "partnerType": {
           "bank": "Bank",
@@ -1311,13 +1317,23 @@
         "title": "Apply for loan",
         "farmSection": "Farm details (read-only)",
         "farmName": "Farm",
-        "lastHarvestKes": "Last harvest value",
+        "gpsSection": "Farm location",
+        "gpsCapture": "Capture GPS coordinates",
+        "gpsRetake": "Retake location",
+        "gpsDenied": "Location permission denied. Enable it in settings to attach GPS coordinates.",
+        "documentsSection": "Documents",
+        "documents": {
+          "national_id": "National ID",
+          "land_title": "Title deed",
+          "bank_statement": "Bank statement",
+          "farm_photo": "Recent passport photo"
+        },
+        "upload": "Upload",
         "loanSection": "Loan details",
         "purpose": "Loan purpose",
         "purposePlaceholder": "e.g. Buy maize seeds",
         "amount": "Amount requested (KES)",
-        "amountMax": "Your limit: KES {{max}}",
-        "amountExceedsLimit": "Exceeds your limit of KES {{max}}",
+        "amountRange": "Amount range: KES {{min}} – {{max}}",
         "repaymentMonths": "Repayment period (months)",
         "monthlySummary": "Estimated monthly payment",
         "estimatedMonthly": "~KES {{amount}} / month",
@@ -1341,7 +1357,7 @@
         "disbursedAt": "Disbursed on",
         "mpesaRef": "M-Pesa reference",
         "rateFormat": "{{rate}}% p.a.",
-        "rejectedNote": "Application rejected. Improve your credit score and try again.",
+        "rejectedNote": "Application rejected. Contact the lender for details or try another product.",
         "cancelledNote": "Application was cancelled.",
         "cancelBtn": "Cancel Application",
         "cancelConfirmTitle": "Cancel application?",
@@ -1816,6 +1832,7 @@
       "outOfStock": {
         "title": "Now out of stock",
         "message": "This item is now out of stock. Would you like to order more?",
+        "messageWithSupplier": "This item is now out of stock. Order more from {{supplier}} at KES {{price}}/{{unit}}?",
         "findSupplier": "Yes, Find Supplier",
         "notNow": "Not Now"
       }

@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ScrollView,
   StatusBar,
@@ -29,6 +29,9 @@ import { InventorySummaryWidget } from '../../components/widgets/InventorySummar
 import { WeatherWidget } from '../../components/Dashboard/WeatherWidget';
 import { FinanceSnapshotCard } from '../../components/Dashboard/FinanceSnapshotCard';
 import { InventoryAlertCard } from '../../components/Dashboard/InventoryAlertCard';
+import { NotificationsModal } from '../../components/Dashboard/NotificationsModal';
+import { useNotifications } from '../../hooks/useNotifications';
+import { useUiStore } from '../../store/ui.store';
 import type { AppTabParamList } from '../../navigation/types';
 import type { Activity } from '../../api/activity';
 
@@ -82,6 +85,17 @@ export function DashboardScreen() {
   const user = useAuthStore((s) => s.user);
   const { isOnline } = useOfflineSync();
   const dash = useDashboardData();
+  const { unreadCount } = useNotifications();
+  const showToast = useUiStore((st) => st.showToast);
+  const [notificationsVisible, setNotificationsVisible] = useState(false);
+  const hasSnippeted = useRef(false);
+
+  useEffect(() => {
+    if (!hasSnippeted.current && unreadCount > 0) {
+      hasSnippeted.current = true;
+      showToast(t('dashboard.notifications.snippet', { count: unreadCount }), 'info');
+    }
+  }, [unreadCount, showToast, t]);
 
   const goToWeather = useCallback(() => {
     navigation.navigate('Farm', {
@@ -208,9 +222,9 @@ export function DashboardScreen() {
           farmLat={dash.primaryFarm?.locationLat}
           farmLng={dash.primaryFarm?.locationLng}
           netCashFlow={dash.cashFlowNet}
-          creditScore={dash.creditScore}
           farmCount={dash.farmCount}
           onWeatherPress={goToWeather}
+          onNotificationsPress={() => setNotificationsVisible(true)}
         />
 
         <ScrollView
@@ -275,6 +289,11 @@ export function DashboardScreen() {
         </ScrollView>
 
         <FAB onPress={() => goToActivity(farmId)} label="+" />
+
+        <NotificationsModal
+          visible={notificationsVisible}
+          onClose={() => setNotificationsVisible(false)}
+        />
       </View>
     );
   }
@@ -352,7 +371,7 @@ export function DashboardScreen() {
 
         <LockedCard
           icon="⭐"
-          titleKey="dashboard.locked.creditScore"
+          titleKey="dashboard.locked.loans"
           descriptionKey="dashboard.locked.desc"
           ctaKey="dashboard.locked.addFarm"
           onCta={goToWizard}

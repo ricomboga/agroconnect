@@ -36,6 +36,8 @@ model LoanApplication {
   partnerBankId        String?
   creditScore          Decimal?       @db.Decimal(5, 2)
   creditBand           CreditBand?
+  farmGpsLat           Decimal?       @db.Decimal(9, 6)
+  farmGpsLng           Decimal?       @db.Decimal(9, 6)
   status               LoanStatus     @default(draft)
   approvedAmountKes    Decimal?       @db.Decimal(12, 2)
   interestRatePct      Decimal?       @db.Decimal(5, 2)

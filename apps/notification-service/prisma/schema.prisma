@@ -32,6 +32,20 @@ model FcmToken {
   @@map("fcm_tokens")
 }
 
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, read])
+  @@map("notifications")
+}
+
 enum DeliveryChannel {
   push
   sms

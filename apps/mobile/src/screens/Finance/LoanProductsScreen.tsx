@@ -13,15 +13,11 @@ import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
 import { financeApi } from '../../api/finance';
-import type { CreditBand, LoanCategory, LoanProduct, PartnerType } from '../../api/finance';
+import type { LoanCategory, LoanProduct, PartnerType } from '../../api/finance';
 import type { FinanceStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<FinanceStackParamList, 'LoanProducts'>;
 
-const BAND_RANK: Record<CreditBand, number> = { A: 4, B: 3, C: 2, D: 1, ineligible: 0 };
-const BAND_COLOR: Record<CreditBand, string> = {
-  A: '#1B5E20', B: '#2E8B57', C: '#E65100', D: '#B71C1C', ineligible: '#616161',
-};
 const CATEGORY_COLOR: Record<LoanCategory, string> = {
   back_to_school: '#6A1B9A',
   farm_input:     '#92400E',
@@ -62,19 +58,13 @@ export function LoanProductsScreen({ navigation }: Props) {
   const { t } = useTranslation();
   const { isOnline } = useOfflineSync();
 
-  const scoreQuery = useQuery({
-    queryKey: ['creditScore'],
-    queryFn: () => financeApi.creditScore.get(),
-    staleTime: isOnline ? 5 * 60 * 1000 : Infinity,
-  });
-
   const productsQuery = useQuery({
     queryKey: ['loanProducts'],
     queryFn: () => financeApi.products.list(),
     staleTime: isOnline ? 5 * 60 * 1000 : Infinity,
   });
 
-  const isLoading = productsQuery.isLoading || (scoreQuery.isLoading && !scoreQuery.isError);
+  const isLoading = productsQuery.isLoading;
   const isError = productsQuery.isError;
 
   const topBar = (
@@ -102,7 +92,7 @@ export function LoanProductsScreen({ navigation }: Props) {
         {topBar}
         <View style={s.center}>
           <Text style={s.errorText}>{t('common.error.loadFailed')}</Text>
-          <Pressable onPress={() => { void productsQuery.refetch(); void scoreQuery.refetch(); }} style={s.retryBtn}>
+          <Pressable onPress={() => { void productsQuery.refetch(); }} style={s.retryBtn}>
             <Text style={s.retryLabel}>{t('common.retry')}</Text>
           </Pressable>
         </View>
@@ -110,7 +100,6 @@ export function LoanProductsScreen({ navigation }: Props) {
     );
   }
 
-  const farmerBand: CreditBand = scoreQuery.data?.data.band ?? 'D';
   const products = productsQuery.data?.data ?? [];
   const sections = groupByPartner(products);
 
@@ -137,9 +126,7 @@ export function LoanProductsScreen({ navigation }: Props) {
           );
         }}
         renderItem={({ item }) => {
-          const eligible = BAND_RANK[farmerBand] >= BAND_RANK[item.eligibilityBand];
           const catColor = CATEGORY_COLOR[item.category];
-          const bandColor = BAND_COLOR[item.eligibilityBand];
           return (
             <Pressable
               style={s.card}
@@ -155,17 +142,10 @@ export function LoanProductsScreen({ navigation }: Props) {
                   </View>
                   <Text style={s.productName}>{item.name}</Text>
                 </View>
-                <View style={[s.eligBadge, { backgroundColor: eligible ? '#E8F5E9' : '#FFEBEE' }]}>
-                  <Text style={[s.eligText, { color: eligible ? '#1B5E20' : '#B71C1C' }]}>
-                    {eligible
-                      ? t('finance.loan.productDetail.eligibleBadge')
-                      : t('finance.loan.products.notEligible')}
-                  </Text>
-                </View>
               </View>
 
               <View style={s.detailsRow}>
-                <Text style={[s.detailChip, { color: bandColor }]}>
+                <Text style={s.detailChip}>
                   {item.interestRate}% p.a.
                 </Text>
                 <Text style={s.detailChipDivider}>·</Text>
@@ -179,7 +159,10 @@ export function LoanProductsScreen({ navigation }: Props) {
               </View>
 
               {item.description && (
-                <Text style={s.description} numberOfLines={2}>{item.description}</Text>
+                <View style={s.eligibilityBox}>
+                  <Text style={s.eligibilityLabel}>{t('finance.loan.products.eligibility')}</Text>
+                  <Text style={s.description} numberOfLines={3}>{item.description}</Text>
+                </View>
               )}
 
               <Text style={s.viewDetails}>{t('finance.loan.products.viewDetails')} →</Text>
@@ -225,14 +208,14 @@ const s = StyleSheet.create({
 
   productName: { fontSize: 14, fontWeight: '700', color: '#1A1A1A' },
 
-  eligBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
-  eligText:  { fontSize: 10, fontWeight: '700' },
-
   detailsRow:      { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 6 },
   detailChip:      { fontSize: 12, color: '#374151', fontWeight: '600' },
   detailChipDivider: { fontSize: 12, color: '#9CA3AF' },
 
-  description:  { fontSize: 12, color: '#6B7280', lineHeight: 17, marginBottom: 8 },
+  eligibilityBox:   { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 8, marginBottom: 8 },
+  eligibilityLabel: { fontSize: 9, fontWeight: '700', color: '#1A6B3C',
+                      textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 3 },
+  description:  { fontSize: 12, color: '#6B7280', lineHeight: 17 },
   viewDetails:  { fontSize: 12, color: '#1A6B3C', fontWeight: '600', textAlign: 'right' },
 
   emptyBox:   { paddingVertical: 40, alignItems: 'center' },

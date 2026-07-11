@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -11,12 +11,15 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as DocumentPicker from 'expo-document-picker';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
+import { useLocation } from '../../hooks/useLocation';
 import { financeApi } from '../../api/finance';
-import type { LoanProduct } from '../../api/finance';
+import type { LoanDocumentType, LoanProduct } from '../../api/finance';
+import { uploadMedia } from '../../api/media';
 import { farmApi } from '../../api/farm';
 import type { FinanceStackParamList } from '../../navigation/types';
 
@@ -24,21 +27,32 @@ type Props = NativeStackScreenProps<FinanceStackParamList, 'LoanApplication'>;
 
 const REPAYMENT_OPTIONS = [6, 12, 18, 24];
 
+const DOCUMENT_TYPES: Array<{ key: LoanDocumentType; icon: string; i18nKey: string }> = [
+  { key: 'national_id',    icon: '🪪', i18nKey: 'finance.loan.application.documents.national_id' },
+  { key: 'land_title',     icon: '📜', i18nKey: 'finance.loan.application.documents.land_title' },
+  { key: 'bank_statement', icon: '🏦', i18nKey: 'finance.loan.application.documents.bank_statement' },
+  { key: 'farm_photo',     icon: '🌾', i18nKey: 'finance.loan.application.documents.farm_photo' },
+];
+
+interface PickedDocument {
+  documentType: LoanDocumentType;
+  uri: string;
+  name: string;
+  mimeType: string;
+  sizeBytes: number;
+}
+
 export function LoanApplicationScreen({ navigation, route }: Props) {
   const { productId } = route.params;
   const { t } = useTranslation();
   const { isOnline } = useOfflineSync();
+  const { coords, loading: gpsLoading, permissionDenied, requestLocation } = useLocation();
 
   const [purpose, setPurpose] = useState('');
   const [amountStr, setAmountStr] = useState('');
   const [selectedMonths, setSelectedMonths] = useState(0);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-
-  const scoreQuery = useQuery({
-    queryKey: ['creditScore'],
-    queryFn: () => financeApi.creditScore.get(),
-    staleTime: isOnline ? 5 * 60 * 1000 : Infinity,
-  });
+  const [documents, setDocuments] = useState<PickedDocument[]>([]);
+  const [uploadError, setUploadError] = useState('');
 
   const productsQuery = useQuery({
     queryKey: ['loanProducts'],
@@ -53,28 +67,44 @@ export function LoanApplicationScreen({ navigation, route }: Props) {
   });
 
   const submitMutation = useMutation({
-    mutationFn: () =>
-      financeApi.loans.create({
+    mutationFn: async () => {
+      const res = await financeApi.loans.create({
         productId,
         amountRequestedKes: amount,
         purpose,
         repaymentMonths: selectedMonths,
-      }),
+        ...(coords ? { farmGpsLat: coords.latitude, farmGpsLng: coords.longitude } : {}),
+      });
+
+      for (const doc of documents) {
+        const uploaded = await uploadMedia(
+          { uri: doc.uri, name: doc.name, mimeType: doc.mimeType },
+          'govt-documents',
+          res.data.id,
+        );
+        await financeApi.loans.addDocument(res.data.id, {
+          name: doc.name,
+          documentType: doc.documentType,
+          storageKey: uploaded.key,
+          mimeType: uploaded.mime_type,
+          sizeBytes: uploaded.size_bytes,
+        });
+      }
+
+      return res;
+    },
     onSuccess: (res) => {
-      setSubmitSuccess(true);
       navigation.replace('LoanStatus', { loanId: res.data.id });
     },
   });
 
-  const isLoading = scoreQuery.isLoading || productsQuery.isLoading;
-  const isError = scoreQuery.isError || productsQuery.isError;
+  const isLoading = productsQuery.isLoading;
+  const isError = productsQuery.isError;
 
   const product = productsQuery.data?.data.find((p: LoanProduct) => p.id === productId);
-  const maxLoanKes = scoreQuery.data?.data.maxLoanKes ?? 0;
   const firstFarm = farmsQuery.data?.data?.[0];
 
   const amount = parseFloat(amountStr) || 0;
-  const exceedsMax = amount > maxLoanKes;
   const availableMonths = product
     ? REPAYMENT_OPTIONS.filter((m) => m <= product.repaymentMonths)
     : [];
@@ -87,10 +117,34 @@ export function LoanApplicationScreen({ navigation, route }: Props) {
 
   const canSubmit =
     amount > 0 &&
-    !exceedsMax &&
     purpose.trim().length > 0 &&
     selectedMonths > 0 &&
     !submitMutation.isPending;
+
+  const pickDocument = async (documentType: LoanDocumentType) => {
+    setUploadError('');
+    const result = await DocumentPicker.getDocumentAsync({
+      type: ['application/pdf', 'image/jpeg', 'image/png'],
+      copyToCacheDirectory: true,
+    });
+    if (result.canceled || result.assets.length === 0) return;
+
+    const asset = result.assets[0]!;
+    setDocuments((prev) => [
+      ...prev.filter((d) => d.documentType !== documentType),
+      {
+        documentType,
+        uri: asset.uri,
+        name: asset.name,
+        mimeType: asset.mimeType ?? 'application/octet-stream',
+        sizeBytes: asset.size ?? 0,
+      },
+    ]);
+  };
+
+  const removeDocument = (documentType: LoanDocumentType) => {
+    setDocuments((prev) => prev.filter((d) => d.documentType !== documentType));
+  };
 
   if (isLoading) {
     return (
@@ -106,7 +160,7 @@ export function LoanApplicationScreen({ navigation, route }: Props) {
         <View style={s.center}>
           <Text style={s.errorText}>{t('common.error.loadFailed')}</Text>
           <Pressable
-            onPress={() => { void scoreQuery.refetch(); void productsQuery.refetch(); }}
+            onPress={() => { void productsQuery.refetch(); }}
             style={s.retryBtn}
           >
             <Text style={s.retryLabel}>{t('common.retry')}</Text>
@@ -140,15 +194,73 @@ export function LoanApplicationScreen({ navigation, route }: Props) {
           {/* Read-only farm info */}
           <Text style={s.sectionLabel}>{t('finance.loan.application.farmSection')}</Text>
           <View style={s.readOnlyCard}>
-            <View style={s.readOnlyRow}>
+            <View style={[s.readOnlyRow, s.noBorder]}>
               <Text style={s.readOnlyLabel}>{t('finance.loan.application.farmName')}</Text>
               <Text style={s.readOnlyValue}>{firstFarm?.name ?? '—'}</Text>
             </View>
-            <View style={[s.readOnlyRow, s.noBorder]}>
-              <Text style={s.readOnlyLabel}>{t('finance.loan.application.lastHarvestKes')}</Text>
-              <Text style={s.readOnlyValue}>—</Text>
-            </View>
           </View>
+
+          {/* GPS capture */}
+          <Text style={s.sectionLabel}>{t('finance.loan.application.gpsSection')}</Text>
+          <View style={s.gpsCard}>
+            {coords ? (
+              <>
+                <Text style={s.gpsCoords}>
+                  {coords.latitude.toFixed(5)}, {coords.longitude.toFixed(5)}
+                </Text>
+                <Pressable onPress={() => void requestLocation()} accessibilityRole="button">
+                  <Text style={s.gpsRetake}>{t('finance.loan.application.gpsRetake')}</Text>
+                </Pressable>
+              </>
+            ) : (
+              <Pressable
+                style={s.gpsBtn}
+                onPress={() => void requestLocation()}
+                disabled={gpsLoading}
+                accessibilityRole="button"
+              >
+                {gpsLoading ? (
+                  <ActivityIndicator size="small" color="#1A6B3C" />
+                ) : (
+                  <Text style={s.gpsBtnLabel}>📍 {t('finance.loan.application.gpsCapture')}</Text>
+                )}
+              </Pressable>
+            )}
+            {permissionDenied && (
+              <Text style={s.gpsError}>{t('finance.loan.application.gpsDenied')}</Text>
+            )}
+          </View>
+
+          {/* Document upload */}
+          <Text style={s.sectionLabel}>{t('finance.loan.application.documentsSection')}</Text>
+          <View style={s.docList}>
+            {DOCUMENT_TYPES.map((docType) => {
+              const picked = documents.find((d) => d.documentType === docType.key);
+              return (
+                <View key={docType.key} style={s.docRow}>
+                  <Text style={s.docIcon}>{docType.icon}</Text>
+                  <View style={s.docInfo}>
+                    <Text style={s.docLabel}>{t(docType.i18nKey)}</Text>
+                    {picked && (
+                      <Text style={s.docFileName} numberOfLines={1}>{picked.name}</Text>
+                    )}
+                  </View>
+                  {picked ? (
+                    <Pressable onPress={() => removeDocument(docType.key)} accessibilityRole="button">
+                      <Text style={s.docRemove}>{t('common.remove')}</Text>
+                    </Pressable>
+                  ) : (
+                    <Pressable onPress={() => void pickDocument(docType.key)} accessibilityRole="button">
+                      <Text style={s.docUpload}>{t('finance.loan.application.upload')}</Text>
+                    </Pressable>
+                  )}
+                </View>
+              );
+            })}
+          </View>
+          {uploadError.length > 0 && (
+            <Text style={s.submitError}>{uploadError}</Text>
+          )}
 
           {/* Editable loan details */}
           <Text style={s.sectionLabel}>{t('finance.loan.application.loanSection')}</Text>
@@ -168,17 +280,18 @@ export function LoanApplicationScreen({ navigation, route }: Props) {
           {/* Amount */}
           <Text style={s.inputLabel}>{t('finance.loan.application.amount')}</Text>
           <TextInput
-            style={[s.textInput, exceedsMax && s.inputError]}
+            style={s.textInput}
             value={amountStr}
             onChangeText={(v) => setAmountStr(v.replace(/[^0-9.]/g, ''))}
             placeholder="30000"
             placeholderTextColor="#BDBDBD"
             keyboardType="numeric"
           />
-          <Text style={exceedsMax ? s.limitError : s.limitHint}>
-            {exceedsMax
-              ? t('finance.loan.application.amountExceedsLimit', { max: maxLoanKes.toLocaleString() })
-              : t('finance.loan.application.amountMax', { max: maxLoanKes.toLocaleString() })}
+          <Text style={s.limitHint}>
+            {t('finance.loan.application.amountRange', {
+              min: product.minAmountKes.toLocaleString(),
+              max: product.maxAmountKes.toLocaleString(),
+            })}
           </Text>
 
           {/* Repayment period chips */}
@@ -218,11 +331,7 @@ export function LoanApplicationScreen({ navigation, route }: Props) {
             {submitMutation.isPending ? (
               <ActivityIndicator size="small" color="#FFF" />
             ) : (
-              <Text style={s.submitLabel}>
-                {t(submitSuccess
-                  ? 'finance.loan.application.success'
-                  : 'finance.loan.application.submit')}
-              </Text>
+              <Text style={s.submitLabel}>{t('finance.loan.application.submit')}</Text>
             )}
           </Pressable>
 
@@ -262,11 +371,25 @@ const s = StyleSheet.create({
   readOnlyLabel:      { fontSize: 13, color: '#757575' },
   readOnlyValue:      { fontSize: 14, fontWeight: '600', color: '#1A1A1A' },
 
+  gpsCard:            { backgroundColor: '#F5F5F5', borderRadius: 12, padding: 14, marginBottom: 20, gap: 6 },
+  gpsBtn:             { minHeight: 44, justifyContent: 'center', alignItems: 'center' },
+  gpsBtnLabel:        { fontSize: 14, fontWeight: '700', color: '#1A6B3C' },
+  gpsCoords:          { fontSize: 14, fontWeight: '600', color: '#1A1A1A' },
+  gpsRetake:          { fontSize: 12, color: '#1A6B3C', fontWeight: '600', marginTop: 4 },
+  gpsError:           { fontSize: 12, color: '#B71C1C', marginTop: 4 },
+
+  docList:            { backgroundColor: '#F5F5F5', borderRadius: 12, marginBottom: 20 },
+  docRow:             { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#EEEEEE' },
+  docIcon:            { fontSize: 18 },
+  docInfo:            { flex: 1 },
+  docLabel:           { fontSize: 13, fontWeight: '600', color: '#1A1A1A' },
+  docFileName:        { fontSize: 11, color: '#757575', marginTop: 2 },
+  docUpload:          { fontSize: 12, color: '#1A6B3C', fontWeight: '700' },
+  docRemove:          { fontSize: 12, color: '#B71C1C', fontWeight: '700' },
+
   inputLabel:         { fontSize: 13, fontWeight: '600', color: '#333', marginBottom: 6, marginTop: 12 },
   textInput:          { backgroundColor: '#FFF', borderRadius: 10, borderWidth: 1.5, borderColor: '#DDDDDD', paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: '#1A1A1A', minHeight: 48 },
-  inputError:         { borderColor: '#B71C1C' },
   limitHint:          { fontSize: 12, color: '#757575', marginTop: 4 },
-  limitError:         { fontSize: 12, color: '#B71C1C', fontWeight: '600', marginTop: 4 },
 
   monthChips:         { flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 4 },
   monthChip:          { minWidth: 56, minHeight: 48, borderRadius: 10, borderWidth: 1.5, borderColor: '#DDDDDD', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 14 },

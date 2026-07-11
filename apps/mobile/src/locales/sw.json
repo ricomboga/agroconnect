@@ -3,6 +3,7 @@
     "retry": "Jaribu tena",
     "save": "Hifadhi",
     "cancel": "Ghairi",
+    "remove": "Ondoa",
     "back": "Rudi",
     "next": "Endelea",
     "skip": "Ruka",
@@ -160,6 +161,12 @@
       "creditScore": "Alama ya Mkopo",
       "activeFarms": "Mashamba Hai"
     },
+    "notifications": {
+      "bellLabel": "Arifa",
+      "title": "Arifa",
+      "empty": "Hakuna arifa bado",
+      "snippet": "Una arifa mpya {{count}}"
+    },
     "streak": {
       "label": "siku mfululizo",
       "best": "Bora: siku {{days}}"
@@ -215,7 +222,7 @@
     "locked": {
       "cashFlow": "Mtiririko wa Fedha",
       "aiNudge": "Mapendekezo ya AI",
-      "creditScore": "Alama ya Mkopo",
+      "loans": "Upatikanaji wa Mkopo",
       "addFarm": "Ongeza Shamba Lako",
       "desc": "Ongeza shamba lako ili kufungua kipengele hiki"
     },
@@ -1127,7 +1134,7 @@
       "dateLabel": "Tarehe *",
       "notesLabel": "Risiti / Maelezo",
       "notesPlaceholder": "mf. 200kg @ KES 40/kg",
-      "infoAlert": "💡 Hii itaongezwa kwenye mtiririko wako wa fedha wa Juni na kusasisha alama yako ya mkopo.",
+      "infoAlert": "💡 Hii itaongezwa kwenye mtiririko wako wa fedha wa {{month}}.",
       "saveBtn": "Hifadhi Muamala ✓",
       "saving": "Inahifadhi...",
       "errorSave": "Imeshindwa kuhifadhi. Tafadhali jaribu tena.",
@@ -1272,9 +1279,8 @@
         "maxAmount": "Hadi KES {{amount}}",
         "minAmount": "Kuanzia KES {{amount}}",
         "repaymentMonths": "Malipo: miezi {{months}}",
-        "eligibility": "Kiwango: {{band}}+",
+        "eligibility": "Masharti ya kustahili",
         "applyBtn": "Omba",
-        "notEligible": "Alama haitoshi",
         "viewDetails": "Tazama maelezo",
         "partnerType": {
           "bank": "Benki",
@@ -1311,13 +1317,23 @@
         "title": "Omba mkopo",
         "farmSection": "Taarifa za shamba (hazibadiliki)",
         "farmName": "Shamba",
-        "lastHarvestKes": "Thamani ya mavuno ya mwisho",
+        "gpsSection": "Mahali pa shamba",
+        "gpsCapture": "Nasa kuratibu za GPS",
+        "gpsRetake": "Nasa tena mahali",
+        "gpsDenied": "Ruhusa ya mahali imekataliwa. Iwashe kwenye mipangilio ili kuambatanisha kuratibu za GPS.",
+        "documentsSection": "Nyaraka",
+        "documents": {
+          "national_id": "Kitambulisho cha Taifa",
+          "land_title": "Hati ya kumiliki ardhi",
+          "bank_statement": "Taarifa ya benki",
+          "farm_photo": "Picha ya hivi karibuni ya pasipoti"
+        },
+        "upload": "Pakia",
         "loanSection": "Maelezo ya mkopo",
         "purpose": "Madhumuni ya mkopo",
         "purposePlaceholder": "Mfano: Kununua mbegu za mahindi",
         "amount": "Kiasi unachoomba (KES)",
-        "amountMax": "Kikomo chako: KES {{max}}",
-        "amountExceedsLimit": "Inazidi kikomo cha KES {{max}}",
+        "amountRange": "Kiwango cha kiasi: KES {{min}} – {{max}}",
         "repaymentMonths": "Muda wa kulipa (miezi)",
         "monthlySummary": "Malipo ya kila mwezi (karibu)",
         "estimatedMonthly": "~KES {{amount}} / mwezi",
@@ -1341,7 +1357,7 @@
         "disbursedAt": "Tarehe ya kutolewa",
         "mpesaRef": "Kumbukumbu ya M-Pesa",
         "rateFormat": "{{rate}}% / mwaka",
-        "rejectedNote": "Ombi limekataliwa. Imarisha alama yako na ujaribu tena.",
+        "rejectedNote": "Ombi limekataliwa. Wasiliana na mkopeshaji au jaribu bidhaa nyingine.",
         "cancelledNote": "Ombi limefutwa.",
         "cancelBtn": "Futa Ombi",
         "cancelConfirmTitle": "Futa ombi?",
@@ -1816,6 +1832,7 @@
       "outOfStock": {
         "title": "Imekwisha hifadhi",
         "message": "Bidhaa hii imekwisha. Ungependa kuagiza zaidi?",
+        "messageWithSupplier": "Bidhaa hii imekwisha. Agiza zaidi kutoka {{supplier}} kwa KES {{price}}/{{unit}}?",
         "findSupplier": "Ndiyo, Tafuta Muuzaji",
         "notNow": "Si sasa"
       }

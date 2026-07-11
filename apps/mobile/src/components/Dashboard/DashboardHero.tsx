@@ -11,6 +11,8 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { weatherApi } from '../../api/weather';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
+import { useNotifications } from '../../hooks/useNotifications';
+import { NotificationBell } from './NotificationBell';
 
 interface DashboardHeroProps {
   farmerName: string;
@@ -18,9 +20,9 @@ interface DashboardHeroProps {
   farmLat?: number | null;
   farmLng?: number | null;
   netCashFlow: number;
-  creditScore: number;
   farmCount: number;
   onWeatherPress: () => void;
+  onNotificationsPress: () => void;
 }
 
 const COUNTY_COORDS: Record<string, [number, number]> = {
@@ -62,12 +64,13 @@ export function DashboardHero({
   farmLat,
   farmLng,
   netCashFlow,
-  creditScore,
   farmCount,
   onWeatherPress,
+  onNotificationsPress,
 }: DashboardHeroProps) {
   const { t } = useTranslation();
   const { isOnline } = useOfflineSync();
+  const { unreadCount } = useNotifications();
   const [lat, lng] = resolveCoords(farmLat, farmLng, county);
 
   const { data: weatherData, isLoading: weatherLoading } = useQuery({
@@ -94,24 +97,28 @@ export function DashboardHero({
           <Text style={s.greetingName}>{farmerName} 👋</Text>
         </View>
 
-        <Pressable
-          onPress={onWeatherPress}
-          style={s.weatherPill}
-          accessibilityRole="button"
-        >
-          {weatherLoading ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : today ? (
-            <>
-              <Text style={s.weatherIcon}>{weatherIcon}</Text>
-              <Text style={s.weatherText}>
-                {today.tempHighC}°C · {county}
-              </Text>
-            </>
-          ) : (
-            <Text style={s.weatherText}>— · {county}</Text>
-          )}
-        </Pressable>
+        <View style={s.topRowRight}>
+          <Pressable
+            onPress={onWeatherPress}
+            style={s.weatherPill}
+            accessibilityRole="button"
+          >
+            {weatherLoading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : today ? (
+              <>
+                <Text style={s.weatherIcon}>{weatherIcon}</Text>
+                <Text style={s.weatherText}>
+                  {today.tempHighC}°C · {county}
+                </Text>
+              </>
+            ) : (
+              <Text style={s.weatherText}>— · {county}</Text>
+            )}
+          </Pressable>
+
+          <NotificationBell unreadCount={unreadCount} onPress={onNotificationsPress} />
+        </View>
       </View>
 
       {/* Row 2: 3 stat pills */}
@@ -119,11 +126,6 @@ export function DashboardHero({
         <View style={s.pill}>
           <Text style={s.pillValue}>{fmtCash(netCashFlow)}</Text>
           <Text style={s.pillLabel}>{t('dashboard.stat.netThisMonth')}</Text>
-        </View>
-
-        <View style={s.pill}>
-          <Text style={s.pillValue}>{creditScore}</Text>
-          <Text style={s.pillLabel}>{t('dashboard.stat.creditScore')}</Text>
         </View>
 
         <View style={s.pill}>
@@ -147,6 +149,11 @@ const s = StyleSheet.create({
     justifyContent: 'space-between',
   },
   greetingBlock: { flex: 1 },
+  topRowRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   greetingLabel: {
     fontSize: 11,
     color: 'rgba(255,255,255,0.7)',

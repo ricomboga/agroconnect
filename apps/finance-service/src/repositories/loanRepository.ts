@@ -5,8 +5,8 @@ import type { LenderStatusUpdateDto } from '../schemas/lenderStatusUpdate.schema
 
 export async function createLoan(
   farmerId: string,
-  creditScore: number,
-  creditBand: CreditBand,
+  creditScore: number | null,
+  creditBand: CreditBand | null,
   dto: CreateLoanDto,
 ) {
   return prisma.loanApplication.create({
@@ -18,6 +18,8 @@ export async function createLoan(
       purpose: dto.purpose,
       repaymentMonths: dto.repaymentMonths,
       partnerBankId: dto.partnerBankId,
+      farmGpsLat: dto.farmGpsLat,
+      farmGpsLng: dto.farmGpsLng,
       creditScore,
       creditBand,
       status: 'submitted',

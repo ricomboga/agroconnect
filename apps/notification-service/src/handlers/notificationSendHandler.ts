@@ -4,6 +4,7 @@ import { getToken } from '../services/tokenService.js';
 import { sendPush } from '../services/fcmService.js';
 import { sendSms } from '../services/smsService.js';
 import { logDelivery } from '../deliveryLogger.js';
+import { recordNotification } from '../notificationRecorder.js';
 
 const TOPIC = 'notification.send';
 
@@ -14,6 +15,8 @@ export async function notificationSendHandler(raw: unknown): Promise<void> {
     return;
   }
   const { userId, title, body, channel, phone, fcmToken } = result.data;
+
+  await recordNotification({ userId, type: TOPIC, title, body });
 
   if (channel === 'sms') {
     if (!phone) {
