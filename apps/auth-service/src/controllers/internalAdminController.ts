@@ -415,9 +415,9 @@ export async function batchGetUsersHandler(req: Request, res: Response, next: Ne
     const ids = String(req.query['ids'] ?? '').split(',').filter(Boolean);
     if (ids.length === 0) { res.json({ data: {} }); return; }
     const users = await findUsersByIds(ids);
-    const map: Record<string, { fullName: string; phone: string }> = {};
+    const map: Record<string, { fullName: string; phone: string; county: string | null; subCounty: string | null }> = {};
     for (const u of users) {
-      map[u.id] = { fullName: u.fullName, phone: u.phone };
+      map[u.id] = { fullName: u.fullName, phone: u.phone, county: u.county, subCounty: u.subCounty };
     }
     res.json({ data: map });
   } catch (err) {

@@ -89,6 +89,6 @@ export async function updatePasswordHash(id: string, passwordHash: string) {
 export async function findUsersByIds(ids: string[]) {
   return prisma.user.findMany({
     where: { id: { in: ids } },
-    select: { id: true, fullName: true, phone: true },
+    select: { id: true, fullName: true, phone: true, county: true, subCounty: true },
   });
 }
