@@ -38,12 +38,6 @@ const KYC_BADGE: Record<string, { bg: string; color: string; label: string }> = 
   rejected:  { bg: '#FEE2E2', color: '#991B1B', label: 'Rejected' },
 }
 
-const TEST_USERS: AdminUser[] = [
-  { id: '1', full_name: 'Jane Wanjiru',  phone: '+254712345678', role: 'farmer',   county: 'Nakuru',  kyc_status: 'verified', is_active: true,  created_at: '2025-01-15T00:00:00Z' },
-  { id: '2', full_name: 'David Kimani',  phone: '+254722345679', role: 'supplier', county: 'Nairobi', kyc_status: 'pending',  is_active: true,  created_at: '2025-02-20T00:00:00Z' },
-  { id: '3', full_name: 'Mary Achieng',  phone: '+254733345680', role: 'farmer',   county: 'Meru',    kyc_status: 'verified', is_active: false, created_at: '2025-03-10T00:00:00Z' },
-]
-
 const wbtn: React.CSSProperties = {
   backgroundColor: '#1A6B3C',
   color: '#fff',
@@ -162,7 +156,7 @@ export function UsersTable() {
 
   const invalidate = () => void queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['admin', 'users', { page, pageSize, role, kyc, status, q }],
     queryFn: async () => {
       const params = new URLSearchParams({
@@ -218,7 +212,7 @@ export function UsersTable() {
   const busy = verifyMutation.isPending || rejectMutation.isPending || toggleMutation.isPending
 
   const meta = data?.meta
-  const users = data?.data?.length ? data.data : TEST_USERS
+  const users = data?.data ?? []
   const start = meta ? (meta.page - 1) * meta.page_size + 1 : 1
   const end   = meta ? Math.min(meta.page * meta.page_size, meta.total) : users.length
   const total = meta?.total ?? users.length
@@ -299,6 +293,18 @@ export function UsersTable() {
               <tr>
                 <td colSpan={7} style={{ ...tdStyle, textAlign: 'center', padding: 20, color: '#6B7280' }}>
                   Loading...
+                </td>
+              </tr>
+            ) : isError ? (
+              <tr>
+                <td colSpan={7} style={{ ...tdStyle, textAlign: 'center', padding: 20, color: '#991B1B' }}>
+                  Failed to load users. Please try again.
+                </td>
+              </tr>
+            ) : users.length === 0 ? (
+              <tr>
+                <td colSpan={7} style={{ ...tdStyle, textAlign: 'center', padding: 20, color: '#6B7280' }}>
+                  No users found.
                 </td>
               </tr>
             ) : users.map((u) => (
