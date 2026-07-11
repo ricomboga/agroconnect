@@ -569,6 +569,8 @@ services:
       dockerfile: Dockerfile
     container_name: agroconnect-predict-service
     restart: unless-stopped
+    env_file:
+      - ../apps/predict-service/.env
     environment:
       FARM_SERVICE_URL: "http://farm-service:3001"
       KAFKA_BROKERS: "kafka:9092"
