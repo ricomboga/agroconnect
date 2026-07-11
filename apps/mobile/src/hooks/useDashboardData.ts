@@ -29,9 +29,6 @@ export interface DashboardData {
   cashFlowExpenses: number;
   cashFlowNet: number;
   monthBars: MonthBar[];
-  creditScore: number;
-  creditBand: string;
-  maxLoanKes: number;
   loanBalance: number;
   loanNextDue: string | null;
   topPriceAlert: TopPriceAlert | null;
@@ -111,13 +108,6 @@ export function useDashboardData(): DashboardData {
     staleTime: staleMs,
   });
 
-  const creditQ = useQuery({
-    queryKey: ['creditScore'],
-    queryFn: () => financeApi.creditScore.get(),
-    enabled: hasData,
-    staleTime: staleMs,
-  });
-
   const loansQ = useQuery({
     queryKey: ['loans'],
     queryFn: () => financeApi.loans.list(),
@@ -169,7 +159,6 @@ export function useDashboardData(): DashboardData {
     (a: Activity) => a.scheduledDate != null && a.scheduledDate >= today,
   );
 
-  const credit = creditQ.data?.data;
   const activeLoan: LoanApplication | undefined = (loansQ.data?.data ?? []).find(
     (l: LoanApplication) => l.status === 'disbursed',
   );
@@ -210,7 +199,6 @@ export function useDashboardData(): DashboardData {
       void allActivitiesQ.refetch();
     }
     if (hasData) {
-      void creditQ.refetch();
       void loansQ.refetch();
       void marketSignalsQ.refetch();
       void transactionsQ.refetch();
@@ -259,9 +247,6 @@ export function useDashboardData(): DashboardData {
     cashFlowExpenses,
     cashFlowNet,
     monthBars,
-    creditScore: credit?.score ?? 0,
-    creditBand: credit?.band ?? '—',
-    maxLoanKes: credit?.maxLoanKes ?? 0,
     loanBalance,
     loanNextDue,
     topPriceAlert,

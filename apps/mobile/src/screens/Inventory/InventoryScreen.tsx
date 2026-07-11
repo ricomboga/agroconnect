@@ -517,6 +517,8 @@ export function InventoryScreen({ navigation }: Props) {
                             itemName:     item.name,
                             unit:         item.unit,
                             remainingQty: item.remainingQty,
+                            supplier:     item.supplier,
+                            costPerUnit:  item.costPerUnit,
                           })}
                           accessibilityRole="button"
                         >

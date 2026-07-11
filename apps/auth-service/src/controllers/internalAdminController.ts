@@ -18,6 +18,22 @@ const createUserSchema = z.object({
   isSuperAdmin: z.boolean().optional(),
   staffRole: z.enum(['admin', 'county_admin', 'moderator']).optional(),
   partnerBankId: z.string().optional(),
+  supervisorId: z.string().optional(),
+  createdByUserId: z.string().min(1),
+});
+
+const createSystemUserSchema = z.object({
+  phone: z.string().min(1),
+  email: z.string().email().optional(),
+  password: z.string().min(8),
+  fullName: z.string().min(1),
+  role: z.enum(['admin', 'govt_officer']),
+  staffRole: z.enum(['admin', 'county_admin', 'moderator']),
+  isSuperAdmin: z.boolean().optional(),
+  county: z.enum(KENYA_COUNTIES).optional(),
+  language: z.enum(['sw', 'en']).optional(),
+  createdByUserId: z.string().min(1),
+  roleIds: z.array(z.string()).optional(),
 });
 
 const updateUserSchema = z.object({
@@ -26,6 +42,34 @@ const updateUserSchema = z.object({
   county: z.enum(KENYA_COUNTIES).optional(),
   subCounty: z.string().max(100).optional(),
   partnerBankId: z.string().optional(),
+  supervisorId: z.string().optional(),
+});
+
+const setUserStatusSchema = z.object({
+  status: z.enum(['pending_verification', 'verified', 'active', 'inactive', 'disabled', 'deleted']),
+});
+
+const verifyUserSchema = z.object({
+  verifierId: z.string().min(1),
+});
+
+const assignRoleSchema = z.object({
+  roleId: z.string().min(1),
+  assignedByUserId: z.string().min(1),
+});
+
+const createRoleSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional(),
+});
+
+const createPermissionSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional(),
+});
+
+const attachPermissionSchema = z.object({
+  permissionId: z.string().min(1),
 });
 
 export async function listUsersHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -37,10 +81,7 @@ export async function listUsersHandler(req: Request, res: Response, next: NextFu
       role: req.query['role'] as string | undefined,
       county: req.query['county'] as string | undefined,
       kyc_status: req.query['kyc_status'] as string | undefined,
-      is_active:
-        req.query['is_active'] !== undefined
-          ? req.query['is_active'] === 'true'
-          : undefined,
+      status: req.query['status'] as string | undefined,
       page,
       page_size: pageSize,
     });
@@ -63,8 +104,12 @@ export async function getUserHandler(req: Request, res: Response, next: NextFunc
 export async function setUserStatusHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params as { id: string };
-    const { is_active } = req.body as { is_active: boolean };
-    await adminUserService.setUserStatus(id, is_active);
+    const parsed = setUserStatusSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ message: 'Invalid request', errors: parsed.error.flatten().fieldErrors });
+      return;
+    }
+    await adminUserService.setUserStatus(id, parsed.data.status);
     res.json({ success: true });
   } catch (err) {
     next(err);
@@ -74,7 +119,12 @@ export async function setUserStatusHandler(req: Request, res: Response, next: Ne
 export async function verifyUserHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params as { id: string };
-    await adminUserService.verifyUser(id);
+    const parsed = verifyUserSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ message: 'Invalid request', errors: parsed.error.flatten().fieldErrors });
+      return;
+    }
+    await adminUserService.verifyUser(id, parsed.data.verifierId);
     res.json({ success: true });
   } catch (err) {
     next(err);
@@ -98,6 +148,20 @@ export async function createUserHandler(req: Request, res: Response, next: NextF
       return;
     }
     const user = await adminUserService.createUser(parsed.data);
+    res.status(201).json({ data: user });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function createSystemUserHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const parsed = createSystemUserSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ message: 'Invalid request', errors: parsed.error.flatten().fieldErrors });
+      return;
+    }
+    const user = await adminUserService.createSystemUser(parsed.data);
     res.status(201).json({ data: user });
   } catch (err) {
     next(err);
@@ -239,14 +303,121 @@ export async function listAuditLogsHandler(req: Request, res: Response, next: Ne
   }
 }
 
+export async function listRolesHandler(_req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const roles = await adminUserService.listRoleDefs();
+    res.json({ data: roles });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function createRoleHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const parsed = createRoleSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ message: 'Invalid request', errors: parsed.error.flatten().fieldErrors });
+      return;
+    }
+    const role = await adminUserService.createRoleDef(parsed.data.name, parsed.data.description);
+    res.status(201).json({ data: role });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function listPermissionsHandler(_req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const permissions = await adminUserService.listPermissionDefs();
+    res.json({ data: permissions });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function createPermissionHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const parsed = createPermissionSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ message: 'Invalid request', errors: parsed.error.flatten().fieldErrors });
+      return;
+    }
+    const permission = await adminUserService.createPermissionDef(parsed.data.name, parsed.data.description);
+    res.status(201).json({ data: permission });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function attachPermissionToRoleHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { id } = req.params as { id: string };
+    const parsed = attachPermissionSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ message: 'Invalid request', errors: parsed.error.flatten().fieldErrors });
+      return;
+    }
+    await adminUserService.grantPermissionToRole(id, parsed.data.permissionId);
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function detachPermissionFromRoleHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { id, permissionId } = req.params as { id: string; permissionId: string };
+    await adminUserService.revokePermissionFromRole(id, permissionId);
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function assignRoleToUserHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { id } = req.params as { id: string };
+    const parsed = assignRoleSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ message: 'Invalid request', errors: parsed.error.flatten().fieldErrors });
+      return;
+    }
+    await adminUserService.assignRole(id, parsed.data.roleId, parsed.data.assignedByUserId);
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function unassignRoleFromUserHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { id, roleId } = req.params as { id: string; roleId: string };
+    await adminUserService.unassignRole(id, roleId);
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getUserRolesHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { id } = req.params as { id: string };
+    const roles = await adminUserService.getRolesForUser(id);
+    const permissions = await adminUserService.getPermissionsForUser(id);
+    res.json({ data: { roles, permissions } });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function batchGetUsersHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const ids = String(req.query['ids'] ?? '').split(',').filter(Boolean);
     if (ids.length === 0) { res.json({ data: {} }); return; }
     const users = await findUsersByIds(ids);
-    const map: Record<string, { fullName: string; phone: string }> = {};
+    const map: Record<string, { fullName: string; phone: string; county: string | null; subCounty: string | null }> = {};
     for (const u of users) {
-      map[u.id] = { fullName: u.fullName, phone: u.phone };
+      map[u.id] = { fullName: u.fullName, phone: u.phone, county: u.county, subCounty: u.subCounty };
     }
     res.json({ data: map });
   } catch (err) {

@@ -17,7 +17,7 @@ Reference: `@docs/architecture.md`
 | govt-service | Node.js | 3006 | REST + Kafka | Farm registration, subsidy applications, eCitizen integration |
 | weather-service | Python | 8001 | REST (internal) | Weather aggregation, hyperlocal forecasting |
 | predict-service | Python | 8002 | REST (internal) | Price forecasting, yield estimation |
-| notification-service | Node.js | 3007 | Kafka consumer | FCM push, SMS (Africa's Talking), USSD callbacks |
+| notification-service | Node.js | 3007 | Kafka consumer + JWT | FCM push, SMS (Africa's Talking), USSD callbacks, in-app notification inbox (GET/PATCH /notifications) |
 | media-service | Node.js | 3009 | REST | Image upload, S3 storage, CDN URL signing |
 | ussd-service | Node.js | 3010 | HTTP webhook | Africa's Talking USSD menu, session state machine |
 | admin-service | Node.js | 3011 | REST | Platform admin, moderation, analytics |

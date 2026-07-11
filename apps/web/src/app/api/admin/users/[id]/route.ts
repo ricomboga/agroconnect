@@ -29,21 +29,47 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  if (!(await requireAdmin())) {
+  const session = await requireAdmin()
+  if (!session) {
     return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
   }
   const body = await req.json().catch(() => ({}))
-  const { action, ...rest } = body as { action?: string; [k: string]: unknown }
-  const url =
-    action === 'verify'
-      ? `${AUTH}/internal/admin/users/${params.id}/verify`
-      : action === 'update'
-        ? `${AUTH}/internal/admin/users/${params.id}`
-        : `${AUTH}/internal/admin/users/${params.id}/status`
+  const { action, is_active, reason, ...rest } = body as {
+    action?: string
+    is_active?: boolean
+    reason?: string
+    [k: string]: unknown
+  }
+
+  let url: string
+  let payload: Record<string, unknown> = rest
+
+  if (action === 'verify' || action === 'reject') {
+    // KYC business-document review (the "✓ Verify" / "✗ Reject" buttons in
+    // UsersTable — gated on kyc_status, distinct from account maker-checker verify).
+    url = `${AUTH}/internal/admin/users/${params.id}/kyc`
+    payload = {
+      decision: action === 'verify' ? 'approved' : 'rejected',
+      reason: reason && reason.trim().length > 0 ? reason : `${action === 'verify' ? 'Approved' : 'Rejected'} via admin portal`,
+      actor: session.sub,
+    }
+  } else if (action === 'verify_account') {
+    // Account-status maker-checker verify: the calling admin can never verify a
+    // user they created themselves (enforced server-side).
+    url = `${AUTH}/internal/admin/users/${params.id}/verify`
+    payload = { verifierId: session.sub }
+  } else if (action === 'update') {
+    url = `${AUTH}/internal/admin/users/${params.id}`
+  } else {
+    // Legacy toggle payload ({ is_active }) maps onto the account status enum.
+    url = `${AUTH}/internal/admin/users/${params.id}/status`
+    payload = typeof is_active === 'boolean' ? { status: is_active ? 'active' : 'disabled' } : {}
+  }
+
   const upstream = await fetch(url, {
     method: 'PATCH',
     headers: serviceHeaders(),
-    body: JSON.stringify(rest),
+    body: JSON.stringify(payload),
   })
   const result = await upstream.json()
   return NextResponse.json(result, { status: upstream.status })

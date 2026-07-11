@@ -4,6 +4,7 @@ import { getToken } from '../services/tokenService.js';
 import { sendPush } from '../services/fcmService.js';
 import { sendSms } from '../services/smsService.js';
 import { logDelivery } from '../deliveryLogger.js';
+import { recordNotification } from '../notificationRecorder.js';
 import { getPushTemplate, getSmsTemplate } from '../templates/index.js';
 
 const TOPIC = 'finance.loan.disbursed';
@@ -16,10 +17,13 @@ export async function financeLoanDisbursedHandler(raw: unknown): Promise<void> {
   }
   const { loanId, farmerId, amountKes, phone } = result.data;
   const data = { loanId, amountKes: String(amountKes) };
+  const tpl = getPushTemplate('sw', TOPIC, data);
+  if (tpl) {
+    await recordNotification({ userId: farmerId, type: TOPIC, title: tpl.title, body: tpl.body });
+  }
 
   const token = await getToken(farmerId);
   if (token) {
-    const tpl = getPushTemplate('sw', TOPIC, data);
     if (tpl) {
       const status = await sendPush(token, tpl.title, tpl.body);
       await logDelivery({ eventType: TOPIC, farmerId, channel: 'push', status });

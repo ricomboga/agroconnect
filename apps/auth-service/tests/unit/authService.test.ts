@@ -11,6 +11,7 @@ jest.mock('../../src/repositories/userRepository', () => ({
   verifyUserPhone: jest.fn(),
   updateUserProfile: jest.fn(),
   updatePasswordHash: jest.fn(),
+  LOGIN_ELIGIBLE_STATUSES: ['verified', 'active'],
 }));
 
 jest.mock('../../src/repositories/sessionRepository', () => ({
@@ -50,8 +51,7 @@ const fakeUser = {
   county: null,
   language: 'sw' as const,
   passwordHash: '$2b$01$fakehash',
-  isVerified: false,
-  isActive: true,
+  status: 'active' as const,
   kycStatus: 'pending' as const,
   createdAt: new Date('2024-01-01T00:00:00Z'),
   updatedAt: new Date('2024-01-01T00:00:00Z'),
@@ -140,12 +140,24 @@ describe('authService.login', () => {
     ).rejects.toMatchObject({ statusCode: 401, errorCode: 'INVALID_CREDENTIALS' });
   });
 
-  it('throws 401 INVALID_CREDENTIALS when user is inactive', async () => {
-    mockFindUserByPhone.mockResolvedValue({ ...fakeUser, isActive: false } as never);
+  it('throws 403 ACCOUNT_NOT_VERIFIED when the account is still pending maker-checker verification', async () => {
+    const bcrypt = await import('bcryptjs');
+    const hash = await bcrypt.hash('correct_password', 1);
+    mockFindUserByPhone.mockResolvedValue({ ...fakeUser, passwordHash: hash, status: 'pending_verification' } as never);
 
     await expect(
-      authService.login({ phone: '+254712345678', password: 'any' }, '127.0.0.1'),
-    ).rejects.toMatchObject({ statusCode: 401, errorCode: 'INVALID_CREDENTIALS' });
+      authService.login({ phone: '+254712345678', password: 'correct_password' }, '127.0.0.1'),
+    ).rejects.toMatchObject({ statusCode: 403, errorCode: 'ACCOUNT_NOT_VERIFIED' });
+  });
+
+  it('throws 403 ACCOUNT_NOT_ACTIVE when the account has been disabled', async () => {
+    const bcrypt = await import('bcryptjs');
+    const hash = await bcrypt.hash('correct_password', 1);
+    mockFindUserByPhone.mockResolvedValue({ ...fakeUser, passwordHash: hash, status: 'disabled' } as never);
+
+    await expect(
+      authService.login({ phone: '+254712345678', password: 'correct_password' }, '127.0.0.1'),
+    ).rejects.toMatchObject({ statusCode: 403, errorCode: 'ACCOUNT_NOT_ACTIVE' });
   });
 });
 

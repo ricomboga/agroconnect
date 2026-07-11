@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { DatePickerField } from '../../components/ui/DatePickerField';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -65,11 +65,16 @@ function formatDateDisplay(d: Date): string {
   return d.toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+function formatMonthLabel(d: Date): string {
+  return d.toLocaleDateString('en-KE', { month: 'long' });
+}
+
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export function AddTransactionScreen({ navigation }: Props) {
   const { t } = useTranslation();
   const { isOnline, queueWrite } = useOfflineSync();
+  const queryClient = useQueryClient();
 
   // ── Form state ──────────────────────────────────────────────────────────────
   const [txType, setTxType]               = useState<TxType>('income');
@@ -115,6 +120,8 @@ export function AddTransactionScreen({ navigation }: Props) {
     mutationFn: (dto: TransactionFormData) =>
       financeApi.transactions.create(dto),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['finance/transactions'] });
       navigation.goBack();
     },
     onError: () => {
@@ -324,7 +331,9 @@ export function AddTransactionScreen({ navigation }: Props) {
 
         {/* ── Info Alert ──────────────────────────────────────────────────── */}
         <View style={s.infoAlert}>
-          <Text style={s.infoAlertText}>{t('finance.transaction.infoAlert')}</Text>
+          <Text style={s.infoAlertText}>
+            {t('finance.transaction.infoAlert', { month: formatMonthLabel(date) })}
+          </Text>
         </View>
 
         {/* ── Error ───────────────────────────────────────────────────────── */}

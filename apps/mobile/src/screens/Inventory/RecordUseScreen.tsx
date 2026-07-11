@@ -22,7 +22,7 @@ import type { StockStackParamList } from '../../navigation/types';
 type Props = NativeStackScreenProps<StockStackParamList, 'RecordUseScreen'>;
 
 export function RecordUseScreen({ navigation, route }: Props) {
-  const { itemId, itemName, unit, remainingQty } = route.params;
+  const { itemId, itemName, unit, remainingQty, supplier, costPerUnit } = route.params;
   const { t } = useTranslation();
   const { isOnline, queueWrite } = useOfflineSync();
   const showToast = useUiStore((st) => st.showToast);
@@ -77,10 +77,19 @@ export function RecordUseScreen({ navigation, route }: Props) {
         if (afterQty === 0) {
           Alert.alert(
             t('inventory.recordUse.outOfStock.title'),
-            t('inventory.recordUse.outOfStock.message'),
+            t('inventory.recordUse.outOfStock.messageWithSupplier', {
+              supplier,
+              price: costPerUnit.toLocaleString(),
+              unit,
+            }),
             [
               { text: t('inventory.recordUse.outOfStock.notNow'), style: 'cancel', onPress: () => navigation.goBack() },
-              { text: t('inventory.recordUse.outOfStock.findSupplier'), onPress: () => navigation.goBack() },
+              {
+                text: t('inventory.recordUse.outOfStock.findSupplier'),
+                onPress: () => navigation.replace('RestockScreen', {
+                  itemId, itemName, unit, remainingQty: 0, supplier, costPerUnit,
+                }),
+              },
             ],
           );
         } else {

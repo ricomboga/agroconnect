@@ -17,7 +17,6 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
 import { financeApi } from '../../api/finance';
 import type {
-  CreditBand,
   LoanStatus,
   LoanApplication,
   Transaction,
@@ -43,12 +42,6 @@ function formatTxDate(dateStr: string): string {
 
 // ── Loan-tab colour maps ──────────────────────────────────────────────────────
 
-const BAND_COLOR: Record<CreditBand, string> = {
-  A: '#1B5E20', B: '#2E8B57', C: '#E65100', D: '#B71C1C', ineligible: '#616161',
-};
-const BAND_BG: Record<CreditBand, string> = {
-  A: '#E8F5E9', B: '#EAF4EE', C: '#FFF3E0', D: '#FFEBEE', ineligible: '#EEEEEE',
-};
 const STATUS_COLOR: Record<LoanStatus, string> = {
   draft: '#424242', submitted: '#2E8B57', under_review: '#E65100',
   approved: '#1B5E20', rejected: '#B71C1C', disbursed: '#00695C', cancelled: '#616161',
@@ -70,12 +63,6 @@ export function FinanceHomeScreen({ navigation }: Props) {
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
-
-  const scoreQuery = useQuery({
-    queryKey: ['creditScore'],
-    queryFn: () => financeApi.creditScore.get(),
-    staleTime: isOnline ? 5 * 60 * 1000 : Infinity,
-  });
 
   const loansQuery = useQuery({
     queryKey: ['loans'],
@@ -145,20 +132,7 @@ export function FinanceHomeScreen({ navigation }: Props) {
   const maxCombined = Math.max(1, ...weeksData.map((w) => w.income + w.expenses));
   const recentTxs = allTxs.slice(0, 8);
 
-  const score = scoreQuery.data?.data;
   const loans = loansQuery.data?.data ?? [];
-  const band: CreditBand = score?.band ?? 'D';
-  const bandColor = BAND_COLOR[band];
-  const bandBg = BAND_BG[band];
-
-  const COMPS = score?.components
-    ? [
-        { key: 'yield',      label: t('finance.score.component.yield'),      val: score.components.yield.score },
-        { key: 'inputs',     label: t('finance.score.component.inputs'),     val: score.components.inputs.score },
-        { key: 'activities', label: t('finance.score.component.activities'), val: score.components.activities.score },
-        { key: 'platform',   label: t('finance.score.component.platform'),   val: score.components.platform.score },
-      ]
-    : [];
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -347,70 +321,16 @@ export function FinanceHomeScreen({ navigation }: Props) {
           contentContainerStyle={s.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {scoreQuery.isLoading && (
-            <View style={s.center}>
-              <ActivityIndicator size="large" color="#1A6B3C" />
-            </View>
-          )}
+          <Pressable
+            style={s.ctaBtn}
+            onPress={() => navigation.navigate('LoanProducts')}
+            accessibilityRole="button"
+          >
+            <Text style={s.ctaLabel}>{t('finance.home.applyBtn')}</Text>
+          </Pressable>
 
-          {scoreQuery.isError && (
-            <View style={s.center}>
-              <Text style={s.errorText}>{t('common.error.loadFailed')}</Text>
-              <Pressable onPress={() => scoreQuery.refetch()} style={s.retryBtn}>
-                <Text style={s.retryLabel}>{t('common.retry')}</Text>
-              </Pressable>
-            </View>
-          )}
-
-          {score && !scoreQuery.isLoading && (
-            <>
-              <Pressable
-                style={[s.scoreCard, { backgroundColor: bandBg, borderColor: bandColor }]}
-                onPress={() => navigation.navigate('CreditScoreDetail')}
-                accessibilityRole="button"
-              >
-                <View style={s.scoreTop}>
-                  <View style={s.scoreLeft}>
-                    <Text style={s.scoreTitleLabel}>{t('finance.score.title')}</Text>
-                    <Text style={[s.scoreNum, { color: bandColor }]}>{score.score}</Text>
-                    <Text style={s.scoreOutOf}>{t('finance.score.outOf')}</Text>
-                  </View>
-                  <View style={[s.bandBadge, { backgroundColor: bandColor }]}>
-                    <Text style={s.bandText}>{t('finance.score.band', { band })}</Text>
-                  </View>
-                </View>
-
-                <Text style={[s.maxLoan, { color: bandColor }]}>
-                  {t('finance.score.maxLoan', { amount: score.maxLoanKes.toLocaleString() })}
-                </Text>
-
-                <View style={s.bars}>
-                  {COMPS.map((c) => (
-                    <View key={c.key} style={s.barRow}>
-                      <Text style={s.barLabel}>{c.label}</Text>
-                      <View style={s.barTrack}>
-                        <View style={[s.barFill, { width: `${c.val}%`, backgroundColor: bandColor }]} />
-                      </View>
-                      <Text style={[s.barVal, { color: bandColor }]}>{c.val}</Text>
-                    </View>
-                  ))}
-                </View>
-
-                <Text style={s.tapHint}>{t('finance.score.tapDetail')}</Text>
-              </Pressable>
-
-              <Pressable
-                style={[s.ctaBtn, { backgroundColor: bandColor }]}
-                onPress={() => navigation.navigate('LoanProducts')}
-                accessibilityRole="button"
-              >
-                <Text style={s.ctaLabel}>{t('finance.home.applyBtn')}</Text>
-              </Pressable>
-            </>
-          )}
-
-          {loans.length > 0 && score && (
-            <LoanOverviewCard loans={loans} maxLoanKes={score.maxLoanKes} t={t} />
+          {loans.length > 0 && (
+            <LoanOverviewCard loans={loans} t={t} />
           )}
 
           <Text style={s.loansSectionTitle}>{t('finance.home.loanHistory')}</Text>
@@ -472,7 +392,6 @@ export function FinanceHomeScreen({ navigation }: Props) {
 
 interface LoanOverviewCardProps {
   loans: LoanApplication[];
-  maxLoanKes: number;
   t: (key: string, opts?: Record<string, unknown>) => string;
 }
 
@@ -495,7 +414,7 @@ function computeNextPayment(loans: LoanApplication[]): string | null {
   return earliest.toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-function LoanOverviewCard({ loans, maxLoanKes, t }: LoanOverviewCardProps) {
+function LoanOverviewCard({ loans, t }: LoanOverviewCardProps) {
   const activeLoans   = loans.filter((l) => l.status === 'disbursed').length;
   const defaulted     = loans.filter((l) => l.status === 'defaulted').length;
   const nextPayment   = computeNextPayment(loans);
@@ -505,25 +424,21 @@ function LoanOverviewCard({ loans, maxLoanKes, t }: LoanOverviewCardProps) {
       <Text style={ov.title}>{t('finance.home.loanOverview.title')}</Text>
       <View style={ov.grid}>
         <View style={ov.cell}>
-          <Text style={ov.cellLabel}>{t('finance.home.loanOverview.creditLimit')}</Text>
-          <Text style={ov.cellValue}>KES {maxLoanKes.toLocaleString()}</Text>
-        </View>
-        <View style={[ov.cell, ov.cellRight]}>
           <Text style={ov.cellLabel}>{t('finance.home.loanOverview.activeLoans')}</Text>
           <Text style={[ov.cellValue, { color: activeLoans > 0 ? '#00695C' : '#424242' }]}>
             {activeLoans}
+          </Text>
+        </View>
+        <View style={[ov.cell, ov.cellRight]}>
+          <Text style={ov.cellLabel}>{t('finance.home.loanOverview.nextPayment')}</Text>
+          <Text style={[ov.cellValue, { fontSize: 13 }]}>
+            {nextPayment ?? '—'}
           </Text>
         </View>
       </View>
       <View style={ov.divider} />
       <View style={ov.grid}>
         <View style={ov.cell}>
-          <Text style={ov.cellLabel}>{t('finance.home.loanOverview.nextPayment')}</Text>
-          <Text style={[ov.cellValue, { fontSize: 13 }]}>
-            {nextPayment ?? '—'}
-          </Text>
-        </View>
-        <View style={[ov.cell, ov.cellRight]}>
           <Text style={ov.cellLabel}>{t('finance.home.loanOverview.nonPerforming')}</Text>
           <Text style={[ov.cellValue, { color: defaulted > 0 ? '#7B1FA2' : '#424242' }]}>
             {defaulted}
@@ -612,9 +527,6 @@ function buildShareText(
           ` (${t('finance.home.reports.production.paid')} ${collections.paidKes.toLocaleString()}, ` +
           `${t('finance.home.reports.production.pending')} ${collections.pendingKes.toLocaleString()})`,
       );
-    }
-    if (report.creditScore) {
-      lines.push('', `${t('finance.score.title')}: ${report.creditScore.score} (${report.creditScore.band})`);
     }
   }
 
@@ -1099,26 +1011,8 @@ const s = StyleSheet.create({
   txAmount:         { fontSize: 10, fontWeight: '700' },
 
   // ── Loans tab ─────────────────────────────────────────────────────────────
-  scoreCard:        { borderRadius: 12, borderWidth: 1.5, padding: 10, marginBottom: 12 },
-  scoreTop:         { flexDirection: 'row', justifyContent: 'space-between',
-                      alignItems: 'flex-start', marginBottom: 6 },
-  scoreLeft:        { gap: 1 },
-  scoreTitleLabel:  { fontSize: 9, color: '#555', fontWeight: '500',
-                      textTransform: 'uppercase', letterSpacing: 0.8 },
-  scoreNum:         { fontSize: 32, fontWeight: '800', lineHeight: 36 },
-  scoreOutOf:       { fontSize: 10, color: '#757575' },
-  bandBadge:        { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-  bandText:         { color: '#FFF', fontSize: 12, fontWeight: '700' },
-  maxLoan:          { fontSize: 11, fontWeight: '600', marginBottom: 8 },
-  bars:             { gap: 4, marginBottom: 6 },
-  barRow:           { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  barLabel:         { fontSize: 9, color: '#555', width: 64 },
-  barTrack:         { flex: 1, height: 5, backgroundColor: '#E0E0E0', borderRadius: 3, overflow: 'hidden' },
-  barFill:          { height: 5, borderRadius: 3 },
-  barVal:           { fontSize: 9, fontWeight: '700', width: 20, textAlign: 'right' },
-  tapHint:          { fontSize: 9, color: '#888', textAlign: 'right' },
   ctaBtn:           { minHeight: 48, borderRadius: 8, justifyContent: 'center',
-                      alignItems: 'center', marginBottom: 20 },
+                      alignItems: 'center', marginBottom: 20, backgroundColor: '#1A6B3C' },
   ctaLabel:         { color: '#FFF', fontSize: 13, fontWeight: '700' },
   loansSectionTitle:{ fontSize: 12, fontWeight: '700', color: '#111827', marginBottom: 10 },
   emptyBox:         { paddingVertical: 20, alignItems: 'center' },

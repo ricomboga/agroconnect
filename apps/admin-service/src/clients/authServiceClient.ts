@@ -35,6 +35,8 @@ function handleError(err: unknown, context: string): never {
   );
 }
 
+export type AccountStatus = 'pending_verification' | 'verified' | 'active' | 'inactive' | 'disabled' | 'deleted';
+
 export interface UserRow {
   id: string;
   phone: string;
@@ -43,6 +45,7 @@ export interface UserRow {
   role: string;
   county: string | null;
   language: string;
+  status: AccountStatus;
   isVerified: boolean;
   isActive: boolean;
   isSuperAdmin?: boolean;
@@ -52,6 +55,9 @@ export interface UserRow {
   is_super_admin?: boolean;
   staff_role?: string;
   partner_bank_id?: string | null;
+  created_by_user_id?: string | null;
+  verified_by_user_id?: string | null;
+  supervisor_id?: string | null;
 }
 
 export type UserDetail = UserRow;
@@ -66,6 +72,22 @@ export interface CreateUserPayload {
   language?: string;
   isSuperAdmin?: boolean;
   staffRole?: string;
+  supervisorId?: string;
+  createdByUserId: string;
+}
+
+export interface CreateSystemUserPayload {
+  phone: string;
+  email?: string;
+  password: string;
+  fullName: string;
+  role: 'admin' | 'govt_officer';
+  staffRole: 'admin' | 'county_admin' | 'moderator';
+  isSuperAdmin?: boolean;
+  county?: string;
+  language?: string;
+  createdByUserId: string;
+  roleIds?: string[];
 }
 
 export interface UsersPage {
@@ -79,7 +101,7 @@ export async function listUsers(query: ListUsersQuery): Promise<UsersPage> {
     if (query.role) params.set('role', query.role);
     if (query.county) params.set('county', query.county);
     if (query.kyc_status) params.set('kyc_status', query.kyc_status);
-    if (query.is_active !== undefined) params.set('is_active', String(query.is_active));
+    if (query.is_active !== undefined) params.set('status', query.is_active ? 'active' : 'inactive');
     params.set('page', String(query.page));
     params.set('page_size', String(query.page_size));
 
@@ -114,11 +136,22 @@ export async function createUser(payload: CreateUserPayload): Promise<UserDetail
   }
 }
 
-export async function setUserStatus(id: string, isActive: boolean): Promise<void> {
+export async function createSystemUser(payload: CreateSystemUserPayload): Promise<UserDetail> {
+  try {
+    const res = await client.post<{ data: UserDetail }>('/internal/admin/system-users', payload, {
+      headers: { 'x-service-token': serviceToken() },
+    });
+    return res.data.data;
+  } catch (err) {
+    handleError(err, 'createSystemUser');
+  }
+}
+
+export async function setUserStatus(id: string, status: AccountStatus): Promise<void> {
   try {
     await client.patch(
       `/internal/admin/users/${id}/status`,
-      { is_active: isActive },
+      { status },
       { headers: { 'x-service-token': serviceToken() } },
     );
   } catch (err) {
@@ -126,15 +159,144 @@ export async function setUserStatus(id: string, isActive: boolean): Promise<void
   }
 }
 
-export async function verifyUser(id: string): Promise<void> {
+export async function verifyUser(id: string, verifierId: string): Promise<void> {
   try {
     await client.patch(
       `/internal/admin/users/${id}/verify`,
-      {},
+      { verifierId },
       { headers: { 'x-service-token': serviceToken() } },
     );
   } catch (err) {
+    if (err instanceof AxiosError && err.response) {
+      const code = (err.response.data as { error_code?: string } | undefined)?.error_code;
+      if (code === 'SELF_VERIFICATION_FORBIDDEN') {
+        throw createError(
+          'The admin who created this account cannot verify it',
+          403,
+          'SELF_VERIFICATION_FORBIDDEN',
+          'error.user.self_verification_forbidden',
+        );
+      }
+      if (code === 'SUPERVISOR_APPROVAL_REQUIRED') {
+        throw createError(
+          "Only the creating field agent's supervisor can verify this account",
+          403,
+          'SUPERVISOR_APPROVAL_REQUIRED',
+          'error.user.supervisor_approval_required',
+        );
+      }
+    }
     handleError(err, 'verifyUser');
+  }
+}
+
+export interface RoleRow {
+  id: string;
+  name: string;
+  description: string | null;
+}
+
+export interface PermissionRow {
+  id: string;
+  name: string;
+  description: string | null;
+}
+
+export async function listRoles(): Promise<RoleRow[]> {
+  try {
+    const res = await client.get<{ data: RoleRow[] }>('/internal/admin/roles', {
+      headers: { 'x-service-token': serviceToken() },
+    });
+    return res.data.data;
+  } catch (err) {
+    handleError(err, 'listRoles');
+  }
+}
+
+export async function createRole(name: string, description?: string): Promise<RoleRow> {
+  try {
+    const res = await client.post<{ data: RoleRow }>(
+      '/internal/admin/roles',
+      { name, description },
+      { headers: { 'x-service-token': serviceToken() } },
+    );
+    return res.data.data;
+  } catch (err) {
+    handleError(err, 'createRole');
+  }
+}
+
+export async function listPermissions(): Promise<PermissionRow[]> {
+  try {
+    const res = await client.get<{ data: PermissionRow[] }>('/internal/admin/permissions', {
+      headers: { 'x-service-token': serviceToken() },
+    });
+    return res.data.data;
+  } catch (err) {
+    handleError(err, 'listPermissions');
+  }
+}
+
+export async function createPermission(name: string, description?: string): Promise<PermissionRow> {
+  try {
+    const res = await client.post<{ data: PermissionRow }>(
+      '/internal/admin/permissions',
+      { name, description },
+      { headers: { 'x-service-token': serviceToken() } },
+    );
+    return res.data.data;
+  } catch (err) {
+    handleError(err, 'createPermission');
+  }
+}
+
+export async function attachPermissionToRole(roleId: string, permissionId: string): Promise<void> {
+  try {
+    await client.post(
+      `/internal/admin/roles/${roleId}/permissions`,
+      { permissionId },
+      { headers: { 'x-service-token': serviceToken() } },
+    );
+  } catch (err) {
+    handleError(err, 'attachPermissionToRole');
+  }
+}
+
+export async function assignRoleToUser(userId: string, roleId: string, assignedByUserId: string): Promise<void> {
+  try {
+    await client.post(
+      `/internal/admin/users/${userId}/roles`,
+      { roleId, assignedByUserId },
+      { headers: { 'x-service-token': serviceToken() } },
+    );
+  } catch (err) {
+    handleError(err, 'assignRoleToUser');
+  }
+}
+
+export async function unassignRoleFromUser(userId: string, roleId: string): Promise<void> {
+  try {
+    await client.delete(`/internal/admin/users/${userId}/roles/${roleId}`, {
+      headers: { 'x-service-token': serviceToken() },
+    });
+  } catch (err) {
+    handleError(err, 'unassignRoleFromUser');
+  }
+}
+
+export interface UserRolesResponse {
+  roles: Array<{ role_id: string; role_name: string; permissions: string[]; assigned_at: string }>;
+  permissions: string[];
+}
+
+export async function getUserRoles(userId: string): Promise<UserRolesResponse> {
+  try {
+    const res = await client.get<{ data: UserRolesResponse }>(`/internal/admin/users/${userId}/roles`, {
+      headers: { 'x-service-token': serviceToken() },
+    });
+    return res.data.data;
+  } catch (err) {
+    handleError(err, 'getUserRoles');
   }
 }
 

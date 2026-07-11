@@ -82,6 +82,35 @@ export interface CreateLoanDto {
   amountRequestedKes: number;
   purpose: string;
   repaymentMonths: number;
+  farmGpsLat?: number;
+  farmGpsLng?: number;
+}
+
+export type LoanDocumentType =
+  | 'national_id'
+  | 'land_title'
+  | 'farm_photo'
+  | 'bank_statement'
+  | 'payslip'
+  | 'other';
+
+export interface AddLoanDocumentDto {
+  name: string;
+  documentType: LoanDocumentType;
+  storageKey: string;
+  mimeType: string;
+  sizeBytes: number;
+}
+
+export interface LoanDocument {
+  id: string;
+  loanId: string;
+  name: string;
+  documentType: LoanDocumentType;
+  storageKey: string;
+  mimeType: string;
+  sizeBytes: number;
+  createdAt: string;
 }
 
 export interface LoanPartner {
@@ -248,5 +277,10 @@ export const financeApi = {
       apiFetch<{ data: LoanApplication }>(`/finance/loans/${id}/cancel`, { method: 'POST' }),
     repayments: (id: string) =>
       apiFetch<{ data: RepaymentScheduleItem[] }>(`/finance/loans/${id}/repayments`),
+    addDocument: (loanId: string, dto: AddLoanDocumentDto) =>
+      apiFetch<{ data: LoanDocument }>(`/finance/loans/${loanId}/documents`, {
+        method: 'POST',
+        body: JSON.stringify(dto),
+      }),
   },
 };

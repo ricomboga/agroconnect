@@ -13,16 +13,10 @@ import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
 import { financeApi } from '../../api/finance';
-import type { CreditBand, LoanCategory } from '../../api/finance';
+import type { LoanCategory } from '../../api/finance';
 import type { FinanceStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<FinanceStackParamList, 'LoanProductDetail'>;
-
-const BAND_RANK: Record<CreditBand, number> = { A: 4, B: 3, C: 2, D: 1, ineligible: 0 };
-
-const BAND_COLOR: Record<CreditBand, string> = {
-  A: '#1B5E20', B: '#2E8B57', C: '#E65100', D: '#B71C1C', ineligible: '#616161',
-};
 
 const CATEGORY_COLOR: Record<LoanCategory, string> = {
   back_to_school: '#6A1B9A',
@@ -40,12 +34,6 @@ export function LoanProductDetailScreen({ navigation, route }: Props) {
   const productQuery = useQuery({
     queryKey: ['loanProduct', productId],
     queryFn: () => financeApi.products.get(productId),
-    staleTime: isOnline ? 5 * 60 * 1000 : Infinity,
-  });
-
-  const scoreQuery = useQuery({
-    queryKey: ['creditScore'],
-    queryFn: () => financeApi.creditScore.get(),
     staleTime: isOnline ? 5 * 60 * 1000 : Infinity,
   });
 
@@ -89,11 +77,7 @@ export function LoanProductDetailScreen({ navigation, route }: Props) {
   const product = productQuery.data?.data;
   if (!product) return null;
 
-  const farmerBand: CreditBand = scoreQuery.data?.data.band ?? 'D';
-  const eligible = BAND_RANK[farmerBand] >= BAND_RANK[product.eligibilityBand];
-  const bandColor = BAND_COLOR[product.eligibilityBand];
   const categoryColor = CATEGORY_COLOR[product.category];
-  const maxLoanKes = scoreQuery.data?.data.maxLoanKes ?? 0;
 
   return (
     <SafeAreaView style={s.safe}>
@@ -114,29 +98,26 @@ export function LoanProductDetailScreen({ navigation, route }: Props) {
                 {t(`finance.loan.productDetail.category.${product.category}`)}
               </Text>
             </View>
-            <View style={[s.eligBadge, { backgroundColor: eligible ? '#E8F5E9' : '#FFEBEE' }]}>
-              <Text style={[s.eligText, { color: eligible ? '#1B5E20' : '#B71C1C' }]}>
-                {eligible
-                  ? t('finance.loan.productDetail.eligibleBadge')
-                  : t('finance.loan.productDetail.notEligibleBadge')}
-              </Text>
-            </View>
           </View>
 
           <Text style={s.productName}>{product.name}</Text>
           <Text style={s.partnerName}>{product.partnerName}</Text>
-
-          {product.description && (
-            <Text style={s.description}>{product.description}</Text>
-          )}
         </View>
+
+        {/* Eligibility requirements */}
+        {product.description && (
+          <View style={s.eligibilityCard}>
+            <Text style={s.eligibilityTitle}>{t('finance.loan.products.eligibility')}</Text>
+            <Text style={s.description}>{product.description}</Text>
+          </View>
+        )}
 
         {/* Details grid */}
         <View style={s.detailGrid}>
           <View style={s.detailRow}>
             <View style={s.detailItem}>
               <Text style={s.detailLabel}>{t('finance.loan.productDetail.interestRate')}</Text>
-              <Text style={[s.detailValue, { color: bandColor }]}>
+              <Text style={s.detailValue}>
                 {product.interestRate}% p.a.
               </Text>
             </View>
@@ -165,48 +146,16 @@ export function LoanProductDetailScreen({ navigation, route }: Props) {
             </View>
           </View>
 
-          <View style={s.detailDivider} />
-
-          <View style={s.detailRow}>
-            <View style={s.detailItem}>
-              <Text style={s.detailLabel}>{t('finance.loan.productDetail.minCreditBand')}</Text>
-              <View style={[s.bandBadge, { backgroundColor: bandColor }]}>
-                <Text style={s.bandText}>
-                  {t('finance.score.band', { band: product.eligibilityBand })}
-                </Text>
-              </View>
-            </View>
-            {maxLoanKes > 0 && (
-              <View style={[s.detailItem, s.detailItemRight]}>
-                <Text style={s.detailLabel}>{t('finance.loan.productDetail.yourLimit')}</Text>
-                <Text style={[s.detailValue, { color: eligible ? '#1B5E20' : '#B71C1C' }]}>
-                  KES {Math.min(maxLoanKes, product.maxAmountKes).toLocaleString()}
-                </Text>
-              </View>
-            )}
-          </View>
         </View>
-
-        {/* Eligibility note */}
-        {!eligible && (
-          <View style={s.ineligibleBox}>
-            <Text style={s.ineligibleText}>
-              {t('finance.loan.productDetail.ineligibleNote', { band: product.eligibilityBand })}
-            </Text>
-          </View>
-        )}
 
         {/* CTA */}
         <Pressable
-          style={[s.applyBtn, !eligible && s.applyBtnDisabled]}
-          disabled={!eligible}
+          style={s.applyBtn}
           onPress={() => navigation.navigate('LoanApplication', { productId: product.id })}
           accessibilityRole="button"
         >
-          <Text style={[s.applyLabel, !eligible && s.applyLabelDisabled]}>
-            {eligible
-              ? t('finance.loan.productDetail.applyBtn')
-              : t('finance.loan.products.notEligible')}
+          <Text style={s.applyLabel}>
+            {t('finance.loan.productDetail.applyBtn')}
           </Text>
         </Pressable>
       </ScrollView>
@@ -234,9 +183,6 @@ const s = StyleSheet.create({
   categoryChip: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
   categoryText: { fontSize: 11, fontWeight: '700' },
 
-  eligBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-  eligText:  { fontSize: 11, fontWeight: '700' },
-
   productName: { fontSize: 20, fontWeight: '800', color: '#1A1A1A', marginBottom: 4 },
   partnerName: { fontSize: 14, color: '#757575', marginBottom: 10 },
   description: { fontSize: 14, color: '#374151', lineHeight: 20 },
@@ -249,14 +195,10 @@ const s = StyleSheet.create({
   detailValue:     { fontSize: 16, fontWeight: '700', color: '#1A1A1A' },
   detailDivider:   { borderTopWidth: 1, borderColor: '#F3F4F6', marginHorizontal: 14 },
 
-  bandBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, alignSelf: 'flex-start' },
-  bandText:  { color: '#FFF', fontSize: 12, fontWeight: '700' },
-
-  ineligibleBox:  { backgroundColor: '#FFF3E0', borderRadius: 10, padding: 12, marginBottom: 12 },
-  ineligibleText: { fontSize: 13, color: '#E65100', lineHeight: 18 },
+  eligibilityCard:  { backgroundColor: '#FFF', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: '#EEEEEE', marginBottom: 12 },
+  eligibilityTitle: { fontSize: 12, fontWeight: '700', color: '#1A6B3C',
+                      textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6 },
 
   applyBtn:         { minHeight: 52, backgroundColor: '#1A6B3C', borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginTop: 4 },
-  applyBtnDisabled: { backgroundColor: '#E0E0E0' },
   applyLabel:       { color: '#FFF', fontSize: 16, fontWeight: '700' },
-  applyLabelDisabled: { color: '#9E9E9E' },
 });
