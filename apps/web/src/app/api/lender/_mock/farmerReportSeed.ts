@@ -59,6 +59,51 @@ export function buildMockFarmerReport(farmerId: string) {
       { season: 'Sep 2024', crop: 'Maize H614D', quantityKg: 800, revenueKes: 28000, costsKes: 8400, profitKes: 19600, harvestDate: '2024-09-15' },
       { season: 'Jan 2025', crop: 'Cabbage', quantityKg: 420, revenueKes: 13300, costsKes: 5100, profitKes: 8200, harvestDate: '2025-01-20' },
     ],
+    // TODO(real-data): mirrors farm-service's InventoryItem shape (purchasedQty/usedQty/unit) —
+    // swap for a real GET /farms/{farmId}/inventory?as_at= call once the lender report joins to
+    // farm-service inventory records.
+    inventory: [
+      {
+        name: 'CAN Fertiliser 50kg',
+        category: 'input',
+        unit: 'bags',
+        purchasedQty: 10,
+        purchasedAt: '2025-03-01',
+        usageLog: [
+          { usedQty: 3, usedAt: '2025-04-05' },
+          { usedQty: 2, usedAt: '2025-05-10' },
+        ],
+      },
+      {
+        name: 'Mancozeb Fungicide',
+        category: 'input',
+        unit: 'litres',
+        purchasedQty: 8,
+        purchasedAt: '2025-02-15',
+        usageLog: [
+          { usedQty: 8, usedAt: '2025-06-01' },
+        ],
+      },
+      {
+        name: 'Maize Seed (H614D)',
+        category: 'input',
+        unit: 'kg',
+        purchasedQty: 25,
+        purchasedAt: '2025-03-20',
+        usageLog: [
+          { usedQty: 25, usedAt: '2025-04-01' },
+        ],
+      },
+    ],
+    // TODO(real-data): no Machinery/Equipment model exists in farm-service yet — this section
+    // documents the shape (acquiredAt/disposedAt/condition) a future model should expose so the
+    // lender "as at date" snapshot can be computed the same way inventory is here.
+    machinery: [
+      { name: 'Petrol Water Pump', type: 'irrigation', condition: 'good', acquiredAt: '2025-01-10', disposedAt: null },
+      { name: 'Ox Plough', type: 'tillage', condition: 'fair', acquiredAt: '2024-08-01', disposedAt: null },
+      { name: 'Knapsack Sprayer (16L)', type: 'spraying', condition: 'good', acquiredAt: '2025-02-01', disposedAt: null },
+      { name: 'Hand Hoe (old)', type: 'tillage', condition: 'worn', acquiredAt: '2023-05-01', disposedAt: '2025-03-15' },
+    ],
     // Superset alias so this payload also satisfies the real FarmerFinancialReport shape used
     // to embed a report inside a loan/grant application decision screen.
     transactions: { totalIncomeKes: 16000, totalExpenseKes: 10060, netKes: 5940, recordCount: 4, byCategory: [], byMonth: [] },

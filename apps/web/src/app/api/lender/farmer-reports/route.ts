@@ -11,13 +11,14 @@ interface LoanRow {
   creditBand: string | null
 }
 
-// TODO(real-data): matches docs/ui-design-reference.md's three seeded test farmers — NGO
-// institutions have no loan pipeline to derive a farmer list from (no Grant model exists yet).
-const MOCK_NGO_FARMERS = [
-  { farmerId: 'usr-jane-wanjiru', county: 'Nakuru', score: 73, band: 'B', activitiesPerMonth: 19, completionPct: 89, overdueCount: 2, lastHarvest: '2025-01-20' },
-  { farmerId: 'usr-peter-kipchoge', county: 'Uasin Gishu', score: 81, band: 'A', activitiesPerMonth: 22, completionPct: 94, overdueCount: 0, lastHarvest: '2025-02-10' },
-  { farmerId: 'usr-mary-njeri', county: 'Meru', score: 58, band: 'C', activitiesPerMonth: 11, completionPct: 72, overdueCount: 1, lastHarvest: '2024-12-05' },
-]
+interface FarmersListReportRow {
+  farmerId: string
+  fullName: string | null
+  county: string | null
+  subCounty: string | null
+  areaAcres: number | null
+  farmerType: string | null
+}
 
 export async function GET() {
   const session = await getServerSession()
@@ -36,7 +37,30 @@ export async function GET() {
   }
 
   if (institutionBody.data?.type === 'ngo_grant') {
-    return NextResponse.json({ data: MOCK_NGO_FARMERS })
+    // NGOs operate region-wide (see LoanPartner.operatingCounties), so their farmer roster
+    // is every farmer with a farm in their operating counties, not loan/grant applicants.
+    const reportRes = await fetch(`${FINANCE_URL}/api/v1/finance/lender/reports/farmers`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store',
+    })
+    if (!reportRes.ok) {
+      return NextResponse.json({ data: [] })
+    }
+    const reportBody = (await reportRes.json()) as { data: FarmersListReportRow[] }
+    const rows = reportBody.data.map((r) => ({
+      farmerId: r.farmerId,
+      fullName: r.fullName,
+      county: r.county,
+      band: null,
+      score: null,
+      // TODO(real-data): per-farmer activity/completion/overdue/last-harvest aggregates
+      // require a farm-service activity join not yet exposed per-farmer outside a full report.
+      activitiesPerMonth: null,
+      completionPct: null,
+      overdueCount: null,
+      lastHarvest: null,
+    }))
+    return NextResponse.json({ data: rows })
   }
 
   const loansRes = await fetch(`${FINANCE_URL}/api/v1/finance/lender/loans`, {

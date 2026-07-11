@@ -185,6 +185,48 @@ export async function getFarmerProductionSummary(
   }
 }
 
+export interface FarmProfile {
+  county: string | null;
+  subCounty: string | null;
+  areaAcres: number;
+  farmType: string;
+}
+
+export async function getFarmProfilesByOwners(farmerIds: string[]): Promise<Record<string, FarmProfile>> {
+  if (farmerIds.length === 0) return {};
+  try {
+    const res = await client.get<{ data: Record<string, FarmProfile> }>('/internal/production/by-owners', {
+      params: { owner_ids: farmerIds.join(',') },
+      headers: { 'x-service-token': SERVICE_TOKEN },
+    });
+    return res.data.data;
+  } catch (err) {
+    throw toScoringError(err, 'farm profiles');
+  }
+}
+
+export interface FarmerRegionProfile {
+  farmerId: string;
+  county: string | null;
+  subCounty: string | null;
+  areaAcres: number;
+  farmType: string;
+  firstRegisteredAt: string;
+}
+
+export async function getFarmersByCounties(counties: string[]): Promise<FarmerRegionProfile[]> {
+  if (counties.length === 0) return [];
+  try {
+    const res = await client.get<{ data: FarmerRegionProfile[] }>('/internal/production/by-counties', {
+      params: { counties: counties.join(',') },
+      headers: { 'x-service-token': SERVICE_TOKEN },
+    });
+    return res.data.data;
+  } catch (err) {
+    throw toScoringError(err, 'farmers by counties');
+  }
+}
+
 export async function getFarmerActivities(
   farmerId: string,
   accessToken: string,

@@ -3,11 +3,14 @@
 import { useEffect, useState } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { FormSection, Field, FieldGroup, Select, TextInput } from '@agroconnect/web-ui'
+import { FormSection, Field, FieldGroup, Select, TextInput, ChipSelect } from '@agroconnect/web-ui'
+import { KENYA_COUNTIES } from '@agroconnect/shared/constants/counties'
 
 interface Settings {
   notifications: { newApplication: string; statusChange: string; overdueAlert: string }
   profile: { contactEmail: string; mpesaPaybill: string; licenceNumber: string }
+  institutionType: string | null
+  operatingCounties: string[]
 }
 
 export function SettingsView() {
@@ -117,6 +120,24 @@ export function SettingsView() {
           </FormSection>
         </div>
       </div>
+
+      {form.institutionType === 'ngo_grant' && (
+        <div className="mt-3.5 rounded-base border border-border bg-white p-4">
+          <FormSection title="Operating Areas">
+            <Field
+              label="Counties your organisation operates in"
+              hint="Determines which farmers appear in your Farmer Reports, General Reports, Input Distribution and Dashboard — every farmer with a farm in these counties."
+            >
+              <ChipSelect
+                multiple
+                options={KENYA_COUNTIES.map((c) => ({ value: c, label: c }))}
+                value={form.operatingCounties}
+                onChange={(counties) => setForm({ ...form, operatingCounties: counties })}
+              />
+            </Field>
+          </FormSection>
+        </div>
+      )}
 
       <div className="mt-3.5">
         <button

@@ -9,6 +9,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model InputDistribution {
+  id            String   @id @default(uuid())
+  partnerId     String
+  farmerId      String
+  inputType     String
+  valueKes      Decimal  @db.Decimal(12, 2)
+  distributedAt DateTime
+  createdAt     DateTime @default(now())
+
+  @@index([partnerId])
+  @@index([farmerId])
+  @@map("input_distributions")
+}
+
 model CreditScore {
   id                      String     @id @default(uuid())
   farmerId                String     @unique
@@ -134,6 +148,10 @@ model LoanPartner {
   paybill            String?
   headOfficeCounty   String?
   headOfficeSubCounty String?
+  // Counties an NGO/grant institution operates in — determines which farmers
+  // (by farm location) show up in their farmer roster, reports and dashboard.
+  // Not applicable to bank/MFI/sacco/mobile_lender partners.
+  operatingCounties  String[]      @default([])
   minLoanKes         Decimal       @db.Decimal(12, 2)
   maxLoanKes         Decimal       @db.Decimal(12, 2)
   processingDays     Int

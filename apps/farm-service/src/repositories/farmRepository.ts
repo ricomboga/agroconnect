@@ -90,6 +90,22 @@ export async function countFarmsByOwner(ownerId: string | undefined, filters: Fa
   });
 }
 
+export async function findFarmsByOwners(ownerIds: string[]) {
+  return prisma.farm.findMany({
+    where: { ownerId: { in: ownerIds }, deletedAt: null },
+    select: { ownerId: true, county: true, subCounty: true, areaAcres: true, farmType: true, createdAt: true },
+    orderBy: { createdAt: 'asc' },
+  });
+}
+
+export async function findFarmsByCounties(counties: string[]) {
+  return prisma.farm.findMany({
+    where: { county: { in: counties }, deletedAt: null },
+    select: { ownerId: true, county: true, subCounty: true, areaAcres: true, farmType: true, createdAt: true },
+    orderBy: { createdAt: 'asc' },
+  });
+}
+
 export async function findFarmsByWorker(userId: string, pagination: PaginationParams) {
   return prisma.farm.findMany({
     where: {
