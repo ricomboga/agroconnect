@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "info"
     FARM_SERVICE_TIMEOUT_S: int = 5
     SENTRY_DSN: str = ""
+    JWT_PUBLIC_KEY: str = ""
 
     class Config:
         env_file = ".env"

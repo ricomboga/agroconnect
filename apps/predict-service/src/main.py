@@ -4,8 +4,9 @@ from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
 import structlog
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 
+from src.auth import require_auth
 from src.config import settings
 from src.events.consumer import PredictConsumer
 from src.routers.market_signals import router as market_signals_router
@@ -34,6 +35,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="predict-service", version="0.1.0", lifespan=lifespan)
-app.include_router(prices_router, prefix="/api/v1")
-app.include_router(yield_router, prefix="/api/v1")
-app.include_router(market_signals_router, prefix="/api/v1")
+app.include_router(prices_router, prefix="/api/v1", dependencies=[Depends(require_auth)])
+app.include_router(yield_router, prefix="/api/v1", dependencies=[Depends(require_auth)])
+app.include_router(market_signals_router, prefix="/api/v1", dependencies=[Depends(require_auth)])
