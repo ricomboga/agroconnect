@@ -12,6 +12,7 @@ export const updateLoanPartnerSchema = z.object({
   maxLoanKes: z.number().min(0).optional(),
   processingDays: z.number().int().min(1).optional(),
   interestRateAnnual: z.number().min(0).max(100).optional(),
+  operatingCounties: z.array(z.enum(KENYA_COUNTIES)).optional(),
 });
 
 export type UpdateLoanPartnerDto = z.infer<typeof updateLoanPartnerSchema>;

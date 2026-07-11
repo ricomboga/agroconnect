@@ -23,6 +23,20 @@ export async function findTransactionsByFarmer(farmerId: string) {
   });
 }
 
+export async function findTransactionsByFarmerIdsInRange(
+  farmerIds: string[],
+  range: { fromDate?: string; toDate?: string } = {},
+) {
+  return prisma.transaction.findMany({
+    where: {
+      farmerId: { in: farmerIds },
+      ...(range.fromDate || range.toDate
+        ? { date: { ...(range.fromDate ? { gte: range.fromDate } : {}), ...(range.toDate ? { lte: range.toDate } : {}) } }
+        : {}),
+    },
+  });
+}
+
 export async function findTransactionsByFarmerInRange(
   farmerId: string,
   range: { fromDate?: string; toDate?: string } = {},

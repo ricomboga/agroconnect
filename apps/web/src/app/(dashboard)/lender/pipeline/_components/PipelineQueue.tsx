@@ -122,10 +122,10 @@ export function PipelineQueue() {
     // TODO(real-data): overdue count needs portfolio-level repayment tracking not present on the
     // pipeline payload — see /lender/portfolio.
     { value: '—', label: 'Overdue', variant: 'red' },
-    { value: avgScore ?? '—', label: 'Avg Credit Score', variant: 'teal' },
     ...(isNgo
       ? []
       : [
+          { value: avgScore ?? '—', label: 'Avg Credit Score', variant: 'teal' as KpiCardVariant },
           { value: farmersCount, label: 'Farmers Registered', variant: 'purple' as KpiCardVariant },
           { value: counts.rejected, label: 'Rejected', variant: 'red' as KpiCardVariant },
           { value: counts.repaid, label: 'Repaid', variant: 'green' as KpiCardVariant },
@@ -156,23 +156,27 @@ export function PipelineQueue() {
       header: isNgo ? 'Grant Amount' : 'Amount',
       render: (row) => formatKes(row.amountRequestedKes),
     },
-    {
-      key: 'creditScore',
-      header: 'Credit Score',
-      render: (row) => (row.creditScore !== null ? Number(row.creditScore).toFixed(0) : '—'),
-    },
-    {
-      key: 'creditBand',
-      header: 'Band',
-      render: (row) =>
-        row.creditBand ? (
-          <StatusBadge variant={row.creditBand === 'A' || row.creditBand === 'B' ? 'green' : row.creditBand === 'C' ? 'amber' : 'red'}>
-            {row.creditBand}
-          </StatusBadge>
-        ) : (
-          '—'
-        ),
-    },
+    ...(isNgo
+      ? []
+      : [
+          {
+            key: 'creditScore',
+            header: 'Credit Score',
+            render: (row) => (row.creditScore !== null ? Number(row.creditScore).toFixed(0) : '—'),
+          } as DataTableColumn<LoanRow>,
+          {
+            key: 'creditBand',
+            header: 'Band',
+            render: (row) =>
+              row.creditBand ? (
+                <StatusBadge variant={row.creditBand === 'A' || row.creditBand === 'B' ? 'green' : row.creditBand === 'C' ? 'amber' : 'red'}>
+                  {row.creditBand}
+                </StatusBadge>
+              ) : (
+                '—'
+              ),
+          } as DataTableColumn<LoanRow>,
+        ]),
     {
       key: 'status',
       header: 'Status',
@@ -240,13 +244,15 @@ export function PipelineQueue() {
       </div>
 
       <div className="mb-3 flex gap-2">
-        <Select value={bandFilter} onChange={(e) => setBandFilter(e.target.value)} className="w-40">
-          <option value="">All Bands</option>
-          <option value="A">Band A</option>
-          <option value="B">Band B</option>
-          <option value="C">Band C</option>
-          <option value="D">Band D</option>
-        </Select>
+        {!isNgo && (
+          <Select value={bandFilter} onChange={(e) => setBandFilter(e.target.value)} className="w-40">
+            <option value="">All Bands</option>
+            <option value="A">Band A</option>
+            <option value="B">Band B</option>
+            <option value="C">Band C</option>
+            <option value="D">Band D</option>
+          </Select>
+        )}
         <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="w-56">
           <option value="">All Types</option>
           {Object.entries(LOAN_TYPE_LABELS).map(([value, label]) => (

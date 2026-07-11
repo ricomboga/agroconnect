@@ -1,7 +1,8 @@
 'use client'
 
+import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { KpiCard, DataTable, StatusBadge, ProgressBar, AlertBox } from '@agroconnect/web-ui'
+import { KpiCard, DataTable, StatusBadge, AlertBox, TextInput, Field } from '@agroconnect/web-ui'
 import type { DataTableColumn } from '@agroconnect/web-ui'
 import type { MockFarmerReport } from '../../../../../api/lender/_mock/farmerReportSeed'
 
@@ -9,14 +10,31 @@ function formatKes(amount: number): string {
   return new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', maximumFractionDigits: 0 }).format(amount)
 }
 
-function scoreBarColor(score: number): 'green' | 'amber' | 'red' {
-  const pct = (score / 25) * 100
-  if (pct >= 75) return 'green'
-  if (pct >= 50) return 'amber'
-  return 'red'
+function formatCoord(value: number): string {
+  return value.toFixed(4)
+}
+
+interface Institution {
+  type: 'bank' | 'microfinance' | 'sacco' | 'mobile_lender' | 'ngo_grant'
 }
 
 export function FarmerReportView({ farmerId }: { farmerId: string }) {
+  const [harvestFrom, setHarvestFrom] = useState('')
+  const [harvestTo, setHarvestTo] = useState('')
+  const [inventoryAsAt, setInventoryAsAt] = useState(() => new Date().toISOString().slice(0, 10))
+  const [machineryAsAt, setMachineryAsAt] = useState(() => new Date().toISOString().slice(0, 10))
+
+  const { data: institution } = useQuery({
+    queryKey: ['lender', 'institution'],
+    queryFn: async () => {
+      const res = await fetch('/api/lender/institution')
+      if (!res.ok) return null
+      const body = (await res.json()) as { data: Institution }
+      return body.data
+    },
+  })
+  const isNgo = institution?.type === 'ngo_grant'
+
   const { data: report } = useQuery({
     queryKey: ['lender', 'farmer-report', farmerId],
     queryFn: async () => {
@@ -27,15 +45,36 @@ export function FarmerReportView({ farmerId }: { farmerId: string }) {
     },
   })
 
+  const filteredHarvestHistory = useMemo(() => {
+    if (!report) return []
+    return report.harvestHistory.filter((h) => {
+      if (harvestFrom && h.harvestDate < harvestFrom) return false
+      if (harvestTo && h.harvestDate > harvestTo) return false
+      return true
+    })
+  }, [report, harvestFrom, harvestTo])
+
+  const inventoryAsOfDate = useMemo(() => {
+    if (!report) return []
+    return report.inventory.map((item) => {
+      const purchasedByDate = item.purchasedAt <= inventoryAsAt ? item.purchasedQty : 0
+      const usedByDate = item.usageLog
+        .filter((u) => u.usedAt <= inventoryAsAt)
+        .reduce((sum, u) => sum + u.usedQty, 0)
+      return { ...item, remainingQty: Math.max(purchasedByDate - usedByDate, 0) }
+    })
+  }, [report, inventoryAsAt])
+
+  const machineryAsOfDate = useMemo(() => {
+    if (!report) return []
+    return report.machinery.filter(
+      (m) => m.acquiredAt <= machineryAsAt && (!m.disposedAt || m.disposedAt > machineryAsAt),
+    )
+  }, [report, machineryAsAt])
+
   if (!report) {
     return <p className="py-6 text-center text-sm text-muted">Loading…</p>
   }
-
-  const totalScore =
-    report.creditScore.breakdown.harvestYieldScore +
-    report.creditScore.breakdown.inputManagementScore +
-    report.creditScore.breakdown.activityComplianceScore +
-    report.creditScore.breakdown.platformEngagementScore
 
   const plotCols: DataTableColumn<(typeof report.farm.plots)[number]>[] = [
     { key: 'name', header: 'Plot' },
@@ -51,6 +90,28 @@ export function FarmerReportView({ farmerId }: { farmerId: string }) {
     { key: 'revenueKes', header: 'Revenue', render: (h) => formatKes(h.revenueKes) },
     { key: 'costsKes', header: 'Costs', render: (h) => formatKes(h.costsKes) },
     { key: 'profitKes', header: 'Profit', render: (h) => formatKes(h.profitKes) },
+  ]
+
+  const inventoryCols: DataTableColumn<(typeof inventoryAsOfDate)[number]>[] = [
+    { key: 'name', header: 'Item' },
+    { key: 'category', header: 'Category', render: (i) => <span className="capitalize">{i.category}</span> },
+    { key: 'remainingQty', header: 'Qty Remaining', render: (i) => `${i.remainingQty} ${i.unit}` },
+    { key: 'purchasedAt', header: 'Purchased', render: (i) => new Date(i.purchasedAt).toLocaleDateString('en-KE') },
+  ]
+
+  const machineryCols: DataTableColumn<(typeof report.machinery)[number]>[] = [
+    { key: 'name', header: 'Item' },
+    { key: 'type', header: 'Type', render: (m) => <span className="capitalize">{m.type}</span> },
+    {
+      key: 'condition',
+      header: 'Condition',
+      render: (m) => (
+        <StatusBadge variant={m.condition === 'good' ? 'green' : m.condition === 'fair' ? 'amber' : 'red'}>
+          {m.condition}
+        </StatusBadge>
+      ),
+    },
+    { key: 'acquiredAt', header: 'Acquired', render: (m) => new Date(m.acquiredAt).toLocaleDateString('en-KE') },
   ]
 
   const loanCols: DataTableColumn<(typeof report.loanHistory)[number]>[] = [
@@ -84,32 +145,7 @@ export function FarmerReportView({ farmerId }: { farmerId: string }) {
         </div>
       </div>
 
-      {/* Section 2 — Credit Score */}
-      <div className="rounded-base border border-border bg-white px-4 py-3">
-        <p className="mb-2 text-md font-semibold text-ink">Credit Score</p>
-        <div className="mb-3 text-4xl font-extrabold text-ac-green">
-          {totalScore}
-          <span className="text-sm font-normal text-muted"> / 100, Band {report.creditScore.band}</span>
-        </div>
-        <div className="flex flex-col gap-2.5">
-          {[
-            { label: 'Harvest Yield Score', score: report.creditScore.breakdown.harvestYieldScore },
-            { label: 'Input Management Score', score: report.creditScore.breakdown.inputManagementScore },
-            { label: 'Activity Compliance Score', score: report.creditScore.breakdown.activityComplianceScore },
-            { label: 'Platform Engagement Score', score: report.creditScore.breakdown.platformEngagementScore },
-          ].map((s) => (
-            <div key={s.label}>
-              <div className="mb-0.5 flex items-center justify-between text-sm">
-                <span>{s.label}</span>
-                <span className="font-semibold text-ink">{s.score}/25</span>
-              </div>
-              <ProgressBar value={(s.score / 25) * 100} color={scoreBarColor(s.score)} />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Section 3 — Farm & Plots */}
+      {/* Section 2 — Farm & Plots */}
       <div className="rounded-base border border-border bg-white px-4 py-3">
         <p className="mb-2 text-md font-semibold text-ink">Farm & Plots</p>
         <div className="mb-3 grid grid-cols-4 gap-x-4 gap-y-2 text-sm">
@@ -117,6 +153,10 @@ export function FarmerReportView({ farmerId }: { farmerId: string }) {
           <div><p className="text-xs uppercase tracking-wide text-muted">Total Acres</p><p className="text-ink">{report.farm.areaAcres}</p></div>
           <div><p className="text-xs uppercase tracking-wide text-muted">Soil Type</p><p className="capitalize text-ink">{report.farm.soilType}</p></div>
           <div><p className="text-xs uppercase tracking-wide text-muted">Water Source</p><p className="capitalize text-ink">{report.farm.waterSource}</p></div>
+          <div>
+            <p className="text-xs uppercase tracking-wide text-muted">GPS Coordinates</p>
+            <p className="text-ink">{formatCoord(report.farm.locationLat)}, {formatCoord(report.farm.locationLng)}</p>
+          </div>
         </div>
         <DataTable columns={plotCols} data={report.farm.plots} />
       </div>
@@ -152,18 +192,58 @@ export function FarmerReportView({ farmerId }: { farmerId: string }) {
 
       {/* Section 5 — Harvest & Financial History */}
       <div className="rounded-base border border-border bg-white px-4 py-3">
-        <p className="mb-2 text-md font-semibold text-ink">Harvest & Financial History</p>
-        <DataTable columns={harvestCols} data={report.harvestHistory} />
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-md font-semibold text-ink">Harvest & Financial History</p>
+          <div className="flex items-center gap-2">
+            <TextInput type="date" value={harvestFrom} onChange={(e) => setHarvestFrom(e.target.value)} className="w-36" />
+            <span className="text-sm text-muted">to</span>
+            <TextInput type="date" value={harvestTo} onChange={(e) => setHarvestTo(e.target.value)} className="w-36" />
+          </div>
+        </div>
+        {filteredHarvestHistory.length === 0 ? (
+          <p className="py-4 text-center text-sm text-muted">No harvests in the selected date range</p>
+        ) : (
+          <DataTable columns={harvestCols} data={filteredHarvestHistory} />
+        )}
         <div className="mt-3 rounded-sm bg-ac-green-light px-2.5 py-1.5 text-sm text-ac-green-dark">
           Cash Flow (30 days): Income {formatKes(report.cashFlow.last30DaysIncomeKes)} / Expenses{' '}
           {formatKes(report.cashFlow.last30DaysExpensesKes)} / Net {formatKes(report.cashFlow.last30DaysNetKes)}
         </div>
       </div>
 
-      {/* Section 6 — Loan History & Risk Flags */}
+      {/* Section 6 — Inventory (as at date) */}
       <div className="rounded-base border border-border bg-white px-4 py-3">
-        <p className="mb-2 text-md font-semibold text-ink">Loan History & Risk Flags</p>
-        <DataTable columns={loanCols} data={report.loanHistory} />
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-md font-semibold text-ink">Inventory</p>
+          <Field label="As at">
+            <TextInput type="date" value={inventoryAsAt} onChange={(e) => setInventoryAsAt(e.target.value)} className="w-36" />
+          </Field>
+        </div>
+        <DataTable
+          columns={inventoryCols}
+          data={inventoryAsOfDate}
+        />
+      </div>
+
+      {/* Section 7 — Machinery & Equipment (as at date) */}
+      <div className="rounded-base border border-border bg-white px-4 py-3">
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-md font-semibold text-ink">Machinery & Equipment</p>
+          <Field label="As at">
+            <TextInput type="date" value={machineryAsAt} onChange={(e) => setMachineryAsAt(e.target.value)} className="w-36" />
+          </Field>
+        </div>
+        {machineryAsOfDate.length === 0 ? (
+          <p className="py-4 text-center text-sm text-muted">No machinery or equipment owned as at this date</p>
+        ) : (
+          <DataTable columns={machineryCols} data={machineryAsOfDate} />
+        )}
+      </div>
+
+      {/* Section 8 — Loan History & Risk Flags */}
+      <div className="rounded-base border border-border bg-white px-4 py-3">
+        <p className="mb-2 text-md font-semibold text-ink">{isNgo ? 'Risk Flags' : 'Loan History & Risk Flags'}</p>
+        {!isNgo && <DataTable columns={loanCols} data={report.loanHistory} />}
         {report.riskFlags.length > 0 && (
           <div className="mt-3">
             <AlertBox variant="amber">

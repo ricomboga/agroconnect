@@ -38,13 +38,21 @@ export function LenderLayoutShell({ children }: Props) {
   const isNgo = institution?.type === 'ngo_grant'
 
   const navLinks = [
+    { label: 'Dashboard', href: '/lender', active: pathname === '/lender' },
     { label: isNgo ? 'Grant Pipeline' : 'Loan Pipeline', href: '/lender/pipeline', active: isActivePath(pathname, '/lender/pipeline') },
     { label: isNgo ? 'Disbursed Grants' : 'Portfolio', href: '/lender/portfolio', active: isActivePath(pathname, '/lender/portfolio') },
     { label: 'Farmer Reports', href: '/lender/farmer-reports', active: isActivePath(pathname, '/lender/farmer-reports') },
+    { label: 'Reports', href: '/lender/reports', active: isActivePath(pathname, '/lender/reports') },
     { label: isNgo ? 'Impact Analytics' : 'Risk Analytics', href: '/lender/risk', active: isActivePath(pathname, '/lender/risk') },
   ]
 
   const sections: SidebarSection[] = [
+    {
+      title: 'Overview',
+      items: [
+        { label: '🏠 Dashboard', href: '/lender', active: pathname === '/lender' },
+      ],
+    },
     {
       title: 'Applications',
       items: [
@@ -63,6 +71,9 @@ export function LenderLayoutShell({ children }: Props) {
           href: '/lender/portfolio',
           active: isActivePath(pathname, '/lender/portfolio'),
         },
+        ...(isNgo
+          ? [{ label: '🌾 Input Distribution', href: '/lender/input-distribution', active: isActivePath(pathname, '/lender/input-distribution') }]
+          : []),
       ],
     },
     {
@@ -72,6 +83,11 @@ export function LenderLayoutShell({ children }: Props) {
           label: '🧑‍🌾 Farmer Reports',
           href: '/lender/farmer-reports',
           active: isActivePath(pathname, '/lender/farmer-reports'),
+        },
+        {
+          label: '📑 General Reports',
+          href: '/lender/reports',
+          active: isActivePath(pathname, '/lender/reports'),
         },
       ],
     },
