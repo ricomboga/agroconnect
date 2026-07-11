@@ -216,7 +216,8 @@ export function MarketHomeScreen({ navigation }: Props) {
 
           <FAB
             onPress={() => navigation.navigate('CreateListing')}
-            label={t('market.listing.createBtn')}
+            label="+"
+            accessibilityLabel={t('market.listing.createBtn')}
           />
         </View>
       )}

@@ -4,13 +4,22 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 interface FABProps {
   onPress: () => void;
   label?: string;
+  accessibilityLabel?: string;
 }
 
-export function FAB({ onPress, label = '+' }: FABProps) {
+// Circular icon button — label is meant to be a single glyph (default "+").
+// Pass accessibilityLabel for a descriptive screen-reader name when the
+// visual label alone (e.g. "+") isn't self-explanatory.
+export function FAB({ onPress, label = '+', accessibilityLabel }: FABProps) {
   return (
     <View style={styles.wrapper} pointerEvents="box-none">
-      <Pressable style={styles.fab} onPress={onPress} accessibilityRole="button">
-        <Text style={styles.label}>{label}</Text>
+      <Pressable
+        style={styles.fab}
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel ?? label}
+      >
+        <Text style={styles.label} numberOfLines={1}>{label}</Text>
       </Pressable>
     </View>
   );

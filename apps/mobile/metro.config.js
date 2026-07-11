@@ -9,6 +9,15 @@ const config = getDefaultConfig(projectRoot);
 
 config.resolver.unstable_enablePackageExports = true;
 
+// Sibling services (e.g. diagnosis-service's WSL-created Python venvs) can contain
+// symlinks that aren't valid reparse points on native Windows — Metro's file crawler
+// throws EINVAL trying to read them and takes the whole bundler down. Exclude
+// non-JS sibling app directories the crawler has no reason to walk.
+config.resolver.blockList = [
+  ...(Array.isArray(config.resolver.blockList) ? config.resolver.blockList : [config.resolver.blockList].filter(Boolean)),
+  /apps[\\/](?!mobile[\\/])[^\\/]+[\\/](\.venv[^\\/]*|venv|__pycache__|node_modules)[\\/].*/,
+];
+
 config.watchFolders = [
   ...config.watchFolders,
   path.resolve(workspaceRoot, 'node_modules/.pnpm'),
