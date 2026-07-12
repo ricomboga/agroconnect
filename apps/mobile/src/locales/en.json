@@ -1077,6 +1077,10 @@
     },
     "product": {
       "title": "Supplier products",
+      "search": {
+        "categoryLabel": "Category",
+        "placeholder": "e.g. DAP fertiliser"
+      },
       "filter": {
         "all": "All",
         "seed": "Seeds",

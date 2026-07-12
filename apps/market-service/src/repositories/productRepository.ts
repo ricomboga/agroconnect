@@ -28,6 +28,13 @@ function buildProductsWhere(query: ListProductsQuery) {
   if (query.county) {
     where['countyAvailability'] = { array_contains: [query.county] };
   }
+  if (query.search) {
+    where['OR'] = [
+      { name: { contains: query.search, mode: 'insensitive' } },
+      { brand: { contains: query.search, mode: 'insensitive' } },
+      { description: { contains: query.search, mode: 'insensitive' } },
+    ];
+  }
   return where;
 }
 
@@ -36,7 +43,9 @@ export async function findProducts(query: ListProductsQuery, pagination: Paginat
     where: buildProductsWhere(query),
     take: pagination.take,
     skip: pagination.skip,
-    orderBy: { createdAt: 'desc' },
+    orderBy: query.search
+      ? [{ stockQuantity: 'desc' }, { pricePerUnitKes: 'asc' }]
+      : { createdAt: 'desc' },
   });
 }
 

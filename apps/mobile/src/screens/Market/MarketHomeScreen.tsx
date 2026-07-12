@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -46,6 +46,83 @@ const CATEGORY_CHIPS = [
   { value: 'veterinary' as const, key: 'market.product.filter.veterinary' },
   { value: 'other' as const,      key: 'market.product.filter.other' },
 ] satisfies Array<{ value: '' | ProductCategory; key: string }>;
+
+// ── Product search bar (category dropdown + text search) ───────────────────────
+function ProductSearchBar({
+  category,
+  onCategoryChange,
+  searchText,
+  onSearchTextChange,
+}: {
+  category: '' | ProductCategory;
+  onCategoryChange: (v: '' | ProductCategory) => void;
+  searchText: string;
+  onSearchTextChange: (v: string) => void;
+}) {
+  const { t } = useTranslation();
+  const [pickerVisible, setPickerVisible] = useState(false);
+  const selectedChip = CATEGORY_CHIPS.find((c) => c.value === category) ?? CATEGORY_CHIPS[0];
+
+  return (
+    <>
+      <View style={styles.searchBarRow}>
+        <Pressable
+          style={styles.categoryDropdown}
+          onPress={() => setPickerVisible(true)}
+          accessibilityRole="button"
+          accessibilityLabel={t('market.product.search.categoryLabel')}
+        >
+          <Text style={styles.categoryDropdownText} numberOfLines={1}>
+            {t(selectedChip.key)}
+          </Text>
+          <Text style={styles.categoryDropdownArrow}>▾</Text>
+        </Pressable>
+
+        <TextInput
+          style={styles.searchInput}
+          value={searchText}
+          onChangeText={onSearchTextChange}
+          placeholder={t('market.product.search.placeholder')}
+          placeholderTextColor="#9E9E9E"
+          returnKeyType="search"
+        />
+      </View>
+
+      <Modal
+        visible={pickerVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setPickerVisible(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setPickerVisible(false)} />
+        <View style={styles.pickerSheet}>
+          <Text style={styles.pickerTitle}>{t('market.product.search.categoryLabel')}</Text>
+          <FlatList
+            data={CATEGORY_CHIPS as Array<{ value: '' | ProductCategory; key: string }>}
+            keyExtractor={(c) => c.value || '__all__'}
+            renderItem={({ item }) => (
+              <Pressable
+                style={[styles.pickerRow, category === item.value && styles.pickerRowSelected]}
+                onPress={() => {
+                  onCategoryChange(item.value);
+                  setPickerVisible(false);
+                }}
+                accessibilityRole="button"
+              >
+                <Text
+                  style={[styles.pickerRowText, category === item.value && styles.pickerRowTextSelected]}
+                >
+                  {t(item.key)}
+                </Text>
+                {category === item.value && <Text style={styles.pickerCheck}>✓</Text>}
+              </Pressable>
+            )}
+          />
+        </View>
+      </Modal>
+    </>
+  );
+}
 
 // ── Filter chip row ───────────────────────────────────────────────────────────
 function FilterChips<V extends string>({
@@ -102,6 +179,13 @@ export function MarketHomeScreen({ navigation }: Props) {
 
   // Buy-tab filters
   const [categoryFilter, setCategoryFilter] = useState<'' | ProductCategory>('');
+  const [searchText, setSearchText] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchText.trim()), 400);
+    return () => clearTimeout(timer);
+  }, [searchText]);
 
   const listingsQuery = useQuery({
     queryKey: ['market', 'listings', cropFilter, gradeFilter, showMineOnly, userId],
@@ -116,10 +200,11 @@ export function MarketHomeScreen({ navigation }: Props) {
   });
 
   const productsQuery = useQuery({
-    queryKey: ['market', 'products', categoryFilter],
+    queryKey: ['market', 'products', categoryFilter, debouncedSearch],
     queryFn: () =>
       marketApi.products.list({
         category: (categoryFilter || undefined) as ProductCategory | undefined,
+        search: debouncedSearch || undefined,
       }),
     staleTime: isOnline ? 5 * 60 * 1000 : Infinity,
     enabled: activeTab === 'buy',
@@ -225,10 +310,11 @@ export function MarketHomeScreen({ navigation }: Props) {
       {/* ── Buy tab ────────────────────────────────────────────────────── */}
       {activeTab === 'buy' && (
         <View style={styles.flex}>
-          <FilterChips
-            chips={CATEGORY_CHIPS}
-            selected={categoryFilter}
-            onSelect={setCategoryFilter}
+          <ProductSearchBar
+            category={categoryFilter}
+            onCategoryChange={setCategoryFilter}
+            searchText={searchText}
+            onSearchTextChange={setSearchText}
           />
 
           {productsQuery.isLoading && <LoadingScreen />}
@@ -322,4 +408,72 @@ const styles = StyleSheet.create({
   mineToggleActive: { backgroundColor: '#E8F5E9', borderColor: '#2E7D32' },
   mineToggleText: { fontSize: 13, color: '#555555', fontWeight: '500' },
   mineToggleTextActive: { color: '#2E7D32', fontWeight: '700' },
+
+  // ── Product search bar ──────────────────────────────────────────────────────
+  searchBarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  categoryDropdown: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    minHeight: 44,
+    maxWidth: 130,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#2E7D32',
+    backgroundColor: '#E8F5E9',
+  },
+  categoryDropdownText: { fontSize: 12, fontWeight: '700', color: '#2E7D32', flexShrink: 1 },
+  categoryDropdownArrow: { fontSize: 12, color: '#2E7D32', fontWeight: '700' },
+  searchInput: {
+    flex: 1,
+    minHeight: 44,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    backgroundColor: '#FAFAFA',
+    fontSize: 14,
+    color: '#1B1B1B',
+  },
+
+  // ── Category picker modal ────────────────────────────────────────────────────
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' },
+  pickerSheet: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    maxHeight: '60%',
+    paddingBottom: 16,
+  },
+  pickerTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1B1B1B',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  pickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    minHeight: 48,
+  },
+  pickerRowSelected: { backgroundColor: '#E8F5E9' },
+  pickerRowText: { fontSize: 14, color: '#1B1B1B' },
+  pickerRowTextSelected: { color: '#2E7D32', fontWeight: '700' },
+  pickerCheck: { fontSize: 14, color: '#2E7D32', fontWeight: '700' },
 });

@@ -17,6 +17,9 @@ import { ListProductsQuery } from '../schemas/listProducts.query.schema.js';
  *         name: county
  *         schema: { type: string }
  *       - in: query
+ *         name: search
+ *         schema: { type: string }
+ *       - in: query
  *         name: page
  *         schema: { type: integer, default: 1 }
  *       - in: query

@@ -158,9 +158,14 @@ export const marketApi = {
       }),
   },
   products: {
-    list: (params?: { category?: ProductCategory; county?: string; page?: number }) =>
+    list: (params?: { category?: ProductCategory; county?: string; search?: string; page?: number }) =>
       apiFetch<ListResponse<SupplierProduct>>(
-        `/market/products${buildQs({ category: params?.category, county: params?.county, page: params?.page })}`
+        `/market/products${buildQs({
+          category: params?.category,
+          county: params?.county,
+          search: params?.search,
+          page: params?.page,
+        })}`
       ),
     get: (id: string) =>
       apiFetch<{ data: SupplierProduct }>(`/market/products/${id}`),
