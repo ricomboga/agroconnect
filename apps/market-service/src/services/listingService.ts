@@ -3,6 +3,7 @@ import { publishListingCreated } from '../events/producers/listingCreatedProduce
 import { publishListingInquiry } from '../events/producers/listingInquiryProducer.js';
 import { createError } from '../middleware/errorHandler.js';
 import { parsePaginationParams, buildMeta } from '../utils/pagination.js';
+import { getFarmCrops } from '../clients/farmServiceClient.js';
 import { CreateListingDto } from '../schemas/createListing.schema.js';
 import { UpdateListingDto } from '../schemas/updateListing.schema.js';
 import { ListListingsQuery } from '../schemas/listListings.query.schema.js';
@@ -17,7 +18,18 @@ export async function browseListings(query: ListListingsQuery) {
   return { listings, meta: buildMeta(query as Record<string, unknown>, pagination, total) };
 }
 
-export async function createListing(farmerId: string, dto: CreateListingDto) {
+export async function createListing(farmerId: string, dto: CreateListingDto, accessToken: string) {
+  const farmCrops = await getFarmCrops(dto.farmId, accessToken);
+  const isGrown = farmCrops.some((c) => c.toLowerCase() === dto.crop.trim().toLowerCase());
+  if (!isGrown) {
+    throw createError(
+      'You can only list a crop that is recorded on this farm',
+      422,
+      'CROP_NOT_GROWN_ON_FARM',
+      'error.market.crop_not_grown_on_farm',
+    );
+  }
+
   const listing = await listingRepo.createListing(farmerId, dto);
   await publishListingCreated(listing.id, farmerId, listing.crop, listing.locationCounty);
   return listing;

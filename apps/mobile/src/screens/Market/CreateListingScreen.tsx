@@ -32,6 +32,10 @@ export function CreateListingScreen({ navigation }: Props) {
   const queryClient = useQueryClient();
   const farmsQuery = useFarms();
   const farms: Farm[] = farmsQuery.data?.data ?? [];
+  const selectedFarm = farms.find((f) => f.id === farmId);
+  const farmCrops: string[] = selectedFarm
+    ? Array.from(new Set(selectedFarm.plots.map((p) => p.currentCrop).filter((c): c is string => !!c)))
+    : [];
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
@@ -42,6 +46,7 @@ export function CreateListingScreen({ navigation }: Props) {
   const [showFarmPicker, setShowFarmPicker] = useState(false);
 
   const [crop, setCrop]           = useState('');
+  const [showCropPicker, setShowCropPicker] = useState(false);
   const [variety, setVariety]     = useState('');
   const [qtyText, setQtyText]     = useState('');
   const [priceText, setPriceText] = useState('');
@@ -92,13 +97,26 @@ export function CreateListingScreen({ navigation }: Props) {
       showToast(t('market.listing.create.successToast'), 'success');
       navigation.goBack();
     },
+    onError: (err: unknown) => {
+      const message = err instanceof Error ? err.message : t('common.error.loadFailed');
+      showToast(message, 'error');
+    },
   });
 
   function selectFarm(farm: Farm) {
     setFarmId(farm.id);
     setFarmName(farm.name);
     setCounty(farm.county);
+    setCrop('');
+    setVariety('');
     setShowFarmPicker(false);
+  }
+
+  function selectCrop(cropName: string) {
+    setCrop(cropName);
+    const plot = selectedFarm?.plots.find((p) => p.currentCrop === cropName);
+    setVariety(plot?.cropVariety ?? '');
+    setShowCropPicker(false);
   }
 
   return (
@@ -125,13 +143,24 @@ export function CreateListingScreen({ navigation }: Props) {
         </Pressable>
 
         <Text style={s.fieldLabel}>{t('market.listing.create.cropLabel')}</Text>
-        <TextInput
-          style={s.textInput}
-          value={crop}
-          onChangeText={setCrop}
-          placeholder={t('market.listing.create.cropPlaceholder')}
-          placeholderTextColor="#9CA3AF"
-        />
+        <Pressable
+          style={[s.pickerBtn, !farmId && s.pickerBtnDisabled]}
+          onPress={() => farmId && setShowCropPicker(true)}
+          disabled={!farmId}
+          accessibilityRole="button"
+        >
+          <Text style={crop ? s.pickerBtnValue : s.pickerBtnPlaceholder}>
+            {crop || t(
+              !farmId
+                ? 'market.listing.create.cropPlaceholderNoFarm'
+                : 'market.listing.create.cropPlaceholder',
+            )}
+          </Text>
+          <Text style={s.pickerChevron}>›</Text>
+        </Pressable>
+        {farmId && farmCrops.length === 0 && (
+          <Text style={s.hintText}>{t('market.listing.create.noCropsHint')}</Text>
+        )}
 
         <Text style={s.fieldLabel}>{t('market.listing.create.varietyLabel')}</Text>
         <TextInput
@@ -262,6 +291,39 @@ export function CreateListingScreen({ navigation }: Props) {
         </View>
       </Modal>
 
+      {/* Crop picker modal — restricted to crops registered on the selected farm */}
+      <Modal visible={showCropPicker} animationType="slide" transparent onRequestClose={() => setShowCropPicker(false)}>
+        <View style={s.modalOverlay}>
+          <View style={s.modalSheet}>
+            <View style={s.modalHeader}>
+              <Text style={s.modalTitle}>{t('market.listing.create.cropPickerTitle')}</Text>
+              <Pressable style={s.modalCloseBtn} onPress={() => setShowCropPicker(false)} accessibilityRole="button">
+                <Text style={s.modalCloseLabel}>✕</Text>
+              </Pressable>
+            </View>
+            {farmCrops.length === 0 ? (
+              <Text style={s.emptyModalText}>{t('market.listing.create.noCropsHint')}</Text>
+            ) : (
+              <FlatList
+                data={farmCrops}
+                keyExtractor={(item) => item}
+                renderItem={({ item }) => (
+                  <Pressable
+                    style={[s.optionRow, crop === item && s.optionRowSelected]}
+                    onPress={() => selectCrop(item)}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: crop === item }}
+                  >
+                    <Text style={s.optionText}>{item}</Text>
+                    {crop === item && <Text style={s.optionCheck}>✓</Text>}
+                  </Pressable>
+                )}
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
+
       {/* County picker modal */}
       <Modal visible={showCountyPicker} animationType="slide" transparent onRequestClose={() => setShowCountyPicker(false)}>
         <View style={s.modalOverlay}>
@@ -324,7 +386,10 @@ const s = StyleSheet.create({
   },
   pickerBtnValue:       { fontSize: 10, color: '#111827', flex: 1 },
   pickerBtnPlaceholder: { fontSize: 10, color: '#9CA3AF', flex: 1 },
+  pickerBtnDisabled:    { opacity: 0.5 },
   pickerChevron:        { fontSize: 16, color: '#9CA3AF', marginLeft: 8 },
+  hintText:             { fontSize: 9, color: '#B45309', marginTop: 4 },
+  emptyModalText:       { fontSize: 11, color: '#6B7280', textAlign: 'center', padding: 24 },
   chipGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip: {
     borderRadius: 20, paddingHorizontal: 10, paddingVertical: 6,

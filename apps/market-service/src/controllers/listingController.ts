@@ -66,7 +66,8 @@ export async function browseListings(req: Request, res: Response, next: NextFunc
  */
 export async function createListing(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
   try {
-    const listing = await listingService.createListing(req.user.id, req.body);
+    const accessToken = (req.headers['authorization'] ?? '').slice(7);
+    const listing = await listingService.createListing(req.user.id, req.body, accessToken);
     res.status(201).json({ data: listing });
   } catch (err) {
     next(err);
