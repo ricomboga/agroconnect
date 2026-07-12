@@ -13,12 +13,26 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiFetch<T>(
-  path: string,
-  options: RequestInit = {},
-): Promise<T> {
-  const token = useAuthStore.getState().token;
+// Access tokens are short-lived (15 min) — dedupe concurrent 401s onto a single
+// refresh attempt so a burst of parallel requests doesn't race the refresh-token
+// rotation (the second call would otherwise reuse an already-rotated-out token).
+let refreshInFlight: Promise<boolean> | null = null;
 
+async function refreshOnce(): Promise<boolean> {
+  if (!refreshInFlight) {
+    refreshInFlight = useAuthStore
+      .getState()
+      .refreshSession()
+      .then(() => useAuthStore.getState().token !== null)
+      .catch(() => false)
+      .finally(() => {
+        refreshInFlight = null;
+      });
+  }
+  return refreshInFlight;
+}
+
+async function doFetch(path: string, options: RequestInit, token: string | null): Promise<Response> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string> | undefined),
@@ -29,22 +43,32 @@ export async function apiFetch<T>(
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10_000);
-
-  let response: Response;
   try {
-    response = await fetch(`${BASE_URL}${path}`, {
-      ...options,
-      headers,
-      signal: controller.signal,
-    });
+    return await fetch(`${BASE_URL}${path}`, { ...options, headers, signal: controller.signal });
   } catch (err) {
-    clearTimeout(timeout);
     if (err instanceof Error && err.name === 'AbortError') {
       throw new ApiError(408, 'REQUEST_TIMEOUT', 'Request timed out');
     }
     throw err;
+  } finally {
+    clearTimeout(timeout);
   }
-  clearTimeout(timeout);
+}
+
+export async function apiFetch<T>(
+  path: string,
+  options: RequestInit = {},
+): Promise<T> {
+  let token = useAuthStore.getState().token;
+  let response = await doFetch(path, options, token);
+
+  if (response.status === 401) {
+    const refreshed = await refreshOnce();
+    if (refreshed) {
+      token = useAuthStore.getState().token;
+      response = await doFetch(path, options, token);
+    }
+  }
 
   if (response.status === 401) {
     await useAuthStore.getState().logout();
