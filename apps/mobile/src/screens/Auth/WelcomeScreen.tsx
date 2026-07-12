@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet, Image } from 'react-native';
+import LogoMark from '../../../assets/adaptive-icon.png';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
@@ -18,7 +19,7 @@ export function WelcomeScreen() {
         {/* Logo */}
         <View style={styles.logoSection}>
           <View style={styles.logoMark}>
-            <Text style={styles.logoMarkText}>🌱</Text>
+            <Image source={LogoMark} style={styles.logoMarkImage} resizeMode="contain" />
           </View>
           <Text style={styles.appName}>AgroConnect</Text>
           <Text style={styles.tagline}>{t('auth.welcome.tagline')}</Text>
@@ -64,7 +65,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  logoMarkText: { fontSize: 48 },
+  logoMarkImage: { width: 64, height: 64 },
   appName: {
     fontSize: 36,
     fontWeight: '800',

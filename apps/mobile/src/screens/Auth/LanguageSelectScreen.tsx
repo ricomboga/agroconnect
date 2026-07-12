@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import {
-  ActivityIndicator, Pressable, SafeAreaView, StyleSheet, Text, View,
+  ActivityIndicator, Image, Pressable, SafeAreaView, StyleSheet, Text, View,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../../navigation/types';
 import { changeLanguage } from '../../i18n';
+import LogoMark from '../../../assets/adaptive-icon.png';
 
 type Nav = NativeStackNavigationProp<AuthStackParamList, 'LanguageSelect'>;
 
@@ -43,7 +44,7 @@ export function LanguageSelectScreen() {
         {/* App mark */}
         <View style={styles.topSection}>
           <View style={styles.logoMark}>
-            <Text style={styles.logoEmoji}>🌱</Text>
+            <Image source={LogoMark} style={styles.logoImage} resizeMode="contain" />
           </View>
           <Text style={styles.appName}>AgroConnect</Text>
           <Text style={styles.prompt}>Chagua lugha / Choose language</Text>
@@ -109,7 +110,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 4,
   },
-  logoEmoji: { fontSize: 52 },
+  logoImage: { width: 68, height: 68 },
   appName: {
     fontSize: 34,
     fontWeight: '800',
