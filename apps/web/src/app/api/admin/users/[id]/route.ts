@@ -60,6 +60,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     payload = { verifierId: session.sub }
   } else if (action === 'update') {
     url = `${AUTH}/internal/admin/users/${params.id}`
+  } else if (action === 'reset_pin') {
+    url = `${AUTH}/internal/admin/users/${params.id}/reset-pin`
+    payload = { resetByUserId: session.sub }
   } else {
     // Legacy toggle payload ({ is_active }) maps onto the account status enum.
     url = `${AUTH}/internal/admin/users/${params.id}/status`

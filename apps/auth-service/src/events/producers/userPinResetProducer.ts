@@ -3,20 +3,22 @@ import { logger } from '../../logger.js';
 
 const BROKERS = (process.env['KAFKA_BROKERS'] ?? 'localhost:9092').split(',');
 
-export interface UserRegisteredPayload {
+export interface UserPinResetPayload {
   userId: string;
   phone: string;
-  role: string;
   fullName: string;
-  county?: string;
+  newPin: string;
+  resetByUserId: string;
   occurredAt: string;
 }
 
-export async function publishUserRegistered(payload: UserRegisteredPayload): Promise<void> {
+// newPin travels only in this transient Kafka message — it is never persisted in
+// plaintext anywhere (not in the DB, not in the audit log, not in this producer's logs).
+export async function publishUserPinReset(payload: UserPinResetPayload): Promise<void> {
   const producer = await createProducer(BROKERS);
   try {
     await producer.send({
-      topic: 'user.registered',
+      topic: 'user.pin_reset',
       messages: [
         {
           key: payload.userId,
@@ -25,7 +27,7 @@ export async function publishUserRegistered(payload: UserRegisteredPayload): Pro
         },
       ],
     });
-    logger.info({ userId: payload.userId }, 'Published user.registered');
+    logger.info({ userId: payload.userId }, 'Published user.pin_reset');
   } finally {
     await producer.disconnect();
   }

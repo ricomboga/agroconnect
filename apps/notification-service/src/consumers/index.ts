@@ -17,6 +17,7 @@ import { communityPostCreatedHandler } from '../handlers/communityPostCreatedHan
 import { communityReplyCreatedHandler } from '../handlers/communityReplyCreatedHandler.js';
 import { communityArticleCreatedHandler } from '../handlers/communityArticleCreatedHandler.js';
 import { userRegisteredHandler } from '../handlers/userRegisteredHandler.js';
+import { userPinResetHandler } from '../handlers/userPinResetHandler.js';
 import { notificationSendHandler } from '../handlers/notificationSendHandler.js';
 import { farmWorkerAssignedHandler } from '../handlers/farmWorkerAssignedHandler.js';
 
@@ -42,6 +43,7 @@ const TOPICS = [
   'community.reply.created',
   'community.article.created',
   'user.registered',
+  'user.pin_reset',
   'notification.send',
 ] as const;
 
@@ -66,6 +68,7 @@ const HANDLER_MAP: Record<Topic, (payload: unknown) => Promise<void>> = {
   'community.reply.created': communityReplyCreatedHandler,
   'community.article.created': communityArticleCreatedHandler,
   'user.registered': userRegisteredHandler,
+  'user.pin_reset': userPinResetHandler,
   'notification.send': notificationSendHandler,
 };
 

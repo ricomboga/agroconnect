@@ -85,6 +85,10 @@ export const swPushTemplates: Record<string, (data: TemplateData) => PushTemplat
     title: `Umeongezwa kwenye ${d['farmName'] ?? 'shamba'}!`,
     body: `Jukumu lako: ${d['workerRole'] ?? 'mfanyakazi'}. Fungua AgroConnect kuona kazi zako.`,
   }),
+  'user.pin_reset': (d) => ({
+    title: `PIN Mpya: ${d['fullName'] ?? 'Mtumiaji'}`,
+    body: `Simu: ${d['phone'] ?? ''} · PIN mpya: ${d['newPin'] ?? '????'}. Mpe mkulima ili aingie kisha abadilishe PIN.`,
+  }),
   'notification.send': (d) => ({
     title: d['title'] ?? 'Ujumbe',
     body: d['body'] ?? '',

@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { FarmerDetailView, farmTypeInfo } from './_components/FarmerDetailView'
 import { LenderDetailView } from './_components/LenderDetailView'
 import { SupplierDetailView } from './_components/SupplierDetailView'
@@ -66,12 +67,27 @@ export default function UserDetailPage({ params }: PageProps) {
   })
 
   const resetPinMutation = useMutation({
-    mutationFn: () =>
-      fetch(`/api/admin/users/${farmerId}`, {
+    mutationFn: async () => {
+      const res = await fetch(`/api/admin/users/${farmerId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'reset_pin' }),
-      }),
+      })
+      const body = await res.json() as { data?: { newPin?: string }; message?: string }
+      if (!res.ok) throw new Error(body.message ?? 'Failed to reset PIN')
+      return body.data
+    },
+    onSuccess: (data) => {
+      toast.success(
+        data?.newPin
+          ? `New PIN: ${data.newPin} — share this with the farmer. It's also been sent as an in-app notification (and SMS, once configured).`
+          : 'PIN reset.',
+        { duration: 15000 },
+      )
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : 'Failed to reset PIN')
+    },
   })
 
   if (userQuery.isLoading) {

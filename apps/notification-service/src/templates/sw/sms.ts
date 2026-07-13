@@ -31,5 +31,7 @@ export const swSmsTemplates: Record<string, (data: TemplateData) => string> = {
     `AgroConnect: Chapisho jipya kwenye ${d['category'] ?? 'jamii'}: "${d['title'] ?? ''}".`,
   'user.registered': (d) =>
     `AgroConnect: Karibu ${d['fullName'] ?? ''}! Akaunti yako imeundwa. Pakua app kwa huduma zote.`,
+  'user.pin_reset': (d) =>
+    `AgroConnect: PIN yako mpya ni ${d['newPin'] ?? '????'}. Tumia kuingia kisha ubadilishe mara moja.`,
   'notification.send': (d) => `AgroConnect: ${d['body'] ?? ''}`,
 };

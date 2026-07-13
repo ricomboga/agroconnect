@@ -161,6 +161,17 @@ export const UserRegisteredPayload = z.object({
 });
 export type UserRegisteredPayload = z.infer<typeof UserRegisteredPayload>;
 
+// user.pin_reset
+export const UserPinResetPayload = z.object({
+  userId: z.string(),
+  phone: z.string(),
+  fullName: z.string(),
+  newPin: z.string(),
+  resetByUserId: z.string(),
+  occurredAt: z.string(),
+});
+export type UserPinResetPayload = z.infer<typeof UserPinResetPayload>;
+
 // farm.worker.assigned
 export const FarmWorkerAssignedPayload = z.object({
   farmId: z.string(),

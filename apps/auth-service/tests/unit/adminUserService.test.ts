@@ -2,6 +2,9 @@ import * as adminUserRepo from '../../src/repositories/adminUserRepository';
 import * as userRepo from '../../src/repositories/userRepository';
 import * as roleRepo from '../../src/repositories/roleRepository';
 import * as adminUserService from '../../src/services/adminUserService';
+import * as userRegisteredProducer from '../../src/events/producers/userRegisteredProducer';
+import * as userPinResetProducer from '../../src/events/producers/userPinResetProducer';
+import * as sessionRepo from '../../src/repositories/sessionRepository';
 import {
   SelfVerificationError,
   SupervisorApprovalRequiredError,
@@ -26,6 +29,16 @@ jest.mock('bcryptjs', () => ({
 
 jest.mock('../../src/repositories/userRepository', () => ({
   findUserByPhone: jest.fn(),
+  updatePasswordHash: jest.fn(),
+}));
+
+jest.mock('../../src/repositories/sessionRepository', () => ({
+  deleteSessionsByUserId: jest.fn(),
+}));
+
+// Suppress Kafka connection errors in test environment
+jest.mock('../../src/events/producers/userPinResetProducer', () => ({
+  publishUserPinReset: jest.fn(),
 }));
 
 jest.mock('../../src/repositories/expertRepository', () => ({
@@ -39,11 +52,20 @@ jest.mock('../../src/repositories/roleRepository', () => ({
   getUserPermissionNames: jest.fn(),
 }));
 
+// Suppress Kafka connection errors in test environment
+jest.mock('../../src/events/producers/userRegisteredProducer', () => ({
+  publishUserRegistered: jest.fn(),
+}));
+
 const mockAdminGetUserById = jest.mocked(adminUserRepo.adminGetUserById);
 const mockAdminCreateUser = jest.mocked(adminUserRepo.adminCreateUser);
 const mockAdminVerifyUser = jest.mocked(adminUserRepo.adminVerifyUser);
 const mockFindUserByPhone = jest.mocked(userRepo.findUserByPhone);
 const mockAssignRoleToUser = jest.mocked(roleRepo.assignRoleToUser);
+const mockPublishUserRegistered = jest.mocked(userRegisteredProducer.publishUserRegistered);
+const mockPublishUserPinReset = jest.mocked(userPinResetProducer.publishUserPinReset);
+const mockUpdatePasswordHash = jest.mocked(userRepo.updatePasswordHash);
+const mockDeleteSessionsByUserId = jest.mocked(sessionRepo.deleteSessionsByUserId);
 
 const fakeUser = {
   id: 'user-uuid-001',
@@ -163,6 +185,38 @@ describe('adminUserService.createUser — maker-checker defaults', () => {
     expect(mockAdminCreateUser).toHaveBeenCalledWith(expect.objectContaining({ staffRole: 'county_admin' }));
     expect(result.staff_role).toBe('county_admin');
   });
+
+  it('publishes user.registered after the account is created', async () => {
+    await adminUserService.createUser({
+      phone: '+254712345678',
+      password: 'Agro1234',
+      fullName: 'Test User',
+      role: 'farmer',
+      createdByUserId: 'admin-uuid-001',
+    });
+
+    expect(mockPublishUserRegistered).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: fakeUser.id,
+        phone: fakeUser.phone,
+        fullName: fakeUser.fullName,
+      }),
+    );
+  });
+
+  it('still returns the created user when the Kafka publish fails', async () => {
+    mockPublishUserRegistered.mockRejectedValueOnce(new Error('broker unreachable'));
+
+    const result = await adminUserService.createUser({
+      phone: '+254712345678',
+      password: 'Agro1234',
+      fullName: 'Test User',
+      role: 'farmer',
+      createdByUserId: 'admin-uuid-001',
+    });
+
+    expect(result.id).toBe(fakeUser.id);
+  });
 });
 
 describe('adminUserService.createSystemUser', () => {
@@ -199,6 +253,55 @@ describe('adminUserService.createSystemUser', () => {
 
     expect(mockAssignRoleToUser).toHaveBeenCalledWith('user-uuid-001', 'role-1', 'super-admin-uuid-000');
     expect(mockAssignRoleToUser).toHaveBeenCalledWith('user-uuid-001', 'role-2', 'super-admin-uuid-000');
+  });
+});
+
+describe('adminUserService.resetPin', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockAdminGetUserById.mockResolvedValue(fakeUser);
+  });
+
+  it('throws 404 when the target user does not exist', async () => {
+    mockAdminGetUserById.mockResolvedValue(null);
+
+    await expect(adminUserService.resetPin('missing-id', 'admin-uuid-001')).rejects.toMatchObject({
+      statusCode: 404,
+      errorCode: 'USER_NOT_FOUND',
+    });
+  });
+
+  it('hashes and stores a new 4-digit PIN, invalidates sessions, and publishes the event', async () => {
+    const result = await adminUserService.resetPin('user-uuid-001', 'admin-uuid-001');
+
+    expect(result.newPin).toMatch(/^\d{4}$/);
+    expect(mockUpdatePasswordHash).toHaveBeenCalledWith('user-uuid-001', 'hashed-password');
+    expect(mockDeleteSessionsByUserId).toHaveBeenCalledWith('user-uuid-001');
+    expect(mockPublishUserPinReset).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: fakeUser.id,
+        phone: fakeUser.phone,
+        fullName: fakeUser.fullName,
+        newPin: result.newPin,
+        resetByUserId: 'admin-uuid-001',
+      }),
+    );
+  });
+
+  it('never generates a trivially weak PIN (repeated digit)', async () => {
+    for (let i = 0; i < 20; i++) {
+      const { newPin } = await adminUserService.resetPin('user-uuid-001', 'admin-uuid-001');
+      expect(newPin).not.toMatch(/^(\d)\1{3}$/);
+    }
+  });
+
+  it('still resets the PIN when the Kafka publish fails', async () => {
+    mockPublishUserPinReset.mockRejectedValueOnce(new Error('broker unreachable'));
+
+    const result = await adminUserService.resetPin('user-uuid-001', 'admin-uuid-001');
+
+    expect(result.newPin).toMatch(/^\d{4}$/);
+    expect(mockUpdatePasswordHash).toHaveBeenCalled();
   });
 });
 

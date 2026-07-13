@@ -67,7 +67,8 @@ Reference: `@docs/architecture.md`
 | govt.registration.submitted | govt-service | notification-service, admin-service | 30 days |
 | weather.alert.issued | weather-service | notification-service, farm-service | 7 days |
 | community.post.created | community-service | notification-service, admin-service | 7 days |
-| user.registered | auth-service | notification-service, farm-service | 30 days |
+| user.registered | auth-service | notification-service | 30 days |
+| user.pin_reset | auth-service | notification-service | 7 days |
 | notification.send | any service | notification-service | 3 days |
 | dead_letter | any service | admin-service | 90 days |
 

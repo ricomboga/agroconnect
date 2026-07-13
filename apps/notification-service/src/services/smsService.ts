@@ -7,10 +7,11 @@ const at = AfricasTalking({
 });
 
 const sms = at.SMS;
+const SENDER_ID = process.env['AT_SENDER_ID'];
 
 export async function sendSms(phone: string, message: string): Promise<'sent' | 'failed'> {
   try {
-    await sms.send({ to: [phone], message });
+    await sms.send({ to: [phone], message, ...(SENDER_ID ? { from: SENDER_ID } : {}) });
     return 'sent';
   } catch (err) {
     logger.error({ err, phone, context: 'smsService' }, 'SMS send failed');

@@ -5,6 +5,7 @@ import { marketListingCreatedHandler } from '../../../src/handlers/marketListing
 import { marketOrderPlacedHandler } from '../../../src/handlers/marketOrderPlacedHandler';
 import { marketOrderUpdatedHandler } from '../../../src/handlers/marketOrderUpdatedHandler';
 import { userRegisteredHandler } from '../../../src/handlers/userRegisteredHandler';
+import { userPinResetHandler } from '../../../src/handlers/userPinResetHandler';
 import { weatherAlertIssuedHandler } from '../../../src/handlers/weatherAlertIssuedHandler';
 import { notificationSendHandler } from '../../../src/handlers/notificationSendHandler';
 
@@ -261,7 +262,7 @@ describe('userRegisteredHandler', () => {
 
     expect(mockSendPush).toHaveBeenCalled();
     expect(mockLogDelivery).toHaveBeenCalledWith(
-      expect.objectContaining({ eventType: 'user.registered', farmerId: 'user-1' }),
+      expect.objectContaining({ eventType: 'user.registered', farmerId: 'user-1', channel: 'push' }),
     );
   });
 
@@ -273,8 +274,55 @@ describe('userRegisteredHandler', () => {
     expect(mockSendPush).not.toHaveBeenCalled();
   });
 
+  it('sends a welcome SMS regardless of FCM token presence', async () => {
+    mockGetToken.mockResolvedValue(null);
+
+    await userRegisteredHandler(validPayload);
+
+    expect(mockSendSms).toHaveBeenCalledWith('+254700000001', expect.any(String));
+    expect(mockLogDelivery).toHaveBeenCalledWith(
+      expect.objectContaining({ eventType: 'user.registered', farmerId: 'user-1', channel: 'sms' }),
+    );
+  });
+
   it('does not throw for invalid payload', async () => {
     await expect(userRegisteredHandler([])).resolves.toBeUndefined();
+  });
+});
+
+describe('userPinResetHandler', () => {
+  const validPayload = {
+    userId: 'farmer-1',
+    phone: '+254700000001',
+    fullName: 'Wanjiru Kamau',
+    newPin: '4685',
+    resetByUserId: 'admin-1',
+    occurredAt: '2026-06-14T08:00:00Z',
+  };
+
+  it('pushes the new PIN to the resetting admin, not the farmer', async () => {
+    mockGetToken.mockResolvedValue('fcm-token-admin');
+
+    await userPinResetHandler(validPayload);
+
+    expect(mockGetToken).toHaveBeenCalledWith('admin-1');
+    expect(mockSendPush).toHaveBeenCalledWith('fcm-token-admin', expect.any(String), expect.stringContaining('4685'));
+    expect(mockLogDelivery).toHaveBeenCalledWith(
+      expect.objectContaining({ eventType: 'user.pin_reset', farmerId: 'admin-1', channel: 'push' }),
+    );
+  });
+
+  it('also attempts SMS to the farmer with the new PIN', async () => {
+    await userPinResetHandler(validPayload);
+
+    expect(mockSendSms).toHaveBeenCalledWith('+254700000001', expect.stringContaining('4685'));
+    expect(mockLogDelivery).toHaveBeenCalledWith(
+      expect.objectContaining({ eventType: 'user.pin_reset', farmerId: 'farmer-1', channel: 'sms' }),
+    );
+  });
+
+  it('does not throw for invalid payload', async () => {
+    await expect(userPinResetHandler([])).resolves.toBeUndefined();
   });
 });
 

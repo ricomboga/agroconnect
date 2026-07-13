@@ -5,6 +5,7 @@ import {
   getUserHandler,
   setUserStatusHandler,
   verifyUserHandler,
+  resetPinHandler,
   getStatsHandler,
   createUserHandler,
   createSystemUserHandler,
@@ -41,6 +42,7 @@ router.post('/system-users', createSystemUserHandler);
 router.patch('/users/:id', updateUserHandler);
 router.patch('/users/:id/status', setUserStatusHandler);
 router.patch('/users/:id/verify', verifyUserHandler);
+router.patch('/users/:id/reset-pin', resetPinHandler);
 router.delete('/users/:id', deleteUserHandler);
 router.get('/stats', getStatsHandler);
 router.get('/experts', listExpertsHandler);

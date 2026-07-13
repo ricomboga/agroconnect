@@ -31,5 +31,7 @@ export const enSmsTemplates: Record<string, (data: TemplateData) => string> = {
     `AgroConnect: New post in ${d['category'] ?? 'community'}: "${d['title'] ?? ''}".`,
   'user.registered': (d) =>
     `AgroConnect: Welcome ${d['fullName'] ?? ''}! Your account is ready. Download the app to get started.`,
+  'user.pin_reset': (d) =>
+    `AgroConnect: Your new PIN is ${d['newPin'] ?? '????'}. Use it to log in, then change it right away.`,
   'notification.send': (d) => `AgroConnect: ${d['body'] ?? ''}`,
 };

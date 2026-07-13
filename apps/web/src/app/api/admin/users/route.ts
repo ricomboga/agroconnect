@@ -43,6 +43,7 @@ export async function POST(req: NextRequest) {
   if (session.staff_role === 'county_admin' && !session.is_super_admin) {
     body.county = session.county
   }
+  body.createdByUserId = session.sub
   const upstream = await fetch(`${AUTH}/internal/admin/users`, {
     method: 'POST',
     headers: serviceHeaders(),

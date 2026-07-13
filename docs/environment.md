@@ -44,6 +44,8 @@ MEDIA_SERVICE_URL   http://localhost:3010  (used for async farm PDF report gener
 ```
 AT_API_KEY          Africa's Talking API key
 AT_USERNAME         Africa's Talking username
+AT_SENDER_ID        (notification-service only, optional) registered alphanumeric sender ID /
+                     shortcode for outbound SMS. Unset uses the Africa's Talking sandbox sender.
 ```
 
 ## media-service

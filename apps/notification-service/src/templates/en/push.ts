@@ -79,6 +79,10 @@ export const enPushTemplates: Record<string, (data: TemplateData) => PushTemplat
     title: `You've been added to ${d['farmName'] ?? 'a farm'}!`,
     body: `Role: ${d['workerRole'] ?? 'worker'}. Open AgroConnect to see your tasks.`,
   }),
+  'user.pin_reset': (d) => ({
+    title: `New PIN: ${d['fullName'] ?? 'User'}`,
+    body: `Phone: ${d['phone'] ?? ''} · New PIN: ${d['newPin'] ?? '????'}. Share it with the farmer so they can log in, then change their PIN.`,
+  }),
   'notification.send': (d) => ({
     title: d['title'] ?? 'Message',
     body: d['body'] ?? '',

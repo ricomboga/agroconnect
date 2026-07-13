@@ -53,6 +53,10 @@ const verifyUserSchema = z.object({
   verifierId: z.string().min(1),
 });
 
+const resetPinSchema = z.object({
+  resetByUserId: z.string().min(1),
+});
+
 const assignRoleSchema = z.object({
   roleId: z.string().min(1),
   assignedByUserId: z.string().min(1),
@@ -126,6 +130,21 @@ export async function verifyUserHandler(req: Request, res: Response, next: NextF
     }
     await adminUserService.verifyUser(id, parsed.data.verifierId);
     res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function resetPinHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { id } = req.params as { id: string };
+    const parsed = resetPinSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ message: 'Invalid request', errors: parsed.error.flatten().fieldErrors });
+      return;
+    }
+    const { newPin } = await adminUserService.resetPin(id, parsed.data.resetByUserId);
+    res.json({ data: { newPin } });
   } catch (err) {
     next(err);
   }

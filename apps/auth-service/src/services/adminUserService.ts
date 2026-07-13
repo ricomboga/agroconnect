@@ -27,9 +27,14 @@ import {
   getUserRoles,
   getUserPermissionNames,
 } from '../repositories/roleRepository.js';
-import { findUserByPhone, type UserRole, type UserStatus } from '../repositories/userRepository.js';
+import { randomInt } from 'node:crypto';
+import { findUserByPhone, updatePasswordHash, type UserRole, type UserStatus } from '../repositories/userRepository.js';
+import { deleteSessionsByUserId } from '../repositories/sessionRepository.js';
 import { findExpertsByCounty, upsertFarmerExpertAssignment } from '../repositories/expertRepository.js';
 import { createError } from '../middleware/errorHandler.js';
+import { publishUserRegistered } from '../events/producers/userRegisteredProducer.js';
+import { publishUserPinReset } from '../events/producers/userPinResetProducer.js';
+import { logger } from '../logger.js';
 
 const STAFF_ROLES: ReadonlyArray<UserRole> = ['admin', 'govt_officer'];
 
@@ -154,6 +159,20 @@ export async function createUser(params: CreateUserParams) {
     supervisorId: params.supervisorId,
     createdByUserId: params.createdByUserId,
   });
+
+  try {
+    await publishUserRegistered({
+      userId: u.id,
+      phone: u.phone,
+      role: u.role,
+      fullName: u.fullName,
+      county: u.county ?? undefined,
+      occurredAt: u.createdAt.toISOString(),
+    });
+  } catch (err) {
+    logger.error({ err, userId: u.id, context: 'createUser.publishUserRegistered' }, 'Kafka publish failed — user still created');
+  }
+
   return toResponse(u);
 }
 
@@ -256,6 +275,44 @@ export async function verifyUser(id: string, verifierId: string) {
     }
     throw createError('User not found', 404, 'USER_NOT_FOUND', 'error.user_not_found');
   }
+}
+
+function generatePin(): string {
+  let pin: string;
+  do {
+    pin = String(randomInt(0, 10000)).padStart(4, '0');
+  } while (/^(\d)\1{3}$/.test(pin)); // avoid trivially guessable 0000/1111/etc.
+  return pin;
+}
+
+// Admin-triggered PIN reset (no OTP — the admin has already verified the farmer's
+// identity out-of-band). The new PIN is returned once to the calling admin and is
+// also published on Kafka so notification-service can log an in-app notification for
+// admins and attempt SMS delivery — it is never persisted anywhere in plaintext.
+export async function resetPin(id: string, resetByUserId: string) {
+  const u = await adminGetUserById(id);
+  if (!u) throw createError('User not found', 404, 'USER_NOT_FOUND', 'error.user_not_found');
+
+  const newPin = generatePin();
+  const rounds = parseInt(process.env['BCRYPT_ROUNDS'] ?? '10', 10);
+  const passwordHash = await bcrypt.hash(newPin, rounds);
+  await updatePasswordHash(id, passwordHash);
+  await deleteSessionsByUserId(id);
+
+  try {
+    await publishUserPinReset({
+      userId: u.id,
+      phone: u.phone,
+      fullName: u.fullName,
+      newPin,
+      resetByUserId,
+      occurredAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    logger.error({ err, userId: u.id, context: 'resetPin.publishUserPinReset' }, 'Kafka publish failed — PIN still reset');
+  }
+
+  return { newPin };
 }
 
 // --- Roles & permissions -------------------------------------------------
