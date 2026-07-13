@@ -161,6 +161,7 @@ services:
         t community.reply.created    604800000
         t community.article.created  604800000
         t user.registered            2592000000
+        t user.pin_reset             604800000
         t notification.send          259200000
         t dead_letter                7776000000
         echo "All Kafka topics ready."
