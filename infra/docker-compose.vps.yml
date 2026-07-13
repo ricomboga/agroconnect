@@ -169,9 +169,7 @@ services:
   # ── Node.js backend services ─────────────────────────────────────────────────
 
   api-gateway:
-    build:
-      context: ..
-      dockerfile: apps/api-gateway/Dockerfile.dev
+    image: ghcr.io/ricomboga/agroconnect-api-gateway:${IMAGE_TAG:-latest}
     container_name: agroconnect-api-gateway
     restart: unless-stopped
     environment:
@@ -202,9 +200,7 @@ services:
       retries: 5
 
   auth-service:
-    build:
-      context: ..
-      dockerfile: apps/auth-service/Dockerfile.dev
+    image: ghcr.io/ricomboga/agroconnect-auth-service:${IMAGE_TAG:-latest}
     container_name: agroconnect-auth-service
     restart: unless-stopped
     env_file:
@@ -231,9 +227,7 @@ services:
       retries: 10
 
   farm-service:
-    build:
-      context: ..
-      dockerfile: apps/farm-service/Dockerfile.dev
+    image: ghcr.io/ricomboga/agroconnect-farm-service:${IMAGE_TAG:-latest}
     container_name: agroconnect-farm-service
     restart: unless-stopped
     env_file:
@@ -264,9 +258,7 @@ services:
       retries: 10
 
   soil-service:
-    build:
-      context: ..
-      dockerfile: apps/soil-service/Dockerfile.dev
+    image: ghcr.io/ricomboga/agroconnect-soil-service:${IMAGE_TAG:-latest}
     container_name: agroconnect-soil-service
     restart: unless-stopped
     env_file:
@@ -292,9 +284,7 @@ services:
       retries: 10
 
   finance-service:
-    build:
-      context: ..
-      dockerfile: apps/finance-service/Dockerfile.dev
+    image: ghcr.io/ricomboga/agroconnect-finance-service:${IMAGE_TAG:-latest}
     container_name: agroconnect-finance-service
     restart: unless-stopped
     env_file:
@@ -323,9 +313,7 @@ services:
       retries: 10
 
   market-service:
-    build:
-      context: ..
-      dockerfile: apps/market-service/Dockerfile.dev
+    image: ghcr.io/ricomboga/agroconnect-market-service:${IMAGE_TAG:-latest}
     container_name: agroconnect-market-service
     restart: unless-stopped
     env_file:
@@ -352,9 +340,7 @@ services:
       retries: 10
 
   community-service:
-    build:
-      context: ..
-      dockerfile: apps/community-service/Dockerfile.dev
+    image: ghcr.io/ricomboga/agroconnect-community-service:${IMAGE_TAG:-latest}
     container_name: agroconnect-community-service
     restart: unless-stopped
     env_file:
@@ -381,9 +367,7 @@ services:
       retries: 10
 
   govt-service:
-    build:
-      context: ..
-      dockerfile: apps/govt-service/Dockerfile.dev
+    image: ghcr.io/ricomboga/agroconnect-govt-service:${IMAGE_TAG:-latest}
     container_name: agroconnect-govt-service
     restart: unless-stopped
     env_file:
@@ -411,9 +395,7 @@ services:
       retries: 10
 
   notification-service:
-    build:
-      context: ..
-      dockerfile: apps/notification-service/Dockerfile.dev
+    image: ghcr.io/ricomboga/agroconnect-notification-service:${IMAGE_TAG:-latest}
     container_name: agroconnect-notification-service
     restart: unless-stopped
     env_file:
@@ -438,9 +420,7 @@ services:
       retries: 5
 
   media-service:
-    build:
-      context: ..
-      dockerfile: apps/media-service/Dockerfile.dev
+    image: ghcr.io/ricomboga/agroconnect-media-service:${IMAGE_TAG:-latest}
     container_name: agroconnect-media-service
     restart: unless-stopped
     env_file:
@@ -462,9 +442,7 @@ services:
       retries: 5
 
   ussd-service:
-    build:
-      context: ..
-      dockerfile: apps/ussd-service/Dockerfile.dev
+    image: ghcr.io/ricomboga/agroconnect-ussd-service:${IMAGE_TAG:-latest}
     container_name: agroconnect-ussd-service
     restart: unless-stopped
     env_file:
@@ -487,9 +465,7 @@ services:
       retries: 5
 
   admin-service:
-    build:
-      context: ..
-      dockerfile: apps/admin-service/Dockerfile.dev
+    image: ghcr.io/ricomboga/agroconnect-admin-service:${IMAGE_TAG:-latest}
     container_name: agroconnect-admin-service
     restart: unless-stopped
     env_file:
@@ -514,9 +490,7 @@ services:
       retries: 5
 
   diagnosis-service:
-    build:
-      context: ..
-      dockerfile: apps/diagnosis-service/Dockerfile.dev
+    image: ghcr.io/ricomboga/agroconnect-diagnosis-service:${IMAGE_TAG:-latest}
     container_name: agroconnect-diagnosis-service
     restart: unless-stopped
     env_file:
@@ -539,9 +513,7 @@ services:
       retries: 8
 
   weather-service:
-    build:
-      context: ../apps/weather-service
-      dockerfile: Dockerfile
+    image: ghcr.io/ricomboga/agroconnect-weather-service:${IMAGE_TAG:-latest}
     container_name: agroconnect-weather-service
     restart: unless-stopped
     environment:
@@ -565,9 +537,7 @@ services:
       retries: 5
 
   predict-service:
-    build:
-      context: ../apps/predict-service
-      dockerfile: Dockerfile
+    image: ghcr.io/ricomboga/agroconnect-predict-service:${IMAGE_TAG:-latest}
     container_name: agroconnect-predict-service
     restart: unless-stopped
     env_file:
@@ -595,11 +565,7 @@ services:
   # ── Web frontend ──────────────────────────────────────────────────────────
 
   web:
-    build:
-      context: ..
-      dockerfile: apps/web/Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: "http://158.220.122.88:3000"
+    image: ghcr.io/ricomboga/agroconnect-web:${IMAGE_TAG:-latest}
     container_name: agroconnect-web
     restart: unless-stopped
     env_file:

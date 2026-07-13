@@ -1,0 +1,115 @@
+name: Build, push, and deploy
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch: {}
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_OWNER: ricomboga
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        include:
+          - service: api-gateway
+            context: .
+            dockerfile: apps/api-gateway/Dockerfile.dev
+          - service: auth-service
+            context: .
+            dockerfile: apps/auth-service/Dockerfile.dev
+          - service: farm-service
+            context: .
+            dockerfile: apps/farm-service/Dockerfile.dev
+          - service: soil-service
+            context: .
+            dockerfile: apps/soil-service/Dockerfile.dev
+          - service: finance-service
+            context: .
+            dockerfile: apps/finance-service/Dockerfile.dev
+          - service: market-service
+            context: .
+            dockerfile: apps/market-service/Dockerfile.dev
+          - service: community-service
+            context: .
+            dockerfile: apps/community-service/Dockerfile.dev
+          - service: govt-service
+            context: .
+            dockerfile: apps/govt-service/Dockerfile.dev
+          - service: notification-service
+            context: .
+            dockerfile: apps/notification-service/Dockerfile.dev
+          - service: media-service
+            context: .
+            dockerfile: apps/media-service/Dockerfile.dev
+          - service: ussd-service
+            context: .
+            dockerfile: apps/ussd-service/Dockerfile.dev
+          - service: admin-service
+            context: .
+            dockerfile: apps/admin-service/Dockerfile.dev
+          - service: diagnosis-service
+            context: .
+            dockerfile: apps/diagnosis-service/Dockerfile.dev
+          - service: weather-service
+            context: apps/weather-service
+            dockerfile: apps/weather-service/Dockerfile
+          - service: predict-service
+            context: apps/predict-service
+            dockerfile: apps/predict-service/Dockerfile
+          - service: web
+            context: .
+            dockerfile: apps/web/Dockerfile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/agroconnect-${{ matrix.service }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/agroconnect-${{ matrix.service }}:sha-${{ github.sha }}
+          build-args: |
+            ${{ matrix.service == 'web' && 'NEXT_PUBLIC_API_URL=http://158.220.122.88:3000' || '' }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+  deploy:
+    needs: build-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull new images and restart on VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          envs: GH_TOKEN,GH_ACTOR
+          script: |
+            set -e
+            echo "$GH_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin
+            cd /opt/agroconnect
+            git pull origin master
+            cd infra
+            docker compose -f docker-compose.vps.yml pull
+            docker compose -f docker-compose.vps.yml up -d
+            docker image prune -f
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_ACTOR: ${{ github.actor }}
