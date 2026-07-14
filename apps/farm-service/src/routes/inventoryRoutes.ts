@@ -4,6 +4,7 @@ import { prisma } from '@agroconnect/db/farm';
 import { requireAuth } from '../middleware/auth.js';
 import { logger } from '../logger.js';
 import { AuthenticatedRequest } from '../types/index.js';
+import { publishCollectionPaid } from '../events/producers/collectionPaidProducer.js';
 
 const router = Router();
 const auth = requireAuth as (req: Request, res: Response, next: NextFunction) => void;
@@ -353,13 +354,124 @@ router.post('/collections', auth, async (req: Request, res: Response) => {
 });
 
 router.patch('/collections/:id/pay', auth, async (req: Request, res: Response) => {
+  const collectionId = req.params['id'] as string;
+  const existing = await prisma.customerCollection.findUnique({
+    where: { id: collectionId },
+    include: { farm: { select: { id: true, ownerId: true } } },
+  });
+  if (!existing) {
+    res.status(404).json({ error: { message: 'Collection not found' } });
+    return;
+  }
+  if (existing.isPaid) {
+    res.json({
+      data: {
+        id: collectionId,
+        isPaid: true,
+        paidDate: existing.paidDate?.toISOString().split('T')[0] ?? null,
+      },
+    });
+    return;
+  }
+
   const paidDate = new Date();
   await prisma.customerCollection.update({
-    where: { id: req.params['id'] as string },
+    where: { id: collectionId },
     data: { isPaid: true, paidDate },
   });
-  logger.info({ context: 'inventory', action: 'mark_paid', id: req.params['id'] }, 'collection marked paid');
-  res.json({ data: { id: req.params['id'], isPaid: true, paidDate: paidDate.toISOString().split('T')[0] } });
+  logger.info({ context: 'inventory', action: 'mark_paid', id: collectionId }, 'collection marked paid');
+
+  try {
+    await publishCollectionPaid(
+      collectionId,
+      existing.farm.id,
+      existing.farm.ownerId,
+      existing.productType,
+      Number(existing.totalAmount),
+      paidDate.toISOString().split('T')[0] as string,
+    );
+  } catch (err) {
+    logger.error({ err, context: 'inventory', action: 'mark_paid', id: collectionId }, 'failed to publish farm.collection.paid');
+  }
+
+  res.json({ data: { id: collectionId, isPaid: true, paidDate: paidDate.toISOString().split('T')[0] } });
+});
+
+// ── Report ─────────────────────────────────────────────────────────────────────
+
+router.get('/report', auth, async (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
+  const asOfDateStr = req.query['asOfDate'] as string | undefined;
+  if (!asOfDateStr || !/^\d{4}-\d{2}-\d{2}$/.test(asOfDateStr)) {
+    res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'asOfDate must be YYYY-MM-DD' } });
+    return;
+  }
+  const asOfDate = new Date(`${asOfDateStr}T23:59:59.999Z`);
+  const farmIds = await ownedFarmIds(authReq.user.id);
+
+  const [items, collections, harvests] = await Promise.all([
+    prisma.inventoryItem.findMany({
+      where: { farmId: { in: farmIds }, createdAt: { lte: asOfDate } },
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.customerCollection.findMany({
+      where: { farmId: { in: farmIds }, takenDate: { lte: asOfDate } },
+      orderBy: { takenDate: 'desc' },
+    }),
+    prisma.harvest.findMany({
+      where: { farmId: { in: farmIds }, harvestDate: { lte: asOfDate } },
+      orderBy: { harvestDate: 'desc' },
+    }),
+  ]);
+
+  const inputRows = items.map((i) => ({
+    name: i.name,
+    category: i.category,
+    unit: i.unit,
+    purchasedQty: toNum(i.purchasedQty),
+    usedQty: toNum(i.usedQty),
+    remainingQty: toNum(i.purchasedQty) - toNum(i.usedQty),
+    costPerUnit: toNum(i.costPerUnit),
+    supplier: i.supplier,
+  }));
+
+  const collectionRows = collections.map((c) => ({
+    customerName: c.customerName,
+    productType: c.productType,
+    quantity: toNum(c.quantity),
+    unit: c.unit,
+    totalAmount: toNum(c.totalAmount),
+    takenDate: c.takenDate.toISOString().split('T')[0],
+    isPaid: c.isPaid,
+  }));
+
+  const harvestRows = harvests.map((h) => ({
+    crop: h.crop,
+    variety: h.variety ?? '',
+    quantityKg: toNum(h.quantityKg),
+    soldQuantityKg: toNum(h.soldQuantityKg),
+    remainingKg: toNum(h.quantityKg) - toNum(h.soldQuantityKg),
+    harvestDate: h.harvestDate.toISOString().split('T')[0],
+    storageLocation: h.storageLocation ?? '',
+  }));
+
+  res.json({
+    data: {
+      asOfDate: asOfDateStr,
+      inputs: inputRows,
+      collections: collectionRows,
+      harvest: harvestRows,
+      totals: {
+        inputsRemainingValueKes: Math.round(
+          inputRows.reduce((sum, r) => sum + r.remainingQty * r.costPerUnit, 0),
+        ),
+        collectionsPendingKes: Math.round(
+          collectionRows.filter((r) => !r.isPaid).reduce((sum, r) => sum + r.totalAmount, 0),
+        ),
+        harvestRemainingKg: Math.round(harvestRows.reduce((sum, r) => sum + r.remainingKg, 0)),
+      },
+    },
+  });
 });
 
 // ── Summary ────────────────────────────────────────────────────────────────────

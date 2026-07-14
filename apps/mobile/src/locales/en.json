@@ -1583,6 +1583,9 @@
     "registrations": {
       "title": "Farm Registrations",
       "empty": "No registrations yet",
+      "active": "Active",
+      "history": "History",
+      "submittedOn": "Submitted {{date}}",
       "status": {
         "pending": "Pending",
         "under_review": "Under Review",
@@ -1590,6 +1593,17 @@
         "rejected": "Rejected"
       },
       "new": "New Registration"
+    },
+    "newRegistration": {
+      "title": "New Registration",
+      "noFarm": "Select a farm from the Farm tab first to register it with the government.",
+      "farmSection": "Farm",
+      "farmName": "Farm name",
+      "countySection": "County",
+      "countyPlaceholder": "Select county",
+      "countyPickerTitle": "Select county",
+      "submit": "Submit Registration",
+      "successToast": "Registration submitted"
     },
     "subsidies": {
       "title": "Subsidies",
@@ -1608,12 +1622,32 @@
       "title": "Licenses",
       "empty": "No licenses yet",
       "new": "Apply for License",
+      "active": "Active",
+      "history": "History",
+      "submittedOn": "Submitted {{date}}",
+      "expiresOn": "Expires {{date}}",
       "status": {
         "pending": "Pending",
         "issued": "Issued",
         "rejected": "Rejected",
         "expired": "Expired"
       }
+    },
+    "newLicense": {
+      "title": "Apply for License",
+      "noFarm": "Select a farm from the Farm tab first to apply for a license.",
+      "farmSection": "Farm",
+      "farmName": "Farm name",
+      "typeSection": "License type",
+      "type": {
+        "movement_permit": "Movement Permit",
+        "pesticide_applicator": "Pesticide Applicator License",
+        "water_permit": "Water Abstraction Permit",
+        "organic_certification": "Organic Certification",
+        "export_phytosanitary": "Export Phytosanitary Certificate"
+      },
+      "submit": "Submit Application",
+      "successToast": "License application submitted"
     }
   },
   "insights": {
@@ -1669,6 +1703,15 @@
   },
   "inventory": {
     "title": "Inventory",
+    "report": {
+      "downloadCta": "Download report",
+      "modalTitle": "Download inventory report",
+      "asOfDateLabel": "As at date",
+      "download": "Download",
+      "generating": "Generating…",
+      "error": "Could not generate report. Try again.",
+      "empty": "No inventory records as at this date."
+    },
     "tab": {
       "inputs": "Inputs",
       "products": "Products",

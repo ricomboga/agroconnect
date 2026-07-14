@@ -143,6 +143,7 @@ services:
         t farm.worker.assigned       604800000
         t farm.activity.completed    604800000
         t farm.harvest.recorded      2592000000
+        t farm.collection.paid       2592000000
         t diagnosis.submitted        604800000
         t diagnosis.completed        2592000000
         t finance.loan.applied       31536000000

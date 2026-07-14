@@ -90,10 +90,12 @@ export type ProfileStackParamList = {
 };
 
 export type GovtStackParamList = {
-  GovtHome:      undefined;
-  Registrations: undefined;
-  Subsidies:     undefined;
-  Licenses:      undefined;
+  GovtHome:        undefined;
+  Registrations:   undefined;
+  NewRegistration: undefined;
+  Subsidies:       undefined;
+  Licenses:        undefined;
+  NewLicense:      undefined;
 };
 
 export type InsightsStackParamList = {

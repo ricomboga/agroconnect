@@ -1583,6 +1583,9 @@
     "registrations": {
       "title": "Usajili wa Shamba",
       "empty": "Huna usajili bado",
+      "active": "Zinazoendelea",
+      "history": "Historia",
+      "submittedOn": "Ilitumwa {{date}}",
       "status": {
         "pending": "Inasubiri",
         "under_review": "Inachunguzwa",
@@ -1590,6 +1593,17 @@
         "rejected": "Imekataliwa"
       },
       "new": "Usajili Mpya"
+    },
+    "newRegistration": {
+      "title": "Usajili Mpya",
+      "noFarm": "Chagua shamba kwenye kichupo cha Shamba kwanza ili kulisajili na serikali.",
+      "farmSection": "Shamba",
+      "farmName": "Jina la shamba",
+      "countySection": "Kaunti",
+      "countyPlaceholder": "Chagua kaunti",
+      "countyPickerTitle": "Chagua kaunti",
+      "submit": "Wasilisha Usajili",
+      "successToast": "Usajili umetumwa"
     },
     "subsidies": {
       "title": "Ruzuku",
@@ -1608,12 +1622,32 @@
       "title": "Leseni",
       "empty": "Huna leseni bado",
       "new": "Omba Leseni",
+      "active": "Zinazoendelea",
+      "history": "Historia",
+      "submittedOn": "Ilitumwa {{date}}",
+      "expiresOn": "Inaisha {{date}}",
       "status": {
         "pending": "Inasubiri",
         "issued": "Imetolewa",
         "rejected": "Imekataliwa",
         "expired": "Imeisha"
       }
+    },
+    "newLicense": {
+      "title": "Omba Leseni",
+      "noFarm": "Chagua shamba kwenye kichupo cha Shamba kwanza ili kuomba leseni.",
+      "farmSection": "Shamba",
+      "farmName": "Jina la shamba",
+      "typeSection": "Aina ya leseni",
+      "type": {
+        "movement_permit": "Kibali cha Usafirishaji",
+        "pesticide_applicator": "Leseni ya Kupulizia Dawa",
+        "water_permit": "Kibali cha Kutumia Maji",
+        "organic_certification": "Uthibitisho wa Kilimo Hai",
+        "export_phytosanitary": "Cheti cha Usafi wa Mazao ya Kusafirisha"
+      },
+      "submit": "Wasilisha Ombi",
+      "successToast": "Ombi la leseni limetumwa"
     }
   },
   "insights": {
@@ -1669,6 +1703,15 @@
   },
   "inventory": {
     "title": "Hifadhi",
+    "report": {
+      "downloadCta": "Pakua ripoti",
+      "modalTitle": "Pakua ripoti ya hifadhi",
+      "asOfDateLabel": "Hadi tarehe",
+      "download": "Pakua",
+      "generating": "Inatengeneza…",
+      "error": "Imeshindwa kutengeneza ripoti. Jaribu tena.",
+      "empty": "Hakuna rekodi za hifadhi hadi tarehe hii."
+    },
     "tab": {
       "inputs": "Pembejeo",
       "products": "Mazao",

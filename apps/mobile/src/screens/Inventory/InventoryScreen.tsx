@@ -9,11 +9,15 @@ import {
   StyleSheet,
   Linking,
   TextInput,
+  Modal,
 } from 'react-native';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AlertBox } from '../../components/ui/AlertBox';
+import { DatePickerField } from '../../components/ui/DatePickerField';
 import {
   useInventoryItems,
   useAnimalProducts,
@@ -21,6 +25,7 @@ import {
   useCustomerCollections,
   useInventorySummary,
   useMarkCollectionPaid,
+  fetchInventoryReport,
 } from '../../hooks/useInventory';
 import type {
   InputCategory,
@@ -29,6 +34,7 @@ import type {
   AnimalProductToday,
   HarvestStore,
   CustomerCollection,
+  InventoryReport,
 } from '../../hooks/useInventory';
 import {
   getStockBadgeVariant,
@@ -78,6 +84,55 @@ function isWithin7Days(isoDate: string | null): boolean {
   if (!isoDate) return false;
   const diff = new Date(isoDate).getTime() - Date.now();
   return diff <= 7 * 24 * 60 * 60 * 1000;
+}
+
+function csvEscape(value: string | number | boolean): string {
+  const str = String(value);
+  return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+}
+
+function buildInventoryReportCsv(report: InventoryReport): string {
+  const lines: string[] = [`Inventory report as at ${report.asOfDate}`, ''];
+
+  lines.push('Inputs');
+  lines.push(['Name', 'Category', 'Unit', 'Purchased', 'Used', 'Remaining', 'Cost/Unit (KES)', 'Supplier'].join(','));
+  for (const r of report.inputs) {
+    lines.push(
+      [r.name, r.category, r.unit, r.purchasedQty, r.usedQty, r.remainingQty, r.costPerUnit, r.supplier]
+        .map(csvEscape)
+        .join(','),
+    );
+  }
+  lines.push('');
+
+  lines.push('Collections');
+  lines.push(['Customer', 'Product', 'Quantity', 'Unit', 'Total (KES)', 'Taken Date', 'Paid'].join(','));
+  for (const r of report.collections) {
+    lines.push(
+      [r.customerName, r.productType, r.quantity, r.unit, r.totalAmount, r.takenDate, r.isPaid ? 'Yes' : 'No']
+        .map(csvEscape)
+        .join(','),
+    );
+  }
+  lines.push('');
+
+  lines.push('Harvest Store');
+  lines.push(['Crop', 'Variety', 'Harvested (kg)', 'Sold (kg)', 'Remaining (kg)', 'Harvest Date', 'Storage'].join(','));
+  for (const r of report.harvest) {
+    lines.push(
+      [r.crop, r.variety, r.quantityKg, r.soldQuantityKg, r.remainingKg, r.harvestDate, r.storageLocation]
+        .map(csvEscape)
+        .join(','),
+    );
+  }
+  lines.push('');
+
+  lines.push('Totals');
+  lines.push(`Inputs remaining value (KES),${report.totals.inputsRemainingValueKes}`);
+  lines.push(`Collections pending (KES),${report.totals.collectionsPendingKes}`);
+  lines.push(`Harvest remaining (kg),${report.totals.harvestRemainingKg}`);
+
+  return lines.join('\n');
 }
 
 function getCropEmoji(cropName: string): string {
@@ -160,6 +215,32 @@ export function InventoryScreen({ navigation }: Props) {
         );
       },
     });
+  };
+
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportDate, setReportDate] = useState(new Date());
+  const [reportGenerating, setReportGenerating] = useState(false);
+
+  const handleDownloadReport = async () => {
+    setReportGenerating(true);
+    try {
+      const asOfDate = reportDate.toISOString().split('T')[0] as string;
+      const report = await fetchInventoryReport(asOfDate);
+      const csv = buildInventoryReportCsv(report);
+
+      const fileName = `inventory-report-${asOfDate}.csv`;
+      const fileUri = `${FileSystem.documentDirectory}${fileName}`;
+      await FileSystem.writeAsStringAsync(fileUri, csv, { encoding: FileSystem.EncodingType.UTF8 });
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(fileUri, { mimeType: 'text/csv', dialogTitle: fileName });
+      }
+      setReportModalOpen(false);
+    } catch {
+      showToast(t('inventory.report.error'), 'error');
+    } finally {
+      setReportGenerating(false);
+    }
   };
 
   // ── Derived data ──────────────────────────────────────────────────────────
@@ -260,16 +341,47 @@ export function InventoryScreen({ navigation }: Props) {
       <SafeAreaView edges={['top']} style={s.topArea}>
         <View style={s.topBar}>
           <Text style={s.topBarTitle}>{t('inventory.title')}</Text>
-          <Pressable
-            style={s.topBarBtn}
-            onPress={() => navigation.navigate('AddStockScreen')}
-            accessibilityRole="button"
-            accessibilityLabel={t('inventory.inputs.addCta')}
-          >
-            <Text style={s.topBarIcon}>+</Text>
-          </Pressable>
+          <View style={s.topBarActions}>
+            <Pressable
+              style={s.topBarBtn}
+              onPress={() => setReportModalOpen(true)}
+              accessibilityRole="button"
+              accessibilityLabel={t('inventory.report.downloadCta')}
+            >
+              <Text style={s.topBarIcon}>⬇️</Text>
+            </Pressable>
+            <Pressable
+              style={s.topBarBtn}
+              onPress={() => navigation.navigate('AddStockScreen')}
+              accessibilityRole="button"
+              accessibilityLabel={t('inventory.inputs.addCta')}
+            >
+              <Text style={s.topBarIcon}>+</Text>
+            </Pressable>
+          </View>
         </View>
       </SafeAreaView>
+
+      <Modal visible={reportModalOpen} transparent animationType="slide" onRequestClose={() => setReportModalOpen(false)}>
+        <Pressable style={s.reportOverlay} onPress={() => setReportModalOpen(false)} />
+        <View style={s.reportSheet}>
+          <Text style={s.reportTitle}>{t('inventory.report.modalTitle')}</Text>
+          <Text style={s.fieldLabel}>{t('inventory.report.asOfDateLabel')}</Text>
+          <DatePickerField value={reportDate} onChange={setReportDate} maximumDate={new Date()} />
+          <Pressable
+            style={[s.primaryBtn, s.mt6, reportGenerating && s.reportBtnDisabled]}
+            onPress={() => void handleDownloadReport()}
+            disabled={reportGenerating}
+            accessibilityRole="button"
+          >
+            {reportGenerating ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={s.reportBtnLabel}>{t('inventory.report.download')}</Text>
+            )}
+          </Pressable>
+        </View>
+      </Modal>
 
       {/* Summary Strip */}
       <View style={s.summaryStrip}>
@@ -794,6 +906,15 @@ export function InventoryScreen({ navigation }: Props) {
               {allHarvest.length === 0 ? (
                 <View style={s.emptyBox}>
                   <Text style={s.emptyBody}>{t('inventory.harvest.empty')}</Text>
+                  <Pressable
+                    style={s.dashedCard}
+                    onPress={() => navigation.navigate('AddHarvestScreen')}
+                    accessibilityRole="button"
+                  >
+                    <Text style={s.dashedCardLabel}>
+                      {t('inventory.harvest.addNew')}
+                    </Text>
+                  </Pressable>
                 </View>
               ) : (
                 <>
@@ -1202,8 +1323,19 @@ const s = StyleSheet.create({
     justifyContent: 'space-between', paddingHorizontal: 12,
   },
   topBarTitle: { fontSize: 15, fontWeight: '600', color: '#fff' },
+  topBarActions: { flexDirection: 'row', alignItems: 'center' },
   topBarBtn:   { minHeight: 44, minWidth: 44, alignItems: 'center', justifyContent: 'center' },
   topBarIcon:  { fontSize: 22, color: 'rgba(255,255,255,0.85)', lineHeight: 26 },
+
+  reportOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' },
+  reportSheet: {
+    backgroundColor: '#fff', borderTopLeftRadius: 16, borderTopRightRadius: 16,
+    padding: 20, paddingBottom: 32,
+  },
+  reportTitle: { fontSize: 16, fontWeight: '700', color: '#111827', marginBottom: 16 },
+  reportBtnDisabled: { opacity: 0.6 },
+  reportBtnLabel: { fontSize: 15, color: '#fff', fontWeight: '700' },
+  fieldLabel: { fontSize: 13, fontWeight: '600', color: '#333', marginBottom: 8 },
 
   // ── Summary strip ──────────────────────────────────────────────────────────
   summaryStrip: {

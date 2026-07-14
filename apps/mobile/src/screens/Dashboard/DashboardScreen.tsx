@@ -159,7 +159,7 @@ export function DashboardScreen() {
   if (dash.isError) return <ErrorScreen onRetry={dash.refetch} />;
 
   const farmerName = user?.fullName ?? '';
-  const county = user?.county ?? dash.primaryFarm?.county ?? '';
+  const county = dash.primaryFarm?.county ?? user?.county ?? '';
   const farmId = dash.primaryFarm?.id ?? '';
 
   const nudges = dash.hasData

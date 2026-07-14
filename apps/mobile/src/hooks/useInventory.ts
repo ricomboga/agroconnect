@@ -151,6 +151,51 @@ export function useInventorySummary() {
   });
 }
 
+export interface InventoryReportRow {
+  inputs: Array<{
+    name: string;
+    category: string;
+    unit: string;
+    purchasedQty: number;
+    usedQty: number;
+    remainingQty: number;
+    costPerUnit: number;
+    supplier: string;
+  }>;
+  collections: Array<{
+    customerName: string;
+    productType: string;
+    quantity: number;
+    unit: string;
+    totalAmount: number;
+    takenDate: string;
+    isPaid: boolean;
+  }>;
+  harvest: Array<{
+    crop: string;
+    variety: string;
+    quantityKg: number;
+    soldQuantityKg: number;
+    remainingKg: number;
+    harvestDate: string;
+    storageLocation: string;
+  }>;
+  totals: {
+    inputsRemainingValueKes: number;
+    collectionsPendingKes: number;
+    harvestRemainingKg: number;
+  };
+}
+
+export interface InventoryReport extends InventoryReportRow {
+  asOfDate: string;
+}
+
+export async function fetchInventoryReport(asOfDate: string): Promise<InventoryReport> {
+  const r = await api.get<{ data: InventoryReport }>(`/inventory/report?asOfDate=${asOfDate}`);
+  return r.data.data;
+}
+
 // ── Mutations ──────────────────────────────────────────────────────
 
 export function useRecordInputUsage() {

@@ -96,7 +96,7 @@ export function useDashboardData(): DashboardData {
 
   const upcomingQ = useQuery({
     queryKey: ['activities', farmId, 'upcoming'],
-    queryFn: () => activityApi.list(farmId!, { pageSize: 5 }),
+    queryFn: () => activityApi.list(farmId!, { status: 'pending', pageSize: 5 }),
     enabled: !!farmId,
     staleTime: staleMs,
   });
@@ -156,7 +156,7 @@ export function useDashboardData(): DashboardData {
     (a: Activity) => a.scheduledDate != null && a.scheduledDate < today && a.status === 'pending',
   );
   const upcomingTasks: Activity[] = (upcomingQ.data?.data ?? []).filter(
-    (a: Activity) => a.scheduledDate != null && a.scheduledDate >= today,
+    (a: Activity) => a.status === 'pending' && a.scheduledDate != null && a.scheduledDate >= today,
   );
 
   const activeLoan: LoanApplication | undefined = (loansQ.data?.data ?? []).find(

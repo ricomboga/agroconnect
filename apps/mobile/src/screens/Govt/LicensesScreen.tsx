@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
   ScrollView,
   Pressable,
   ActivityIndicator,
-  Alert,
+  RefreshControl,
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -31,16 +31,37 @@ const STATUS_BG: Record<LicenseStatus, string> = {
   expired:  '#EEEEEE',
 };
 
-export function LicensesScreen({ navigation: _navigation }: Props) {
+const ACTIVE_STATUSES: LicenseStatus[] = ['pending', 'issued'];
+const KNOWN_TYPES = new Set([
+  'movement_permit',
+  'pesticide_applicator',
+  'water_permit',
+  'organic_certification',
+  'export_phytosanitary',
+]);
+
+function formatDate(iso: string | null): string {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+export function LicensesScreen({ navigation }: Props) {
   const { t } = useTranslation();
+  const [refreshing, setRefreshing] = useState(false);
 
   const query = useQuery({
     queryKey: ['govt', 'licenses'],
     queryFn: () => govtApi.licenses.list(),
   });
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await query.refetch();
+    setRefreshing(false);
+  }, [query]);
+
   function handleCreate() {
-    Alert.alert(t('govt.licenses.new'), t('common.comingSoon'));
+    navigation.navigate('NewLicense');
   }
 
   if (query.isLoading) {
@@ -64,11 +85,42 @@ export function LicensesScreen({ navigation: _navigation }: Props) {
     );
   }
 
-  const licenses = query.data?.data ?? [];
+  const licenses = [...(query.data?.data ?? [])].sort(
+    (a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime(),
+  );
+  const active = licenses.filter((l) => ACTIVE_STATUSES.includes(l.status));
+  const history = licenses.filter((l) => !ACTIVE_STATUSES.includes(l.status));
+
+  function renderRow(lic: FarmLicense) {
+    const typeLabel = KNOWN_TYPES.has(lic.type) ? t(`govt.newLicense.type.${lic.type}`) : lic.type;
+    return (
+      <View key={lic.id} style={s.row}>
+        <View style={s.rowInfo}>
+          <Text style={s.rowName}>{typeLabel}</Text>
+          <Text style={s.rowSub}>{lic.licenseNumber ?? lic.id}</Text>
+          {lic.status === 'issued' && lic.expiresAt ? (
+            <Text style={s.rowDate}>{t('govt.licenses.expiresOn', { date: formatDate(lic.expiresAt) })}</Text>
+          ) : (
+            <Text style={s.rowDate}>{t('govt.licenses.submittedOn', { date: formatDate(lic.submittedAt) })}</Text>
+          )}
+        </View>
+        <View style={[s.pill, { backgroundColor: STATUS_BG[lic.status] }]}>
+          <Text style={[s.pillText, { color: STATUS_COLOR[lic.status] }]}>
+            {t(`govt.licenses.status.${lic.status}`)}
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={s.safe}>
-      <ScrollView contentContainerStyle={s.scroll}>
+      <ScrollView
+        contentContainerStyle={s.scroll}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#1B5E20']} tintColor="#1B5E20" />
+        }
+      >
         <View style={s.headerRow}>
           <Text style={s.header}>{t('govt.licenses.title')}</Text>
           <Pressable style={s.newBtn} onPress={handleCreate} accessibilityRole="button">
@@ -82,22 +134,21 @@ export function LicensesScreen({ navigation: _navigation }: Props) {
           </View>
         )}
 
-        {licenses.map((lic: FarmLicense) => (
-          <View key={lic.id} style={s.row}>
-            <View style={s.rowInfo}>
-              <Text style={s.rowName}>{lic.type}</Text>
-              <Text style={s.rowSub}>{lic.licenseNumber ?? lic.id}</Text>
-              {lic.expiresAt ? (
-                <Text style={s.rowExpiry}>{lic.expiresAt}</Text>
-              ) : null}
-            </View>
-            <View style={[s.pill, { backgroundColor: STATUS_BG[lic.status] }]}>
-              <Text style={[s.pillText, { color: STATUS_COLOR[lic.status] }]}>
-                {t(`govt.licenses.status.${lic.status}`)}
-              </Text>
-            </View>
-          </View>
-        ))}
+        {active.length > 0 && (
+          <>
+            <Text style={s.sectionTitle}>{t('govt.licenses.active')}</Text>
+            {active.map(renderRow)}
+          </>
+        )}
+
+        {history.length > 0 && (
+          <>
+            <Text style={[s.sectionTitle, active.length > 0 && s.sectionTitleSpaced]}>
+              {t('govt.licenses.history')}
+            </Text>
+            {history.map(renderRow)}
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -119,11 +170,14 @@ const s = StyleSheet.create({
   emptyBox:   { paddingVertical: 24, alignItems: 'center' },
   emptyTitle: { fontSize: 15, fontWeight: '600', color: '#424242' },
 
+  sectionTitle:       { fontSize: 12, fontWeight: '700', color: '#9E9E9E', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 },
+  sectionTitleSpaced: { marginTop: 16 },
+
   row:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFF', borderRadius: 12, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: '#EEEEEE' },
   rowInfo:   { flex: 1, gap: 2 },
   rowName:   { fontSize: 14, fontWeight: '600', color: '#1A1A1A' },
   rowSub:    { fontSize: 12, color: '#757575' },
-  rowExpiry: { fontSize: 11, color: '#9E9E9E' },
+  rowDate:   { fontSize: 11, color: '#9E9E9E', marginTop: 2 },
   pill:      { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, marginLeft: 8 },
   pillText:  { fontSize: 11, fontWeight: '700' },
 });

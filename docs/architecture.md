@@ -55,6 +55,7 @@ Reference: `@docs/architecture.md`
 | farm.created | farm-service | notification-service, govt-service | 7 days |
 | farm.activity.completed | farm-service | notification-service | 7 days |
 | farm.harvest.recorded | farm-service | notification-service, predict-service | 30 days |
+| farm.collection.paid | farm-service | finance-service | 30 days |
 | diagnosis.submitted | farm-service | diagnosis-service | 7 days |
 | diagnosis.completed | diagnosis-service | notification-service, farm-service | 30 days |
 | finance.loan.applied | finance-service | notification-service, admin-service | 365 days |

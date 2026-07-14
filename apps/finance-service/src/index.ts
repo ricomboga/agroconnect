@@ -14,6 +14,7 @@ import { farmerLenderRouter } from './routes/farmerLenderRoutes.js';
 import { adminLenderRouter } from './routes/adminLenderRoutes.js';
 import { adminFarmerRouter } from './routes/adminFarmerRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import { startCollectionPaidConsumer } from './events/consumers/collectionPaidConsumer.js';
 
 const app = express();
 const PORT = parseInt(process.env['PORT'] ?? '3003', 10);
@@ -38,9 +39,17 @@ app.use('/internal/admin', internalStatsRouter);
 
 app.use(errorHandler);
 
+async function startConsumers(): Promise<void> {
+  if (process.env['NODE_ENV'] === 'test') return;
+  await Promise.all([startCollectionPaidConsumer()]);
+}
+
 if (process.env['NODE_ENV'] !== 'test') {
   app.listen(PORT, () => {
     logger.info({ port: PORT }, 'finance-service started');
+    startConsumers().catch((err) => {
+      logger.error({ err }, 'Failed to start Kafka consumers');
+    });
   });
 }
 
