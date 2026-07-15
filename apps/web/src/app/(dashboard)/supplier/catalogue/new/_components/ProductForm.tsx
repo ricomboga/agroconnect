@@ -83,7 +83,7 @@ export function ProductForm() {
   const [name, setName] = useState(cachedProduct?.name ?? '')
   const [brand, setBrand] = useState(cachedProduct?.brand ?? '')
   const [description, setDescription] = useState(cachedProduct?.description ?? '')
-  const [unit, setUnit] = useState<string>(UNITS[0])
+  const [unit, setUnit] = useState<string>(cachedProduct?.unit ?? UNITS[0])
   const [price, setPrice] = useState(cachedProduct?.pricePerUnitKes ?? '')
   const [stock, setStock] = useState(cachedProduct?.stockQuantity ?? '')
   const [counties, setCounties] = useState<string[]>(cachedProduct?.countyAvailability ?? [])
@@ -128,8 +128,22 @@ export function ProductForm() {
       void queryClient.invalidateQueries({ queryKey: ['supplier', 'products'] })
       setSubmitted(true)
     },
-    onError: () => toast.error('Failed to save product'),
+    onError: (err) => {
+      const message =
+        err && typeof err === 'object' && 'response' in err
+          ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+          : undefined
+      toast.error(message ?? 'Failed to save product')
+    },
   })
+
+  const missingFields = [
+    !name && 'product name',
+    !description && 'description',
+    !price && 'price',
+    !stock && 'stock quantity',
+    counties.length === 0 && 'at least one county',
+  ].filter((v): v is string => Boolean(v))
 
   if (submitted) {
     return (
@@ -309,10 +323,16 @@ export function ProductForm() {
             </FormSection>
           </div>
 
+          {missingFields.length > 0 && (
+            <div className="mb-2">
+              <AlertBox variant="blue">Add {missingFields.join(', ')} to save this product.</AlertBox>
+            </div>
+          )}
+
           <div className="flex gap-2">
             <button
               type="button"
-              disabled={mutation.isPending || !name || !description || !price || !stock || counties.length === 0}
+              disabled={mutation.isPending || missingFields.length > 0}
               onClick={() => mutation.mutate()}
               className="flex-1 rounded-md bg-ac-green px-3 py-2.5 text-center text-base font-semibold text-white disabled:opacity-50"
             >
