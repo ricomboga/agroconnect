@@ -44,6 +44,7 @@ export function LenderLayoutShell({ children }: Props) {
     { label: 'Farmer Reports', href: '/lender/farmer-reports', active: isActivePath(pathname, '/lender/farmer-reports') },
     { label: 'Reports', href: '/lender/reports', active: isActivePath(pathname, '/lender/reports') },
     { label: isNgo ? 'Impact Analytics' : 'Risk Analytics', href: '/lender/risk', active: isActivePath(pathname, '/lender/risk') },
+    ...(isNgo ? [{ label: 'Add Farmer', href: '/lender/farmers/new', active: isActivePath(pathname, '/lender/farmers') }] : []),
   ]
 
   const sections: SidebarSection[] = [
@@ -89,6 +90,9 @@ export function LenderLayoutShell({ children }: Props) {
           href: '/lender/reports',
           active: isActivePath(pathname, '/lender/reports'),
         },
+        ...(isNgo
+          ? [{ label: '➕ Add Farmer', href: '/lender/farmers/new', active: isActivePath(pathname, '/lender/farmers') }]
+          : []),
       ],
     },
     {
