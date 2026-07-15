@@ -30,3 +30,14 @@ export async function getNgoRegionRoster(partnerBankId: string): Promise<farmCli
   if (partner?.type !== 'ngo_grant' || partner.operatingCounties.length === 0) return [];
   return farmClient.getFarmersByCounties(partner.operatingCounties);
 }
+
+/**
+ * True unless this is an NGO/grant institution that has not yet configured any
+ * operatingCounties — used to tell "roster genuinely empty" apart from
+ * "roster not configured yet" in report/download UIs.
+ */
+export async function isRosterConfigured(partnerBankId: string): Promise<boolean> {
+  const partner = await loanPartnerRepo.findPartnerById(partnerBankId);
+  if (partner?.type === 'ngo_grant') return partner.operatingCounties.length > 0;
+  return true;
+}

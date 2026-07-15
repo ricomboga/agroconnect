@@ -9,6 +9,7 @@ import type { DataTableColumn } from '@agroconnect/web-ui'
 interface FarmerReportRow {
   farmerId: string
   fullName?: string | null
+  phone?: string | null
   county: string | null
   score: number | null
   band: string | null
@@ -33,6 +34,7 @@ function scoreVariant(score: number | null): 'green' | 'amber' | 'blue' | 'red' 
 export function FarmerReportsList() {
   const [bandFilter, setBandFilter] = useState('')
   const [countyFilter, setCountyFilter] = useState('')
+  const [idOrPhoneFilter, setIdOrPhoneFilter] = useState('')
 
   const { data: institution } = useQuery({
     queryKey: ['lender', 'institution'],
@@ -57,12 +59,18 @@ export function FarmerReportsList() {
 
   const filtered = useMemo(
     () =>
-      rows.filter(
-        (r) =>
-          (!bandFilter || r.band === bandFilter) &&
-          (!countyFilter || (r.county ?? '').toLowerCase().includes(countyFilter.toLowerCase())),
-      ),
-    [rows, bandFilter, countyFilter],
+      rows.filter((r) => {
+        if (bandFilter && r.band !== bandFilter) return false
+        if (countyFilter && !(r.county ?? '').toLowerCase().includes(countyFilter.toLowerCase())) return false
+        if (idOrPhoneFilter) {
+          const needle = idOrPhoneFilter.trim().toLowerCase()
+          const matchesId = r.farmerId.toLowerCase().includes(needle)
+          const matchesPhone = (r.phone ?? '').toLowerCase().includes(needle)
+          if (!matchesId && !matchesPhone) return false
+        }
+        return true
+      }),
+    [rows, bandFilter, countyFilter, idOrPhoneFilter],
   )
 
   const totalFarmers = rows.length
@@ -148,6 +156,12 @@ export function FarmerReportsList() {
       </div>
 
       <div className="mb-3 flex gap-2">
+        <TextInput
+          placeholder="Farmer ID or phone…"
+          value={idOrPhoneFilter}
+          onChange={(e) => setIdOrPhoneFilter(e.target.value)}
+          className="max-w-[200px]"
+        />
         <TextInput
           placeholder="Filter by county…"
           value={countyFilter}

@@ -67,5 +67,10 @@ router.get(
   validateQuery(reportQuerySchema),
   toAuthReq(lenderReportsController.getIncomeStatementReportHandler),
 );
+router.get(
+  '/farmer-reports/:farmerId/credit',
+  auth,
+  toAuthReq(lenderReportsController.getFarmerCreditReportHandler),
+);
 
 export { router as lenderRouter };

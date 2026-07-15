@@ -14,6 +14,7 @@ interface LoanRow {
 interface FarmersListReportRow {
   farmerId: string
   fullName: string | null
+  phone: string | null
   county: string | null
   subCounty: string | null
   areaAcres: number | null
@@ -50,6 +51,7 @@ export async function GET() {
     const rows = reportBody.data.map((r) => ({
       farmerId: r.farmerId,
       fullName: r.fullName,
+      phone: r.phone,
       county: r.county,
       band: null,
       score: null,
@@ -79,9 +81,10 @@ export async function GET() {
 
   const rows = [...byFarmer.values()].map((loan) => ({
     farmerId: loan.farmerId,
-    // TODO(real-data): county isn't a column on LoanApplication and there's no cross-service
+    // TODO(real-data): county/phone aren't columns on LoanApplication and there's no cross-service
     // join to the farmer's profile (CLAUDE.md AD-001) — not available from finance-service.
     county: null,
+    phone: null,
     score: loan.creditScore !== null ? Number(loan.creditScore) : null,
     band: loan.creditBand,
     // TODO(real-data): activities/mo, completion %, overdue count and last-harvest date need

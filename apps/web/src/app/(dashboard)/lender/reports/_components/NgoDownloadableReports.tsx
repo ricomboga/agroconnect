@@ -1,8 +1,9 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { DataTable, TextInput, KpiCard } from '@agroconnect/web-ui'
+import Link from 'next/link'
+import { DataTable, TextInput, KpiCard, AlertBox } from '@agroconnect/web-ui'
 import type { DataTableColumn } from '@agroconnect/web-ui'
 import {
   exportFarmerListCsv,
@@ -11,20 +12,35 @@ import {
   type IncomeStatementRow,
 } from '../_lib/exportNgoReports'
 
+function RosterNotConfiguredNotice() {
+  return (
+    <AlertBox variant="blue">
+      Your organization has no operating counties configured yet, so no farmer roster can be built. Set them in{' '}
+      <Link href="/lender/settings" className="font-semibold underline">
+        Settings
+      </Link>{' '}
+      to populate this report.
+    </AlertBox>
+  )
+}
+
 function formatKes(amount: number): string {
   return new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', maximumFractionDigits: 0 }).format(amount)
 }
 
 function FarmerListReport() {
-  const { data: rows = [], isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['lender', 'reports', 'farmer-list'],
     queryFn: async () => {
       const res = await fetch('/api/finance/lender/reports/farmers')
       if (!res.ok) throw new Error('Failed to load farmer list report')
-      const body = (await res.json()) as { data: FarmerListRow[] }
-      return body.data
+      const body = (await res.json()) as { data: FarmerListRow[]; rosterConfigured: boolean }
+      return body
     },
   })
+
+  const rows = data?.data ?? []
+  const rosterConfigured = data?.rosterConfigured ?? true
 
   const columns: DataTableColumn<FarmerListRow>[] = [
     { key: 'fullName', header: 'Name', render: (r) => r.fullName ?? r.farmerId },
@@ -53,6 +69,8 @@ function FarmerListReport() {
       </div>
       {isLoading ? (
         <p className="py-6 text-center text-sm text-muted">Loading…</p>
+      ) : !rosterConfigured ? (
+        <RosterNotConfiguredNotice />
       ) : rows.length === 0 ? (
         <p className="py-6 text-center text-sm text-muted">No farmers linked to your institution yet</p>
       ) : (
@@ -75,7 +93,11 @@ function IncomeStatementReport() {
       const res = await fetch(`/api/finance/lender/reports/income-statement?${params.toString()}`)
       if (!res.ok) throw new Error('Failed to load income statement')
       const body = (await res.json()) as {
-        data: { rows: IncomeStatementRow[]; combined: { totalIncomeKes: number; totalExpenseKes: number; netIncomeKes: number } }
+        data: {
+          rows: IncomeStatementRow[]
+          combined: { totalIncomeKes: number; totalExpenseKes: number; netIncomeKes: number }
+          rosterConfigured: boolean
+        }
       }
       return body.data
     },
@@ -83,6 +105,7 @@ function IncomeStatementReport() {
 
   const rows = data?.rows ?? []
   const combined = data?.combined
+  const rosterConfigured = data?.rosterConfigured ?? true
 
   const columns: DataTableColumn<IncomeStatementRow>[] = [
     { key: 'fullName', header: 'Farmer Name', render: (r) => r.fullName ?? r.farmerId },
@@ -121,6 +144,8 @@ function IncomeStatementReport() {
       )}
       {isLoading ? (
         <p className="py-6 text-center text-sm text-muted">Loading…</p>
+      ) : !rosterConfigured ? (
+        <RosterNotConfiguredNotice />
       ) : rows.length === 0 ? (
         <p className="py-6 text-center text-sm text-muted">No transactions in the selected date range</p>
       ) : (
