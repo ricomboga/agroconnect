@@ -88,12 +88,8 @@ export default function AnalyticsPage() {
 
   const allCounties = data?.farmers_by_county ?? []
   const sortedCounties = [...allCounties].sort((a, b) => b.count - a.count)
-  const topCounties = sortedCounties
-    .slice(0, 8)
-    .map((row) => ({ county: row.county, Farmers: row.count }))
-    .reverse()
-  const shownFarmerCount = sortedCounties.slice(0, 8).reduce((sum, row) => sum + row.count, 0)
-  const hiddenCountyCount = Math.max(0, sortedCounties.length - 8)
+  const countyBars = sortedCounties.map((row) => ({ county: row.county, Farmers: row.count })).reverse()
+  const shownFarmerCount = sortedCounties.reduce((sum, row) => sum + row.count, 0)
 
   return (
     <div>
@@ -152,24 +148,25 @@ export default function AnalyticsPage() {
 
         <div className="col-span-2 rounded-base border border-border bg-white px-4 py-3">
           <div className="mb-2 flex items-baseline justify-between">
-            <p className="text-md font-semibold text-ink">Top Counties by Farmer Count</p>
+            <p className="text-md font-semibold text-ink">Farmers by County</p>
             <p className="text-xs text-muted">
-              {shownFarmerCount} of {data?.total_farmers ?? 0} farmers shown
-              {hiddenCountyCount > 0 ? ` · +${hiddenCountyCount} more counties` : ''}
+              {shownFarmerCount} of {data?.total_farmers ?? 0} farmers · {sortedCounties.length} counties
             </p>
           </div>
-          {topCounties.length === 0 ? (
+          {countyBars.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted">No farmer accounts yet</p>
           ) : (
-            <ResponsiveContainer width="100%" height={Math.max(180, topCounties.length * 34)}>
-              <BarChart data={topCounties} layout="vertical" margin={{ left: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                <XAxis type="number" tick={{ fontSize: 12 }} allowDecimals={false} />
-                <YAxis type="category" dataKey="county" tick={{ fontSize: 12 }} width={110} />
-                <Tooltip />
-                <Bar dataKey="Farmers" fill="#0E7490" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="max-h-[500px] overflow-y-auto">
+              <ResponsiveContainer width="100%" height={Math.max(180, countyBars.length * 30)}>
+                <BarChart data={countyBars} layout="vertical" margin={{ left: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                  <XAxis type="number" tick={{ fontSize: 12 }} allowDecimals={false} />
+                  <YAxis type="category" dataKey="county" tick={{ fontSize: 12 }} width={110} />
+                  <Tooltip />
+                  <Bar dataKey="Farmers" fill="#0E7490" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           )}
         </div>
       </div>
