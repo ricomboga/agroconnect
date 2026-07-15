@@ -407,7 +407,12 @@ router.get('/report', auth, async (req: Request, res: Response) => {
     return;
   }
   const asOfDate = new Date(`${asOfDateStr}T23:59:59.999Z`);
-  const farmIds = await ownedFarmIds(authReq.user.id);
+  const ownedFarms = await prisma.farm.findMany({
+    where: { ownerId: authReq.user.id, deletedAt: null },
+    select: { id: true, name: true },
+  });
+  const farmIds = ownedFarms.map((f) => f.id);
+  const farmNameById = new Map(ownedFarms.map((f) => [f.id, f.name]));
 
   const [items, collections, harvests] = await Promise.all([
     prisma.inventoryItem.findMany({
@@ -425,6 +430,8 @@ router.get('/report', auth, async (req: Request, res: Response) => {
   ]);
 
   const inputRows = items.map((i) => ({
+    farmId: i.farmId,
+    farmName: farmNameById.get(i.farmId) ?? i.farmId,
     name: i.name,
     category: i.category,
     unit: i.unit,
@@ -436,6 +443,8 @@ router.get('/report', auth, async (req: Request, res: Response) => {
   }));
 
   const collectionRows = collections.map((c) => ({
+    farmId: c.farmId,
+    farmName: farmNameById.get(c.farmId) ?? c.farmId,
     customerName: c.customerName,
     productType: c.productType,
     quantity: toNum(c.quantity),
@@ -446,6 +455,8 @@ router.get('/report', auth, async (req: Request, res: Response) => {
   }));
 
   const harvestRows = harvests.map((h) => ({
+    farmId: h.farmId,
+    farmName: farmNameById.get(h.farmId) ?? h.farmId,
     crop: h.crop,
     variety: h.variety ?? '',
     quantityKg: toNum(h.quantityKg),
@@ -458,6 +469,7 @@ router.get('/report', auth, async (req: Request, res: Response) => {
   res.json({
     data: {
       asOfDate: asOfDateStr,
+      farms: ownedFarms,
       inputs: inputRows,
       collections: collectionRows,
       harvest: harvestRows,

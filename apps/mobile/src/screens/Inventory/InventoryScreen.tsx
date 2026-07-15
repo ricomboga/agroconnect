@@ -92,13 +92,15 @@ function csvEscape(value: string | number | boolean): string {
 }
 
 function buildInventoryReportCsv(report: InventoryReport): string {
-  const lines: string[] = [`Inventory report as at ${report.asOfDate}`, ''];
+  const lines: string[] = [`Inventory report as at ${report.asOfDate}`];
+  lines.push(`Farms: ${report.farms.map((f) => f.name).join(', ') || '—'}`);
+  lines.push('');
 
   lines.push('Inputs');
-  lines.push(['Name', 'Category', 'Unit', 'Purchased', 'Used', 'Remaining', 'Cost/Unit (KES)', 'Supplier'].join(','));
+  lines.push(['Farm', 'Name', 'Category', 'Unit', 'Purchased', 'Used', 'Remaining', 'Cost/Unit (KES)', 'Supplier'].join(','));
   for (const r of report.inputs) {
     lines.push(
-      [r.name, r.category, r.unit, r.purchasedQty, r.usedQty, r.remainingQty, r.costPerUnit, r.supplier]
+      [r.farmName, r.name, r.category, r.unit, r.purchasedQty, r.usedQty, r.remainingQty, r.costPerUnit, r.supplier]
         .map(csvEscape)
         .join(','),
     );
@@ -106,10 +108,10 @@ function buildInventoryReportCsv(report: InventoryReport): string {
   lines.push('');
 
   lines.push('Collections');
-  lines.push(['Customer', 'Product', 'Quantity', 'Unit', 'Total (KES)', 'Taken Date', 'Paid'].join(','));
+  lines.push(['Farm', 'Customer', 'Product', 'Quantity', 'Unit', 'Total (KES)', 'Taken Date', 'Paid'].join(','));
   for (const r of report.collections) {
     lines.push(
-      [r.customerName, r.productType, r.quantity, r.unit, r.totalAmount, r.takenDate, r.isPaid ? 'Yes' : 'No']
+      [r.farmName, r.customerName, r.productType, r.quantity, r.unit, r.totalAmount, r.takenDate, r.isPaid ? 'Yes' : 'No']
         .map(csvEscape)
         .join(','),
     );
@@ -117,10 +119,10 @@ function buildInventoryReportCsv(report: InventoryReport): string {
   lines.push('');
 
   lines.push('Harvest Store');
-  lines.push(['Crop', 'Variety', 'Harvested (kg)', 'Sold (kg)', 'Remaining (kg)', 'Harvest Date', 'Storage'].join(','));
+  lines.push(['Farm', 'Crop', 'Variety', 'Harvested (kg)', 'Sold (kg)', 'Remaining (kg)', 'Harvest Date', 'Storage'].join(','));
   for (const r of report.harvest) {
     lines.push(
-      [r.crop, r.variety, r.quantityKg, r.soldQuantityKg, r.remainingKg, r.harvestDate, r.storageLocation]
+      [r.farmName, r.crop, r.variety, r.quantityKg, r.soldQuantityKg, r.remainingKg, r.harvestDate, r.storageLocation]
         .map(csvEscape)
         .join(','),
     );

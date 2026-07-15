@@ -1,6 +1,17 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import type { AxiosResponse } from 'axios';
 import api from '../lib/api';
+
+// Finance-related data is cached under several distinct query keys across
+// the app (Home dashboard: 'transactions', Finance module: 'finance/transactions'
+// and 'finance/report'). invalidateQueries({queryKey: ['finance']}) does NOT
+// match any of these — React Query only invalidates by array-prefix — so every
+// mutation that affects finance data must invalidate each real key explicitly.
+export function invalidateFinanceQueries(qc: QueryClient): void {
+  qc.invalidateQueries({ queryKey: ['transactions'] });
+  qc.invalidateQueries({ queryKey: ['finance/transactions'] });
+  qc.invalidateQueries({ queryKey: ['finance/report'] });
+}
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -153,6 +164,8 @@ export function useInventorySummary() {
 
 export interface InventoryReportRow {
   inputs: Array<{
+    farmId: string;
+    farmName: string;
     name: string;
     category: string;
     unit: string;
@@ -163,6 +176,8 @@ export interface InventoryReportRow {
     supplier: string;
   }>;
   collections: Array<{
+    farmId: string;
+    farmName: string;
     customerName: string;
     productType: string;
     quantity: number;
@@ -172,6 +187,8 @@ export interface InventoryReportRow {
     isPaid: boolean;
   }>;
   harvest: Array<{
+    farmId: string;
+    farmName: string;
     crop: string;
     variety: string;
     quantityKg: number;
@@ -189,6 +206,7 @@ export interface InventoryReportRow {
 
 export interface InventoryReport extends InventoryReportRow {
   asOfDate: string;
+  farms: Array<{ id: string; name: string }>;
 }
 
 export async function fetchInventoryReport(asOfDate: string): Promise<InventoryReport> {
@@ -281,7 +299,7 @@ export function useRestockItem() {
     onSuccess: () => {
       // Don't invalidate inventory/inputs — the optimistic update is the source of truth
       // until the backend has a real inventory DB. Only sync finance (purchase cost recorded).
-      qc.invalidateQueries({ queryKey: ['finance'] });
+      invalidateFinanceQueries(qc);
     },
   });
 }
@@ -304,7 +322,7 @@ export function useMarkCollectionPaid() {
       api.patch(`/inventory/collections/${collectionId}/pay`).then((r: AxiosResponse<unknown>) => r.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['inventory', 'collections'] });
-      qc.invalidateQueries({ queryKey: ['finance'] });
+      invalidateFinanceQueries(qc);
     },
   });
 }
@@ -338,7 +356,7 @@ export function useRecordHarvestSale() {
       api.post(`/inventory/harvest-store/${data.harvestId}/sell`, data).then((r: AxiosResponse<unknown>) => r.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['inventory', 'harvest-store'] });
-      qc.invalidateQueries({ queryKey: ['finance'] });
+      invalidateFinanceQueries(qc);
     },
   });
 }

@@ -14,7 +14,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import type { InventoryItem } from '../../../hooks/useInventory';
-import { useRestockItem } from '../../../hooks/useInventory';
+import { useRestockItem, invalidateFinanceQueries } from '../../../hooks/useInventory';
 import { useOfflineSync } from '../../../hooks/useOfflineSync';
 import { useUiStore } from '../../../store/ui.store';
 
@@ -161,7 +161,7 @@ export function RestockItemModal({ item, onClose, onSuccess }: Props) {
         // The server-side restock handler creates the expense transaction in Finance.
         // Invalidate both slices so UI refreshes without a manual pull.
         qc.invalidateQueries({ queryKey: ['inventory', 'inputs'] });
-        qc.invalidateQueries({ queryKey: ['finance'] });
+        invalidateFinanceQueries(qc);
 
         showToast(
           t('inventory.restock.successToast', {

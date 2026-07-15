@@ -122,6 +122,7 @@ export function AddTransactionScreen({ navigation }: Props) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['finance/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['finance/report'] });
       navigation.goBack();
     },
     onError: () => {
