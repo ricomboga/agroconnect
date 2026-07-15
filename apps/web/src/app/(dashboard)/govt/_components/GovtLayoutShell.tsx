@@ -1,7 +1,7 @@
 'use client'
 
-import { usePathname, useRouter } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
+import { usePathname } from 'next/navigation'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { TopBar, Sidebar, PageLayout } from '@agroconnect/web-ui'
 import type { SidebarSection } from '@agroconnect/web-ui'
 
@@ -29,7 +29,7 @@ function isActivePath(pathname: string, href: string): boolean {
 
 export function GovtLayoutShell({ children }: Props) {
   const pathname = usePathname()
-  const router = useRouter()
+  const queryClient = useQueryClient()
 
   const { data: pendingCount = 0 } = useQuery({
     queryKey: ['govt', 'subsidies', 'applications', 'pending-count'],
@@ -92,7 +92,8 @@ export function GovtLayoutShell({ children }: Props) {
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' })
-    router.push('/login')
+    queryClient.clear()
+    window.location.href = '/login'
   }
 
   return (

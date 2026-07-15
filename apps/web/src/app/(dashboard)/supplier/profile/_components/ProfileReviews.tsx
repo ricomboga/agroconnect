@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { FormSection, FieldGroup, Field, TextInput, Textarea, StatusBadge, ProgressBar } from '@agroconnect/web-ui'
 import { useAuthStore } from '@/stores/authStore'
 import api from '@/lib/api'
+import { apiErrorMessage } from '@/lib/apiError'
 
 // TODO(real-data): no Review model exists in market-service yet — the
 // reviews list and rating summary below remain sample data pending a
@@ -69,14 +70,6 @@ interface SupplierProfile {
   deliveryRadiusKm: string | null
 }
 
-function errorMessage(err: unknown, fallback: string): string {
-  if (err && typeof err === 'object' && 'response' in err) {
-    const resp = (err as { response?: { data?: { message?: string } } }).response
-    if (resp?.data?.message) return resp.data.message
-  }
-  return fallback
-}
-
 export function ProfileReviews() {
   const user = useAuthStore((s) => s.user)
   const queryClient = useQueryClient()
@@ -114,7 +107,7 @@ export function ProfileReviews() {
       void queryClient.invalidateQueries({ queryKey: ['supplier', 'profile'] })
       toast.success('Business profile updated')
     },
-    onError: (err) => toast.error(errorMessage(err, 'Failed to update business profile')),
+    onError: (err) => toast.error(apiErrorMessage(err, 'Failed to update business profile')),
   })
 
   const businessName = profile?.businessName ?? (isLoading ? 'Loading…' : 'Business name not set')

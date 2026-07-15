@@ -1,7 +1,7 @@
 'use client'
 
-import { usePathname, useRouter } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
+import { usePathname } from 'next/navigation'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { TopBar, Sidebar, PageLayout } from '@agroconnect/web-ui'
 import api from '@/lib/api'
 import { useAuthStore } from '@/stores/authStore'
@@ -16,6 +16,10 @@ interface SupplierSummary {
   lowStockItems: unknown[]
 }
 
+interface SupplierProfile {
+  businessName: string
+}
+
 function initialsOf(name: string): string {
   const parts = name.trim().split(/\s+/)
   if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase()
@@ -24,7 +28,7 @@ function initialsOf(name: string): string {
 
 export function SupplierLayoutShell({ children }: Props) {
   const pathname = usePathname()
-  const router = useRouter()
+  const queryClient = useQueryClient()
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
 
@@ -39,6 +43,17 @@ export function SupplierLayoutShell({ children }: Props) {
       return res.data.meta?.total ?? 0
     },
     refetchInterval: 30_000,
+  })
+
+  // Shares the ['supplier','profile'] query cache with ProfileReviews so the
+  // business name shown here always matches the one Admin set, instead of
+  // falling back to the contact person's account name.
+  const { data: profile } = useQuery({
+    queryKey: ['supplier', 'profile'],
+    queryFn: async () => {
+      const res = await api.get<{ data: SupplierProfile }>('/api/supplier/suppliers/me/profile')
+      return res.data.data
+    },
   })
 
   const navLinks = [
@@ -76,9 +91,7 @@ export function SupplierLayoutShell({ children }: Props) {
     },
   ]
 
-  // TODO(real-data): no SupplierProfile model exists yet — business name isn't
-  // available from the JWT/AuthUser shape, so fall back to the account's full name.
-  const displayName = user?.fullName ?? 'Supplier'
+  const displayName = profile?.businessName ?? user?.fullName ?? 'Supplier'
 
   return (
     <PageLayout
@@ -88,7 +101,10 @@ export function SupplierLayoutShell({ children }: Props) {
           navLinks={navLinks}
           user={{ name: displayName, initials: initialsOf(displayName) }}
           onLogout={() => {
-            void logout().then(() => router.push('/login'))
+            void logout().then(() => {
+              queryClient.clear()
+              window.location.href = '/login'
+            })
           }}
         />
       }

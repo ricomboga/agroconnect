@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LayoutDashboard, MapPin, Wheat, LogOut, CreditCard } from 'lucide-react'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/authStore'
 
 const NAV = [
@@ -15,13 +15,14 @@ const NAV = [
 
 function LogoutButton() {
   const logout = useAuthStore((s) => s.logout)
-  const router = useRouter()
+  const queryClient = useQueryClient()
   const [loading, setLoading] = useState(false)
 
   async function handleLogout() {
     setLoading(true)
     await logout()
-    router.push('/login')
+    queryClient.clear()
+    window.location.href = '/login'
   }
 
   return (

@@ -1,7 +1,7 @@
 'use client'
 
-import { usePathname, useRouter } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
+import { usePathname } from 'next/navigation'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { TopBar, Sidebar, PageLayout } from '@agroconnect/web-ui'
 import type { SidebarSection } from '@agroconnect/web-ui'
 
@@ -23,7 +23,7 @@ function isActivePath(pathname: string, href: string): boolean {
 
 export function LenderLayoutShell({ children }: Props) {
   const pathname = usePathname()
-  const router = useRouter()
+  const queryClient = useQueryClient()
 
   const { data: institution } = useQuery({
     queryKey: ['lender', 'institution'],
@@ -113,7 +113,13 @@ export function LenderLayoutShell({ children }: Props) {
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' })
-    router.push('/login')
+    // Clear the cached data from this session before navigating — the
+    // QueryClient outlives client-side route transitions, so without this
+    // the next login in the same tab would briefly render this account's
+    // stale cached data. A hard navigation (not router.push) also
+    // guarantees every other in-memory client store resets.
+    queryClient.clear()
+    window.location.href = '/login'
   }
 
   return (

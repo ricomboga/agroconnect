@@ -1,19 +1,20 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import { LogOut } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 
 export function LogoutButton() {
   const logout = useAuthStore((s) => s.logout)
-  const router = useRouter()
+  const queryClient = useQueryClient()
   const [loading, setLoading] = useState(false)
 
   async function handleLogout() {
     setLoading(true)
     await logout()
-    router.push('/login')
+    queryClient.clear()
+    window.location.href = '/login'
   }
 
   return (

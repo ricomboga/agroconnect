@@ -16,6 +16,7 @@ import {
 } from '@agroconnect/web-ui'
 import { toast } from 'sonner'
 import api from '@/lib/api'
+import { apiErrorMessage } from '@/lib/apiError'
 
 interface SupplierProduct {
   id: string
@@ -129,13 +130,18 @@ export function ProductForm() {
       setSubmitted(true)
     },
     onError: (err) => {
-      const message =
-        err && typeof err === 'object' && 'response' in err
-          ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
-          : undefined
-      toast.error(message ?? 'Failed to save product')
+      toast.error(apiErrorMessage(err, 'Failed to save product'))
     },
   })
+
+  // The backend requires each photo entry to be a full URL (createProduct.schema.ts
+  // validates `photos` as z.string().url()) but the field is free-text, so a bare
+  // filename or typo silently fails server-side validation with no visible cause.
+  const invalidPhotoUrls = photosCsv
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .filter((s) => !/^https?:\/\/\S+$/i.test(s))
 
   const missingFields = [
     !name && 'product name',
@@ -144,6 +150,8 @@ export function ProductForm() {
     !stock && 'stock quantity',
     counties.length === 0 && 'at least one county',
   ].filter((v): v is string => Boolean(v))
+
+  const canSave = missingFields.length === 0 && invalidPhotoUrls.length === 0
 
   if (submitted) {
     return (
@@ -329,10 +337,18 @@ export function ProductForm() {
             </div>
           )}
 
+          {invalidPhotoUrls.length > 0 && (
+            <div className="mb-2">
+              <AlertBox variant="blue">
+                Photo URLs must start with http:// or https:// — fix or remove: {invalidPhotoUrls.join(', ')}
+              </AlertBox>
+            </div>
+          )}
+
           <div className="flex gap-2">
             <button
               type="button"
-              disabled={mutation.isPending || missingFields.length > 0}
+              disabled={mutation.isPending || !canSave}
               onClick={() => mutation.mutate()}
               className="flex-1 rounded-md bg-ac-green px-3 py-2.5 text-center text-base font-semibold text-white disabled:opacity-50"
             >
