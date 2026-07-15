@@ -75,6 +75,22 @@ export async function adminCountUsersByKycStatus(kycStatus: KycStatus) {
   return prisma.user.count({ where: { kycStatus } });
 }
 
+export async function adminKycStatusBreakdown() {
+  const rows = await prisma.user.groupBy({
+    by: ['kycStatus'],
+    where: { role: 'farmer' },
+    _count: { _all: true },
+  });
+  return rows.map((r) => ({ kycStatus: r.kycStatus, count: r._count._all }));
+}
+
+export async function adminFarmerRegistrationsSince(sinceDate: Date) {
+  return prisma.user.findMany({
+    where: { role: 'farmer', createdAt: { gte: sinceDate } },
+    select: { createdAt: true },
+  });
+}
+
 export async function adminSetUserStatus(id: string, status: UserStatus) {
   return prisma.user.update({ where: { id }, data: { status } });
 }

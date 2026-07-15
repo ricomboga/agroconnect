@@ -12,6 +12,8 @@ export interface AnalyticsSummary {
   active_listings: number;
   pending_kyc: number;
   farms_health_below_50: number;
+  kyc_breakdown: Array<{ status: string; count: number }>;
+  weekly_registrations: Array<{ date: string; count: number }>;
 }
 
 export async function getSummary(): Promise<AnalyticsSummary> {
@@ -35,7 +37,10 @@ export async function getSummary(): Promise<AnalyticsSummary> {
     logger.warn({ err: marketResult.reason }, 'market-service stats failed in summary');
   }
 
-  const auth = authResult.status === 'fulfilled' ? authResult.value : { total_farmers: 0, pending_kyc: 0 };
+  const auth =
+    authResult.status === 'fulfilled'
+      ? authResult.value
+      : { total_farmers: 0, pending_kyc: 0, kyc_breakdown: [], weekly_registrations: [] };
   const farm =
     farmResult.status === 'fulfilled'
       ? farmResult.value
@@ -51,5 +56,7 @@ export async function getSummary(): Promise<AnalyticsSummary> {
     active_listings: market.active_listings,
     pending_kyc: auth.pending_kyc,
     farms_health_below_50: farm.farms_health_below_50,
+    kyc_breakdown: auth.kyc_breakdown,
+    weekly_registrations: auth.weekly_registrations,
   };
 }

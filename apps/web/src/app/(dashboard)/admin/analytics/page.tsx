@@ -1,8 +1,31 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from 'recharts'
 import api from '@/lib/api'
-import { KpiCard, ProgressBar } from '@agroconnect/web-ui'
+import { KpiCard } from '@agroconnect/web-ui'
+
+interface WeeklyRegistration {
+  date: string
+  count: number
+}
+
+interface KycBreakdownRow {
+  status: string
+  count: number
+}
 
 interface AnalyticsSummary {
   total_farmers: number
@@ -12,17 +35,27 @@ interface AnalyticsSummary {
   active_listings: number
   pending_kyc: number
   farms_health_below_50: number
+  kyc_breakdown: KycBreakdownRow[]
+  weekly_registrations: WeeklyRegistration[]
 }
 
-const WEEK_BARS = [
-  { day: 'Mon', pct: 30 },
-  { day: 'Tue', pct: 35 },
-  { day: 'Wed', pct: 50 },
-  { day: 'Thu', pct: 55 },
-  { day: 'Fri', pct: 100 },
-  { day: 'Sat', pct: 90 },
-  { day: 'Sun', pct: 25 },
-] as const
+const KYC_COLORS: Record<string, string> = {
+  pending: '#D97706',
+  submitted: '#1D4ED8',
+  verified: '#1A6B3C',
+  rejected: '#DC2626',
+}
+
+const KYC_LABELS: Record<string, string> = {
+  pending: 'Pending',
+  submitted: 'Submitted',
+  verified: 'Verified',
+  rejected: 'Rejected',
+}
+
+function formatDayLabel(isoDate: string): string {
+  return new Date(`${isoDate}T00:00:00Z`).toLocaleDateString('en-KE', { weekday: 'short', timeZone: 'UTC' })
+}
 
 export default function AnalyticsPage() {
   const { data, isLoading } = useQuery({
@@ -43,8 +76,25 @@ export default function AnalyticsPage() {
     },
   })
 
-  const topCounties = (farmersByCounty ?? []).slice(0, 5).map((row) => [row.county, row.farmerCount] as const)
-  const maxCounty = topCounties[0]?.[1] ?? 1
+  const weeklyBars = (data?.weekly_registrations ?? []).map((row) => ({
+    day: formatDayLabel(row.date),
+    date: row.date,
+    Registrations: row.count,
+  }))
+
+  const kycSlices = (data?.kyc_breakdown ?? [])
+    .filter((row) => row.count > 0)
+    .map((row) => ({
+      name: KYC_LABELS[row.status] ?? row.status,
+      value: row.count,
+      color: KYC_COLORS[row.status] ?? '#6B7280',
+    }))
+
+  const topCounties = [...(farmersByCounty ?? [])]
+    .sort((a, b) => b.farmerCount - a.farmerCount)
+    .slice(0, 8)
+    .map((row) => ({ county: row.county, Farmers: row.farmerCount }))
+    .reverse()
 
   return (
     <div>
@@ -66,34 +116,56 @@ export default function AnalyticsPage() {
 
       <div className="grid grid-cols-2 gap-3.5">
         <div className="rounded-base border border-border bg-white px-4 py-3">
-          <p className="mb-2 text-md font-semibold text-ink">Weekly Registrations</p>
-          <div className="flex h-16 items-end gap-1.5">
-            {WEEK_BARS.map((bar) => (
-              <div key={bar.day} className="flex flex-1 flex-col items-center">
-                <div
-                  className="w-full rounded-t-sm bg-ac-green-light"
-                  style={{ height: `${Math.round((bar.pct / 100) * 56)}px` }}
-                />
-                <span className="mt-1 text-xs text-muted">{bar.day[0]}</span>
-              </div>
-            ))}
-          </div>
+          <p className="mb-2 text-md font-semibold text-ink">Farmer Registrations (Last 7 Days)</p>
+          {weeklyBars.every((b) => b.Registrations === 0) ? (
+            <p className="py-8 text-center text-sm text-muted">No new registrations this week</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={weeklyBars}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="day" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+                <Tooltip labelFormatter={(_, payload) => payload?.[0]?.payload?.date ?? ''} />
+                <Bar dataKey="Registrations" fill="#1A6B3C" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
 
         <div className="rounded-base border border-border bg-white px-4 py-3">
+          <p className="mb-2 text-md font-semibold text-ink">Farmer KYC Status</p>
+          {kycSlices.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted">No farmer accounts yet</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie data={kycSlices} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80} paddingAngle={2}>
+                  {kycSlices.map((slice) => (
+                    <Cell key={slice.name} fill={slice.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        <div className="col-span-2 rounded-base border border-border bg-white px-4 py-3">
           <p className="mb-2 text-md font-semibold text-ink">Top Counties by Farmer Count</p>
-          <div className="flex flex-col gap-2">
-            {topCounties.map(([county, count]) => (
-              <div key={county}>
-                <div className="mb-0.5 flex justify-between text-sm">
-                  <span className="text-ink2">{county}</span>
-                  <span className="font-semibold text-ink">{count}</span>
-                </div>
-                <ProgressBar value={(count / maxCounty) * 100} color="green" />
-              </div>
-            ))}
-            {topCounties.length === 0 && <p className="text-sm text-muted">No farm data yet</p>}
-          </div>
+          {topCounties.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted">No farm data yet</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={Math.max(180, topCounties.length * 34)}>
+              <BarChart data={topCounties} layout="vertical" margin={{ left: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                <XAxis type="number" tick={{ fontSize: 12 }} allowDecimals={false} />
+                <YAxis type="category" dataKey="county" tick={{ fontSize: 12 }} width={110} />
+                <Tooltip />
+                <Bar dataKey="Farmers" fill="#0E7490" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
     </div>

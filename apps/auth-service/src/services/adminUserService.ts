@@ -5,6 +5,8 @@ import {
   adminCountUsers,
   adminCountFarmers,
   adminCountUsersByKycStatus,
+  adminKycStatusBreakdown,
+  adminFarmerRegistrationsSince,
   adminSetUserStatus,
   adminVerifyUser,
   adminCreateUser,
@@ -229,12 +231,39 @@ export async function deleteUser(id: string) {
   }
 }
 
+function weeklyRegistrationBuckets(rows: Array<{ createdAt: Date }>): Array<{ date: string; count: number }> {
+  const buckets = new Map<string, number>();
+  const today = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setUTCDate(d.getUTCDate() - i);
+    buckets.set(d.toISOString().split('T')[0] as string, 0);
+  }
+  for (const row of rows) {
+    const key = row.createdAt.toISOString().split('T')[0] as string;
+    if (buckets.has(key)) buckets.set(key, (buckets.get(key) ?? 0) + 1);
+  }
+  return Array.from(buckets.entries()).map(([date, count]) => ({ date, count }));
+}
+
 export async function getStats() {
-  const [total_farmers, pending_kyc] = await Promise.all([
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setUTCDate(sevenDaysAgo.getUTCDate() - 6);
+  sevenDaysAgo.setUTCHours(0, 0, 0, 0);
+
+  const [total_farmers, pending_kyc, kycRows, registrationRows] = await Promise.all([
     adminCountFarmers(),
     adminCountUsersByKycStatus('pending'),
+    adminKycStatusBreakdown(),
+    adminFarmerRegistrationsSince(sevenDaysAgo),
   ]);
-  return { total_farmers, pending_kyc };
+
+  return {
+    total_farmers,
+    pending_kyc,
+    kyc_breakdown: kycRows.map((r) => ({ status: r.kycStatus, count: r.count })),
+    weekly_registrations: weeklyRegistrationBuckets(registrationRows),
+  };
 }
 
 export async function setUserStatus(id: string, status: UserStatus) {
