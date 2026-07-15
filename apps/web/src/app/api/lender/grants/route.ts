@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from '@/lib/auth'
+import { requireLenderSession } from '@/lib/auth'
 
 // TODO(real-data): finance-service has no Grant/GrantApplication model — NGO institutions
 // (institutionType = 'ngo_grant') have no backing loan pipeline since LoanApplication is a
@@ -40,7 +40,7 @@ const MOCK_GRANTS = [
 ]
 
 export async function GET() {
-  const session = await getServerSession()
+  const session = await requireLenderSession()
   if (!session) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
   }

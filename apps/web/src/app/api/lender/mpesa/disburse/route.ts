@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from '@/lib/auth'
+import { requireLenderSession } from '@/lib/auth'
 
 // TODO(real-data): finance-service has no outbound M-Pesa disbursement trigger endpoint —
 // /finance/mpesa/callback is the inbound Safaricom result webhook only. This stub simulates
@@ -10,7 +10,7 @@ function delay(ms: number) {
 }
 
 export async function POST() {
-  const session = await getServerSession()
+  const session = await requireLenderSession()
   if (!session) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
   }

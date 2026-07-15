@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getServerSession } from '@/lib/auth'
+import { requireLenderSession } from '@/lib/auth'
 
 // TODO(real-data): PATCH /finance/grants/:grantId/status has no backend — no Grant model exists
 // in finance-service. Echoes the requested change back so the decision UI is exercisable.
@@ -11,7 +11,7 @@ const bodySchema = z.object({
 })
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const session = await getServerSession()
+  const session = await requireLenderSession()
   if (!session) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
   }

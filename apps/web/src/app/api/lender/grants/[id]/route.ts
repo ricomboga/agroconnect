@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from '@/lib/auth'
+import { requireLenderSession } from '@/lib/auth'
 
 // TODO(real-data): no Grant model/endpoints exist in finance-service yet — mirrors the
 // /finance/lender/loans/:id shape with mock data keyed by the grant ids returned from
@@ -11,7 +11,7 @@ const MOCK_GRANTS: Record<string, { farmerId: string; type: string; amountReques
 }
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
-  const session = await getServerSession()
+  const session = await requireLenderSession()
   if (!session) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
   }

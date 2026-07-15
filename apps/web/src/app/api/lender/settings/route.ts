@@ -1,27 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { getServerSession } from '@/lib/auth'
+import { requireLenderSession } from '@/lib/auth'
 
 const FINANCE_URL = process.env.FINANCE_SERVICE_URL ?? 'http://localhost:3003'
 
 // TODO(real-data): finance-service has no lender notification-preferences or institution-profile
 // write endpoints — mocked in-memory per server instance. operatingCounties is real (backed by
-// LoanPartner.operatingCounties in finance-service), fetched/saved separately below.
-let settings = {
-  notifications: {
-    newApplication: 'email',
-    statusChange: 'sms_and_email',
-    overdueAlert: 'sms',
-  },
-  profile: {
-    contactEmail: '',
-    mpesaPaybill: '',
-    licenceNumber: '',
-  },
+// LoanPartner.operatingCounties in finance-service), fetched/saved separately below. Keyed by
+// user id so one lender's mutations aren't visible to every other lender hitting this server
+// instance.
+interface Settings {
+  notifications: { newApplication: string; statusChange: string; overdueAlert: string }
+  profile: { contactEmail: string; mpesaPaybill: string; licenceNumber: string }
+}
+
+function defaultSettings(): Settings {
+  return {
+    notifications: {
+      newApplication: 'email',
+      statusChange: 'sms_and_email',
+      overdueAlert: 'sms',
+    },
+    profile: {
+      contactEmail: '',
+      mpesaPaybill: '',
+      licenceNumber: '',
+    },
+  }
+}
+
+const settingsByUser = new Map<string, Settings>()
+
+function settingsFor(userId: string): Settings {
+  let settings = settingsByUser.get(userId)
+  if (!settings) {
+    settings = defaultSettings()
+    settingsByUser.set(userId, settings)
+  }
+  return settings
 }
 
 export async function GET() {
-  const session = await getServerSession()
+  const session = await requireLenderSession()
   if (!session) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
   }
@@ -37,7 +57,7 @@ export async function GET() {
 
   return NextResponse.json({
     data: {
-      ...settings,
+      ...settingsFor(session.sub),
       institutionType: institutionBody.data?.type ?? null,
       operatingCounties: institutionBody.data?.operatingCounties ?? [],
     },
@@ -45,14 +65,21 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
-  const session = await getServerSession()
+  const session = await requireLenderSession()
   if (!session) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
   }
 
-  const body = (await req.json().catch(() => ({}))) as Partial<typeof settings> & { operatingCounties?: string[] }
+  const body = (await req.json().catch(() => ({}))) as Partial<Settings> & { operatingCounties?: string[] }
   const { operatingCounties, ...rest } = body
-  settings = { ...settings, ...rest, notifications: { ...settings.notifications, ...rest.notifications }, profile: { ...settings.profile, ...rest.profile } }
+  const current = settingsFor(session.sub)
+  const updated: Settings = {
+    ...current,
+    ...rest,
+    notifications: { ...current.notifications, ...rest.notifications },
+    profile: { ...current.profile, ...rest.profile },
+  }
+  settingsByUser.set(session.sub, updated)
 
   let updatedOperatingCounties: string[] | undefined
   if (operatingCounties) {
@@ -69,5 +96,5 @@ export async function PATCH(req: NextRequest) {
     updatedOperatingCounties = resBody.data.operatingCounties
   }
 
-  return NextResponse.json({ data: { ...settings, operatingCounties: updatedOperatingCounties ?? operatingCounties ?? [] } })
+  return NextResponse.json({ data: { ...updated, operatingCounties: updatedOperatingCounties ?? operatingCounties ?? [] } })
 }

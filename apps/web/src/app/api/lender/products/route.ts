@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getServerSession } from '@/lib/auth'
+import { requireLenderSession } from '@/lib/auth'
 
 // TODO(real-data): finance-service's /finance/products route is read-only (GET list/get-by-id
 // only) — no POST/PATCH exists to create or edit a LoanProduct yet. Echoes the submitted product
@@ -16,7 +16,7 @@ const bodySchema = z.object({
 })
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession()
+  const session = await requireLenderSession()
   if (!session) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
   }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { z } from 'zod'
+import { requireLenderSession } from '@/lib/auth'
 
 const FINANCE_URL = process.env.FINANCE_SERVICE_URL ?? 'http://localhost:3003'
 
@@ -15,10 +16,11 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } },
 ) {
-  const token = cookies().get('__ac')?.value
-  if (!token) {
+  const session = await requireLenderSession()
+  if (!session) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
   }
+  const token = cookies().get('__ac')?.value ?? ''
 
   const parsed = bodySchema.safeParse(await req.json().catch(() => ({})))
   if (!parsed.success) {
