@@ -302,6 +302,7 @@ services:
       KAFKA_BROKERS: "kafka:9092"
       REDIS_URL: "redis://:redis_dev_password@redis:6379"
       FARM_SERVICE_URL: "http://farm-service:3001"
+      AUTH_SERVICE_URL: "http://auth-service:3008"
       INTERNAL_SERVICE_SECRET: "agroconnect-internal-dev-secret-2026"
     command: >
       sh -c "cd /workspace && pnpm --filter @agroconnect/db exec prisma migrate deploy --schema prisma/finance/schema.prisma && cd apps/finance-service && exec npx tsx src/index.ts"
