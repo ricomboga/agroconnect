@@ -1,11 +1,24 @@
 import { getRegionCounties } from '@agroconnect/shared/constants/counties';
 import * as supplierProfileRepo from '../repositories/supplierProfileRepository.js';
 import { CreateSupplierProfileDto } from '../schemas/createSupplierProfile.schema.js';
+import { UpdateSupplierProfileDto } from '../schemas/updateSupplierProfile.schema.js';
 import { PaginationParams } from '../types/index.js';
 import { createError } from '../middleware/errorHandler.js';
 
 export async function createOrUpdateSupplierProfile(dto: CreateSupplierProfileDto) {
   return supplierProfileRepo.upsertSupplierProfile(dto);
+}
+
+export async function getMySupplierProfile(userId: string) {
+  const profile = await supplierProfileRepo.findSupplierProfileByUserId(userId);
+  if (!profile)
+    throw createError('Supplier profile not found', 404, 'SUPPLIER_PROFILE_NOT_FOUND', 'error.supplier_profile.not_found');
+  return profile;
+}
+
+export async function updateMySupplierProfile(userId: string, dto: UpdateSupplierProfileDto) {
+  await getMySupplierProfile(userId);
+  return supplierProfileRepo.updateSupplierProfileByUserId(userId, dto);
 }
 
 export async function getSupplierProfile(id: string) {

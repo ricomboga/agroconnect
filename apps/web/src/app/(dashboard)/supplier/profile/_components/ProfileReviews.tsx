@@ -1,16 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { FormSection, FieldGroup, Field, TextInput, Textarea, StatusBadge, ProgressBar } from '@agroconnect/web-ui'
 import { useAuthStore } from '@/stores/authStore'
+import api from '@/lib/api'
 
-// TODO(real-data): no SupplierProfile or Review model exists in market-service
-// yet (docs/schemas.md's business-profile/rating fields were never implemented
-// as real tables). This whole screen is wired to local mock state so the
-// wireframe's layout/interactions are faithfully represented, but nothing here
-// persists to a backend — Save just shows a toast, and the reviews below are
-// static sample data, not a live fetch.
+// TODO(real-data): no Review model exists in market-service yet — the
+// reviews list and rating summary below remain sample data pending a
+// backend model. The business profile fields above them are now real,
+// live data (see /suppliers/me/profile).
 
 interface MockReview {
   reviewerName: string
@@ -59,24 +59,65 @@ function Stars({ count }: { count: number }) {
   )
 }
 
+interface SupplierProfile {
+  businessName: string
+  businessRegNumber: string | null
+  description: string | null
+  county: string
+  subCounty: string | null
+  address: string | null
+  deliveryRadiusKm: string | null
+}
+
+function errorMessage(err: unknown, fallback: string): string {
+  if (err && typeof err === 'object' && 'response' in err) {
+    const resp = (err as { response?: { data?: { message?: string } } }).response
+    if (resp?.data?.message) return resp.data.message
+  }
+  return fallback
+}
+
 export function ProfileReviews() {
   const user = useAuthStore((s) => s.user)
+  const queryClient = useQueryClient()
 
-  const [businessName, setBusinessName] = useState('Nakuru Agrovets')
-  const [registrationNo, setRegistrationNo] = useState('')
-  const [description, setDescription] = useState(
-    'Full-service agrovet supplying fertiliser, pesticides, seeds, and veterinary drugs to smallholder and commercial farmers across Nakuru county.',
-  )
-  const [operatingHours, setOperatingHours] = useState('Mon–Sat 7:00am–6:00pm')
-  const [deliveryRangeKm, setDeliveryRangeKm] = useState('30')
+  const { data: profile, isLoading } = useQuery({
+    queryKey: ['supplier', 'profile'],
+    queryFn: async () => {
+      const res = await api.get<{ data: SupplierProfile }>('/api/supplier/suppliers/me/profile')
+      return res.data.data
+    },
+  })
+
+  const [description, setDescription] = useState('')
+  const [deliveryRangeKm, setDeliveryRangeKm] = useState('')
   const [address, setAddress] = useState('')
-  const [county, setCounty] = useState('Nakuru')
+  const [subCounty, setSubCounty] = useState('')
 
-  function handleSave() {
-    // TODO(real-data): no backend endpoint to persist this — no
-    // SupplierProfile model exists yet.
-    toast.info('Business profile saving is not yet available (no backend model exists yet)')
-  }
+  useEffect(() => {
+    if (!profile) return
+    setDescription(profile.description ?? '')
+    setDeliveryRangeKm(profile.deliveryRadiusKm ?? '')
+    setAddress(profile.address ?? '')
+    setSubCounty(profile.subCounty ?? '')
+  }, [profile])
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      api.patch('/api/supplier/suppliers/me/profile', {
+        description: description || undefined,
+        deliveryRadiusKm: deliveryRangeKm || undefined,
+        address: address || undefined,
+        subCounty: subCounty || undefined,
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['supplier', 'profile'] })
+      toast.success('Business profile updated')
+    },
+    onError: (err) => toast.error(errorMessage(err, 'Failed to update business profile')),
+  })
+
+  const businessName = profile?.businessName ?? (isLoading ? 'Loading…' : 'Business name not set')
 
   return (
     <div>
@@ -92,15 +133,11 @@ export function ProfileReviews() {
         <div className="lg:col-span-2 rounded-base border border-border bg-white p-4">
           <FormSection title="Business Profile">
             <FieldGroup cols={2}>
-              <Field label="Business Name" required>
-                <TextInput value={businessName} onChange={(e) => setBusinessName(e.target.value)} />
+              <Field label="Business Name" hint="Set by admin at onboarding">
+                <TextInput value={businessName} readOnly />
               </Field>
-              <Field label="Business Registration No.">
-                <TextInput
-                  value={registrationNo}
-                  onChange={(e) => setRegistrationNo(e.target.value)}
-                  placeholder="BN-2024-XXXXXX"
-                />
+              <Field label="Business Registration No." hint="Set by admin at onboarding">
+                <TextInput value={profile?.businessRegNumber ?? '—'} readOnly />
               </Field>
             </FieldGroup>
 
@@ -109,18 +146,14 @@ export function ProfileReviews() {
             </Field>
 
             <FieldGroup cols={3}>
-              <Field label="Operating Hours">
-                <TextInput value={operatingHours} onChange={(e) => setOperatingHours(e.target.value)} />
-              </Field>
               <Field label="Delivery Range (km)">
-                <TextInput
-                  type="number"
-                  value={deliveryRangeKm}
-                  onChange={(e) => setDeliveryRangeKm(e.target.value)}
-                />
+                <TextInput value={deliveryRangeKm} onChange={(e) => setDeliveryRangeKm(e.target.value)} />
               </Field>
-              <Field label="County">
-                <TextInput value={county} onChange={(e) => setCounty(e.target.value)} />
+              <Field label="County" hint="Set by admin at onboarding">
+                <TextInput value={profile?.county ?? '—'} readOnly />
+              </Field>
+              <Field label="Sub-county">
+                <TextInput value={subCounty} onChange={(e) => setSubCounty(e.target.value)} />
               </Field>
             </FieldGroup>
 
@@ -131,10 +164,11 @@ export function ProfileReviews() {
             <div>
               <button
                 type="button"
-                onClick={handleSave}
-                className="rounded-md bg-ac-green px-4 py-2 text-base font-semibold text-white"
+                onClick={() => mutation.mutate()}
+                disabled={mutation.isPending || isLoading}
+                className="rounded-md bg-ac-green px-4 py-2 text-base font-semibold text-white disabled:opacity-50"
               >
-                Save Profile
+                {mutation.isPending ? 'Saving…' : 'Save Profile'}
               </button>
             </div>
           </FormSection>
@@ -178,8 +212,7 @@ export function ProfileReviews() {
       </div>
 
       <p className="mt-3 text-xs text-muted">
-        Signed in as {user?.fullName ?? 'Supplier'} · {/* TODO(real-data): no SupplierProfile/Review model exists yet */}
-        profile and reviews above are sample data pending a backend model.
+        Signed in as {user?.fullName ?? 'Supplier'} · reviews above are sample data pending a backend Review model.
       </p>
     </div>
   )

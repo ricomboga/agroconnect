@@ -1,5 +1,6 @@
 import { prisma } from '@agroconnect/db/market';
 import { CreateSupplierProfileDto } from '../schemas/createSupplierProfile.schema.js';
+import { UpdateSupplierProfileDto } from '../schemas/updateSupplierProfile.schema.js';
 import { PaginationParams } from '../types/index.js';
 
 export interface SupplierProfileFilter {
@@ -69,4 +70,12 @@ export async function countSupplierProfiles(filter: SupplierProfileFilter) {
 
 export async function findSupplierProfileById(id: string) {
   return prisma.supplierProfile.findFirst({ where: { id, isActive: true } });
+}
+
+export async function findSupplierProfileByUserId(userId: string) {
+  return prisma.supplierProfile.findUnique({ where: { userId } });
+}
+
+export async function updateSupplierProfileByUserId(userId: string, dto: UpdateSupplierProfileDto) {
+  return prisma.supplierProfile.update({ where: { userId }, data: dto });
 }

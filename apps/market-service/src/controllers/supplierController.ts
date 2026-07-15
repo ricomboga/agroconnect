@@ -2,9 +2,11 @@ import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from '../types/index.js';
 import * as orderService from '../services/orderService.js';
 import * as productService from '../services/productService.js';
+import * as supplierProfileService from '../services/supplierProfileService.js';
 import { ListOrdersQuery } from '../schemas/listOrders.query.schema.js';
 import { ListCustomersQuery } from '../schemas/listCustomers.query.schema.js';
 import { SupplierSummaryQuery } from '../schemas/supplierSummary.query.schema.js';
+import { UpdateSupplierProfileDto } from '../schemas/updateSupplierProfile.schema.js';
 
 /**
  * @openapi
@@ -84,6 +86,64 @@ export async function getMySummary(req: AuthenticatedRequest, res: Response, nex
     const result = await productService.getSupplierSummary(
       req.user.id,
       req.query as unknown as SupplierSummaryQuery,
+    );
+    res.json({ data: result });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * @openapi
+ * /api/v1/market/suppliers/me/profile:
+ *   get:
+ *     summary: Business profile for the authenticated supplier
+ *     tags: [Suppliers]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Supplier business profile
+ *       401:
+ *         description: Missing or invalid JWT
+ *       403:
+ *         description: Caller is not a supplier or admin
+ *       404:
+ *         description: No supplier profile exists for this account yet
+ */
+export async function getMyProfile(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await supplierProfileService.getMySupplierProfile(req.user.id);
+    res.json({ data: result });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * @openapi
+ * /api/v1/market/suppliers/me/profile:
+ *   patch:
+ *     summary: Update the authenticated supplier's editable business profile fields
+ *     description: businessName and businessRegNumber are admin-owned and cannot be edited here.
+ *     tags: [Suppliers]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Updated supplier business profile
+ *       401:
+ *         description: Missing or invalid JWT
+ *       403:
+ *         description: Caller is not a supplier or admin
+ *       404:
+ *         description: No supplier profile exists for this account yet
+ */
+export async function updateMyProfile(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await supplierProfileService.updateMySupplierProfile(
+      req.user.id,
+      req.body as UpdateSupplierProfileDto,
     );
     res.json({ data: result });
   } catch (err) {

@@ -1,9 +1,10 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { requireAuth, authorize } from '../middleware/auth.js';
-import { validateQuery } from '../middleware/validate.js';
+import { validateQuery, validateBody } from '../middleware/validate.js';
 import { listOrdersQuerySchema } from '../schemas/listOrders.query.schema.js';
 import { listCustomersQuerySchema } from '../schemas/listCustomers.query.schema.js';
 import { supplierSummaryQuerySchema } from '../schemas/supplierSummary.query.schema.js';
+import { updateSupplierProfileSchema } from '../schemas/updateSupplierProfile.schema.js';
 import * as supplierController from '../controllers/supplierController.js';
 import { AuthenticatedRequest } from '../types/index.js';
 
@@ -34,6 +35,21 @@ router.get(
   supplierOnly,
   validateQuery(supplierSummaryQuerySchema),
   (req, res, next) => supplierController.getMySummary(req as AuthenticatedRequest, res, next),
+);
+
+router.get(
+  '/me/profile',
+  auth,
+  supplierOnly,
+  (req, res, next) => supplierController.getMyProfile(req as AuthenticatedRequest, res, next),
+);
+
+router.patch(
+  '/me/profile',
+  auth,
+  supplierOnly,
+  validateBody(updateSupplierProfileSchema),
+  (req, res, next) => supplierController.updateMyProfile(req as AuthenticatedRequest, res, next),
 );
 
 router.get(
