@@ -31,6 +31,7 @@ model Farm {
   inventoryItems        InventoryItem[]
   animalProductRecords  AnimalProductRecord[]
   customerCollections   CustomerCollection[]
+  machinery             Machinery[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   deletedAt   DateTime?
@@ -271,4 +272,37 @@ model CustomerCollection {
 
   @@index([farmId])
   @@map("customer_collections")
+}
+
+model Machinery {
+  id          String            @id @default(uuid())
+  farmId      String
+  farm        Farm              @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  name        String
+  type        MachineryType
+  condition   MachineryCondition @default(good)
+  acquiredAt  DateTime          @db.Date
+  disposedAt  DateTime?         @db.Date
+  notes       String?
+  createdAt   DateTime          @default(now())
+
+  @@index([farmId])
+  @@map("machinery")
+}
+
+enum MachineryType {
+  irrigation
+  tillage
+  spraying
+  harvesting
+  transport
+  processing
+  other
+}
+
+enum MachineryCondition {
+  good
+  fair
+  worn
+  broken
 }

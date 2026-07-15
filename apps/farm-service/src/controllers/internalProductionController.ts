@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { getProductionSummary } from '../services/productionSummaryService.js';
+import { getFarmerFarmReport } from '../services/farmerReportService.js';
 import { createError } from '../middleware/errorHandler.js';
 import { findFarmsByOwners, findFarmsByCounties } from '../repositories/farmRepository.js';
 
@@ -50,6 +51,45 @@ export async function getFarmerProductionSummaryHandler(
 
     const summary = await getProductionSummary(farmerId, { from, to });
     res.json({ data: summary });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * @openapi
+ * /internal/production/{farmerId}/report:
+ *   get:
+ *     summary: Full farm/plots, 90-day activity summary, harvest history, inventory, and machinery for a farmer (service-to-service) — powers the lender Farmer Report screen
+ *     tags: [Internal]
+ *     security:
+ *       - serviceToken: []
+ *     parameters:
+ *       - in: path
+ *         name: farmerId
+ *         required: true
+ *         schema: { type: string }
+ *       - in: query
+ *         name: as_of_date
+ *         schema: { type: string, format: date }
+ *         description: Defaults to today. Governs the inventory/machinery as-at snapshot.
+ *     responses:
+ *       200:
+ *         description: Farmer farm report
+ *       400:
+ *         description: Invalid date format
+ *       401:
+ *         description: Missing or invalid service token
+ */
+export async function getFarmerFarmReportHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const farmerId = req.params['farmerId'] as string;
+    const asOfDate = (req.query['as_of_date'] as string | undefined) ?? new Date().toISOString().slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(asOfDate)) {
+      throw createError('as_of_date must be YYYY-MM-DD', 400, 'VALIDATION_ERROR', 'error.validation');
+    }
+    const report = await getFarmerFarmReport(farmerId, asOfDate);
+    res.json({ data: report });
   } catch (err) {
     next(err);
   }

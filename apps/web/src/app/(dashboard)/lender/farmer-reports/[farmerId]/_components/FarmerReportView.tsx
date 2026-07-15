@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { KpiCard, DataTable, StatusBadge, AlertBox, TextInput, Field } from '@agroconnect/web-ui'
 import type { DataTableColumn } from '@agroconnect/web-ui'
-import type { MockFarmerReport } from '../../../../../api/lender/_mock/farmerReportSeed'
 
 function formatKes(amount: number): string {
   return new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES', maximumFractionDigits: 0 }).format(amount)
@@ -18,11 +17,61 @@ interface Institution {
   type: 'bank' | 'microfinance' | 'sacco' | 'mobile_lender' | 'ngo_grant'
 }
 
+interface FarmerReport {
+  farmerId: string
+  farmer: {
+    fullName: string
+    phone: string
+    county: string | null
+    subCounty: string | null
+    farmerType: string | null
+    memberSince: string
+    kycStatus: string
+  }
+  creditScore: {
+    score: number
+    band: string
+    maxLoanKes: number
+    seasonsOfData: number
+    breakdown: {
+      harvestYieldScore: number
+      inputManagementScore: number
+      activityComplianceScore: number
+      platformEngagementScore: number
+    }
+  } | null
+  farm: {
+    name: string
+    areaAcres: number
+    county: string
+    soilType: string | null
+    waterSource: string | null
+    locationLat: number
+    locationLng: number
+    plots: { name: string; areaAcres: number; currentCrop: string | null; plantedAt: string | null }[]
+  } | null
+  activitySummary: {
+    totalActivitiesLast90Days: number
+    completedOnTime: number
+    overdueAtQuery: number
+    completionRatePct: number
+    streakDays: number
+    recentCompleted: { date: string; title: string; costKes: number }[]
+  }
+  overdueActivities: string[]
+  harvestHistory: { crop: string; quantityKg: number; harvestDate: string; revenueKes: number | null }[]
+  inventory: { name: string; category: string; unit: string; purchasedQty: number; remainingQty: number; purchasedAt: string }[]
+  machinery: { name: string; type: string; condition: string; acquiredAt: string; disposedAt: string | null }[]
+  loanHistory: { lender: string; amountKes: number; status: string; disbursedAt: string | null; termMonths: number }[]
+  cashFlow: { last30DaysIncomeKes: number; last30DaysExpensesKes: number; last30DaysNetKes: number }
+  riskFlags: string[]
+  generatedAt: string
+}
+
 export function FarmerReportView({ farmerId }: { farmerId: string }) {
   const [harvestFrom, setHarvestFrom] = useState('')
   const [harvestTo, setHarvestTo] = useState('')
-  const [inventoryAsAt, setInventoryAsAt] = useState(() => new Date().toISOString().slice(0, 10))
-  const [machineryAsAt, setMachineryAsAt] = useState(() => new Date().toISOString().slice(0, 10))
+  const [asOfDate, setAsOfDate] = useState(() => new Date().toISOString().slice(0, 10))
 
   const { data: institution } = useQuery({
     queryKey: ['lender', 'institution'],
@@ -35,12 +84,12 @@ export function FarmerReportView({ farmerId }: { farmerId: string }) {
   })
   const isNgo = institution?.type === 'ngo_grant'
 
-  const { data: report } = useQuery({
-    queryKey: ['lender', 'farmer-report', farmerId],
+  const { data: report, isLoading } = useQuery({
+    queryKey: ['lender', 'farmer-report', farmerId, asOfDate],
     queryFn: async () => {
-      const res = await fetch(`/api/lender/farmer-reports/${farmerId}`)
+      const res = await fetch(`/api/lender/farmer-reports/${farmerId}?as_of=${asOfDate}`)
       if (!res.ok) throw new Error('Failed to load farmer report')
-      const body = (await res.json()) as { data: MockFarmerReport }
+      const body = (await res.json()) as { data: FarmerReport }
       return body.data
     },
   })
@@ -54,45 +103,18 @@ export function FarmerReportView({ farmerId }: { farmerId: string }) {
     })
   }, [report, harvestFrom, harvestTo])
 
-  const inventoryAsOfDate = useMemo(() => {
-    if (!report) return []
-    return report.inventory.map((item) => {
-      const purchasedByDate = item.purchasedAt <= inventoryAsAt ? item.purchasedQty : 0
-      const usedByDate = item.usageLog
-        .filter((u) => u.usedAt <= inventoryAsAt)
-        .reduce((sum, u) => sum + u.usedQty, 0)
-      return { ...item, remainingQty: Math.max(purchasedByDate - usedByDate, 0) }
-    })
-  }, [report, inventoryAsAt])
-
-  const machineryAsOfDate = useMemo(() => {
-    if (!report) return []
-    return report.machinery.filter(
-      (m) => m.acquiredAt <= machineryAsAt && (!m.disposedAt || m.disposedAt > machineryAsAt),
-    )
-  }, [report, machineryAsAt])
-
-  if (!report) {
+  if (isLoading || !report) {
     return <p className="py-6 text-center text-sm text-muted">Loading…</p>
   }
 
-  const plotCols: DataTableColumn<(typeof report.farm.plots)[number]>[] = [
-    { key: 'name', header: 'Plot' },
-    { key: 'areaAcres', header: 'Acres' },
-    { key: 'currentCrop', header: 'Current Crop' },
-    { key: 'plantedAt', header: 'Planted', render: (p) => new Date(p.plantedAt).toLocaleDateString('en-KE') },
-  ]
-
   const harvestCols: DataTableColumn<(typeof report.harvestHistory)[number]>[] = [
-    { key: 'season', header: 'Season' },
     { key: 'crop', header: 'Crop' },
     { key: 'quantityKg', header: 'Yield (kg)', render: (h) => h.quantityKg.toLocaleString() },
-    { key: 'revenueKes', header: 'Revenue', render: (h) => formatKes(h.revenueKes) },
-    { key: 'costsKes', header: 'Costs', render: (h) => formatKes(h.costsKes) },
-    { key: 'profitKes', header: 'Profit', render: (h) => formatKes(h.profitKes) },
+    { key: 'harvestDate', header: 'Harvest Date', render: (h) => new Date(h.harvestDate).toLocaleDateString('en-KE') },
+    { key: 'revenueKes', header: 'Revenue', render: (h) => (h.revenueKes !== null ? formatKes(h.revenueKes) : '—') },
   ]
 
-  const inventoryCols: DataTableColumn<(typeof inventoryAsOfDate)[number]>[] = [
+  const inventoryCols: DataTableColumn<(typeof report.inventory)[number]>[] = [
     { key: 'name', header: 'Item' },
     { key: 'category', header: 'Category', render: (i) => <span className="capitalize">{i.category}</span> },
     { key: 'remainingQty', header: 'Qty Remaining', render: (i) => `${i.remainingQty} ${i.unit}` },
@@ -118,8 +140,8 @@ export function FarmerReportView({ farmerId }: { farmerId: string }) {
     { key: 'lender', header: 'Lender' },
     { key: 'amountKes', header: 'Amount', render: (l) => formatKes(l.amountKes) },
     { key: 'status', header: 'Status', render: (l) => <StatusBadge variant="green">{l.status}</StatusBadge> },
-    { key: 'paymentsCompleted', header: 'Payments', render: (l) => `${l.paymentsCompleted}/${l.termMonths}` },
-    { key: 'onTimePayments', header: 'On-time', render: (l) => l.onTimePayments },
+    { key: 'disbursedAt', header: 'Disbursed', render: (l) => (l.disbursedAt ? new Date(l.disbursedAt).toLocaleDateString('en-KE') : '—') },
+    { key: 'termMonths', header: 'Term (months)', render: (l) => l.termMonths },
   ]
 
   return (
@@ -135,9 +157,9 @@ export function FarmerReportView({ farmerId }: { farmerId: string }) {
         <div className="grid grid-cols-3 gap-x-4 gap-y-2 text-sm">
           <div><p className="text-xs uppercase tracking-wide text-muted">Full Name</p><p className="text-ink">{report.farmer.fullName}</p></div>
           <div><p className="text-xs uppercase tracking-wide text-muted">Phone</p><p className="text-ink">{report.farmer.phone}</p></div>
-          <div><p className="text-xs uppercase tracking-wide text-muted">County</p><p className="text-ink">{report.farmer.county}</p></div>
+          <div><p className="text-xs uppercase tracking-wide text-muted">County</p><p className="text-ink">{report.farmer.county ?? '—'}</p></div>
           <div><p className="text-xs uppercase tracking-wide text-muted">Member Since</p><p className="text-ink">{new Date(report.farmer.memberSince).toLocaleDateString('en-KE')}</p></div>
-          <div><p className="text-xs uppercase tracking-wide text-muted">Farm Type</p><p className="text-ink capitalize">{report.farmer.farmerType}</p></div>
+          <div><p className="text-xs uppercase tracking-wide text-muted">Farm Type</p><p className="text-ink capitalize">{report.farmer.farmerType ?? '—'}</p></div>
           <div>
             <p className="text-xs uppercase tracking-wide text-muted">KYC Status</p>
             <StatusBadge variant={report.farmer.kycStatus === 'verified' ? 'green' : 'amber'}>{report.farmer.kycStatus}</StatusBadge>
@@ -145,42 +167,79 @@ export function FarmerReportView({ farmerId }: { farmerId: string }) {
         </div>
       </div>
 
-      {/* Section 2 — Farm & Plots */}
+      {/* Section 2 — Credit Score (bank/MFI only — not meaningful for region-wide NGO rosters) */}
+      {!isNgo && (
+        <div className="rounded-base border border-border bg-white px-4 py-3">
+          <p className="mb-2 text-md font-semibold text-ink">Credit Score</p>
+          {report.creditScore ? (
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+              <KpiCard variant="green" value={report.creditScore.score} label={`Score (Band ${report.creditScore.band})`} />
+              <KpiCard variant="blue" value={formatKes(report.creditScore.maxLoanKes)} label="Max Loan" />
+              <KpiCard variant="teal" value={report.creditScore.seasonsOfData} label="Seasons of Data" />
+              <KpiCard variant="gold" value={report.creditScore.breakdown.activityComplianceScore} label="Activity Compliance" />
+            </div>
+          ) : (
+            <p className="py-2 text-sm text-muted">No credit score computed for this farmer yet.</p>
+          )}
+        </div>
+      )}
+
+      {/* Section 3 — Farm & Plots */}
       <div className="rounded-base border border-border bg-white px-4 py-3">
         <p className="mb-2 text-md font-semibold text-ink">Farm & Plots</p>
-        <div className="mb-3 grid grid-cols-4 gap-x-4 gap-y-2 text-sm">
-          <div><p className="text-xs uppercase tracking-wide text-muted">Farm</p><p className="text-ink">{report.farm.name}</p></div>
-          <div><p className="text-xs uppercase tracking-wide text-muted">Total Acres</p><p className="text-ink">{report.farm.areaAcres}</p></div>
-          <div><p className="text-xs uppercase tracking-wide text-muted">Soil Type</p><p className="capitalize text-ink">{report.farm.soilType}</p></div>
-          <div><p className="text-xs uppercase tracking-wide text-muted">Water Source</p><p className="capitalize text-ink">{report.farm.waterSource}</p></div>
-          <div>
-            <p className="text-xs uppercase tracking-wide text-muted">GPS Coordinates</p>
-            <p className="text-ink">{formatCoord(report.farm.locationLat)}, {formatCoord(report.farm.locationLng)}</p>
-          </div>
-        </div>
-        <DataTable columns={plotCols} data={report.farm.plots} />
+        {report.farm ? (
+          <>
+            <div className="mb-3 grid grid-cols-4 gap-x-4 gap-y-2 text-sm">
+              <div><p className="text-xs uppercase tracking-wide text-muted">Farm</p><p className="text-ink">{report.farm.name}</p></div>
+              <div><p className="text-xs uppercase tracking-wide text-muted">Total Acres</p><p className="text-ink">{report.farm.areaAcres}</p></div>
+              <div><p className="text-xs uppercase tracking-wide text-muted">Soil Type</p><p className="capitalize text-ink">{report.farm.soilType ?? '—'}</p></div>
+              <div><p className="text-xs uppercase tracking-wide text-muted">Water Source</p><p className="capitalize text-ink">{report.farm.waterSource ?? '—'}</p></div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-muted">GPS Coordinates</p>
+                <p className="text-ink">{formatCoord(report.farm.locationLat)}, {formatCoord(report.farm.locationLng)}</p>
+              </div>
+            </div>
+            {report.farm.plots.length === 0 ? (
+              <p className="py-2 text-sm text-muted">No plots recorded.</p>
+            ) : (
+              <DataTable
+                columns={[
+                  { key: 'name', header: 'Plot' },
+                  { key: 'areaAcres', header: 'Acres' },
+                  { key: 'currentCrop', header: 'Current Crop', render: (p) => p.currentCrop ?? '—' },
+                  { key: 'plantedAt', header: 'Planted', render: (p) => (p.plantedAt ? new Date(p.plantedAt).toLocaleDateString('en-KE') : '—') },
+                ]}
+                data={report.farm.plots}
+              />
+            )}
+          </>
+        ) : (
+          <p className="py-2 text-sm text-muted">No farm registered for this farmer yet.</p>
+        )}
       </div>
 
       {/* Section 4 — Activity Summary */}
       <div className="rounded-base border border-border bg-white px-4 py-3">
-        <p className="mb-2 text-md font-semibold text-ink">Activity Summary</p>
+        <p className="mb-2 text-md font-semibold text-ink">Activity Summary (last 90 days)</p>
         <div className="mb-3 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
           <KpiCard variant="green" value={report.activitySummary.totalActivitiesLast90Days} label="Activities (90 days)" />
           <KpiCard variant="blue" value={report.activitySummary.completedOnTime} label="Completed On Time" />
           <KpiCard variant="teal" value={`${report.activitySummary.completionRatePct}%`} label="Completion Rate" />
           <KpiCard variant="gold" value={report.activitySummary.streakDays} label="Streak (days)" />
         </div>
-        <div className="mb-3">
-          <p className="mb-1 text-sm font-semibold text-ink2">Recent Activity</p>
-          <ul className="flex flex-col gap-1 text-sm text-ink2">
-            {report.activitySummary.recentCompleted.map((a) => (
-              <li key={a.title} className="flex justify-between border-b border-border py-1">
-                <span>{new Date(a.date).toLocaleDateString('en-KE')}, {a.title}</span>
-                <span className="font-medium text-ink">{formatKes(a.costKes)}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        {report.activitySummary.recentCompleted.length > 0 && (
+          <div className="mb-3">
+            <p className="mb-1 text-sm font-semibold text-ink2">Recent Activity</p>
+            <ul className="flex flex-col gap-1 text-sm text-ink2">
+              {report.activitySummary.recentCompleted.map((a) => (
+                <li key={`${a.title}-${a.date}`} className="flex justify-between border-b border-border py-1">
+                  <span>{new Date(a.date).toLocaleDateString('en-KE')}, {a.title}</span>
+                  <span className="font-medium text-ink">{formatKes(a.costKes)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         {report.overdueActivities.length > 0 && (
           <AlertBox variant="red">
             {report.overdueActivities.map((f) => (
@@ -190,10 +249,10 @@ export function FarmerReportView({ farmerId }: { farmerId: string }) {
         )}
       </div>
 
-      {/* Section 5 — Harvest & Financial History */}
+      {/* Section 5 — Harvest History & Cash Flow */}
       <div className="rounded-base border border-border bg-white px-4 py-3">
         <div className="mb-2 flex items-center justify-between">
-          <p className="text-md font-semibold text-ink">Harvest & Financial History</p>
+          <p className="text-md font-semibold text-ink">Harvest History</p>
           <div className="flex items-center gap-2">
             <TextInput type="date" value={harvestFrom} onChange={(e) => setHarvestFrom(e.target.value)} className="w-36" />
             <span className="text-sm text-muted">to</span>
@@ -211,39 +270,38 @@ export function FarmerReportView({ farmerId }: { farmerId: string }) {
         </div>
       </div>
 
-      {/* Section 6 — Inventory (as at date) */}
+      {/* Section 6 — Inventory & Machinery (shared as-at snapshot date) */}
       <div className="rounded-base border border-border bg-white px-4 py-3">
         <div className="mb-2 flex items-center justify-between">
-          <p className="text-md font-semibold text-ink">Inventory</p>
+          <p className="text-md font-semibold text-ink">Inventory & Machinery</p>
           <Field label="As at">
-            <TextInput type="date" value={inventoryAsAt} onChange={(e) => setInventoryAsAt(e.target.value)} className="w-36" />
+            <TextInput type="date" value={asOfDate} onChange={(e) => setAsOfDate(e.target.value)} className="w-36" />
           </Field>
         </div>
-        <DataTable
-          columns={inventoryCols}
-          data={inventoryAsOfDate}
-        />
-      </div>
-
-      {/* Section 7 — Machinery & Equipment (as at date) */}
-      <div className="rounded-base border border-border bg-white px-4 py-3">
-        <div className="mb-2 flex items-center justify-between">
-          <p className="text-md font-semibold text-ink">Machinery & Equipment</p>
-          <Field label="As at">
-            <TextInput type="date" value={machineryAsAt} onChange={(e) => setMachineryAsAt(e.target.value)} className="w-36" />
-          </Field>
-        </div>
-        {machineryAsOfDate.length === 0 ? (
-          <p className="py-4 text-center text-sm text-muted">No machinery or equipment owned as at this date</p>
+        <p className="mb-1 text-sm font-semibold text-ink2">Inventory</p>
+        {report.inventory.length === 0 ? (
+          <p className="py-2 text-sm text-muted">No inventory recorded as at this date.</p>
         ) : (
-          <DataTable columns={machineryCols} data={machineryAsOfDate} />
+          <DataTable columns={inventoryCols} data={report.inventory} />
+        )}
+        <p className="mb-1 mt-3 text-sm font-semibold text-ink2">Machinery & Equipment</p>
+        {report.machinery.length === 0 ? (
+          <p className="py-2 text-sm text-muted">No machinery or equipment owned as at this date.</p>
+        ) : (
+          <DataTable columns={machineryCols} data={report.machinery} />
         )}
       </div>
 
-      {/* Section 8 — Loan History & Risk Flags */}
+      {/* Section 7 — Loan History & Risk Flags */}
       <div className="rounded-base border border-border bg-white px-4 py-3">
         <p className="mb-2 text-md font-semibold text-ink">{isNgo ? 'Risk Flags' : 'Loan History & Risk Flags'}</p>
-        {!isNgo && <DataTable columns={loanCols} data={report.loanHistory} />}
+        {!isNgo && (
+          report.loanHistory.length === 0 ? (
+            <p className="py-2 text-sm text-muted">No loan history for this farmer.</p>
+          ) : (
+            <DataTable columns={loanCols} data={report.loanHistory} />
+          )
+        )}
         {report.riskFlags.length > 0 && (
           <div className="mt-3">
             <AlertBox variant="amber">
@@ -253,9 +311,6 @@ export function FarmerReportView({ farmerId }: { farmerId: string }) {
             </AlertBox>
           </div>
         )}
-        {/* TODO(real-data): GET /api/v1/farms/{farmId}/report exists in farm-service, but this
-            mock farmer report has no real farmId to pass it — wire once farmer-reports resolves
-            to real farm-service records. */}
         <div className="mt-3 flex gap-2">
           <button type="button" disabled className="rounded-md bg-ac-green px-3 py-1.5 text-sm font-semibold text-white opacity-50">
             📄 Download PDF
