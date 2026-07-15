@@ -104,3 +104,83 @@ export async function groupCustomersBySupplier(
     lastOrderAt: group._max.createdAt as Date,
   }));
 }
+
+// Orders in these statuses represent an accepted sale (the supplier has
+// committed to fulfilling it) — 'pending' orders are not yet a real sale and
+// must not count toward revenue/top-product figures.
+const REVENUE_STATUSES = ['confirmed', 'dispatched', 'delivered'];
+
+// Safety bound mirroring MAX_DISTINCT_CUSTOMERS_SCAN above — this endpoint
+// only ever needs a 6-month window for one supplier, but caps the scan in
+// case of an outlier supplier with an extreme order volume.
+const MAX_REVENUE_ORDERS_SCAN = 20000;
+
+export interface ProductRevenueAggregate {
+  productId: string;
+  unitsSold: number;
+  totalKes: number;
+}
+
+export interface SupplierRevenueSummary {
+  revenueMonthKes: number;
+  revenueTrend: { month: string; totalKes: number }[];
+  topProducts: ProductRevenueAggregate[];
+}
+
+function monthKey(date: Date): string {
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
+function monthLabel(date: Date): string {
+  return date.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' });
+}
+
+export async function getSupplierRevenueSummary(supplierId: string): Promise<SupplierRevenueSummary> {
+  const now = new Date();
+  const sixMonthsAgo = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 5, 1));
+
+  const orders = await prisma.order.findMany({
+    where: {
+      supplierId,
+      status: { in: REVENUE_STATUSES as unknown as ('confirmed' | 'dispatched' | 'delivered')[] },
+      createdAt: { gte: sixMonthsAgo },
+    },
+    select: { productId: true, totalPriceKes: true, quantityUnits: true, createdAt: true },
+    take: MAX_REVENUE_ORDERS_SCAN,
+  });
+
+  const monthBuckets = new Map<string, { label: string; totalKes: number }>();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
+    monthBuckets.set(monthKey(d), { label: monthLabel(d), totalKes: 0 });
+  }
+
+  const productTotals = new Map<string, { unitsSold: number; totalKes: number }>();
+  const currentMonthKey = monthKey(now);
+  let revenueMonthKes = 0;
+
+  for (const order of orders) {
+    const amount = Number(order.totalPriceKes);
+    const key = monthKey(order.createdAt);
+    const bucket = monthBuckets.get(key);
+    if (bucket) bucket.totalKes += amount;
+    if (key === currentMonthKey) revenueMonthKes += amount;
+
+    const productTotal = productTotals.get(order.productId) ?? { unitsSold: 0, totalKes: 0 };
+    productTotal.unitsSold += Number(order.quantityUnits);
+    productTotal.totalKes += amount;
+    productTotals.set(order.productId, productTotal);
+  }
+
+  const revenueTrend = Array.from(monthBuckets.values()).map((b) => ({
+    month: b.label,
+    totalKes: Math.round(b.totalKes),
+  }));
+
+  const topProducts = Array.from(productTotals.entries())
+    .map(([productId, agg]) => ({ productId, unitsSold: agg.unitsSold, totalKes: Math.round(agg.totalKes) }))
+    .sort((a, b) => b.totalKes - a.totalKes)
+    .slice(0, 4);
+
+  return { revenueMonthKes: Math.round(revenueMonthKes), revenueTrend, topProducts };
+}

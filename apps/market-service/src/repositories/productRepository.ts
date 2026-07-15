@@ -81,3 +81,11 @@ export async function findLowStockProductsBySupplier(supplierId: string, thresho
     take: limit,
   });
 }
+
+export async function findProductsByIds(ids: string[]) {
+  if (ids.length === 0) return [];
+  return prisma.supplierProduct.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, name: true },
+  });
+}

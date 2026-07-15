@@ -1,4 +1,6 @@
 import * as productRepo from '../repositories/productRepository.js';
+import * as orderRepo from '../repositories/orderRepository.js';
+import type { ProductRevenueAggregate } from '../repositories/orderRepository.js';
 import { createError } from '../middleware/errorHandler.js';
 import { parsePaginationParams, buildMeta } from '../utils/pagination.js';
 import { CreateProductDto } from '../schemas/createProduct.schema.js';
@@ -45,10 +47,28 @@ export async function updateProduct(productId: string, supplierId: string, dto: 
  */
 export async function getSupplierSummary(supplierId: string, query: SupplierSummaryQuery) {
   const threshold = query.low_stock_threshold;
-  const [activeProductCount, lowStockCount, lowStockItems] = await Promise.all([
+  const [activeProductCount, lowStockCount, lowStockItems, revenueSummary] = await Promise.all([
     productRepo.countActiveProductsBySupplier(supplierId),
     productRepo.countLowStockProductsBySupplier(supplierId, threshold),
     productRepo.findLowStockProductsBySupplier(supplierId, threshold, MAX_LOW_STOCK_ITEMS),
+    orderRepo.getSupplierRevenueSummary(supplierId),
   ]);
-  return { activeProductCount, lowStockCount, lowStockItems };
+
+  const products = await productRepo.findProductsByIds(
+    revenueSummary.topProducts.map((p: ProductRevenueAggregate) => p.productId),
+  );
+  const nameById = new Map(products.map((p: { id: string; name: string }) => [p.id, p.name]));
+  const topProducts = revenueSummary.topProducts.map((p: ProductRevenueAggregate) => ({
+    ...p,
+    name: nameById.get(p.productId) ?? 'Unknown product',
+  }));
+
+  return {
+    activeProductCount,
+    lowStockCount,
+    lowStockItems,
+    revenueMonthKes: revenueSummary.revenueMonthKes,
+    revenueTrend: revenueSummary.revenueTrend,
+    topProducts,
+  };
 }

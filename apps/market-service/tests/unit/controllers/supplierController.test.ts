@@ -89,7 +89,14 @@ describe('getMyCustomers', () => {
 
 describe('getMySummary', () => {
   it('returns the KPI summary', async () => {
-    const summary = { activeProductCount: 5, lowStockCount: 2, lowStockItems: [] };
+    const summary = {
+      activeProductCount: 5,
+      lowStockCount: 2,
+      lowStockItems: [],
+      revenueMonthKes: 0,
+      revenueTrend: [],
+      topProducts: [],
+    };
     mockProductService.getSupplierSummary.mockResolvedValue(summary);
     const { res, json } = makeRes();
     await supplierController.getMySummary(authReq(), res, next);
@@ -137,7 +144,14 @@ describe('getCustomersForAdmin', () => {
 
 describe('getSummaryForAdmin', () => {
   it('scopes to the supplierId path param, not the caller', async () => {
-    const summary = { activeProductCount: 3, lowStockCount: 1, lowStockItems: [] };
+    const summary = {
+      activeProductCount: 3,
+      lowStockCount: 1,
+      lowStockItems: [],
+      revenueMonthKes: 0,
+      revenueTrend: [],
+      topProducts: [],
+    };
     mockProductService.getSupplierSummary.mockResolvedValue(summary);
     const { res, json } = makeRes();
     await supplierController.getSummaryForAdmin(

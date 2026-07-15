@@ -73,21 +73,49 @@ describe('orderService.getSupplierCustomers', () => {
 });
 
 describe('productService.getSupplierSummary', () => {
-  it('returns active count, low-stock count, and bounded low-stock items', async () => {
+  it('returns active count, low-stock count, bounded low-stock items, and revenue aggregates', async () => {
     const lowStockItem = { id: 'prod-001', supplierId: SUPPLIER_ID, stockQuantity: '2', isActive: true };
     mockProductRepo.countActiveProductsBySupplier.mockResolvedValue(5);
     mockProductRepo.countLowStockProductsBySupplier.mockResolvedValue(1);
     mockProductRepo.findLowStockProductsBySupplier.mockResolvedValue([lowStockItem]);
+    mockOrderRepo.getSupplierRevenueSummary.mockResolvedValue({
+      revenueMonthKes: 5000,
+      revenueTrend: [{ month: 'Jun', totalKes: 5000 }],
+      topProducts: [{ productId: 'prod-001', unitsSold: 3, totalKes: 5000 }],
+    });
+    mockProductRepo.findProductsByIds.mockResolvedValue([{ id: 'prod-001', name: 'CAN Fertiliser' }]);
 
     const result = await productService.getSupplierSummary(SUPPLIER_ID, { low_stock_threshold: 10 });
 
     expect(mockProductRepo.countActiveProductsBySupplier).toHaveBeenCalledWith(SUPPLIER_ID);
     expect(mockProductRepo.countLowStockProductsBySupplier).toHaveBeenCalledWith(SUPPLIER_ID, 10);
     expect(mockProductRepo.findLowStockProductsBySupplier).toHaveBeenCalledWith(SUPPLIER_ID, 10, 50);
+    expect(mockOrderRepo.getSupplierRevenueSummary).toHaveBeenCalledWith(SUPPLIER_ID);
     expect(result).toEqual({
       activeProductCount: 5,
       lowStockCount: 1,
       lowStockItems: [lowStockItem],
+      revenueMonthKes: 5000,
+      revenueTrend: [{ month: 'Jun', totalKes: 5000 }],
+      topProducts: [{ productId: 'prod-001', unitsSold: 3, totalKes: 5000, name: 'CAN Fertiliser' }],
     });
+  });
+
+  it('falls back to "Unknown product" when a top product has since been deleted', async () => {
+    mockProductRepo.countActiveProductsBySupplier.mockResolvedValue(0);
+    mockProductRepo.countLowStockProductsBySupplier.mockResolvedValue(0);
+    mockProductRepo.findLowStockProductsBySupplier.mockResolvedValue([]);
+    mockOrderRepo.getSupplierRevenueSummary.mockResolvedValue({
+      revenueMonthKes: 0,
+      revenueTrend: [],
+      topProducts: [{ productId: 'deleted-prod', unitsSold: 1, totalKes: 100 }],
+    });
+    mockProductRepo.findProductsByIds.mockResolvedValue([]);
+
+    const result = await productService.getSupplierSummary(SUPPLIER_ID, { low_stock_threshold: 10 });
+
+    expect(result.topProducts).toEqual([
+      { productId: 'deleted-prod', unitsSold: 1, totalKes: 100, name: 'Unknown product' },
+    ]);
   });
 });
