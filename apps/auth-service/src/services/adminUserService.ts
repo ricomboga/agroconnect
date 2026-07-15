@@ -7,6 +7,7 @@ import {
   adminCountUsersByKycStatus,
   adminKycStatusBreakdown,
   adminFarmerRegistrationsSince,
+  adminFarmersByCounty,
   adminSetUserStatus,
   adminVerifyUser,
   adminCreateUser,
@@ -251,11 +252,12 @@ export async function getStats() {
   sevenDaysAgo.setUTCDate(sevenDaysAgo.getUTCDate() - 6);
   sevenDaysAgo.setUTCHours(0, 0, 0, 0);
 
-  const [total_farmers, pending_kyc, kycRows, registrationRows] = await Promise.all([
+  const [total_farmers, pending_kyc, kycRows, registrationRows, countyRows] = await Promise.all([
     adminCountFarmers(),
     adminCountUsersByKycStatus('pending'),
     adminKycStatusBreakdown(),
     adminFarmerRegistrationsSince(sevenDaysAgo),
+    adminFarmersByCounty(),
   ]);
 
   return {
@@ -263,6 +265,7 @@ export async function getStats() {
     pending_kyc,
     kyc_breakdown: kycRows.map((r) => ({ status: r.kycStatus, count: r.count })),
     weekly_registrations: weeklyRegistrationBuckets(registrationRows),
+    farmers_by_county: countyRows,
   };
 }
 

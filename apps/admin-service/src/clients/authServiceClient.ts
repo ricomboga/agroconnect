@@ -305,6 +305,7 @@ export interface AuthStats {
   pending_kyc: number;
   kyc_breakdown: Array<{ status: string; count: number }>;
   weekly_registrations: Array<{ date: string; count: number }>;
+  farmers_by_county: Array<{ county: string; count: number }>;
 }
 
 export async function getStats(): Promise<AuthStats> {
@@ -315,7 +316,7 @@ export async function getStats(): Promise<AuthStats> {
     return res.data;
   } catch (err) {
     logger.warn({ err }, 'auth-service stats unavailable');
-    return { total_farmers: 0, pending_kyc: 0, kyc_breakdown: [], weekly_registrations: [] };
+    return { total_farmers: 0, pending_kyc: 0, kyc_breakdown: [], weekly_registrations: [], farmers_by_county: [] };
   }
 }
 

@@ -27,6 +27,11 @@ interface KycBreakdownRow {
   count: number
 }
 
+interface CountyFarmerCount {
+  county: string
+  count: number
+}
+
 interface AnalyticsSummary {
   total_farmers: number
   total_farms: number
@@ -37,6 +42,7 @@ interface AnalyticsSummary {
   farms_health_below_50: number
   kyc_breakdown: KycBreakdownRow[]
   weekly_registrations: WeeklyRegistration[]
+  farmers_by_county: CountyFarmerCount[]
 }
 
 const KYC_COLORS: Record<string, string> = {
@@ -66,16 +72,6 @@ export default function AnalyticsPage() {
     },
   })
 
-  const { data: farmersByCounty } = useQuery({
-    queryKey: ['admin', 'reports', 'farmers-by-county'],
-    queryFn: async () => {
-      const res = await api.get<{ data: { county: string; farmerCount: number }[] }>(
-        '/api/v1/admin/reports/farmers-by-county',
-      )
-      return res.data.data
-    },
-  })
-
   const weeklyBars = (data?.weekly_registrations ?? []).map((row) => ({
     day: formatDayLabel(row.date),
     date: row.date,
@@ -90,11 +86,14 @@ export default function AnalyticsPage() {
       color: KYC_COLORS[row.status] ?? '#6B7280',
     }))
 
-  const topCounties = [...(farmersByCounty ?? [])]
-    .sort((a, b) => b.farmerCount - a.farmerCount)
+  const allCounties = data?.farmers_by_county ?? []
+  const sortedCounties = [...allCounties].sort((a, b) => b.count - a.count)
+  const topCounties = sortedCounties
     .slice(0, 8)
-    .map((row) => ({ county: row.county, Farmers: row.farmerCount }))
+    .map((row) => ({ county: row.county, Farmers: row.count }))
     .reverse()
+  const shownFarmerCount = sortedCounties.slice(0, 8).reduce((sum, row) => sum + row.count, 0)
+  const hiddenCountyCount = Math.max(0, sortedCounties.length - 8)
 
   return (
     <div>
@@ -152,9 +151,15 @@ export default function AnalyticsPage() {
         </div>
 
         <div className="col-span-2 rounded-base border border-border bg-white px-4 py-3">
-          <p className="mb-2 text-md font-semibold text-ink">Top Counties by Farmer Count</p>
+          <div className="mb-2 flex items-baseline justify-between">
+            <p className="text-md font-semibold text-ink">Top Counties by Farmer Count</p>
+            <p className="text-xs text-muted">
+              {shownFarmerCount} of {data?.total_farmers ?? 0} farmers shown
+              {hiddenCountyCount > 0 ? ` · +${hiddenCountyCount} more counties` : ''}
+            </p>
+          </div>
           {topCounties.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted">No farm data yet</p>
+            <p className="py-8 text-center text-sm text-muted">No farmer accounts yet</p>
           ) : (
             <ResponsiveContainer width="100%" height={Math.max(180, topCounties.length * 34)}>
               <BarChart data={topCounties} layout="vertical" margin={{ left: 8 }}>

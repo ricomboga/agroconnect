@@ -14,6 +14,7 @@ export interface AnalyticsSummary {
   farms_health_below_50: number;
   kyc_breakdown: Array<{ status: string; count: number }>;
   weekly_registrations: Array<{ date: string; count: number }>;
+  farmers_by_county: Array<{ county: string; count: number }>;
 }
 
 export async function getSummary(): Promise<AnalyticsSummary> {
@@ -40,7 +41,7 @@ export async function getSummary(): Promise<AnalyticsSummary> {
   const auth =
     authResult.status === 'fulfilled'
       ? authResult.value
-      : { total_farmers: 0, pending_kyc: 0, kyc_breakdown: [], weekly_registrations: [] };
+      : { total_farmers: 0, pending_kyc: 0, kyc_breakdown: [], weekly_registrations: [], farmers_by_county: [] };
   const farm =
     farmResult.status === 'fulfilled'
       ? farmResult.value
@@ -58,5 +59,6 @@ export async function getSummary(): Promise<AnalyticsSummary> {
     farms_health_below_50: farm.farms_health_below_50,
     kyc_breakdown: auth.kyc_breakdown,
     weekly_registrations: auth.weekly_registrations,
+    farmers_by_county: auth.farmers_by_county,
   };
 }
