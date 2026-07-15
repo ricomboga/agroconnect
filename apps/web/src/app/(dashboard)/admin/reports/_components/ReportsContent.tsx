@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import api from '@/lib/api'
 import { Field, FieldGroup, Select, DataTable } from '@agroconnect/web-ui'
 
@@ -175,6 +176,11 @@ export function ReportsContent() {
   const countyOptions = Array.from(new Set((allLivestock ?? []).map((r) => r.county))).sort()
   const animalTypeOptions = Array.from(new Set((allLivestock ?? []).map((r) => r.animalType))).sort()
 
+  const farmersByCountyBars = [...(farmersByCounty ?? [])]
+    .sort((a, b) => b.farmerCount - a.farmerCount)
+    .map((row) => ({ county: row.county, Farmers: row.farmerCount }))
+    .reverse()
+
   return (
     <div>
       <div className="mb-4">
@@ -194,16 +200,20 @@ export function ReportsContent() {
         </div>
         {isFarmersLoading ? (
           <p className="py-6 text-center text-sm text-muted">Loading…</p>
-        ) : (farmersByCounty ?? []).length === 0 ? (
+        ) : farmersByCountyBars.length === 0 ? (
           <p className="py-6 text-center text-sm text-muted">No farm data recorded yet</p>
         ) : (
-          <DataTable<CountyFarmerCount>
-            columns={[
-              { key: 'county', header: 'County' },
-              { key: 'farmerCount', header: 'Farmers' },
-            ]}
-            data={farmersByCounty ?? []}
-          />
+          <div className="max-h-[500px] overflow-y-auto">
+            <ResponsiveContainer width="100%" height={Math.max(180, farmersByCountyBars.length * 30)}>
+              <BarChart data={farmersByCountyBars} layout="vertical" margin={{ left: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                <XAxis type="number" tick={{ fontSize: 12 }} allowDecimals={false} />
+                <YAxis type="category" dataKey="county" tick={{ fontSize: 12 }} width={110} />
+                <Tooltip />
+                <Bar dataKey="Farmers" fill="#1A6B3C" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         )}
       </div>
 
