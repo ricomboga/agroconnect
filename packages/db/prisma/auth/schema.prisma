@@ -13,6 +13,7 @@ model User {
   id            String     @id @default(uuid())
   phone         String     @unique
   email         String?    @unique
+  idNumber      String?    @unique
   passwordHash  String
   fullName      String
   role          UserRole

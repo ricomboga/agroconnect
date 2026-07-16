@@ -8,6 +8,7 @@ import type { DataTableColumn } from '@agroconnect/web-ui'
 
 interface FarmerReportRow {
   farmerId: string
+  idNumber?: string | null
   fullName?: string | null
   phone?: string | null
   county: string | null
@@ -64,9 +65,9 @@ export function FarmerReportsList() {
         if (countyFilter && !(r.county ?? '').toLowerCase().includes(countyFilter.toLowerCase())) return false
         if (idOrPhoneFilter) {
           const needle = idOrPhoneFilter.trim().toLowerCase()
-          const matchesId = r.farmerId.toLowerCase().includes(needle)
+          const matchesIdNumber = (r.idNumber ?? '').toLowerCase().includes(needle)
           const matchesPhone = (r.phone ?? '').toLowerCase().includes(needle)
-          if (!matchesId && !matchesPhone) return false
+          if (!matchesIdNumber && !matchesPhone) return false
         }
         return true
       }),
@@ -132,11 +133,22 @@ export function FarmerReportsList() {
     { key: 'lastHarvest', header: 'Last Harvest', render: (row) => (row.lastHarvest ? new Date(row.lastHarvest).toLocaleDateString('en-KE') : '—') },
     {
       key: 'action',
-      header: 'Action',
+      header: 'Reports',
       render: (row) => (
-        <Link href={`/lender/farmer-reports/${row.farmerId}`} className="text-sm font-semibold text-ac-green">
-          View Report →
-        </Link>
+        <div className="flex flex-col gap-0.5">
+          <Link
+            href={`/lender/farmer-reports/${row.farmerId}#inventory`}
+            className="text-sm font-semibold text-ac-green"
+          >
+            Inventory Report →
+          </Link>
+          <Link
+            href={`/lender/farmer-reports/${row.farmerId}#cashflow`}
+            className="text-sm font-semibold text-ac-green"
+          >
+            Income &amp; Expenses →
+          </Link>
+        </div>
       ),
     },
   ]
@@ -157,7 +169,7 @@ export function FarmerReportsList() {
 
       <div className="mb-3 flex gap-2">
         <TextInput
-          placeholder="Farmer ID or phone…"
+          placeholder="Farmer ID number or phone…"
           value={idOrPhoneFilter}
           onChange={(e) => setIdOrPhoneFilter(e.target.value)}
           className="max-w-[200px]"

@@ -73,10 +73,7 @@ export async function getFarmersListReportHandler(
       const farm = farmProfiles[farmerId];
       return {
         farmerId,
-        // No nationalId/ID-number field exists on the User model today (only a KYC
-        // "national_id" *document* upload, not a stored ID string) — surfaced as null
-        // until that field is added.
-        idNumber: null,
+        idNumber: profile?.idNumber ?? null,
         fullName: profile?.fullName ?? null,
         phone: profile?.phone ?? null,
         county: farm?.county ?? profile?.county ?? null,

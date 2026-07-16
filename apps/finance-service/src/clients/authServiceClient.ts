@@ -15,6 +15,7 @@ const client = axios.create({
 export interface UserProfile {
   fullName: string;
   phone: string;
+  idNumber: string | null;
   county: string | null;
   subCounty: string | null;
 }

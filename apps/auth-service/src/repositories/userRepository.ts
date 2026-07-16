@@ -41,6 +41,10 @@ export async function findUserByPhone(phone: string) {
   return prisma.user.findUnique({ where: { phone } });
 }
 
+export async function findUserByIdNumber(idNumber: string) {
+  return prisma.user.findUnique({ where: { idNumber } });
+}
+
 export async function findUserById(id: string) {
   return prisma.user.findUnique({ where: { id } });
 }
@@ -93,6 +97,7 @@ export async function findUsersByIds(ids: string[]) {
       id: true,
       fullName: true,
       phone: true,
+      idNumber: true,
       county: true,
       subCounty: true,
       kycStatus: true,

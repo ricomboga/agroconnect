@@ -31,7 +31,7 @@ import {
   getUserPermissionNames,
 } from '../repositories/roleRepository.js';
 import { randomInt } from 'node:crypto';
-import { findUserByPhone, updatePasswordHash, type UserRole, type UserStatus } from '../repositories/userRepository.js';
+import { findUserByPhone, findUserByIdNumber, updatePasswordHash, type UserRole, type UserStatus } from '../repositories/userRepository.js';
 import { deleteSessionsByUserId } from '../repositories/sessionRepository.js';
 import { findExpertsByCounty, upsertFarmerExpertAssignment } from '../repositories/expertRepository.js';
 import { createError } from '../middleware/errorHandler.js';
@@ -57,6 +57,7 @@ function toResponse(u: {
   fullName: string;
   phone: string;
   email: string | null;
+  idNumber: string | null;
   role: string;
   county: string | null;
   subCounty: string | null;
@@ -77,6 +78,7 @@ function toResponse(u: {
     full_name: u.fullName,
     phone: u.phone,
     email: u.email ?? null,
+    id_number: u.idNumber ?? null,
     role: u.role,
     county: u.county ?? '',
     sub_county: u.subCounty ?? '',
@@ -124,6 +126,7 @@ export async function getUser(id: string) {
 export interface CreateUserParams {
   phone: string;
   email?: string;
+  idNumber?: string;
   password: string;
   fullName: string;
   role: string;
@@ -144,12 +147,18 @@ export async function createUser(params: CreateUserParams) {
   const existing = await findUserByPhone(params.phone);
   if (existing) throw createError('Phone already registered', 409, 'PHONE_TAKEN', 'error.phone_taken');
 
+  if (params.idNumber) {
+    const existingId = await findUserByIdNumber(params.idNumber);
+    if (existingId) throw createError('ID number already registered', 409, 'ID_NUMBER_TAKEN', 'error.id_number_taken');
+  }
+
   const rounds = parseInt(process.env['BCRYPT_ROUNDS'] ?? '10', 10);
   const passwordHash = await bcrypt.hash(params.password, rounds);
 
   const u = await adminCreateUser({
     phone: params.phone,
     email: params.email,
+    idNumber: params.idNumber,
     passwordHash,
     fullName: params.fullName,
     role: params.role as UserRole,

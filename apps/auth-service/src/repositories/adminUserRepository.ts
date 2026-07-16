@@ -13,6 +13,7 @@ const ADMIN_USER_SELECT = {
   id: true,
   phone: true,
   email: true,
+  idNumber: true,
   fullName: true,
   role: true,
   county: true,
@@ -148,6 +149,7 @@ export async function adminVerifyUser(targetId: string, verifierId: string) {
 export interface AdminCreateUserParams {
   phone: string;
   email?: string;
+  idNumber?: string;
   passwordHash: string;
   fullName: string;
   role: UserRole;

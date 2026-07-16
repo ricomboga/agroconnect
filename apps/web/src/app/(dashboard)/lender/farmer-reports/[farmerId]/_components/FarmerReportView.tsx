@@ -22,6 +22,7 @@ interface FarmerReport {
   farmer: {
     fullName: string
     phone: string
+    idNumber: string | null
     county: string | null
     subCounty: string | null
     farmerType: string | null
@@ -157,6 +158,7 @@ export function FarmerReportView({ farmerId }: { farmerId: string }) {
         <div className="grid grid-cols-3 gap-x-4 gap-y-2 text-sm">
           <div><p className="text-xs uppercase tracking-wide text-muted">Full Name</p><p className="text-ink">{report.farmer.fullName}</p></div>
           <div><p className="text-xs uppercase tracking-wide text-muted">Phone</p><p className="text-ink">{report.farmer.phone}</p></div>
+          <div><p className="text-xs uppercase tracking-wide text-muted">ID Number</p><p className="text-ink">{report.farmer.idNumber ?? '—'}</p></div>
           <div><p className="text-xs uppercase tracking-wide text-muted">County</p><p className="text-ink">{report.farmer.county ?? '—'}</p></div>
           <div><p className="text-xs uppercase tracking-wide text-muted">Member Since</p><p className="text-ink">{new Date(report.farmer.memberSince).toLocaleDateString('en-KE')}</p></div>
           <div><p className="text-xs uppercase tracking-wide text-muted">Farm Type</p><p className="text-ink capitalize">{report.farmer.farmerType ?? '—'}</p></div>
@@ -250,7 +252,7 @@ export function FarmerReportView({ farmerId }: { farmerId: string }) {
       </div>
 
       {/* Section 5 — Harvest History & Cash Flow */}
-      <div className="rounded-base border border-border bg-white px-4 py-3">
+      <div id="cashflow" className="scroll-mt-4 rounded-base border border-border bg-white px-4 py-3">
         <div className="mb-2 flex items-center justify-between">
           <p className="text-md font-semibold text-ink">Harvest History</p>
           <div className="flex items-center gap-2">
@@ -271,7 +273,7 @@ export function FarmerReportView({ farmerId }: { farmerId: string }) {
       </div>
 
       {/* Section 6 — Inventory & Machinery (shared as-at snapshot date) */}
-      <div className="rounded-base border border-border bg-white px-4 py-3">
+      <div id="inventory" className="scroll-mt-4 rounded-base border border-border bg-white px-4 py-3">
         <div className="mb-2 flex items-center justify-between">
           <p className="text-md font-semibold text-ink">Inventory & Machinery</p>
           <Field label="As at">

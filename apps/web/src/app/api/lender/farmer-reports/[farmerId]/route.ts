@@ -10,6 +10,7 @@ const SERVICE_TOKEN = process.env.INTERNAL_SERVICE_SECRET ?? ''
 interface FarmerIdentity {
   fullName: string
   phone: string
+  idNumber: string | null
   county: string | null
   subCounty: string | null
   kycStatus: string
@@ -120,6 +121,7 @@ export async function GET(req: NextRequest, { params }: { params: { farmerId: st
       farmer: {
         fullName: identity.fullName,
         phone: identity.phone,
+        idNumber: identity.idNumber,
         county: identity.county,
         subCounty: identity.subCounty,
         farmerType: farmReport.farm?.farmType ?? null,

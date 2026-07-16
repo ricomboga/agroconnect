@@ -34,6 +34,7 @@ export default function NgoFarmerStep4Page() {
           phone: state.phone.trim(),
           password: 'Agro1234',
           fullName: state.fullName.trim(),
+          idNumber: state.nationalId.trim(),
           county: state.county,
           language: state.language,
         }),

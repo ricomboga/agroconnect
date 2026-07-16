@@ -9,6 +9,7 @@ import { createAuditLog, listAuditLogs, countAuditLogs } from '../repositories/a
 const createUserSchema = z.object({
   phone: z.string().min(1),
   email: z.string().email().optional(),
+  idNumber: z.string().trim().min(5).max(20).optional(),
   password: z.string().min(8),
   fullName: z.string().min(1),
   role: z.enum(['farmer', 'extension_officer', 'vet_officer', 'supplier', 'buyer', 'govt_officer', 'admin', 'lender', 'farm_worker']),
@@ -439,6 +440,7 @@ export async function batchGetUsersHandler(req: Request, res: Response, next: Ne
       {
         fullName: string;
         phone: string;
+        idNumber: string | null;
         county: string | null;
         subCounty: string | null;
         kycStatus: string;
@@ -449,6 +451,7 @@ export async function batchGetUsersHandler(req: Request, res: Response, next: Ne
       map[u.id] = {
         fullName: u.fullName,
         phone: u.phone,
+        idNumber: u.idNumber,
         county: u.county,
         subCounty: u.subCounty,
         kycStatus: u.kycStatus,
