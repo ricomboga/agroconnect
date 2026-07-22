@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from '@/lib/auth'
+import { getServerSessionWithRefresh } from '@/lib/auth'
 
 const MARKET_SERVICE = process.env.MARKET_SERVICE_URL ?? 'http://localhost:3004'
 const SERVICE_TOKEN = process.env.INTERNAL_SERVICE_SECRET ?? ''
 
 async function requireAdmin() {
-  const session = await getServerSession()
-  if (!session || session.role !== 'admin') return null
-  return session
+  const auth = await getServerSessionWithRefresh()
+  if (!auth || auth.session.role !== 'admin') return null
+  return auth.session
 }
 
 export async function GET(req: NextRequest) {

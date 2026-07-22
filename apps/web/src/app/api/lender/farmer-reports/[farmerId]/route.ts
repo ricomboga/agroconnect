@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
-import { getServerSession } from '@/lib/auth'
+import { getServerSessionWithRefresh } from '@/lib/auth'
 
 const AUTH = process.env.AUTH_SERVICE_URL ?? ''
 const FARM_SERVICE = process.env.FARM_SERVICE_URL ?? ''
@@ -76,14 +75,13 @@ function buildRiskFlags(farmReport: FarmReport, credit: CreditReport): string[] 
 }
 
 export async function GET(req: NextRequest, { params }: { params: { farmerId: string } }) {
-  const session = await getServerSession()
-  if (!session || session.role !== 'lender') {
+  const auth = await getServerSessionWithRefresh()
+  if (!auth || auth.session.role !== 'lender') {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
   }
 
   const farmerId = params.farmerId
   const asOfDate = req.nextUrl.searchParams.get('as_of') ?? new Date().toISOString().slice(0, 10)
-  const token = cookies().get('__ac')?.value ?? ''
 
   const [identityRes, farmReportRes, creditRes] = await Promise.all([
     fetch(`${AUTH}/internal/admin/users/batch?ids=${encodeURIComponent(farmerId)}`, {
@@ -95,7 +93,7 @@ export async function GET(req: NextRequest, { params }: { params: { farmerId: st
       cache: 'no-store',
     }),
     fetch(`${FINANCE_URL}/api/v1/finance/lender/farmer-reports/${encodeURIComponent(farmerId)}/credit`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${auth.token}` },
       cache: 'no-store',
     }),
   ])

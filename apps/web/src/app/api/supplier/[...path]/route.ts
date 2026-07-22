@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
-import { getServerSession } from '@/lib/auth'
+import { getServerSessionWithRefresh } from '@/lib/auth'
 
 const MARKET_SERVICE = process.env.MARKET_SERVICE_URL ?? 'http://localhost:3004'
 
 async function supplierProxy(req: NextRequest, segments: string[]) {
-  const session = await getServerSession()
-  if (!session) {
+  // getServerSessionWithRefresh (not getServerSession) so a supplier who has
+  // been on a long form (e.g. Add Product) past the 15-minute access-token
+  // TTL doesn't get a silent 401 on save — page navigations already get this
+  // via middleware, but middleware never covers /api/* routes.
+  const auth = await getServerSessionWithRefresh()
+  if (!auth) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
   }
 
-  const token = cookies().get('__ac')?.value ?? ''
   const upstreamPath = `/api/v1/market/${segments.join('/')}`
   const search = req.nextUrl.searchParams.toString()
   const url = `${MARKET_SERVICE}${upstreamPath}${search ? `?${search}` : ''}`
@@ -22,7 +24,7 @@ async function supplierProxy(req: NextRequest, segments: string[]) {
     method: req.method,
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${auth.token}`,
     },
     ...(body !== undefined ? { body } : {}),
   })

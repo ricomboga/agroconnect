@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
-import { getServerSession } from '@/lib/auth'
+import { getServerSessionWithRefresh } from '@/lib/auth'
 
 const FARM_SERVICE = process.env.FARM_SERVICE_URL ?? ''
 
 async function farmProxy(req: NextRequest, segments: string[]) {
-  const session = await getServerSession()
-  if (!session) {
+  // getServerSessionWithRefresh (not getServerSession) so a session whose
+  // 15-minute access token has expired mid-form doesn't get a silent 401 —
+  // page navigations already get this via middleware, but middleware never
+  // covers /api/* routes.
+  const auth = await getServerSessionWithRefresh()
+  if (!auth) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
   }
 
-  const token = cookies().get('__ac')?.value ?? ''
   const upstreamPath = `/api/v1/${segments.join('/')}`
   const search = req.nextUrl.searchParams.toString()
   const url = `${FARM_SERVICE}${upstreamPath}${search ? `?${search}` : ''}`
@@ -22,7 +24,7 @@ async function farmProxy(req: NextRequest, segments: string[]) {
     method: req.method,
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${auth.token}`,
     },
     ...(body !== undefined ? { body } : {}),
   })

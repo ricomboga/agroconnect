@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from '@/lib/auth'
+import { getServerSessionWithRefresh } from '@/lib/auth'
 
 const AUTH = process.env.AUTH_SERVICE_URL ?? ''
 const SERVICE_TOKEN = process.env.INTERNAL_SERVICE_SECRET ?? ''
@@ -12,9 +12,9 @@ function serviceHeaders() {
 }
 
 async function requireAdmin() {
-  const session = await getServerSession()
-  if (!session || session.role !== 'admin') return null
-  return session
+  const auth = await getServerSessionWithRefresh()
+  if (!auth || auth.session.role !== 'admin') return null
+  return auth.session
 }
 
 export async function GET(req: NextRequest) {

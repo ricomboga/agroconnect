@@ -32,16 +32,16 @@ const bodySchema = z.object({
 })
 
 export async function GET() {
-  const session = await requireLenderSession()
-  if (!session) {
+  const auth = await requireLenderSession()
+  if (!auth) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
   }
-  return NextResponse.json({ data: programsFor(session.sub) })
+  return NextResponse.json({ data: programsFor(auth.session.sub) })
 }
 
 export async function POST(req: NextRequest) {
-  const session = await requireLenderSession()
-  if (!session) {
+  const auth = await requireLenderSession()
+  if (!auth) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
   }
 
@@ -51,6 +51,6 @@ export async function POST(req: NextRequest) {
   }
 
   const program: Program = { id: `gp-mock-${Date.now()}`, ...parsed.data, active: true }
-  programsByUser.set(session.sub, [...programsFor(session.sub), program])
+  programsByUser.set(auth.session.sub, [...programsFor(auth.session.sub), program])
   return NextResponse.json({ data: program }, { status: 201 })
 }

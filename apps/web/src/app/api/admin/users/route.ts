@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
-import { getServerSession } from '@/lib/auth'
+import { getServerSessionWithRefresh } from '@/lib/auth'
 
 const AUTH = process.env.AUTH_SERVICE_URL ?? ''
 const SERVICE_TOKEN = process.env.INTERNAL_SERVICE_SECRET ?? ''
@@ -12,10 +11,16 @@ function serviceHeaders() {
   }
 }
 
+// getServerSessionWithRefresh (not getServerSession) so an admin whose
+// 15-minute access token has expired mid-form doesn't get a false
+// "Forbidden" — this route only needs the session claims (not the token
+// itself, since it authenticates upstream via the internal service token),
+// but a session check that never refreshes would still wrongly reject a
+// still-valid, just-stale-cookie session.
 async function requireAdmin() {
-  const session = await getServerSession()
-  if (!session || session.role !== 'admin') return null
-  return session
+  const auth = await getServerSessionWithRefresh()
+  if (!auth || auth.session.role !== 'admin') return null
+  return auth.session
 }
 
 export async function GET(req: NextRequest) {

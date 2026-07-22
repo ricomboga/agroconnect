@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
-import { getServerSession } from '@/lib/auth'
+import { getServerSessionWithRefresh } from '@/lib/auth'
 
 const MEDIA_SERVICE = process.env.MEDIA_SERVICE_URL ?? ''
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession()
-  if (!session) {
+  const auth = await getServerSessionWithRefresh()
+  if (!auth) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
   }
 
-  const token = cookies().get('__ac')?.value ?? ''
   const contentType = req.headers.get('content-type') ?? 'multipart/form-data'
   const body = await req.blob()
 
@@ -18,7 +16,7 @@ export async function POST(req: NextRequest) {
     method: 'POST',
     headers: {
       'Content-Type': contentType,
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${auth.token}`,
     },
     body,
   })

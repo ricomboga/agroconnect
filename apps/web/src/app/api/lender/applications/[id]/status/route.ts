@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import { z } from 'zod'
 import { requireLenderSession } from '@/lib/auth'
 
@@ -16,11 +15,10 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } },
 ) {
-  const session = await requireLenderSession()
-  if (!session) {
+  const auth = await requireLenderSession()
+  if (!auth) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
   }
-  const token = cookies().get('__ac')?.value ?? ''
 
   const parsed = bodySchema.safeParse(await req.json().catch(() => ({})))
   if (!parsed.success) {
@@ -36,7 +34,7 @@ export async function POST(
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${auth.token}`,
       },
       body: JSON.stringify(parsed.data),
     },

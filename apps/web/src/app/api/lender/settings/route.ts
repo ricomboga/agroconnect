@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import { requireLenderSession } from '@/lib/auth'
 
 const FINANCE_URL = process.env.FINANCE_SERVICE_URL ?? 'http://localhost:3003'
@@ -41,14 +40,13 @@ function settingsFor(userId: string): Settings {
 }
 
 export async function GET() {
-  const session = await requireLenderSession()
-  if (!session) {
+  const auth = await requireLenderSession()
+  if (!auth) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
   }
 
-  const token = cookies().get('__ac')?.value ?? ''
   const institutionRes = await fetch(`${FINANCE_URL}/api/v1/finance/lender/institution`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { Authorization: `Bearer ${auth.token}` },
     cache: 'no-store',
   })
   const institutionBody = (await institutionRes.json().catch(() => ({}))) as {
@@ -57,7 +55,7 @@ export async function GET() {
 
   return NextResponse.json({
     data: {
-      ...settingsFor(session.sub),
+      ...settingsFor(auth.session.sub),
       institutionType: institutionBody.data?.type ?? null,
       operatingCounties: institutionBody.data?.operatingCounties ?? [],
     },
@@ -65,28 +63,27 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
-  const session = await requireLenderSession()
-  if (!session) {
+  const auth = await requireLenderSession()
+  if (!auth) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
   }
 
   const body = (await req.json().catch(() => ({}))) as Partial<Settings> & { operatingCounties?: string[] }
   const { operatingCounties, ...rest } = body
-  const current = settingsFor(session.sub)
+  const current = settingsFor(auth.session.sub)
   const updated: Settings = {
     ...current,
     ...rest,
     notifications: { ...current.notifications, ...rest.notifications },
     profile: { ...current.profile, ...rest.profile },
   }
-  settingsByUser.set(session.sub, updated)
+  settingsByUser.set(auth.session.sub, updated)
 
   let updatedOperatingCounties: string[] | undefined
   if (operatingCounties) {
-    const token = cookies().get('__ac')?.value ?? ''
     const res = await fetch(`${FINANCE_URL}/api/v1/finance/lender/institution/operating-counties`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
       body: JSON.stringify({ operatingCounties }),
     })
     if (!res.ok) {
