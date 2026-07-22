@@ -16,7 +16,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres-init:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U agroconnect"]
+      test: ["CMD-SHELL", "pg_isready -U agroconnect -d postgres"]
       interval: 5s
       timeout: 5s
       retries: 10
