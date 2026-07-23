@@ -85,8 +85,6 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/agroconnect-${{ matrix.service }}:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/agroconnect-${{ matrix.service }}:sha-${{ github.sha }}
-          build-args: |
-            ${{ matrix.service == 'web' && 'NEXT_PUBLIC_API_URL=http://158.220.122.88:3000' || '' }}
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
 

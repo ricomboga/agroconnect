@@ -572,7 +572,6 @@ services:
     env_file:
       - ../apps/web/.env.local
     environment:
-      NEXT_PUBLIC_API_URL: "http://158.220.122.88:3000"
       AUTH_SERVICE_URL: "http://auth-service:3008"
       FARM_SERVICE_URL: "http://farm-service:3001"
       FINANCE_SERVICE_URL: "http://finance-service:3003"
