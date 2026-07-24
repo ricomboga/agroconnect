@@ -22,6 +22,14 @@ function subjectEmoji(subjectType: string): string {
   return subjectType === 'animal' ? '🐄' : '🌱';
 }
 
+const FEEDBACK_ELIGIBLE_AFTER_DAYS = 7;
+
+function isFeedbackEligible(item: DiagnosisResult): boolean {
+  if (item.status !== 'completed' || item.feedback) return false;
+  const ageMs = Date.now() - new Date(item.created_at).getTime();
+  return ageMs >= FEEDBACK_ELIGIBLE_AFTER_DAYS * 24 * 60 * 60 * 1000;
+}
+
 export function DiagnosisHomeScreen({ navigation }: Props) {
   const { t } = useTranslation();
   const { isOnline } = useOfflineSync();
@@ -120,29 +128,41 @@ export function DiagnosisHomeScreen({ navigation }: Props) {
               month: 'short',
               day: 'numeric',
             });
+            const showFeedbackPrompt = isFeedbackEligible(item);
             return (
-              <View key={item.id} style={s.historyRow}>
-                <Text style={{ fontSize: 20 }}>{subjectEmoji(item.subject.type)}</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={s.historyTitle}>{item.subject.name} — {diseaseName}</Text>
-                  <Text style={s.historyMeta}>
-                    {date} · {resolved
-                      ? t('diagnose.home.historyItem.resolved')
-                      : t('diagnose.home.historyItem.pending')}
-                  </Text>
-                </View>
-                {item.diagnosis && (
-                  <View style={[
-                    s.confBadge,
-                    { backgroundColor: item.diagnosis.confidence_tier === 'high' ? '#EAF4EE' : '#FEF3C7' },
-                  ]}>
-                    <Text style={[
-                      s.confText,
-                      { color: item.diagnosis.confidence_tier === 'high' ? '#0D4A28' : '#92400E' },
-                    ]}>
-                      {t('diagnose.home.historyItem.confidence', { pct: Math.round(item.diagnosis.confidence * 100) })}
+              <View key={item.id}>
+                <View style={[s.historyRow, showFeedbackPrompt && { borderBottomWidth: 0 }]}>
+                  <Text style={{ fontSize: 20 }}>{subjectEmoji(item.subject.type)}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.historyTitle}>{item.subject.name} — {diseaseName}</Text>
+                    <Text style={s.historyMeta}>
+                      {date} · {resolved
+                        ? t('diagnose.home.historyItem.resolved')
+                        : t('diagnose.home.historyItem.pending')}
                     </Text>
                   </View>
+                  {item.diagnosis && (
+                    <View style={[
+                      s.confBadge,
+                      { backgroundColor: item.diagnosis.confidence_tier === 'high' ? '#EAF4EE' : '#FEF3C7' },
+                    ]}>
+                      <Text style={[
+                        s.confText,
+                        { color: item.diagnosis.confidence_tier === 'high' ? '#0D4A28' : '#92400E' },
+                      ]}>
+                        {t('diagnose.home.historyItem.confidence', { pct: Math.round(item.diagnosis.confidence * 100) })}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                {showFeedbackPrompt && (
+                  <Pressable
+                    onPress={() => navigation.navigate('DiagnosisFeedback', { diagnosisId: item.id })}
+                    style={s.feedbackPrompt}
+                    accessibilityRole="button"
+                  >
+                    <Text style={s.feedbackPromptText}>{t('diagnose.home.historyItem.feedbackPrompt')}</Text>
+                  </Pressable>
                 )}
               </View>
             );
@@ -228,6 +248,13 @@ const s = StyleSheet.create({
   historyMeta:  { fontSize: 8, color: '#6B7280', marginTop: 1 },
   confBadge: { borderRadius: 8, paddingHorizontal: 6, paddingVertical: 2 },
   confText:  { fontSize: 8, fontWeight: '600' },
+  feedbackPrompt: {
+    paddingVertical: 6,
+    paddingHorizontal: 29,
+    borderBottomWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  feedbackPromptText: { fontSize: 9, color: '#1A6B3C', fontWeight: '600' },
   emptyWrap:  { alignItems: 'center', paddingVertical: 20 },
   emptyTitle: { fontSize: 11, fontWeight: '600', color: '#111827', marginBottom: 4 },
   emptyBody:  { fontSize: 9, color: '#6B7280', textAlign: 'center' },

@@ -39,6 +39,11 @@ export interface DiagnosisResult {
   alternative_diagnoses?: Array<{ disease_name: string; confidence: number; description: string }>;
   prescriptions?: DiagnosisPrescription[];
   suppliers?: SupplierProduct[];
+  feedback?: {
+    rating: number;
+    outcome: FeedbackOutcome;
+    submitted_at: string;
+  };
   processing_time_ms?: number;
   created_at: string;
 }

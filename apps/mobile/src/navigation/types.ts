@@ -48,6 +48,7 @@ export type DiagnoseStackParamList = {
   DiagnosisHome:   undefined;
   DiagnosisInput:  { mode: 'text' | 'photo' | 'both' };
   DiagnosisResult: { diagnosisId: string; farmId?: string };
+  DiagnosisFeedback: { diagnosisId: string };
   SupplierProducts: { productName: string };
   SupplierProductDetail: { productId: string };
 };

@@ -29,6 +29,16 @@ function confidenceBarColor(tier: 'high' | 'medium' | 'low' | undefined) {
   return '#D97706';
 }
 
+function severityColor(severity: 'mild' | 'moderate' | 'severe' | 'critical' | undefined) {
+  switch (severity) {
+    case 'mild': return '#1A6B3C';
+    case 'moderate': return '#C9A84C';
+    case 'severe': return '#EA580C';
+    case 'critical': return '#DC2626';
+    default: return '#6B7280';
+  }
+}
+
 export function DiagnosisResultScreen({ route, navigation }: Props) {
   const { diagnosisId } = route.params;
   const { t } = useTranslation();
@@ -47,6 +57,7 @@ export function DiagnosisResultScreen({ route, navigation }: Props) {
   const isProcessing = !data || data.status === 'pending' || data.status === 'processing';
   const diagnosis    = data?.diagnosis;
   const prescriptions: DiagnosisPrescription[] = data?.prescriptions ?? [];
+  const alternatives  = data?.alternative_diagnoses ?? [];
   const confidence   = diagnosis ? Math.round(diagnosis.confidence * 100) : 0;
   const subjectName  = data?.subject?.name ?? '';
   const firstProduct = prescriptions.find((p) => p.product_name)?.product_name ?? '';
@@ -142,6 +153,11 @@ export function DiagnosisResultScreen({ route, navigation }: Props) {
                 ({diagnosis?.disease_code} — {subjectName})
               </Text>
             </View>
+            {diagnosis?.severity && (
+              <View style={[s.severityChip, { backgroundColor: severityColor(diagnosis.severity) }]}>
+                <Text style={s.severityChipText}>{t(`diagnose.result.severity_${diagnosis.severity}`)}</Text>
+              </View>
+            )}
           </View>
           <View style={s.progressTrack}>
             <View
@@ -166,6 +182,24 @@ export function DiagnosisResultScreen({ route, navigation }: Props) {
           </Text>
           <Text style={s.paragraph}>{diagnosis?.description ?? ''}</Text>
         </View>
+
+        {/* Alternative diagnoses card */}
+        {alternatives.length > 0 && (
+          <View style={[s.card, s.altCard]}>
+            <Text style={s.altTitle}>{t('diagnose.result.alternativesTitle')}</Text>
+            {alternatives.map((alt: { disease_name: string; confidence: number; description: string }, idx: number) => (
+              <View key={idx} style={s.altRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.altName}>{alt.disease_name}</Text>
+                  <Text style={s.altDescription}>{alt.description}</Text>
+                </View>
+                <Text style={s.altConfidence}>
+                  {t('diagnose.result.alternativeConfidence', { pct: Math.round(alt.confidence * 100) })}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* Steps card */}
         {prescriptions.length > 0 && (
@@ -275,6 +309,13 @@ const s = StyleSheet.create({
   confPct: { fontSize: 8, color: '#1A6B3C', fontWeight: '600' },
   confTier: { fontSize: 9, color: '#1A6B3C', fontWeight: '600', marginTop: 3 },
   confTierLow: { color: '#B45309' },
+  severityChip: {
+    borderRadius: 5,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    alignSelf: 'flex-start',
+  },
+  severityChipText: { fontSize: 8, fontWeight: '700', color: '#fff' },
 
   card: {
     backgroundColor: '#fff',
@@ -286,6 +327,18 @@ const s = StyleSheet.create({
   },
   cardTitle: { fontSize: 10, fontWeight: '700', color: '#111827', marginBottom: 5 },
   paragraph: { fontSize: 10, color: '#374151', lineHeight: 16 },
+
+  altCard: { backgroundColor: '#F9FAFB', borderColor: '#E5E7EB' },
+  altTitle: { fontSize: 9, fontWeight: '700', color: '#6B7280', marginBottom: 6 },
+  altRow: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'flex-start',
+    marginBottom: 6,
+  },
+  altName: { fontSize: 10, fontWeight: '600', color: '#374151' },
+  altDescription: { fontSize: 9, color: '#6B7280', lineHeight: 13, marginTop: 1 },
+  altConfidence: { fontSize: 8, color: '#9CA3AF', fontWeight: '600' },
 
   stepsTitle: { fontSize: 10, color: '#1A6B3C', fontWeight: '700', marginBottom: 8 },
   stepRow: {

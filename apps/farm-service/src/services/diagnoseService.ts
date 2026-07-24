@@ -54,6 +54,11 @@ export interface DiagnosisResultFull {
     frequency: string | null;
   }>;
   suppliers: SupplierProduct[];
+  feedback?: {
+    rating: number;
+    outcome: 'resolved' | 'improved' | 'no_change' | 'worsened';
+    submitted_at: string;
+  };
   processing_time_ms?: number;
   created_at: string;
 }

@@ -4,6 +4,7 @@ import type { DiagnoseStackParamList } from '../types';
 import { DiagnosisHomeScreen } from '../../screens/Diagnosis/DiagnosisHomeScreen';
 import { DiagnosisInputScreen } from '../../screens/Diagnosis/DiagnosisInputScreen';
 import { DiagnosisResultScreen } from '../../screens/Diagnosis/DiagnosisResultScreen';
+import { DiagnosisFeedbackScreen } from '../../screens/Diagnosis/DiagnosisFeedbackScreen';
 import { SupplierProductsScreen } from '../../screens/Market/SupplierProductsScreen';
 import { SupplierProductDetailScreen } from '../../screens/Market/SupplierProductDetailScreen';
 
@@ -26,6 +27,11 @@ export function DiagnoseStack() {
         name="DiagnosisResult"
         component={DiagnosisResultScreen}
         options={{ headerShown: false, gestureEnabled: false }}
+      />
+      <Stack.Screen
+        name="DiagnosisFeedback"
+        component={DiagnosisFeedbackScreen}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="SupplierProducts"

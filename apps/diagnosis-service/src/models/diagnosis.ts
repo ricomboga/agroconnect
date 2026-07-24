@@ -59,6 +59,11 @@ export interface DiagnosisResponse {
   };
   alternative_diagnoses: AlternativeDiagnosis[];
   prescriptions: Prescription[];
+  feedback?: {
+    rating: number;
+    outcome: 'resolved' | 'improved' | 'no_change' | 'worsened';
+    submitted_at: string;
+  };
   processing_time_ms?: number;
   created_at: string;
 }
@@ -82,6 +87,13 @@ export function toResponse(doc: DiagnosisDocument): DiagnosisResponse {
       : undefined,
     alternative_diagnoses: doc.result?.alternativeDiagnoses ?? [],
     prescriptions: doc.result?.prescriptions ?? [],
+    feedback: doc.feedback
+      ? {
+          rating: doc.feedback.rating,
+          outcome: doc.feedback.outcome,
+          submitted_at: doc.feedback.submittedAt.toISOString(),
+        }
+      : undefined,
     processing_time_ms: doc.processingTimeMs,
     created_at: doc.createdAt.toISOString(),
   };

@@ -915,7 +915,8 @@
         "confidence": "{{pct}}%",
         "resolved": "Resolved",
         "pending": "Pending",
-        "processing": "Analysing…"
+        "processing": "Analysing…",
+        "feedbackPrompt": "How did it go? Rate this result →"
       }
     },
     "input": {
@@ -956,6 +957,8 @@
       "severity_moderate": "Moderate",
       "severity_severe": "Severe",
       "severity_critical": "Critical",
+      "alternativesTitle": "Other possible causes",
+      "alternativeConfidence": "{{pct}}% possible",
       "whatHappening": "❓ What is happening to your {{subject}}?",
       "stepsTitle": "✅ What to do — {{n}} Simple Steps:",
       "recovery": "💡 Good news: If you start treatment today, your crop should recover in 2–3 weeks.",

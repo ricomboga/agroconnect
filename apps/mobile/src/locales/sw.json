@@ -915,7 +915,8 @@
         "confidence": "{{pct}}%",
         "resolved": "Imepona",
         "pending": "Inasubiri",
-        "processing": "Inachanganua…"
+        "processing": "Inachanganua…",
+        "feedbackPrompt": "Ilikwendaje? Tathmini matokeo →"
       }
     },
     "input": {
@@ -956,6 +957,8 @@
       "severity_moderate": "Wastani",
       "severity_severe": "Kali",
       "severity_critical": "Hatari Sana",
+      "alternativesTitle": "Sababu nyingine zinazowezekana",
+      "alternativeConfidence": "Uwezekano wa {{pct}}%",
       "whatHappening": "❓ Kinachotokea kwa {{subject}} wako?",
       "stepsTitle": "✅ Nini cha kufanya — Hatua {{n}} Rahisi:",
       "recovery": "💡 Habari njema: Ukianza matibabu leo, zao lako linapaswa kupona katika wiki 2–3.",
