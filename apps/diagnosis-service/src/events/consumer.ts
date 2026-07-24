@@ -3,8 +3,17 @@ import { z } from 'zod';
 import { config } from '../config.js';
 import { logger } from '../logger.js';
 import { getProvider } from '../providers/index.js';
+import { isRetryable, errorCode } from '../providers/errorClassification.js';
 import { DiagnosisRepository } from '../repositories/diagnosisRepository.js';
 import { publishCompleted } from './producer.js';
+import { withTimeout } from '../utils/withTimeout.js';
+
+const INFERENCE_TIMEOUT_MS = 45_000;
+const RETRY_DELAYS_MS = [1000, 3000];
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 const SubmittedEventSchema = z.object({
   diagnosis_id: z.string(),
@@ -29,35 +38,57 @@ async function handleEvent(
   const provider = getProvider();
   const startMs = Date.now();
 
-  try {
-    const result = await provider.analyze({
-      imageUrls: event.image_urls,
-      subjectType: event.subject_type,
-      subjectName: event.subject_name,
-      symptoms: event.symptoms,
-    });
+  const attempts = 1 + RETRY_DELAYS_MS.length;
+  let lastErr: unknown;
 
-    const processingTimeMs = Date.now() - startMs;
-    await repo.setCompleted(event.diagnosis_id, result, processingTimeMs);
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    try {
+      const result = await withTimeout(
+        provider.analyze({
+          imageUrls: event.image_urls,
+          subjectType: event.subject_type,
+          subjectName: event.subject_name,
+          symptoms: event.symptoms,
+        }),
+        INFERENCE_TIMEOUT_MS,
+        'inference',
+      );
 
-    await publishCompleted(producer, {
-      diagnosisId: event.diagnosis_id,
-      farmId: event.farm_id,
-      farmerId: event.farmer_id,
-      subjectType: event.subject_type,
-      subjectName: event.subject_name,
-      result,
-    });
+      const processingTimeMs = Date.now() - startMs;
+      await repo.setCompleted(event.diagnosis_id, result, processingTimeMs);
 
-    logger.info(
-      { diagnosisId: event.diagnosis_id, diseaseCode: result.diseaseCode, confidence: result.confidence, processingTimeMs, provider: result.providerName },
-      'inference complete',
-    );
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    logger.error({ err, diagnosisId: event.diagnosis_id }, 'inference failed');
-    await repo.setFailed(event.diagnosis_id, msg);
+      await publishCompleted(producer, {
+        diagnosisId: event.diagnosis_id,
+        farmId: event.farm_id,
+        farmerId: event.farmer_id,
+        subjectType: event.subject_type,
+        subjectName: event.subject_name,
+        result,
+      });
+
+      logger.info(
+        { diagnosisId: event.diagnosis_id, diseaseCode: result.diseaseCode, confidence: result.confidence, processingTimeMs, provider: result.providerName, attempt },
+        'inference complete',
+      );
+      return;
+    } catch (err) {
+      lastErr = err;
+      const retryable = isRetryable(err);
+      const isLastAttempt = attempt === attempts - 1;
+
+      logger.warn(
+        { err, diagnosisId: event.diagnosis_id, attempt, retryable, errorCode: errorCode(err) },
+        'inference attempt failed',
+      );
+
+      if (!retryable || isLastAttempt) break;
+      await sleep(RETRY_DELAYS_MS[attempt]);
+    }
   }
+
+  const msg = lastErr instanceof Error ? lastErr.message : String(lastErr);
+  logger.error({ err: lastErr, diagnosisId: event.diagnosis_id, errorCode: errorCode(lastErr) }, 'inference failed');
+  await repo.setFailed(event.diagnosis_id, msg, errorCode(lastErr));
 }
 
 let _consumer: Consumer | null = null;

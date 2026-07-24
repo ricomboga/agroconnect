@@ -32,6 +32,7 @@ export interface DiagnosisResult {
     disease_name: string;
     disease_code: string;
     confidence: number;
+    confidence_tier: 'high' | 'medium' | 'low';
     severity: 'mild' | 'moderate' | 'severe' | 'critical';
     description: string;
   };

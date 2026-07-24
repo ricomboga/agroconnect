@@ -4,6 +4,7 @@ import { createProducer } from '@agroconnect/kafka';
 import { config } from '../config.js';
 import { DiagnosisRepository } from '../repositories/diagnosisRepository.js';
 import { logger } from '../logger.js';
+import { checkDiagnosisRateLimit } from '../lib/rateLimit.js';
 
 const submitSchema = z.object({
   farm_id: z.string().min(1),
@@ -37,6 +38,16 @@ export function createInternalRouter(repo: DiagnosisRepository): Router {
       }
 
       const data = parse.data;
+
+      const rateLimit = await checkDiagnosisRateLimit(data.farmer_id);
+      if (!rateLimit.allowed) {
+        logger.warn({ farmerId: data.farmer_id, count: rateLimit.count, max: rateLimit.max }, 'diagnosis rate limit exceeded');
+        res.status(429).json({
+          error: { message: 'Daily diagnosis limit reached', code: 'DIAGNOSIS_RATE_LIMIT' },
+        });
+        return;
+      }
+
       const now = new Date();
 
       const doc = await repo.create({

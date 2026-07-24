@@ -23,9 +23,9 @@ function stepBg(idx: number) {
   return idx >= 3 ? '#C9A84C' : '#1A6B3C';
 }
 
-function confidenceBarColor(pct: number) {
-  if (pct >= 80) return '#1A6B3C';
-  if (pct >= 50) return '#2E8B57';
+function confidenceBarColor(tier: 'high' | 'medium' | 'low' | undefined) {
+  if (tier === 'high') return '#1A6B3C';
+  if (tier === 'medium') return '#2E8B57';
   return '#D97706';
 }
 
@@ -147,11 +147,16 @@ export function DiagnosisResultScreen({ route, navigation }: Props) {
             <View
               style={[
                 s.progressFill,
-                { width: `${confidence}%` as `${number}%`, backgroundColor: confidenceBarColor(confidence) },
+                { width: `${confidence}%` as `${number}%`, backgroundColor: confidenceBarColor(diagnosis?.confidence_tier) },
               ]}
             />
           </View>
           <Text style={s.confPct}>{t('diagnose.result.confidence', { pct: confidence })}</Text>
+          {diagnosis?.confidence_tier && (
+            <Text style={[s.confTier, diagnosis.confidence_tier === 'low' && s.confTierLow]}>
+              {t(`diagnose.result.confidence_${diagnosis.confidence_tier}`)}
+            </Text>
+          )}
         </View>
 
         {/* Explanation card */}
@@ -268,6 +273,8 @@ const s = StyleSheet.create({
   },
   progressFill: { height: '100%', borderRadius: 3 },
   confPct: { fontSize: 8, color: '#1A6B3C', fontWeight: '600' },
+  confTier: { fontSize: 9, color: '#1A6B3C', fontWeight: '600', marginTop: 3 },
+  confTierLow: { color: '#B45309' },
 
   card: {
     backgroundColor: '#fff',

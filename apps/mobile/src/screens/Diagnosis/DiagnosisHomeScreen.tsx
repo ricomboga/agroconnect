@@ -134,13 +134,13 @@ export function DiagnosisHomeScreen({ navigation }: Props) {
                 {item.diagnosis && (
                   <View style={[
                     s.confBadge,
-                    { backgroundColor: item.diagnosis.confidence >= 80 ? '#EAF4EE' : '#FEF3C7' },
+                    { backgroundColor: item.diagnosis.confidence_tier === 'high' ? '#EAF4EE' : '#FEF3C7' },
                   ]}>
                     <Text style={[
                       s.confText,
-                      { color: item.diagnosis.confidence >= 80 ? '#0D4A28' : '#92400E' },
+                      { color: item.diagnosis.confidence_tier === 'high' ? '#0D4A28' : '#92400E' },
                     ]}>
-                      {t('diagnose.home.historyItem.confidence', { pct: item.diagnosis.confidence })}
+                      {t('diagnose.home.historyItem.confidence', { pct: Math.round(item.diagnosis.confidence * 100) })}
                     </Text>
                   </View>
                 )}

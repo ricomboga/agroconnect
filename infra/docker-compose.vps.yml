@@ -499,6 +499,7 @@ services:
     environment:
       MONGODB_URI: "mongodb://mongodb:27017/diagnosis_db"
       KAFKA_BROKERS: "kafka:9092"
+      REDIS_URL: "redis://:redis_dev_password@redis:6379"
       NODE_ENV: "production"
     ports:
       - "127.0.0.1:8000:8000"
@@ -506,6 +507,8 @@ services:
       mongodb:
         condition: service_healthy
       kafka:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "node -e \"fetch('http://localhost:8000/health').then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))\""]

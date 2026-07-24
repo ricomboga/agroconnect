@@ -15,5 +15,11 @@ export const config = {
   googleCredentials: process.env['GOOGLE_APPLICATION_CREDENTIALS'] ?? '',
 
   minConfidence: parseFloat(process.env['MIN_CONFIDENCE'] ?? '0.60'),
+  confidenceHighThreshold: parseFloat(process.env['CONFIDENCE_HIGH_THRESHOLD'] ?? '0.80'),
+
+  redisUrl: process.env['REDIS_URL'] ?? 'redis://localhost:6379',
+  diagnosisRateLimitMax: parseInt(process.env['DIAGNOSIS_RATE_LIMIT_MAX'] ?? '20', 10),
+  diagnosisRateLimitWindowSeconds: parseInt(process.env['DIAGNOSIS_RATE_LIMIT_WINDOW_SECONDS'] ?? '86400', 10),
+
   nodeEnv: process.env['NODE_ENV'] ?? 'development',
 };

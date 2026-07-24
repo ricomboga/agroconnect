@@ -1,5 +1,6 @@
 import type { ObjectId } from 'mongodb';
 import type { Prescription, AlternativeDiagnosis } from '../providers/types.js';
+import { confidenceTier } from '../utils/confidenceTier.js';
 
 export type DiagnosisStatus = 'pending' | 'processing' | 'completed' | 'failed';
 
@@ -35,6 +36,7 @@ export interface DiagnosisDocument {
   result?: DiagnosisResult;
   feedback?: DiagnosisFeedback;
   error?: string;
+  errorCode?: string;
   processingTimeMs?: number;
   createdAt: Date;
   updatedAt: Date;
@@ -51,6 +53,7 @@ export interface DiagnosisResponse {
     disease_name: string;
     disease_code: string;
     confidence: number;
+    confidence_tier: 'high' | 'medium' | 'low';
     severity: string;
     description: string;
   };
@@ -72,6 +75,7 @@ export function toResponse(doc: DiagnosisDocument): DiagnosisResponse {
           disease_name: doc.result.diseaseName,
           disease_code: doc.result.diseaseCode,
           confidence: doc.result.confidence,
+          confidence_tier: confidenceTier(doc.result.confidence),
           severity: doc.result.severity,
           description: doc.result.description,
         }

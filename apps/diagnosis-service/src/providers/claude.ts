@@ -80,16 +80,26 @@ interface ClaudeJsonResponse {
   }>;
 }
 
-async function fetchImageAsBase64(url: string): Promise<{ base64: string; mediaType: 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif' }> {
+const ALLOWED_IMAGE_MEDIA_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as const;
+type AllowedImageMediaType = (typeof ALLOWED_IMAGE_MEDIA_TYPES)[number];
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10MB
+
+async function fetchImageAsBase64(url: string): Promise<{ base64: string; mediaType: AllowedImageMediaType }> {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Failed to fetch image ${url}: ${res.status}`);
+
+  const ct = (res.headers.get('content-type') ?? '').split(';')[0].trim();
+  if (!ALLOWED_IMAGE_MEDIA_TYPES.includes(ct as AllowedImageMediaType)) {
+    throw new Error(`Unsupported image content-type for ${url}: ${ct || '(none)'}`);
+  }
+
   const buffer = await res.arrayBuffer();
+  if (buffer.byteLength > MAX_IMAGE_BYTES) {
+    throw new Error(`Image ${url} exceeds max size of ${MAX_IMAGE_BYTES} bytes (was ${buffer.byteLength})`);
+  }
+
   const base64 = Buffer.from(buffer).toString('base64');
-  const ct = res.headers.get('content-type') ?? 'image/jpeg';
-  const mediaType = (['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(ct)
-    ? ct
-    : 'image/jpeg') as 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif';
-  return { base64, mediaType };
+  return { base64, mediaType: ct as AllowedImageMediaType };
 }
 
 export class ClaudeVisionProvider implements InferenceProvider {

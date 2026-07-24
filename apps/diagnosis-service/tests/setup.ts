@@ -1,0 +1,11 @@
+process.env['MONGODB_URI'] = 'mongodb://localhost:27017/diagnosis_db_test';
+process.env['KAFKA_BROKERS'] = 'localhost:9094';
+process.env['INFERENCE_PROVIDER'] = 'claude';
+process.env['ANTHROPIC_API_KEY'] = 'test-anthropic-key';
+process.env['CLAUDE_MODEL'] = 'claude-sonnet-4-6';
+process.env['MIN_CONFIDENCE'] = '0.60';
+process.env['CONFIDENCE_HIGH_THRESHOLD'] = '0.80';
+process.env['REDIS_URL'] = 'redis://localhost:6379';
+process.env['DIAGNOSIS_RATE_LIMIT_MAX'] = '20';
+process.env['DIAGNOSIS_RATE_LIMIT_WINDOW_SECONDS'] = '86400';
+process.env['NODE_ENV'] = 'test';

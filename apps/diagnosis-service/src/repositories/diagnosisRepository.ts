@@ -47,10 +47,10 @@ export class DiagnosisRepository {
     );
   }
 
-  async setFailed(id: string, error: string): Promise<void> {
+  async setFailed(id: string, error: string, errorCode?: string): Promise<void> {
     await this.col().updateOne(
       { _id: new ObjectId(id) },
-      { $set: { status: 'failed', error, updatedAt: new Date() } },
+      { $set: { status: 'failed', error, errorCode, updatedAt: new Date() } },
     );
   }
 
