@@ -96,6 +96,6 @@ export const diagnoseApi = {
 
   diseases: {
     list: () => apiFetch<{ data: DiseaseEntry[]; total: number }>('/diagnose/diseases'),
-    get: (code: string) => apiFetch<DiseaseEntry>(`/diagnose/diseases/${code}`),
+    get: (code: string) => apiFetch<{ data: DiseaseEntry }>(`/diagnose/diseases/${code}`).then((r) => r.data),
   },
 };
