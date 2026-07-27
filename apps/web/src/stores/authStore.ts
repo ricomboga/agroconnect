@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import type { AuthUser } from '@agroconnect/shared'
 import { setTokenGetter } from '../lib/api'
 
@@ -14,37 +15,48 @@ interface AuthActions {
   setUser(user: AuthUser): void
 }
 
-export const useAuthStore = create<AuthState & AuthActions>((set, get) => {
-  setTokenGetter(() => get().accessToken)
+export const useAuthStore = create<AuthState & AuthActions>()(
+  persist(
+    (set, get) => {
+      setTokenGetter(() => get().accessToken)
 
-  return {
-    user: null,
-    accessToken: null,
-    isAuthenticated: false,
+      return {
+        user: null,
+        accessToken: null,
+        isAuthenticated: false,
 
-    async login(credentials) {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(credentials),
-      })
+        async login(credentials) {
+          const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(credentials),
+          })
 
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
-        throw new Error(body.message ?? 'Login failed')
+          if (!res.ok) {
+            const body = await res.json().catch(() => ({}))
+            throw new Error(body.message ?? 'Login failed')
+          }
+
+          const { user, accessToken } = await res.json()
+          set({ user, accessToken, isAuthenticated: true })
+        },
+
+        async logout() {
+          await fetch('/api/auth/logout', { method: 'POST' })
+          set({ user: null, accessToken: null, isAuthenticated: false })
+        },
+
+        setUser(user) {
+          set({ user })
+        },
       }
-
-      const { user, accessToken } = await res.json()
-      set({ user, accessToken, isAuthenticated: true })
     },
-
-    async logout() {
-      await fetch('/api/auth/logout', { method: 'POST' })
-      set({ user: null, accessToken: null, isAuthenticated: false })
+    {
+      name: 'agroconnect-auth-user',
+      // accessToken is deliberately excluded — real auth is enforced server-side via
+      // httpOnly cookies, and persisting a bearer token to localStorage would expose
+      // it to XSS. Only the display-only user object needs to survive a reload.
+      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
     },
-
-    setUser(user) {
-      set({ user })
-    },
-  }
-})
+  ),
+)
