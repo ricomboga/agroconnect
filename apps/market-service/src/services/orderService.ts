@@ -98,10 +98,15 @@ export async function updateOrderStatus(
  */
 export async function listSupplierOrders(supplierId: string, query: ListOrdersQuery) {
   const pagination = parsePaginationParams(query as Record<string, unknown>);
-  const [orders, total] = await Promise.all([
+  const [rawOrders, total] = await Promise.all([
     orderRepo.findOrders(supplierId, 'supplier', query, pagination),
     orderRepo.countOrders(supplierId, 'supplier', query),
   ]);
+
+  const products = await productRepo.findProductsByIds([...new Set(rawOrders.map((o) => o.productId))]);
+  const nameById = new Map(products.map((p: { id: string; name: string }) => [p.id, p.name]));
+  const orders = rawOrders.map((o) => ({ ...o, productName: nameById.get(o.productId) ?? 'Unknown product' }));
+
   return { orders, meta: buildMeta(query as Record<string, unknown>, pagination, total) };
 }
 

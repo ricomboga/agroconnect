@@ -14,6 +14,7 @@ interface Order {
   id: string
   buyerId: string
   productId: string
+  productName: string
   quantityUnits: string
   unitPriceKes: string
   totalPriceKes: string
@@ -135,8 +136,10 @@ export function OrdersView() {
                   }`}
                 >
                   <div>
-                    <div className="text-base font-semibold text-ink">#{o.id.slice(0, 8)}</div>
-                    <div className="text-sm text-muted">{formatKES(Number(o.totalPriceKes))}</div>
+                    <div className="text-base font-semibold text-ink">{o.productName}</div>
+                    <div className="text-sm text-muted">
+                      #{o.id.slice(0, 8)} · {formatKES(Number(o.totalPriceKes))}
+                    </div>
                   </div>
                   <StatusBadge variant={badge.variant}>{badge.label}</StatusBadge>
                 </button>
@@ -171,8 +174,7 @@ export function OrdersView() {
                   </thead>
                   <tbody>
                     <tr>
-                      {/* TODO(real-data): no join to SupplierProduct.name from the order record. */}
-                      <td className="py-1.5 pr-3 text-base text-ink">{selected.productId.slice(0, 8)}…</td>
+                      <td className="py-1.5 pr-3 text-base text-ink">{selected.productName}</td>
                       <td className="py-1.5 pr-3 text-base text-ink">{selected.quantityUnits}</td>
                       <td className="py-1.5 pr-3 text-base text-ink">{formatKES(Number(selected.unitPriceKes))}</td>
                       <td className="py-1.5 pr-3 text-base font-semibold text-ac-green">
