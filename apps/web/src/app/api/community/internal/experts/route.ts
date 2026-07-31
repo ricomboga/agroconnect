@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
   }
   const body = await req.text()
-  const upstream = await fetch(`${COMMUNITY}/experts`, {
+  const upstream = await fetch(`${COMMUNITY}/api/v1/community/experts`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

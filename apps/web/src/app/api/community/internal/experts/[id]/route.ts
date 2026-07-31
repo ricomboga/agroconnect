@@ -14,7 +14,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   if (!(await requireAdmin())) {
     return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
   }
-  const upstream = await fetch(`${COMMUNITY}/experts/${params.id}`)
+  const upstream = await fetch(`${COMMUNITY}/api/v1/community/experts/${params.id}`)
   const result = await upstream.json()
   return NextResponse.json(result, { status: upstream.status })
 }
@@ -24,7 +24,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
   }
   const body = await req.text()
-  const upstream = await fetch(`${COMMUNITY}/experts/${params.id}`, {
+  const upstream = await fetch(`${COMMUNITY}/api/v1/community/experts/${params.id}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',

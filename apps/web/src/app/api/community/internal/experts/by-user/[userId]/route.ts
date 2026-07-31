@@ -14,7 +14,7 @@ export async function GET(_req: NextRequest, { params }: { params: { userId: str
   if (!(await requireAdmin())) {
     return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
   }
-  const upstream = await fetch(`${COMMUNITY}/experts/by-user/${params.userId}`, {
+  const upstream = await fetch(`${COMMUNITY}/api/v1/community/experts/by-user/${params.userId}`, {
     headers: { 'x-service-token': SERVICE_TOKEN },
   })
   const result = await upstream.json()

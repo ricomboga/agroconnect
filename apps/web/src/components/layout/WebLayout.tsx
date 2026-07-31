@@ -1,5 +1,9 @@
+'use client'
+
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { useAuthStore } from '@/stores/authStore'
+import { useQueryClient } from '@tanstack/react-query'
 
 interface NavLink {
   label: string
@@ -29,6 +33,15 @@ export function WebLayout({
   sidebarItems = [],
   activeSidebarItem,
 }: WebLayoutProps) {
+  const logout = useAuthStore((s) => s.logout)
+  const queryClient = useQueryClient()
+
+  async function handleLogout() {
+    await logout()
+    queryClient.clear()
+    window.location.href = '/login'
+  }
+
   return (
     <div className="flex flex-col h-screen">
       <nav className="w-nav shrink-0">
@@ -51,9 +64,23 @@ export function WebLayout({
             </Link>
           ))}
         </div>
-        <button className="bg-[#C9A84C] text-white text-md font-semibold px-3 py-1 rounded-[3px]">
-          Account ▾
-        </button>
+        <div className="group relative">
+          <button
+            type="button"
+            className="bg-[#C9A84C] text-white text-md font-semibold px-3 py-1 rounded-[3px]"
+          >
+            Account ▾
+          </button>
+          <div className="absolute right-0 top-full z-10 hidden min-w-[120px] rounded-[3px] border border-gray-200 bg-white py-1 shadow-md group-hover:block">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
       </nav>
 
       <div className="flex flex-1 overflow-hidden">
