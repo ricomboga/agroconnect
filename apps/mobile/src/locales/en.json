@@ -149,7 +149,10 @@
   },
   "dashboard": {
     "greeting": "Hello, {{name}} 👋",
-    "greetingTime": "Good morning",
+    "greetingMorning": "Good morning",
+    "greetingAfternoon": "Good afternoon",
+    "greetingEvening": "Good evening",
+    "greetingNight": "Good night",
     "stat": {
       "net": "Net Cash",
       "kesValue": "KES {{value}}",
@@ -1053,7 +1056,13 @@
         "withdrawBtn": "Withdraw Listing",
         "withdrawing": "Withdrawing…",
         "withdrawConfirmTitle": "Withdraw this listing?",
-        "withdrawConfirmBody": "Buyers will no longer be able to see or contact you about it."
+        "withdrawConfirmBody": "Buyers will no longer be able to see or contact you about it.",
+        "inquireLabel": "Contact Farmer",
+        "inquirePlaceholder": "e.g. Is this still available? Can I buy 50kg?",
+        "inquireBtn": "Send Message",
+        "inquiring": "Sending…",
+        "inquirySent": "Message sent! The farmer will be notified.",
+        "inquireError": "Could not send your message. Please try again."
       },
       "create": {
         "title": "Add Listing",

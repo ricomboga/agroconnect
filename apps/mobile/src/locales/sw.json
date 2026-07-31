@@ -149,7 +149,10 @@
   },
   "dashboard": {
     "greeting": "Habari, {{name}} 👋",
-    "greetingTime": "Habari asubuhi",
+    "greetingMorning": "Habari ya asubuhi",
+    "greetingAfternoon": "Habari ya mchana",
+    "greetingEvening": "Habari ya jioni",
+    "greetingNight": "Habari ya usiku",
     "stat": {
       "net": "Faida",
       "kesValue": "KES {{value}}",
@@ -1053,7 +1056,13 @@
         "withdrawBtn": "Ondoa Orodha",
         "withdrawing": "Inaondoa…",
         "withdrawConfirmTitle": "Ondoa orodha hii?",
-        "withdrawConfirmBody": "Wanunuzi hawataweza tena kuiona au kuwasiliana nawe kuihusu."
+        "withdrawConfirmBody": "Wanunuzi hawataweza tena kuiona au kuwasiliana nawe kuihusu.",
+        "inquireLabel": "Wasiliana na Mkulima",
+        "inquirePlaceholder": "mfano: Bidhaa hii bado ipo? Naweza kununua kilo 50?",
+        "inquireBtn": "Tuma Ujumbe",
+        "inquiring": "Inatuma…",
+        "inquirySent": "Ujumbe umetumwa! Mkulima ataarifiwa.",
+        "inquireError": "Imeshindwa kutuma ujumbe. Tafadhali jaribu tena."
       },
       "create": {
         "title": "Ongeza Orodha",

@@ -18,7 +18,7 @@ import { LoadingScreen } from '../../components/Common/LoadingScreen';
 import { ErrorScreen } from '../../components/Common/ErrorScreen';
 import { OfflineBanner } from '../../components/Common/OfflineBanner';
 import { FAB } from '../../components/Common/FAB';
-import { DashboardHero } from '../../components/Dashboard/DashboardHero';
+import { DashboardHero, greetingKeyForHour } from '../../components/Dashboard/DashboardHero';
 import { StreakBar } from '../../components/Dashboard/StreakBar';
 import { AiNudgeSection, type Nudge } from '../../components/Dashboard/AiNudgeSection';
 import { PriceAlertBanner } from '../../components/Dashboard/PriceAlertBanner';
@@ -313,7 +313,7 @@ export function DashboardScreen() {
       >
         <View style={s.newHeaderTop}>
           <View>
-            <Text style={s.greetingLabel}>{t('dashboard.greetingTime')}</Text>
+            <Text style={s.greetingLabel}>{t(greetingKeyForHour(new Date().getHours()))}</Text>
             <Text style={s.greetingName}>{farmerName} 👋</Text>
           </View>
         </View>

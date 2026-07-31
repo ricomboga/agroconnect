@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Alert,
   Pressable,
@@ -6,6 +6,7 @@ import {
   StatusBar,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -41,6 +42,9 @@ export function ProduceListingDetailScreen({ navigation, route }: Props) {
   const userId = useAuthStore((s) => s.user?.id);
   const queryClient = useQueryClient();
 
+  const [inquiryMessage, setInquiryMessage] = useState('');
+  const [inquirySent, setInquirySent] = useState(false);
+
   const listingQuery = useQuery({
     queryKey: ['market', 'listings', listingId],
     queryFn: () => marketApi.listings.get(listingId),
@@ -64,6 +68,12 @@ export function ProduceListingDetailScreen({ navigation, route }: Props) {
       void queryClient.invalidateQueries({ queryKey: ['market', 'listings', listingId] });
       navigation.goBack();
     },
+  });
+
+  const inquireMutation = useMutation({
+    mutationFn: () => marketApi.listings.inquire(listingId, inquiryMessage.trim()),
+    onSuccess: () => setInquirySent(true),
+    onError: () => Alert.alert(t('market.listing.detail.inquireError')),
   });
 
   function confirmWithdraw() {
@@ -157,6 +167,44 @@ export function ProduceListingDetailScreen({ navigation, route }: Props) {
           </>
         )}
 
+        {!isOwner && listing.status === 'active' && (
+          inquirySent ? (
+            <View style={s.successBox}>
+              <Text style={s.successText}>{t('market.listing.detail.inquirySent')}</Text>
+            </View>
+          ) : (
+            <View style={s.inquiryForm}>
+              <Text style={s.sectionLabel}>{t('market.listing.detail.inquireLabel')}</Text>
+              <TextInput
+                style={[s.textInput, s.messageInput]}
+                value={inquiryMessage}
+                onChangeText={setInquiryMessage}
+                placeholder={t('market.listing.detail.inquirePlaceholder')}
+                placeholderTextColor="#9CA3AF"
+                multiline
+                numberOfLines={3}
+                textAlignVertical="top"
+                maxLength={500}
+              />
+              <Pressable
+                style={[
+                  s.inquireBtn,
+                  (!inquiryMessage.trim() || inquireMutation.isPending) && s.inquireBtnDisabled,
+                ]}
+                onPress={() => inquireMutation.mutate()}
+                disabled={!inquiryMessage.trim() || inquireMutation.isPending}
+                accessibilityRole="button"
+              >
+                <Text style={s.inquireBtnLabel}>
+                  {inquireMutation.isPending
+                    ? t('market.listing.detail.inquiring')
+                    : t('market.listing.detail.inquireBtn')}
+                </Text>
+              </Pressable>
+            </View>
+          )
+        )}
+
         {isOwner && listing.status !== 'withdrawn' && (
           <Pressable
             style={[s.withdrawBtn, withdrawMutation.isPending && s.withdrawBtnDisabled]}
@@ -214,6 +262,26 @@ const s = StyleSheet.create({
   },
   forecastTrend: { fontSize: 12, color: '#374151', fontWeight: '600' },
   forecastValue: { fontSize: 13, color: '#1565C0', fontWeight: '700', marginTop: 4 },
+
+  inquiryForm: { marginTop: 20 },
+  textInput: {
+    borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 6,
+    paddingVertical: 9, paddingHorizontal: 11,
+    fontSize: 13, color: '#111827', backgroundColor: '#F9FAFB', minHeight: 42,
+  },
+  messageInput: { height: 76, textAlignVertical: 'top' },
+  inquireBtn: {
+    minHeight: 48, backgroundColor: '#2E7D32', borderRadius: 8,
+    alignItems: 'center', justifyContent: 'center', marginTop: 10,
+  },
+  inquireBtnDisabled: { opacity: 0.5 },
+  inquireBtnLabel: { color: '#fff', fontSize: 13, fontWeight: '700' },
+
+  successBox: {
+    marginTop: 20, padding: 16, borderRadius: 10,
+    backgroundColor: '#E8F5E9', borderWidth: 1, borderColor: '#A5D6A7',
+  },
+  successText: { fontSize: 13, fontWeight: '600', color: '#1B5E20', textAlign: 'center' },
 
   withdrawBtn: {
     minHeight: 48, backgroundColor: '#C62828', borderRadius: 8,

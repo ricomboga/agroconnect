@@ -50,6 +50,14 @@ const CONDITION_ICON: Record<string, string> = {
   stormy: '⛈️',
 };
 
+export function greetingKeyForHour(hour: number): string {
+  if (hour < 5) return 'dashboard.greetingNight';
+  if (hour < 12) return 'dashboard.greetingMorning';
+  if (hour < 17) return 'dashboard.greetingAfternoon';
+  if (hour < 21) return 'dashboard.greetingEvening';
+  return 'dashboard.greetingNight';
+}
+
 function fmtCash(n: number): string {
   const abs = Math.abs(n);
   const prefix = n < 0 ? '-' : '';
@@ -82,6 +90,7 @@ export function DashboardHero({
 
   const today = weatherData?.data?.[0];
   const weatherIcon = today ? (CONDITION_ICON[today.condition] ?? '🌤️') : '🌤️';
+  const greetingKey = greetingKeyForHour(new Date().getHours());
 
   return (
     <LinearGradient
@@ -93,7 +102,7 @@ export function DashboardHero({
       {/* Row 1: greeting + weather */}
       <View style={s.topRow}>
         <View style={s.greetingBlock}>
-          <Text style={s.greetingLabel}>{t('dashboard.greetingTime')}</Text>
+          <Text style={s.greetingLabel}>{t(greetingKey)}</Text>
           <Text style={s.greetingName}>{farmerName} 👋</Text>
         </View>
 
