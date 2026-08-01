@@ -272,7 +272,7 @@ export async function getStats() {
   return {
     total_farmers,
     pending_kyc,
-    kyc_breakdown: kycRows.map((r) => ({ status: r.kycStatus, count: r.count })),
+    kyc_breakdown: kycRows.map((r: { kycStatus: string; count: number }) => ({ status: r.kycStatus, count: r.count })),
     weekly_registrations: weeklyRegistrationBuckets(registrationRows),
     farmers_by_county: countyRows,
   };
