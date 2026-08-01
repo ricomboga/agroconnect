@@ -12,6 +12,7 @@ import {
   updateUserHandler,
   deleteUserHandler,
   batchGetUsersHandler,
+  resolveUsersHandler,
   listExpertsHandler,
   assignExpertHandler,
   kycQueueHandler,
@@ -36,6 +37,7 @@ router.use(requireServiceToken);
 
 router.get('/users', listUsersHandler);
 router.get('/users/batch', batchGetUsersHandler);
+router.get('/users/resolve', resolveUsersHandler);
 router.get('/users/:id', getUserHandler);
 router.post('/users', createUserHandler);
 router.post('/system-users', createSystemUserHandler);

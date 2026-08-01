@@ -33,3 +33,28 @@ export async function getUserProfiles(userIds: string[]): Promise<Record<string,
     throw createError('auth-service unavailable while fetching user profiles', 502, 'AUTH_SERVICE_ERROR', 'error.auth_service_unavailable');
   }
 }
+
+export interface ResolvedUser {
+  id: string;
+  fullName: string;
+  role: string;
+}
+
+/**
+ * Resolves a CSV-style list of phone numbers / National IDs to user records —
+ * powers bulk farmer-to-lender assignment (CSV upload). Each input identifier
+ * maps to either a matched user or null if none exists.
+ */
+export async function resolveUsersByIdentifiers(identifiers: string[]): Promise<Record<string, ResolvedUser | null>> {
+  if (identifiers.length === 0) return {};
+  try {
+    const res = await client.get<{ data: Record<string, ResolvedUser | null> }>('/internal/admin/users/resolve', {
+      params: { identifiers: identifiers.join(',') },
+      headers: { 'x-service-token': SERVICE_TOKEN },
+    });
+    return res.data.data;
+  } catch (err) {
+    logger.warn({ err }, 'auth-service call failed while resolving user identifiers');
+    throw createError('auth-service unavailable while resolving farmers', 502, 'AUTH_SERVICE_ERROR', 'error.auth_service_unavailable');
+  }
+}

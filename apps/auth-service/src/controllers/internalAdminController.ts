@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { KENYA_COUNTIES } from '@agroconnect/shared/constants/counties';
 import * as adminUserService from '../services/adminUserService.js';
 import * as kycService from '../services/kycService.js';
-import { findUsersByIds } from '../repositories/userRepository.js';
+import { findUsersByIds, findUsersByPhonesOrIdNumbers } from '../repositories/userRepository.js';
 import { createAuditLog, listAuditLogs, countAuditLogs } from '../repositories/auditLogRepository.js';
 
 const createUserSchema = z.object({
@@ -459,6 +459,28 @@ export async function batchGetUsersHandler(req: Request, res: Response, next: Ne
       };
     }
     res.json({ data: map });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// Resolves a CSV-style list of phone numbers / National IDs to user records —
+// each input identifier maps to either a matched user or null if none exists.
+// Used by finance-service's bulk farmer-to-lender assignment (CSV upload).
+export async function resolveUsersHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const identifiers = String(req.query['identifiers'] ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+    if (identifiers.length === 0) { res.json({ data: {} }); return; }
+    const users = await findUsersByPhonesOrIdNumbers(identifiers);
+    const byPhone = new Map(users.map((u) => [u.phone, u]));
+    const byIdNumber = new Map(users.filter((u) => u.idNumber).map((u) => [u.idNumber as string, u]));
+
+    const data: Record<string, { id: string; fullName: string; role: string } | null> = {};
+    for (const identifier of identifiers) {
+      const match = byPhone.get(identifier) ?? byIdNumber.get(identifier);
+      data[identifier] = match ? { id: match.id, fullName: match.fullName, role: match.role } : null;
+    }
+    res.json({ data });
   } catch (err) {
     next(err);
   }

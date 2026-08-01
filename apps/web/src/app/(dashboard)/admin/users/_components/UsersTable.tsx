@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { toast } from 'sonner'
 import Link from 'next/link'
+import { AssignLenderModal } from './AssignLenderModal'
 
 interface AdminUser {
   id: string
@@ -138,6 +139,8 @@ export function UsersTable() {
 
   const [searchVal, setSearchVal] = useState(q)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [assignFarmer, setAssignFarmer] = useState<AdminUser | null>(null)
+  const [bulkAssignOpen, setBulkAssignOpen] = useState(false)
 
   function updateParams(updates: Record<string, string>) {
     const params = new URLSearchParams(searchParams.toString())
@@ -222,9 +225,14 @@ export function UsersTable() {
       {/* Header Row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <span style={{ fontSize: 22, fontWeight: 700, color: '#111827' }}>User Management</span>
-        <button style={wbtn} onClick={() => router.push('/admin/users/new')}>
-          ➕ Create New User
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button style={{ ...wbtn, backgroundColor: '#fff', color: '#1A6B3C', border: '1px solid #1A6B3C' }} onClick={() => setBulkAssignOpen(true)}>
+            📎 Assign to NGO/Group (CSV)
+          </button>
+          <button style={wbtn} onClick={() => router.push('/admin/users/new')}>
+            ➕ Create New User
+          </button>
+        </div>
       </div>
 
       {/* Filter Row */}
@@ -325,6 +333,11 @@ export function UsersTable() {
                     <Link href={`/admin/users/${u.id}`} style={{ textDecoration: 'none' }}>
                       <button style={wbtnSm('#1A6B3C', '#1A6B3C')}>View</button>
                     </Link>
+                    {u.role === 'farmer' && (
+                      <button style={wbtnSm('#374151', '#E5E7EB')} onClick={() => setAssignFarmer(u)} disabled={busy}>
+                        🏷 Assign
+                      </button>
+                    )}
                     {(u.kyc_status === 'pending' || u.kyc_status === 'submitted') && (
                       <>
                         <button
@@ -390,6 +403,9 @@ export function UsersTable() {
           </button>
         </div>
       </div>
+
+      {assignFarmer && <AssignLenderModal farmer={assignFarmer} onClose={() => setAssignFarmer(null)} />}
+      {bulkAssignOpen && <AssignLenderModal onClose={() => setBulkAssignOpen(false)} />}
     </div>
   )
 }

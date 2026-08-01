@@ -105,3 +105,13 @@ export async function findUsersByIds(ids: string[]) {
     },
   });
 }
+
+// Bulk lookup by phone number OR National ID — used by other services to resolve
+// CSV-style identifier lists (e.g. finance-service bulk-assigning farmers to a
+// lender by phone/ID number) without exposing raw user records cross-service.
+export async function findUsersByPhonesOrIdNumbers(identifiers: string[]) {
+  return prisma.user.findMany({
+    where: { OR: [{ phone: { in: identifiers } }, { idNumber: { in: identifiers } }] },
+    select: { id: true, fullName: true, phone: true, idNumber: true, role: true },
+  });
+}

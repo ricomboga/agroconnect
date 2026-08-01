@@ -3,11 +3,20 @@ import { authorize } from '@agroconnect/shared';
 import { requireAuth } from '../middleware/auth.js';
 import { validateBody } from '../middleware/validate.js';
 import { assignLenderSchema } from '../schemas/assignLender.schema.js';
+import { bulkAssignLenderSchema } from '../schemas/bulkAssignLender.schema.js';
 import * as farmerLenderController from '../controllers/farmerLenderController.js';
 import type { AuthenticatedRequest } from '../types/index.js';
 
 const router = Router();
 const auth = requireAuth as (req: Request, res: Response, next: NextFunction) => void;
+
+router.patch(
+  '/bulk-lender',
+  auth,
+  authorize('admin'),
+  validateBody(bulkAssignLenderSchema),
+  (req, res, next) => farmerLenderController.bulkAssignLender(req as AuthenticatedRequest, res, next),
+);
 
 router.patch(
   '/:id/lender',
