@@ -6,6 +6,7 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { AssignLenderModal } from './AssignLenderModal'
+import { BulkCreateFarmersModal } from './BulkCreateFarmersModal'
 
 interface AdminUser {
   id: string
@@ -141,6 +142,7 @@ export function UsersTable() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [assignFarmer, setAssignFarmer] = useState<AdminUser | null>(null)
   const [bulkAssignOpen, setBulkAssignOpen] = useState(false)
+  const [bulkCreateOpen, setBulkCreateOpen] = useState(false)
 
   function updateParams(updates: Record<string, string>) {
     const params = new URLSearchParams(searchParams.toString())
@@ -226,8 +228,11 @@ export function UsersTable() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <span style={{ fontSize: 22, fontWeight: 700, color: '#111827' }}>User Management</span>
         <div style={{ display: 'flex', gap: 8 }}>
+          <button style={{ ...wbtn, backgroundColor: '#fff', color: '#1A6B3C', border: '1px solid #1A6B3C' }} onClick={() => setBulkCreateOpen(true)}>
+            🌱 Onboard New Farmers (CSV)
+          </button>
           <button style={{ ...wbtn, backgroundColor: '#fff', color: '#1A6B3C', border: '1px solid #1A6B3C' }} onClick={() => setBulkAssignOpen(true)}>
-            📎 Assign to NGO/Group (CSV)
+            📎 Assign Existing Farmers (CSV)
           </button>
           <button style={wbtn} onClick={() => router.push('/admin/users/new')}>
             ➕ Create New User
@@ -406,6 +411,7 @@ export function UsersTable() {
 
       {assignFarmer && <AssignLenderModal farmer={assignFarmer} onClose={() => setAssignFarmer(null)} />}
       {bulkAssignOpen && <AssignLenderModal onClose={() => setBulkAssignOpen(false)} />}
+      {bulkCreateOpen && <BulkCreateFarmersModal onClose={() => setBulkCreateOpen(false)} />}
     </div>
   )
 }

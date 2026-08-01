@@ -8,14 +8,14 @@ jest.mock('../../../src/repositories/farmerLenderAssignmentRepository', () => ({
   upsertFarmerLenderAssignment: jest.fn(),
 }));
 jest.mock('../../../src/repositories/loanPartnerRepository', () => ({
-  findPartnerById: jest.fn(),
+  findAllPartners: jest.fn(),
 }));
 jest.mock('../../../src/clients/authServiceClient', () => ({
   resolveUsersByIdentifiers: jest.fn(),
 }));
 
 const mockUpsert = jest.mocked(farmerLenderAssignmentRepo.upsertFarmerLenderAssignment);
-const mockFindPartnerById = jest.mocked(loanPartnerRepo.findPartnerById);
+const mockFindAllPartners = jest.mocked(loanPartnerRepo.findAllPartners);
 const mockResolveUsers = jest.mocked(authClient.resolveUsersByIdentifiers);
 
 function makeReq(body: Record<string, unknown> = {}) {
@@ -33,20 +33,43 @@ const next = jest.fn() as NextFunction;
 beforeEach(() => jest.clearAllMocks());
 
 describe('farmerLenderController.bulkAssignLender', () => {
-  it('404s when the lender/NGO does not exist', async () => {
-    mockFindPartnerById.mockResolvedValue(null);
+  it('flags a row whose lender name matches no active partner', async () => {
+    mockFindAllPartners.mockResolvedValue([{ id: 'ngo-1', name: 'Hope Foundation' }] as never);
 
     const res = makeRes();
-    await farmerLenderController.bulkAssignLender(makeReq({ lenderId: 'ngo-1', identifiers: ['+254700000001'] }), res, next);
+    await farmerLenderController.bulkAssignLender(
+      makeReq({ rows: [{ identifier: '+254700000001', lenderName: 'Nonexistent NGO' }] }),
+      res,
+      next,
+    );
 
-    expect(next).toHaveBeenCalled();
-    const err = (next as jest.Mock).mock.calls[0][0];
-    expect(err.statusCode).toBe(404);
-    expect(mockResolveUsers).not.toHaveBeenCalled();
+    expect(mockResolveUsers).toHaveBeenCalled();
+    expect(mockUpsert).not.toHaveBeenCalled();
+    const payload = (res.json as jest.Mock).mock.calls[0][0];
+    expect(payload.data.results).toEqual([
+      { identifier: '+254700000001', lenderName: 'Nonexistent NGO', status: 'lender_not_found' },
+    ]);
   });
 
-  it('assigns matched farmers, flags not-found and non-farmer rows individually', async () => {
-    mockFindPartnerById.mockResolvedValue({ id: 'ngo-1', type: 'ngo_grant' } as never);
+  it('matches lender names case-insensitively', async () => {
+    mockFindAllPartners.mockResolvedValue([{ id: 'ngo-1', name: 'Hope Foundation' }] as never);
+    mockResolveUsers.mockResolvedValue({ '+254700000001': { id: 'farmer-1', fullName: 'Jane', role: 'farmer' } });
+
+    const res = makeRes();
+    await farmerLenderController.bulkAssignLender(
+      makeReq({ rows: [{ identifier: '+254700000001', lenderName: 'hope foundation' }] }),
+      res,
+      next,
+    );
+
+    expect(mockUpsert).toHaveBeenCalledWith('farmer-1', 'ngo-1');
+  });
+
+  it('assigns matched farmers, and flags not-found / non-farmer rows individually, per their own lender', async () => {
+    mockFindAllPartners.mockResolvedValue([
+      { id: 'ngo-1', name: 'Hope Foundation' },
+      { id: 'sacco-1', name: 'Nakuru SACCO' },
+    ] as never);
     mockResolveUsers.mockResolvedValue({
       '+254700000001': { id: 'farmer-1', fullName: 'Jane', role: 'farmer' },
       '11111111': null,
@@ -55,7 +78,13 @@ describe('farmerLenderController.bulkAssignLender', () => {
 
     const res = makeRes();
     await farmerLenderController.bulkAssignLender(
-      makeReq({ lenderId: 'ngo-1', identifiers: ['+254700000001', '11111111', '+254700000002'] }),
+      makeReq({
+        rows: [
+          { identifier: '+254700000001', lenderName: 'Hope Foundation' },
+          { identifier: '11111111', lenderName: 'Nakuru SACCO' },
+          { identifier: '+254700000002', lenderName: 'Hope Foundation' },
+        ],
+      }),
       res,
       next,
     );
@@ -65,24 +94,32 @@ describe('farmerLenderController.bulkAssignLender', () => {
     const payload = (res.json as jest.Mock).mock.calls[0][0];
     expect(payload.data.assignedCount).toBe(1);
     expect(payload.data.results).toEqual([
-      { identifier: '+254700000001', status: 'assigned', fullName: 'Jane' },
-      { identifier: '11111111', status: 'not_found' },
-      { identifier: '+254700000002', status: 'not_a_farmer', fullName: 'A Bank Officer' },
+      { identifier: '+254700000001', lenderName: 'Hope Foundation', status: 'assigned', fullName: 'Jane' },
+      { identifier: '11111111', lenderName: 'Nakuru SACCO', status: 'not_found' },
+      { identifier: '+254700000002', lenderName: 'Hope Foundation', status: 'not_a_farmer', fullName: 'A Bank Officer' },
     ]);
   });
 
-  it('deduplicates identifiers before resolving', async () => {
-    mockFindPartnerById.mockResolvedValue({ id: 'ngo-1', type: 'ngo_grant' } as never);
+  it('deduplicates identifiers before resolving, even across different target lenders', async () => {
+    mockFindAllPartners.mockResolvedValue([
+      { id: 'ngo-1', name: 'Hope Foundation' },
+      { id: 'sacco-1', name: 'Nakuru SACCO' },
+    ] as never);
     mockResolveUsers.mockResolvedValue({ '+254700000001': { id: 'farmer-1', fullName: 'Jane', role: 'farmer' } });
 
     const res = makeRes();
     await farmerLenderController.bulkAssignLender(
-      makeReq({ lenderId: 'ngo-1', identifiers: ['+254700000001', '+254700000001', ' +254700000001 '.trim()] }),
+      makeReq({
+        rows: [
+          { identifier: '+254700000001', lenderName: 'Hope Foundation' },
+          { identifier: ' +254700000001 '.trim(), lenderName: 'Nakuru SACCO' },
+        ],
+      }),
       res,
       next,
     );
 
     expect(mockResolveUsers).toHaveBeenCalledWith(['+254700000001']);
-    expect(mockUpsert).toHaveBeenCalledTimes(1);
+    expect(mockUpsert).toHaveBeenCalledTimes(2);
   });
 });

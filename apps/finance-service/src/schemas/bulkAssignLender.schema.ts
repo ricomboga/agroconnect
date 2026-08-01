@@ -1,8 +1,13 @@
 import { z } from 'zod';
 
-export const bulkAssignLenderSchema = z.object({
-  lenderId: z.string().min(1),
-  identifiers: z.array(z.string().min(1)).min(1).max(500),
+const bulkAssignRowSchema = z.object({
+  identifier: z.string().min(1), // farmer phone number or National ID
+  lenderName: z.string().min(1), // NGO/Group/lender name, resolved server-side (case-insensitive)
 });
 
+export const bulkAssignLenderSchema = z.object({
+  rows: z.array(bulkAssignRowSchema).min(1).max(500),
+});
+
+export type BulkAssignRow = z.infer<typeof bulkAssignRowSchema>;
 export type BulkAssignLenderDto = z.infer<typeof bulkAssignLenderSchema>;

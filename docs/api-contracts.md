@@ -149,7 +149,7 @@ All endpoints require JWT. Farmers access their own farms only; admin can access
 | GET | /finance/reports/me?from_date&to_date | JWT (farmer) | Comprehensive financial report: transaction income/expense totals + farm production (harvests, eggs/milk/honey, customer collections) + cached credit score. Query dates optional, `YYYY-MM-DD`. |
 | GET | /finance/lender/loans/:loanId/report?from_date&to_date | JWT (lender, own pipeline only) | Same comprehensive report as above, scoped to the farmer who applied for `loanId`. Used by financial institutions to score loan applicants. |
 | PATCH | /finance/farmers/:id/lender | JWT (admin) | Assign one farmer to a lender/NGO/Group (upserts `FarmerLenderAssignment`). Body: `{ lenderId }`. |
-| PATCH | /finance/farmers/bulk-lender | JWT (admin) | Bulk-assign farmers to a lender/NGO/Group by phone number or National ID (CSV upload, parsed client-side). Body: `{ lenderId, identifiers: string[] }` (max 500). Response reports per-identifier status: `assigned`, `not_found`, or `not_a_farmer`. |
+| PATCH | /finance/farmers/bulk-lender | JWT (admin) | Bulk-assign farmers to lender/NGO/Group institutions by phone number or National ID (CSV upload, parsed client-side) — each row names its own institution, so one file can target several. Body: `{ rows: [{ identifier, lenderName }] }` (max 500). `lenderName` is matched case-insensitively against active `LoanPartner` names. Response reports per-row status: `assigned`, `not_found` (farmer), `not_a_farmer`, or `lender_not_found`. |
 
 ---
 

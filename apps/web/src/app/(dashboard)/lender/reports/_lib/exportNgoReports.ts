@@ -18,7 +18,9 @@ function toCsv(headers: string[], rows: (string | number)[][]): Blob {
   for (const row of rows) {
     lines.push(row.map((v) => `"${v}"`).join(','))
   }
-  return new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' })
+  // Leading UTF-8 BOM: without it, Excel on Windows can misdetect the encoding
+  // and show mangled or seemingly blank cells.
+  return new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' })
 }
 
 export interface FarmerListRow {

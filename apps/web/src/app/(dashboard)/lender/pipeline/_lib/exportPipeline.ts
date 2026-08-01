@@ -63,7 +63,9 @@ export function exportPipelineCsv(institutionName: string, kpis: ExportKpi[], ro
     lines.push(loanToRow(row).map((v) => `"${v}"`).join(','))
   }
 
-  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' })
+  // Leading UTF-8 BOM: without it, Excel on Windows can misdetect the encoding
+  // and show mangled or seemingly blank cells.
+  const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' })
   triggerDownload(blob, `lender-pipeline-${fileTimestamp()}.csv`)
 }
 

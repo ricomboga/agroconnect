@@ -1,8 +1,9 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { parseCsvRows, looksLikeHeader, downloadCsv } from '../_lib/csv'
 
 interface Partner {
   id: string
@@ -12,7 +13,8 @@ interface Partner {
 
 interface BulkRowResult {
   identifier: string
-  status: 'assigned' | 'not_found' | 'not_a_farmer'
+  lenderName: string
+  status: 'assigned' | 'not_found' | 'not_a_farmer' | 'lender_not_found'
   fullName?: string
 }
 
@@ -27,27 +29,42 @@ const PARTNER_TYPE_LABELS: Record<string, string> = {
 
 const ROW_STATUS_LABEL: Record<BulkRowResult['status'], { label: string; bg: string; color: string }> = {
   assigned: { label: 'Assigned', bg: '#EAF4EE', color: '#0D4A28' },
-  not_found: { label: 'Not found', bg: '#FEE2E2', color: '#991B1B' },
+  not_found: { label: 'Farmer not found', bg: '#FEE2E2', color: '#991B1B' },
   not_a_farmer: { label: 'Not a farmer', bg: '#FEF3C7', color: '#92400E' },
+  lender_not_found: { label: 'NGO/Group not found', bg: '#FEE2E2', color: '#991B1B' },
 }
 
-/** Splits on newlines, drops a header row if the first cell looks like a column name. */
-function parseCsvIdentifiers(text: string): string[] {
-  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
-  if (lines.length === 0) return []
-  const firstCell = (lines[0]?.split(',')[0] ?? '').trim().toLowerCase()
-  const startIdx = ['phone', 'national_id', 'nationalid', 'id_number', 'idnumber'].includes(firstCell) ? 1 : 0
-  return [...new Set(lines.slice(startIdx).map((l) => l.split(',')[0]?.trim() ?? '').filter(Boolean))]
+const IDENTIFIER_HEADERS = ['phone', 'national_id', 'nationalid', 'id_number', 'idnumber']
+const LENDER_HEADERS = ['ngo_or_group_name', 'ngo_name', 'lender_name', 'group_name', 'institution']
+
+interface ParsedRow {
+  identifier: string
+  lenderName: string
 }
 
-function downloadTemplate() {
-  const blob = new Blob(['phone\n+254712345678\n+254798765432\n'], { type: 'text/csv' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = 'farmer-assignment-template.csv'
-  a.click()
-  URL.revokeObjectURL(url)
+/**
+ * Reads a 1- or 2-column CSV: column 1 is the farmer's phone/National ID,
+ * column 2 (optional per row) is the NGO/Group/lender name. Rows missing a
+ * lender name fall back to `defaultLenderName` when one is selected.
+ */
+function parseAssignmentCsv(text: string, defaultLenderName: string): { rows: ParsedRow[]; skipped: number } {
+  const raw = parseCsvRows(text)
+  if (raw.length === 0) return { rows: [], skipped: 0 }
+  const startIdx = looksLikeHeader(raw[0]?.[0] ?? '', IDENTIFIER_HEADERS) || looksLikeHeader(raw[0]?.[1] ?? '', LENDER_HEADERS) ? 1 : 0
+
+  const rows: ParsedRow[] = []
+  let skipped = 0
+  const seen = new Set<string>()
+  for (const cells of raw.slice(startIdx)) {
+    const identifier = (cells[0] ?? '').trim()
+    const lenderName = (cells[1] ?? '').trim() || defaultLenderName
+    if (!identifier || !lenderName) { skipped++; continue }
+    const key = `${identifier}::${lenderName}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    rows.push({ identifier, lenderName })
+  }
+  return { rows, skipped }
 }
 
 const overlayStyle: React.CSSProperties = {
@@ -56,7 +73,7 @@ const overlayStyle: React.CSSProperties = {
 }
 
 const cardStyle: React.CSSProperties = {
-  backgroundColor: '#fff', borderRadius: 10, padding: 20, width: 480,
+  backgroundColor: '#fff', borderRadius: 10, padding: 20, width: 520,
   maxWidth: '90vw', maxHeight: '85vh', overflowY: 'auto',
   boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
 }
@@ -89,10 +106,11 @@ interface Props {
 
 export function AssignLenderModal({ farmer, onClose }: Props) {
   const queryClient = useQueryClient()
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const [lenderId, setLenderId] = useState('')
+  const [defaultLenderName, setDefaultLenderName] = useState('')
   const [fileName, setFileName] = useState('')
-  const [identifiers, setIdentifiers] = useState<string[]>([])
+  const [rows, setRows] = useState<ParsedRow[]>([])
+  const [skippedCount, setSkippedCount] = useState(0)
   const [results, setResults] = useState<BulkRowResult[] | null>(null)
 
   const { data: partners, isLoading: partnersLoading } = useQuery({
@@ -132,7 +150,7 @@ export function AssignLenderModal({ farmer, onClose }: Props) {
       const res = await fetch('/api/finance/farmers/bulk-lender', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lenderId, identifiers }),
+        body: JSON.stringify({ rows }),
       })
       const body = (await res.json().catch(() => ({}))) as {
         message?: string
@@ -153,16 +171,31 @@ export function AssignLenderModal({ farmer, onClose }: Props) {
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]
     setResults(null)
-    if (!f) { setFileName(''); setIdentifiers([]); return }
+    if (!f) { setFileName(''); setRows([]); setSkippedCount(0); return }
     setFileName(f.name)
     const text = await f.text()
-    const parsed = parseCsvIdentifiers(text)
-    setIdentifiers(parsed)
-    if (parsed.length === 0) toast.error('No phone numbers or National IDs found in that file')
+    const parsed = parseAssignmentCsv(text, defaultLenderName)
+    setRows(parsed.rows)
+    setSkippedCount(parsed.skipped)
+    if (parsed.rows.length === 0) {
+      toast.error('No valid rows found — each row needs a phone/National ID and an NGO/Group name (or pick a default above)')
+    }
+  }
+
+  function downloadTemplate() {
+    const exampleName = partners?.find((p) => p.type === 'ngo_grant' || p.type === 'cooperative')?.name ?? partners?.[0]?.name ?? 'Hope Foundation'
+    downloadCsv(
+      'farmer-ngo-assignment-template.csv',
+      ['phone', 'ngo_or_group_name'],
+      [
+        ['+254712345678', exampleName],
+        ['+254798765432', exampleName],
+      ],
+    )
   }
 
   const isBulk = !farmer
-  const canSubmit = lenderId.length > 0 && (!isBulk || identifiers.length > 0)
+  const canSubmit = isBulk ? rows.length > 0 : lenderId.length > 0
   const busy = singleMutation.isPending || bulkMutation.isPending
 
   return (
@@ -170,7 +203,7 @@ export function AssignLenderModal({ farmer, onClose }: Props) {
       <div style={cardStyle} onClick={(e) => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
           <span style={{ fontSize: 18, fontWeight: 700, color: '#111827' }}>
-            {isBulk ? 'Bulk Assign to NGO / Group' : `Assign ${farmer?.full_name}`}
+            {isBulk ? 'Bulk Assign Existing Farmers to NGO / Group' : `Assign ${farmer?.full_name}`}
           </span>
           <button
             onClick={onClose}
@@ -180,55 +213,72 @@ export function AssignLenderModal({ farmer, onClose }: Props) {
           </button>
         </div>
 
-        <label style={labelStyle}>NGO / Group / Lender</label>
-        <select
-          value={lenderId}
-          onChange={(e) => setLenderId(e.target.value)}
-          style={selectStyle}
-          disabled={partnersLoading}
-        >
-          <option value="">{partnersLoading ? 'Loading…' : 'Select an institution…'}</option>
-          {partners?.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name} — {PARTNER_TYPE_LABELS[p.type] ?? p.type}
-            </option>
-          ))}
-        </select>
+        {!isBulk && (
+          <>
+            <label style={labelStyle}>NGO / Group / Lender</label>
+            <select value={lenderId} onChange={(e) => setLenderId(e.target.value)} style={selectStyle} disabled={partnersLoading}>
+              <option value="">{partnersLoading ? 'Loading…' : 'Select an institution…'}</option>
+              {partners?.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name} — {PARTNER_TYPE_LABELS[p.type] ?? p.type}
+                </option>
+              ))}
+            </select>
+          </>
+        )}
 
         {isBulk && (
           <>
-            <label style={labelStyle}>Farmers CSV (phone number or National ID, one per row)</label>
+            <label style={labelStyle}>Default NGO / Group (optional — used for rows without their own)</label>
+            <select
+              value={defaultLenderName}
+              onChange={(e) => setDefaultLenderName(e.target.value)}
+              style={selectStyle}
+              disabled={partnersLoading}
+            >
+              <option value="">{partnersLoading ? 'Loading…' : 'No default — every row must name its own institution'}</option>
+              {partners?.map((p) => (
+                <option key={p.id} value={p.name}>
+                  {p.name} — {PARTNER_TYPE_LABELS[p.type] ?? p.type}
+                </option>
+              ))}
+            </select>
+
+            <label style={labelStyle}>Farmers CSV — columns: phone (or National ID), NGO/Group name</label>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
-              <input ref={fileInputRef} type="file" accept=".csv,text/csv" onChange={(e) => void handleFileChange(e)} style={{ fontSize: 13 }} />
+              <input type="file" accept=".csv,text/csv" onChange={(e) => void handleFileChange(e)} style={{ fontSize: 13 }} />
               <button type="button" onClick={downloadTemplate} style={{ ...secondaryBtn, padding: '5px 8px', fontSize: 12 }}>
                 ⬇ Template
               </button>
             </div>
             {fileName && (
               <p style={{ fontSize: 12, color: '#6B7280', marginBottom: 14 }}>
-                {fileName} — {identifiers.length} identifier{identifiers.length === 1 ? '' : 's'} found
+                {fileName} — {rows.length} row{rows.length === 1 ? '' : 's'} ready
+                {skippedCount > 0 && `, ${skippedCount} skipped (missing phone/National ID or NGO name)`}
               </p>
             )}
           </>
         )}
 
         {results && (
-          <div style={{ marginTop: 4, marginBottom: 14, maxHeight: 220, overflowY: 'auto', border: '1px solid #E5E7EB', borderRadius: 6 }}>
+          <div style={{ marginTop: 4, marginBottom: 14, maxHeight: 240, overflowY: 'auto', border: '1px solid #E5E7EB', borderRadius: 6 }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
               <thead style={{ backgroundColor: '#F9FAFB', position: 'sticky', top: 0 }}>
                 <tr>
                   <th style={{ textAlign: 'left', padding: '5px 8px' }}>Identifier</th>
                   <th style={{ textAlign: 'left', padding: '5px 8px' }}>Farmer</th>
+                  <th style={{ textAlign: 'left', padding: '5px 8px' }}>NGO/Group</th>
                   <th style={{ textAlign: 'left', padding: '5px 8px' }}>Status</th>
                 </tr>
               </thead>
               <tbody>
-                {results.map((r) => {
+                {results.map((r, i) => {
                   const s = ROW_STATUS_LABEL[r.status]
                   return (
-                    <tr key={r.identifier}>
+                    <tr key={`${r.identifier}-${r.lenderName}-${i}`}>
                       <td style={{ padding: '5px 8px', borderTop: '1px solid #F3F4F6' }}>{r.identifier}</td>
                       <td style={{ padding: '5px 8px', borderTop: '1px solid #F3F4F6' }}>{r.fullName ?? '—'}</td>
+                      <td style={{ padding: '5px 8px', borderTop: '1px solid #F3F4F6' }}>{r.lenderName}</td>
                       <td style={{ padding: '5px 8px', borderTop: '1px solid #F3F4F6' }}>
                         <span style={{ backgroundColor: s.bg, color: s.color, borderRadius: 8, padding: '2px 6px', fontWeight: 600 }}>
                           {s.label}
@@ -253,7 +303,7 @@ export function AssignLenderModal({ farmer, onClose }: Props) {
               onClick={() => (isBulk ? bulkMutation.mutate() : singleMutation.mutate())}
               style={{ ...primaryBtn, opacity: !canSubmit || busy ? 0.5 : 1, cursor: !canSubmit || busy ? 'not-allowed' : 'pointer' }}
             >
-              {busy ? 'Assigning…' : isBulk ? `Assign ${identifiers.length || ''} Farmer(s)` : 'Assign'}
+              {busy ? 'Assigning…' : isBulk ? `Assign ${rows.length || ''} Farmer(s)` : 'Assign'}
             </button>
           )}
         </div>

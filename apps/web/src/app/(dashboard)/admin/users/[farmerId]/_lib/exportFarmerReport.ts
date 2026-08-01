@@ -71,6 +71,8 @@ export function exportFarmerReportCsv(farmerId: string, report: FarmerReport): v
     lines.push('"Not yet computed"')
   }
 
-  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' })
+  // Leading UTF-8 BOM: without it, Excel on Windows can misdetect the encoding
+  // and show mangled or seemingly blank cells.
+  const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' })
   triggerDownload(blob, `farmer-report-${farmerId}-${new Date().toISOString().slice(0, 10)}.csv`)
 }

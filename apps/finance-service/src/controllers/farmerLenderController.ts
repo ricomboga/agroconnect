@@ -3,7 +3,6 @@ import type { AuthenticatedRequest } from '../types/index.js';
 import { upsertFarmerLenderAssignment } from '../repositories/farmerLenderAssignmentRepository.js';
 import * as loanPartnerRepo from '../repositories/loanPartnerRepository.js';
 import * as authClient from '../clients/authServiceClient.js';
-import { createError } from '../middleware/errorHandler.js';
 import type { AssignLenderDto } from '../schemas/assignLender.schema.js';
 import type { BulkAssignLenderDto } from '../schemas/bulkAssignLender.schema.js';
 
@@ -22,19 +21,22 @@ export async function assignLender(
   }
 }
 
-export type BulkAssignRowStatus = 'assigned' | 'not_found' | 'not_a_farmer';
+export type BulkAssignRowStatus = 'assigned' | 'not_found' | 'not_a_farmer' | 'lender_not_found';
 
 export interface BulkAssignRowResult {
   identifier: string;
+  lenderName: string;
   status: BulkAssignRowStatus;
   fullName?: string;
 }
 
 /**
- * Bulk farmer-to-lender assignment (CSV upload) — each identifier is a phone
- * number or National ID from the uploaded file. Every row is resolved and
- * reported individually so the admin UI can show exactly which rows failed
- * and why, rather than the whole batch succeeding or failing as one unit.
+ * Bulk farmer-to-lender assignment (CSV upload) — each row is a farmer
+ * identifier (phone/National ID) paired with the NGO/Group/lender name to
+ * assign them to, so one file can target multiple institutions at once.
+ * Every row is resolved and reported individually so the admin UI can show
+ * exactly which rows failed and why, rather than the whole batch succeeding
+ * or failing as one unit.
  */
 export async function bulkAssignLender(
   req: AuthenticatedRequest,
@@ -42,29 +44,37 @@ export async function bulkAssignLender(
   next: NextFunction,
 ): Promise<void> {
   try {
-    const { lenderId, identifiers } = req.body as BulkAssignLenderDto;
+    const { rows } = req.body as BulkAssignLenderDto;
 
-    const partner = await loanPartnerRepo.findPartnerById(lenderId);
-    if (!partner) {
-      throw createError('Lender/NGO not found', 404, 'PARTNER_NOT_FOUND', 'error.finance.partner_not_found');
-    }
+    const partners = await loanPartnerRepo.findAllPartners();
+    const partnerByName = new Map<string, { id: string; name: string }>(
+      partners.map((p: { id: string; name: string }) => [p.name.trim().toLowerCase(), p]),
+    );
 
-    const uniqueIdentifiers = [...new Set(identifiers.map((i) => i.trim()).filter(Boolean))];
+    const uniqueIdentifiers = [...new Set(rows.map((r) => r.identifier.trim()).filter(Boolean))];
     const resolved = await authClient.resolveUsersByIdentifiers(uniqueIdentifiers);
 
     const results: BulkAssignRowResult[] = [];
-    for (const identifier of uniqueIdentifiers) {
+    for (const row of rows) {
+      const identifier = row.identifier.trim();
+      const lenderName = row.lenderName.trim();
+      const partner = partnerByName.get(lenderName.toLowerCase());
+      if (!partner) {
+        results.push({ identifier, lenderName, status: 'lender_not_found' });
+        continue;
+      }
+
       const match = resolved[identifier];
       if (!match) {
-        results.push({ identifier, status: 'not_found' });
+        results.push({ identifier, lenderName, status: 'not_found' });
         continue;
       }
       if (match.role !== 'farmer') {
-        results.push({ identifier, status: 'not_a_farmer', fullName: match.fullName });
+        results.push({ identifier, lenderName, status: 'not_a_farmer', fullName: match.fullName });
         continue;
       }
-      await upsertFarmerLenderAssignment(match.id, lenderId);
-      results.push({ identifier, status: 'assigned', fullName: match.fullName });
+      await upsertFarmerLenderAssignment(match.id, partner.id);
+      results.push({ identifier, lenderName, status: 'assigned', fullName: match.fullName });
     }
 
     res.json({
