@@ -13,6 +13,12 @@ export async function findPartnerById(id: string) {
   return prisma.loanPartner.findUnique({ where: { id } });
 }
 
+// Deliberately not filtered by `active` — a farmer's assignment display
+// should still show the institution's name even if it was later deactivated.
+export async function findPartnersByIds(ids: string[]) {
+  return prisma.loanPartner.findMany({ where: { id: { in: ids } } });
+}
+
 export async function createPartner(id: string, dto: CreateLoanPartnerDto) {
   return prisma.loanPartner.create({
     data: {

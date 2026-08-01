@@ -27,3 +27,10 @@ export async function findFarmerIdsByLender(lenderId: string): Promise<string[]>
   });
   return rows.map((r) => r.farmerId);
 }
+
+export async function findAssignmentsByFarmerIds(farmerIds: string[]) {
+  return prisma.farmerLenderAssignment.findMany({
+    where: { farmerId: { in: farmerIds } },
+    select: { farmerId: true, lenderId: true },
+  });
+}

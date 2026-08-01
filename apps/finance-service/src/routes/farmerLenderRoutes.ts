@@ -10,6 +10,13 @@ import type { AuthenticatedRequest } from '../types/index.js';
 const router = Router();
 const auth = requireAuth as (req: Request, res: Response, next: NextFunction) => void;
 
+router.get(
+  '/lender-map',
+  auth,
+  authorize('admin'),
+  farmerLenderController.getFarmerLenderMap,
+);
+
 router.patch(
   '/bulk-lender',
   auth,

@@ -1,6 +1,9 @@
-import type { Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import type { AuthenticatedRequest } from '../types/index.js';
-import { upsertFarmerLenderAssignment } from '../repositories/farmerLenderAssignmentRepository.js';
+import {
+  upsertFarmerLenderAssignment,
+  findAssignmentsByFarmerIds,
+} from '../repositories/farmerLenderAssignmentRepository.js';
 import * as loanPartnerRepo from '../repositories/loanPartnerRepository.js';
 import * as authClient from '../clients/authServiceClient.js';
 import type { AssignLenderDto } from '../schemas/assignLender.schema.js';
@@ -16,6 +19,35 @@ export async function assignLender(
     const { lenderId } = req.body as AssignLenderDto;
     const assignment = await upsertFarmerLenderAssignment(id, lenderId);
     res.json({ data: assignment });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * For a set of farmer IDs, reports which ones already have a lender/NGO/Group
+ * assignment (and its name) — powers the "NGO/Group" column + assigned/
+ * unassigned flag on the admin farmer list, so the admin never needs to open
+ * each farmer individually to know.
+ */
+export async function getFarmerLenderMap(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const farmerIds = String(req.query['farmerIds'] ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+    if (farmerIds.length === 0) { res.json({ data: {} }); return; }
+
+    const assignments = (await findAssignmentsByFarmerIds(farmerIds)) as { farmerId: string; lenderId: string }[];
+    const lenderIds: string[] = [...new Set(assignments.map((a) => a.lenderId))];
+    const partners = await loanPartnerRepo.findPartnersByIds(lenderIds);
+    const partnerById = new Map<string, string>(
+      partners.map((p: { id: string; name: string }) => [p.id, p.name]),
+    );
+
+    const data: Record<string, { lenderId: string; lenderName: string }> = {};
+    for (const a of assignments) {
+      const lenderName = partnerById.get(a.lenderId);
+      if (lenderName) data[a.farmerId] = { lenderId: a.lenderId, lenderName };
+    }
+    res.json({ data });
   } catch (err) {
     next(err);
   }

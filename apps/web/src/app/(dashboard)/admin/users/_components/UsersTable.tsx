@@ -24,6 +24,8 @@ interface UsersResponse {
   meta: { page: number; page_size: number; total: number; total_pages: number }
 }
 
+type LenderMap = Record<string, { lenderId: string; lenderName: string }>
+
 const ROLE_LABELS: Record<string, string> = {
   farmer: '🌾 Farmer',
   lender: '🏦 Lender',
@@ -125,6 +127,35 @@ function StatusBadge({ active }: { active: boolean }) {
   )
 }
 
+/** Flags whether a farmer is already linked to an NGO/Group, and shows which one. */
+function LenderBadge({ lenderName }: { lenderName?: string }) {
+  if (!lenderName) {
+    return (
+      <span style={{
+        backgroundColor: '#F3F4F6', color: '#6B7280',
+        borderRadius: 8, paddingLeft: 6, paddingRight: 6,
+        paddingTop: 2, paddingBottom: 2, fontSize: 12, fontWeight: 600,
+      }}>
+        Unassigned
+      </span>
+    )
+  }
+  return (
+    <span
+      title={lenderName}
+      style={{
+        display: 'inline-block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap', verticalAlign: 'bottom',
+        backgroundColor: '#EAF4EE', color: '#0D4A28',
+        borderRadius: 8, paddingLeft: 6, paddingRight: 6,
+        paddingTop: 2, paddingBottom: 2, fontSize: 12, fontWeight: 600,
+      }}
+    >
+      {lenderName}
+    </span>
+  )
+}
+
 export function UsersTable() {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -218,6 +249,18 @@ export function UsersTable() {
 
   const meta = data?.meta
   const users = data?.data ?? []
+  const farmerIds = users.filter((u) => u.role === 'farmer').map((u) => u.id)
+
+  const { data: lenderMap } = useQuery({
+    queryKey: ['admin', 'users', 'lender-map', farmerIds],
+    queryFn: async () => {
+      const res = await fetch(`/api/finance/farmers/lender-map?farmerIds=${farmerIds.join(',')}`)
+      if (!res.ok) return {} as LenderMap
+      const body = (await res.json()) as { data: LenderMap }
+      return body.data
+    },
+    enabled: farmerIds.length > 0,
+  })
   const start = meta ? (meta.page - 1) * meta.page_size + 1 : 1
   const end   = meta ? Math.min(meta.page * meta.page_size, meta.total) : users.length
   const total = meta?.total ?? users.length
@@ -282,13 +325,14 @@ export function UsersTable() {
       <div style={{ border: '1px solid #E5E7EB', borderRadius: 8, overflow: 'hidden', backgroundColor: '#fff' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
           <colgroup>
-            <col style={{ width: '20%' }} />
-            <col style={{ width: '14%' }} />
+            <col style={{ width: '18%' }} />
             <col style={{ width: '12%' }} />
             <col style={{ width: '10%' }} />
-            <col style={{ width: '10%' }} />
-            <col style={{ width: '10%' }} />
-            <col style={{ width: '24%' }} />
+            <col style={{ width: '9%' }} />
+            <col style={{ width: '12%' }} />
+            <col style={{ width: '9%' }} />
+            <col style={{ width: '9%' }} />
+            <col style={{ width: '21%' }} />
           </colgroup>
           <thead style={{ backgroundColor: '#F9FAFB' }}>
             <tr>
@@ -296,6 +340,7 @@ export function UsersTable() {
               <th style={thStyle}>Phone</th>
               <th style={thStyle}>Type</th>
               <th style={thStyle}>County</th>
+              <th style={thStyle}>NGO/Group</th>
               <th style={thStyle}>KYC</th>
               <th style={thStyle}>Status</th>
               <th style={thStyle}>Actions</th>
@@ -304,19 +349,19 @@ export function UsersTable() {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={7} style={{ ...tdStyle, textAlign: 'center', padding: 20, color: '#6B7280' }}>
+                <td colSpan={8} style={{ ...tdStyle, textAlign: 'center', padding: 20, color: '#6B7280' }}>
                   Loading...
                 </td>
               </tr>
             ) : isError ? (
               <tr>
-                <td colSpan={7} style={{ ...tdStyle, textAlign: 'center', padding: 20, color: '#991B1B' }}>
+                <td colSpan={8} style={{ ...tdStyle, textAlign: 'center', padding: 20, color: '#991B1B' }}>
                   Failed to load users. Please try again.
                 </td>
               </tr>
             ) : users.length === 0 ? (
               <tr>
-                <td colSpan={7} style={{ ...tdStyle, textAlign: 'center', padding: 20, color: '#6B7280' }}>
+                <td colSpan={8} style={{ ...tdStyle, textAlign: 'center', padding: 20, color: '#6B7280' }}>
                   No users found.
                 </td>
               </tr>
@@ -331,6 +376,9 @@ export function UsersTable() {
                 <td style={tdStyle}>{u.phone}</td>
                 <td style={tdStyle}>{ROLE_LABELS[u.role] ?? u.role}</td>
                 <td style={tdStyle}>{u.county}</td>
+                <td style={tdStyle}>
+                  {u.role === 'farmer' ? <LenderBadge lenderName={lenderMap?.[u.id]?.lenderName} /> : '—'}
+                </td>
                 <td style={tdStyle}><KycBadge status={u.kyc_status} /></td>
                 <td style={tdStyle}><StatusBadge active={u.is_active} /></td>
                 <td style={tdStyle}>
