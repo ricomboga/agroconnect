@@ -207,3 +207,39 @@ export async function getFarmerFarmReport(farmerId: string, asOfDateStr: string)
       })),
   };
 }
+
+/**
+ * Inventory items purchased within a date range for a farmer — powers the
+ * NGO lender portal's Inventory Report (filtered by farmer + date range),
+ * distinct from getFarmerFarmReport's "as-at snapshot" inventory view.
+ */
+export async function getFarmerInventoryReport(
+  farmerId: string,
+  range: { fromDate?: string; toDate?: string } = {},
+) {
+  const farms = await findFarmsByOwner(farmerId, { take: 100, skip: 0 });
+  const farmIds = farms.map((f) => f.id);
+  if (farmIds.length === 0) return [];
+
+  const fromDate = range.fromDate ? new Date(`${range.fromDate}T00:00:00.000Z`) : undefined;
+  const toDate = range.toDate ? new Date(`${range.toDate}T23:59:59.999Z`) : undefined;
+
+  const inventoryItems: InventoryItemRow[] = await prisma.inventoryItem.findMany({
+    where: {
+      farmId: { in: farmIds },
+      ...(fromDate || toDate
+        ? { createdAt: { ...(fromDate ? { gte: fromDate } : {}), ...(toDate ? { lte: toDate } : {}) } }
+        : {}),
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  return inventoryItems.map((i) => ({
+    name: i.name,
+    category: i.category,
+    unit: i.unit,
+    purchasedQty: toNum(i.purchasedQty),
+    remainingQty: toNum(i.purchasedQty) - toNum(i.usedQty),
+    purchasedAt: toDateStr(i.createdAt),
+  }));
+}

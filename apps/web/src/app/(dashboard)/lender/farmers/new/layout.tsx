@@ -1,6 +1,7 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
+import { useEffect } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { WizardBar } from '@agroconnect/web-ui'
 import { NgoFarmerCreationProvider } from './_context/NgoFarmerCreationContext'
 
@@ -14,9 +15,17 @@ function currentStepFromPathname(pathname: string): number {
   return STEPS.length
 }
 
+// Farmer onboarding is company-retained — NGO/Group lenders no longer have
+// Add Farmer access (the nav link is gone; this guard catches direct URL
+// entry). The create endpoint itself also denies the request server-side.
 export default function NgoFarmerWizardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const router = useRouter()
   const currentStep = currentStepFromPathname(pathname)
+
+  useEffect(() => {
+    router.replace('/lender')
+  }, [router])
 
   return (
     <NgoFarmerCreationProvider>

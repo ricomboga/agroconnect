@@ -1,12 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
 import * as productionSummaryService from '../../../src/services/productionSummaryService';
+import * as farmerReportService from '../../../src/services/farmerReportService';
 import * as internalProductionController from '../../../src/controllers/internalProductionController';
 
 jest.mock('../../../src/services/productionSummaryService', () => ({
   getProductionSummary: jest.fn(),
 }));
+jest.mock('../../../src/services/farmerReportService', () => ({
+  getFarmerFarmReport: jest.fn(),
+  getFarmerInventoryReport: jest.fn(),
+}));
 
 const mockGetProductionSummary = jest.mocked(productionSummaryService.getProductionSummary);
+const mockGetFarmerInventoryReport = jest.mocked(farmerReportService.getFarmerInventoryReport);
 
 const fakeSummary = {
   cropHarvests: { totalHarvestedKg: 0, totalSoldKg: 0, totalRevenueKes: 0, byCrop: [] },
@@ -70,5 +76,42 @@ describe('internalProductionController.getFarmerProductionSummaryHandler', () =>
     await internalProductionController.getFarmerProductionSummaryHandler(req, res, next);
 
     expect(next).toHaveBeenCalledWith(err);
+  });
+});
+
+describe('internalProductionController.getFarmerInventoryReportHandler', () => {
+  const fakeItems = [
+    { name: 'Fertilizer', category: 'input', unit: 'kg', purchasedQty: 50, remainingQty: 20, purchasedAt: '2026-02-01' },
+  ];
+
+  it('returns inventory items scoped to the parsed date range', async () => {
+    mockGetFarmerInventoryReport.mockResolvedValue(fakeItems);
+
+    const req = makeReq({ query: { from_date: '2026-01-01', to_date: '2026-06-30' } });
+    const res = makeRes();
+    await internalProductionController.getFarmerInventoryReportHandler(req, res, next);
+
+    expect(mockGetFarmerInventoryReport).toHaveBeenCalledWith('farmer-1', { fromDate: '2026-01-01', toDate: '2026-06-30' });
+    expect(res.json).toHaveBeenCalledWith({ data: fakeItems });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('works with no date range given', async () => {
+    mockGetFarmerInventoryReport.mockResolvedValue(fakeItems);
+
+    const req = makeReq();
+    const res = makeRes();
+    await internalProductionController.getFarmerInventoryReportHandler(req, res, next);
+
+    expect(mockGetFarmerInventoryReport).toHaveBeenCalledWith('farmer-1', { fromDate: undefined, toDate: undefined });
+  });
+
+  it('forwards a 400 validation error to next when from_date is malformed', async () => {
+    const req = makeReq({ query: { from_date: 'not-a-date' } });
+    const res = makeRes();
+    await internalProductionController.getFarmerInventoryReportHandler(req, res, next);
+
+    expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 400 }));
+    expect(mockGetFarmerInventoryReport).not.toHaveBeenCalled();
   });
 });

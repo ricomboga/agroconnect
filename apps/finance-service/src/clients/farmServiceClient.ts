@@ -214,6 +214,39 @@ export interface FarmerRegionProfile {
   firstRegisteredAt: string;
 }
 
+export interface InventoryReportItem {
+  name: string;
+  category: string;
+  unit: string;
+  purchasedQty: number;
+  remainingQty: number;
+  purchasedAt: string;
+}
+
+/**
+ * Fetches inventory items purchased within a date range for a single farmer —
+ * powers the NGO lender portal's Inventory Report (filtered by farmer + date
+ * range), distinct from the "as-at snapshot" inventory used by the Farmer
+ * Report screen (getFarmerFarmReport).
+ */
+export async function getFarmerInventoryReport(
+  farmerId: string,
+  range: { fromDate?: string; toDate?: string } = {},
+): Promise<InventoryReportItem[]> {
+  try {
+    const res = await client.get<{ data: InventoryReportItem[] }>(
+      `/internal/production/${farmerId}/inventory-report`,
+      {
+        params: { from_date: range.fromDate, to_date: range.toDate },
+        headers: { 'x-service-token': SERVICE_TOKEN },
+      },
+    );
+    return res.data.data;
+  } catch (err) {
+    throw toScoringError(err, 'inventory report');
+  }
+}
+
 export async function getFarmersByCounties(counties: string[]): Promise<FarmerRegionProfile[]> {
   if (counties.length === 0) return [];
   try {

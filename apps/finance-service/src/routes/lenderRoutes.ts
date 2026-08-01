@@ -68,6 +68,12 @@ router.get(
   toAuthReq(lenderReportsController.getIncomeStatementReportHandler),
 );
 router.get(
+  '/reports/inventory',
+  auth,
+  validateQuery(reportQuerySchema),
+  toAuthReq(lenderReportsController.getInventoryReportHandler),
+);
+router.get(
   '/farmer-reports/:farmerId/credit',
   auth,
   toAuthReq(lenderReportsController.getFarmerCreditReportHandler),

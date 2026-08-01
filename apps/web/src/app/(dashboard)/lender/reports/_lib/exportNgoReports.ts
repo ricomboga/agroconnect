@@ -61,3 +61,20 @@ export function exportIncomeStatementCsv(rows: IncomeStatementRow[]): void {
   )
   triggerDownload(blob, `income-statement-${fileTimestamp()}.csv`)
 }
+
+export interface InventoryReportRow {
+  name: string
+  category: string
+  unit: string
+  purchasedQty: number
+  remainingQty: number
+  purchasedAt: string
+}
+
+export function exportInventoryReportCsv(rows: InventoryReportRow[]): void {
+  const blob = toCsv(
+    ['Item', 'Category', 'Unit', 'Purchased Qty', 'Remaining Qty', 'Purchased At'],
+    rows.map((r) => [r.name, r.category, r.unit, r.purchasedQty, r.remainingQty, r.purchasedAt]),
+  )
+  triggerDownload(blob, `inventory-report-${fileTimestamp()}.csv`)
+}

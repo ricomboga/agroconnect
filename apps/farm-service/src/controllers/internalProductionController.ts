@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { getProductionSummary } from '../services/productionSummaryService.js';
-import { getFarmerFarmReport } from '../services/farmerReportService.js';
+import { getFarmerFarmReport, getFarmerInventoryReport } from '../services/farmerReportService.js';
 import { createError } from '../middleware/errorHandler.js';
 import { findFarmsByOwners, findFarmsByCounties } from '../repositories/farmRepository.js';
 
@@ -90,6 +90,48 @@ export async function getFarmerFarmReportHandler(req: Request, res: Response, ne
     }
     const report = await getFarmerFarmReport(farmerId, asOfDate);
     res.json({ data: report });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * @openapi
+ * /internal/production/{farmerId}/inventory-report:
+ *   get:
+ *     summary: Inventory items purchased within a date range for a farmer (service-to-service) — powers the NGO lender portal's Inventory Report
+ *     tags: [Internal]
+ *     security:
+ *       - serviceToken: []
+ *     parameters:
+ *       - in: path
+ *         name: farmerId
+ *         required: true
+ *         schema: { type: string }
+ *       - in: query
+ *         name: from_date
+ *         schema: { type: string, format: date }
+ *       - in: query
+ *         name: to_date
+ *         schema: { type: string, format: date }
+ *     responses:
+ *       200:
+ *         description: Inventory items purchased in the given range
+ *       400:
+ *         description: Invalid date format
+ *       401:
+ *         description: Missing or invalid service token
+ */
+export async function getFarmerInventoryReportHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const farmerId = req.params['farmerId'] as string;
+    const fromDate = parseDate(req.query['from_date'] as string | undefined, 'from_date');
+    const toDate = parseDate(req.query['to_date'] as string | undefined, 'to_date');
+    const items = await getFarmerInventoryReport(farmerId, {
+      fromDate: fromDate ? fromDate.toISOString().slice(0, 10) : undefined,
+      toDate: toDate ? toDate.toISOString().slice(0, 10) : undefined,
+    });
+    res.json({ data: items });
   } catch (err) {
     next(err);
   }

@@ -93,7 +93,7 @@ export async function getFarmersListReportHandler(
  * @openapi
  * /api/v1/finance/lender/reports/income-statement:
  *   get:
- *     summary: Combined income statement (total income, total expenses, net income) across all farmers linked to this institution
+ *     summary: Combined income statement (total income, total expenses, net income) across all farmers linked to this institution, optionally scoped to one farmer by National ID
  *     tags: [Reports, Lender]
  *     security:
  *       - bearerAuth: []
@@ -101,6 +101,10 @@ export async function getFarmersListReportHandler(
  *       - in: query
  *         name: farmer_ids
  *         schema: { type: string }
+ *       - in: query
+ *         name: national_id
+ *         schema: { type: string }
+ *         description: Optional National ID number — narrows the report to the one matching farmer in the roster
  *       - in: query
  *         name: from_date
  *         schema: { type: string, format: date }
@@ -120,19 +124,24 @@ export async function getIncomeStatementReportHandler(
 ): Promise<void> {
   try {
     const partnerBankId = requirePartnerBankId(req);
-    const [farmerIds, rosterConfigured] = await Promise.all([
+    const [rosterFarmerIds, rosterConfigured] = await Promise.all([
       resolveFarmerIds(req, partnerBankId),
       farmerRosterService.isRosterConfigured(partnerBankId),
     ]);
-    const query = req.query as { from_date?: string; to_date?: string };
+    const query = req.query as { from_date?: string; to_date?: string; national_id?: string };
 
-    const [transactions, profiles] = await Promise.all([
-      transactionRepo.findTransactionsByFarmerIdsInRange(farmerIds, {
-        fromDate: query.from_date,
-        toDate: query.to_date,
-      }),
-      authClient.getUserProfiles(farmerIds),
-    ]);
+    const allProfiles = await authClient.getUserProfiles(rosterFarmerIds);
+    const farmerIds = query.national_id
+      ? rosterFarmerIds.filter((id) => allProfiles[id]?.idNumber === query.national_id)
+      : rosterFarmerIds;
+    const profiles = farmerIds.length === rosterFarmerIds.length
+      ? allProfiles
+      : Object.fromEntries(farmerIds.map((id) => [id, allProfiles[id]]));
+
+    const transactions = await transactionRepo.findTransactionsByFarmerIdsInRange(farmerIds, {
+      fromDate: query.from_date,
+      toDate: query.to_date,
+    });
 
     const totalsByFarmer = new Map<string, { incomeKes: number; expenseKes: number }>();
     for (const farmerId of farmerIds) totalsByFarmer.set(farmerId, { incomeKes: 0, expenseKes: 0 });
@@ -173,6 +182,71 @@ export async function getIncomeStatementReportHandler(
           netIncomeKes: round(combined.netIncomeKes),
         },
         rosterConfigured,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * @openapi
+ * /api/v1/finance/lender/reports/inventory:
+ *   get:
+ *     summary: Inventory report for one farmer in this lender's roster, resolved by National ID and filtered to a date range
+ *     tags: [Reports, Lender]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: national_id
+ *         required: true
+ *         schema: { type: string }
+ *       - in: query
+ *         name: from_date
+ *         schema: { type: string, format: date }
+ *       - in: query
+ *         name: to_date
+ *         schema: { type: string, format: date }
+ *     responses:
+ *       200:
+ *         description: Inventory items purchased in the given range for the matched farmer
+ *       403:
+ *         description: Caller is not a registered lending partner
+ *       404:
+ *         description: No farmer in the roster matches the given National ID
+ */
+export async function getInventoryReportHandler(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const partnerBankId = requirePartnerBankId(req);
+    const query = req.query as { from_date?: string; to_date?: string; national_id?: string };
+    if (!query.national_id) {
+      throw createError('national_id is required', 400, 'VALIDATION_ERROR', 'error.validation');
+    }
+
+    const rosterFarmerIds = await resolveFarmerIds(req, partnerBankId);
+    const profiles = await authClient.getUserProfiles(rosterFarmerIds);
+    const farmerId = rosterFarmerIds.find((id) => profiles[id]?.idNumber === query.national_id);
+    if (!farmerId) {
+      throw createError('No farmer in your roster matches that National ID', 404, 'FARMER_NOT_IN_ROSTER', 'error.auth.forbidden');
+    }
+
+    const inventory = await farmClient.getFarmerInventoryReport(farmerId, {
+      fromDate: query.from_date,
+      toDate: query.to_date,
+    });
+
+    res.json({
+      data: {
+        farmerId,
+        fullName: profiles[farmerId]?.fullName ?? null,
+        idNumber: query.national_id,
+        period: { fromDate: query.from_date ?? null, toDate: query.to_date ?? null },
+        items: inventory,
       },
     });
   } catch (err) {
@@ -223,14 +297,20 @@ export async function getFarmerCreditReportHandler(
       transactionRepo.findTransactionsByFarmerInRange(farmerId, { fromDate }),
     ]);
 
-    const partnerIds = [
-      ...new Set(
-        loans.map((l: { partnerBankId: string | null }) => l.partnerBankId).filter((id): id is string => Boolean(id)),
+    const partnerIds: string[] = Array.from(
+      new Set(
+        loans
+          .map((l: { partnerBankId: string | null }) => l.partnerBankId)
+          .filter((id: string | null): id is string => Boolean(id)),
       ),
-    ];
-    const partners = await Promise.all(partnerIds.map((id: string) => loanPartnerRepo.findPartnerById(id)));
+    );
+    const partners: ({ id: string; name: string } | null)[] = await Promise.all(
+      partnerIds.map((id: string) => loanPartnerRepo.findPartnerById(id)),
+    );
     const partnerNameById = new Map(
-      partners.filter(Boolean).map((p) => [(p as { id: string }).id, (p as { name: string }).name]),
+      partners
+        .filter((p: { id: string; name: string } | null): p is { id: string; name: string } => Boolean(p))
+        .map((p: { id: string; name: string }) => [p.id, p.name] as [string, string]),
     );
 
     const cashFlow = (last30DaysTx as { type: string; amountKes: unknown }[]).reduce(

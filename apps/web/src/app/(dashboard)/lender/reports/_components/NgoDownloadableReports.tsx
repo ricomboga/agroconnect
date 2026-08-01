@@ -8,8 +8,10 @@ import type { DataTableColumn } from '@agroconnect/web-ui'
 import {
   exportFarmerListCsv,
   exportIncomeStatementCsv,
+  exportInventoryReportCsv,
   type FarmerListRow,
   type IncomeStatementRow,
+  type InventoryReportRow,
 } from '../_lib/exportNgoReports'
 
 function RosterNotConfiguredNotice() {
@@ -81,13 +83,15 @@ function FarmerListReport() {
 }
 
 function IncomeStatementReport() {
+  const [nationalId, setNationalId] = useState('')
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
 
   const { data, isLoading } = useQuery({
-    queryKey: ['lender', 'reports', 'income-statement', from, to],
+    queryKey: ['lender', 'reports', 'income-statement', nationalId, from, to],
     queryFn: async () => {
       const params = new URLSearchParams()
+      if (nationalId) params.set('national_id', nationalId)
       if (from) params.set('from_date', from)
       if (to) params.set('to_date', to)
       const res = await fetch(`/api/finance/lender/reports/income-statement?${params.toString()}`)
@@ -116,12 +120,22 @@ function IncomeStatementReport() {
 
   return (
     <div className="rounded-base border border-border bg-white px-4 py-3">
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p className="text-md font-semibold text-ink">Combined Income Statement — All Farmers</p>
-          <p className="text-sm text-muted">Total income, total expenses and net income per farmer</p>
+          <p className="text-md font-semibold text-ink">
+            {nationalId ? 'Income Statement' : 'Combined Income Statement — All Farmers'}
+          </p>
+          <p className="text-sm text-muted">
+            Total income, total expenses and net income{nationalId ? ' for the matched farmer' : ' per farmer'}. Enter a National ID to scope this to one farmer.
+          </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <TextInput
+            placeholder="National ID number…"
+            value={nationalId}
+            onChange={(e) => setNationalId(e.target.value)}
+            className="w-44"
+          />
           <TextInput type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-36" />
           <span className="text-sm text-muted">to</span>
           <TextInput type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-36" />
@@ -147,9 +161,99 @@ function IncomeStatementReport() {
       ) : !rosterConfigured ? (
         <RosterNotConfiguredNotice />
       ) : rows.length === 0 ? (
-        <p className="py-6 text-center text-sm text-muted">No transactions in the selected date range</p>
+        <p className="py-6 text-center text-sm text-muted">
+          {nationalId ? 'No farmer in your roster matches that National ID, or no transactions in the selected date range' : 'No transactions in the selected date range'}
+        </p>
       ) : (
         <DataTable columns={columns} data={rows} />
+      )}
+    </div>
+  )
+}
+
+function InventoryReport() {
+  const [nationalId, setNationalId] = useState('')
+  const [submittedNationalId, setSubmittedNationalId] = useState('')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
+
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ['lender', 'reports', 'inventory', submittedNationalId, from, to],
+    enabled: submittedNationalId.length > 0,
+    queryFn: async () => {
+      const params = new URLSearchParams({ national_id: submittedNationalId })
+      if (from) params.set('from_date', from)
+      if (to) params.set('to_date', to)
+      const res = await fetch(`/api/finance/lender/reports/inventory?${params.toString()}`)
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { message?: string }
+        throw new Error(body.message ?? 'Failed to load inventory report')
+      }
+      const body = (await res.json()) as {
+        data: { farmerId: string; fullName: string | null; idNumber: string; items: InventoryReportRow[] }
+      }
+      return body.data
+    },
+  })
+
+  const rows = data?.items ?? []
+
+  const columns: DataTableColumn<InventoryReportRow>[] = [
+    { key: 'name', header: 'Item' },
+    { key: 'category', header: 'Category', render: (r) => <span className="capitalize">{r.category}</span> },
+    { key: 'purchasedQty', header: 'Purchased Qty', render: (r) => `${r.purchasedQty} ${r.unit}` },
+    { key: 'remainingQty', header: 'Remaining Qty', render: (r) => `${r.remainingQty} ${r.unit}` },
+    { key: 'purchasedAt', header: 'Purchased', render: (r) => new Date(r.purchasedAt).toLocaleDateString('en-KE') },
+  ]
+
+  return (
+    <div className="rounded-base border border-border bg-white px-4 py-3">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-md font-semibold text-ink">Inventory Report</p>
+          <p className="text-sm text-muted">Enter a farmer&apos;s National ID and a date range, then generate the report</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <TextInput
+            placeholder="National ID number…"
+            value={nationalId}
+            onChange={(e) => setNationalId(e.target.value)}
+            className="w-44"
+          />
+          <TextInput type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-36" />
+          <span className="text-sm text-muted">to</span>
+          <TextInput type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-36" />
+          <button
+            type="button"
+            disabled={!nationalId.trim()}
+            onClick={() => setSubmittedNationalId(nationalId.trim())}
+            className="rounded-md bg-ac-green px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+          >
+            Generate
+          </button>
+          <button
+            type="button"
+            disabled={rows.length === 0}
+            onClick={() => exportInventoryReportCsv(rows)}
+            className="rounded-md border border-border px-3 py-1.5 text-xs font-semibold text-ink2 disabled:opacity-50"
+          >
+            ⬇ Download CSV
+          </button>
+        </div>
+      </div>
+      {!submittedNationalId ? (
+        <p className="py-6 text-center text-sm text-muted">Enter a National ID and tap Generate to view a farmer&apos;s inventory</p>
+      ) : isLoading ? (
+        <p className="py-6 text-center text-sm text-muted">Loading…</p>
+      ) : isError ? (
+        <AlertBox variant="red">{error instanceof Error ? error.message : 'Failed to load inventory report'}</AlertBox>
+      ) : rows.length === 0 ? (
+        <p className="py-6 text-center text-sm text-muted">No inventory purchased in the selected date range</p>
+      ) : (
+        <>
+          {data?.fullName && <p className="mb-2 text-sm text-ink2">Farmer: <span className="font-semibold text-ink">{data.fullName}</span></p>}
+          <DataTable columns={columns} data={rows} />
+        </>
       )}
     </div>
   )
@@ -160,6 +264,7 @@ export function NgoDownloadableReports() {
     <div className="flex flex-col gap-3.5">
       <FarmerListReport />
       <IncomeStatementReport />
+      <InventoryReport />
     </div>
   )
 }
