@@ -39,11 +39,12 @@ export async function getFarmStats(farmIds: string[]) {
     }),
   ]);
 
+  type GroupByCount = { farmId: string; _count: { id: number } };
   const statsMap: Record<string, { overdueCount: number; workerCount: number; activitiesThisMonth: number; healthScore: number }> = {};
   for (const id of farmIds) {
-    const overdue = overdueCounts.find((r) => r.farmId === id)?._count.id ?? 0;
-    const workers = workerCounts.find((r) => r.farmId === id)?._count.id ?? 0;
-    const monthActs = monthCounts.find((r) => r.farmId === id)?._count.id ?? 0;
+    const overdue = overdueCounts.find((r: GroupByCount) => r.farmId === id)?._count.id ?? 0;
+    const workers = workerCounts.find((r: GroupByCount) => r.farmId === id)?._count.id ?? 0;
+    const monthActs = monthCounts.find((r: GroupByCount) => r.farmId === id)?._count.id ?? 0;
     const health = Math.max(0, 100 - overdue * 15);
     statsMap[id] = { overdueCount: overdue, workerCount: workers, activitiesThisMonth: monthActs, healthScore: health };
   }
