@@ -65,7 +65,7 @@ export const ROLE_FORM_CONFIG: Record<string, RoleFormConfig> = {
               { value: 'sacco', label: 'SACCO' },
               { value: 'mobile_lender', label: 'Mobile Lender' },
               { value: 'cooperative', label: 'Cooperative' },
-              { value: 'ngo', label: 'NGO' },
+              { value: 'ngo_grant', label: 'NGO' },
             ],
           },
           { key: 'licenceNo', label: 'Licence No.', type: 'text', required: true },
